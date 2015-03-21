@@ -28,12 +28,11 @@ It can then be used like this:
 
     a.add(b);
 
-To compile the example, install node-gyp, build and run inside the `example` directory:
+To compile the example, install required packages for both nbind and the example, build and run inside the `example` directory:
 
+    npm install
     cd example
-    npm install node-gyp
-    node_modules/node-gyp/bin/node-gyp.js configure
-    node_modules/node-gyp/bin/node-gyp.js build
+    npm install
     node point.js
 
 License

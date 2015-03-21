@@ -8,6 +8,7 @@
 
 #include <v8.h>
 #include <node.h>
+#include <nan.h>
 
 #include "BindingType.h"
 
@@ -15,7 +16,8 @@
 
 namespace nbind {
 
-typedef v8::Handle<v8::Value> jsMethod(const v8::Arguments &args);
+inline static NAN_METHOD(dummyMethod) {NanReturnNull();}
+typedef decltype(dummyMethod) jsMethod;
 
 class BindClassBase;
 
@@ -68,12 +70,11 @@ public:
 		methodList.emplace_front(name,ptr);
 	}
 
-	typedef v8::Handle<v8::Value> createType(const v8::Arguments& args);
 	typedef v8::Persistent<v8::Function> &getConstructorType();
 
 	std::forward_list<methodDef> &getMethodList() {return(methodList);}
 
-	createType *createPtr;
+	jsMethod *createPtr;
 	getConstructorType *getConstructorPtr;
 
 protected:
@@ -117,7 +118,8 @@ public:
 		return(constructorTblStore()[arity]);
 	}
 
-	static v8::Handle<v8::Value> create(const v8::Arguments &args);
+//	static v8::Handle<v8::Value> create(const v8::Arguments &args);
+	static NAN_METHOD(create);
 
 	static v8::Persistent<v8::Function> &getConstructor() {
 		static v8::Persistent<v8::Function> constructor;
@@ -160,7 +162,7 @@ struct Caller<void,TypeList<Args...>> {
 	template <class Bound,typename Method>
 	static v8::Handle<v8::Value> call(Bound &target,Method method,const v8::Arguments &args) {
 		(target.*method)(Args::get(args)...);
-		return(v8::Undefined());
+		NanReturnUndefined();
 	}
 };
 
@@ -195,27 +197,27 @@ public:
 	static void setClassName(const char *className) {classNameStore()=className;}
 	static void setMethodName(const char *methodName) {methodNameStore()=strdup(methodName);}
 
-	static v8::Handle<v8::Value> call(const v8::Arguments &args) {
-		v8::HandleScope scope;
-		static constexpr size_t arity=sizeof...(Args);
+	static NAN_METHOD(call) {
+		NanEscapableScope();
+		static constexpr decltype(args.Length()) arity=sizeof...(Args);
 
 		if(args.Length()!=arity) {
 //			printf("Wrong number of arguments to %s.%s: expected %ld, got %d.\n",getClassName(),getMethodName(),arity,args.Length());
-			v8::ThrowException(v8::String::New("Wrong number of arguments"));
-			return(v8::Local<v8::Value>());
+			NanThrowError("Wrong number of arguments");
+			NanReturnNull();
 		}
 
 		v8::Local<v8::Object> targetWrapped=args.This();
 		Bound &target=node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
 
-		return(scope.Close(Caller<
+		return(NanEscapeScope((Caller<
 			ReturnType,
 			typename emscripten::internal::MapWithIndex<
 				TypeList,
 				FromWire,
 				Args...
 			>::type
-		>::call(target,getMethod(),args)));
+		>::call(target,getMethod(),args))));
 	}
 
 private:
@@ -354,39 +356,41 @@ private:
 // The create function would better fit in BindClass but it needs to call
 // node::ObjectWrap::Wrap which is protected and only inherited by BindWrapper.
 template <class Bound>
-v8::Handle<v8::Value> BindClass<Bound>::create(const v8::Arguments& args) {
+NAN_METHOD(BindClass<Bound>::create) {
 	return(BindWrapper<Bound>::create(args));
 }
 
 template <class Bound>
-v8::Handle<v8::Value> BindWrapper<Bound>::create(const v8::Arguments &args) {
-	v8::HandleScope scope;
-
+NAN_METHOD(BindWrapper<Bound>::create) {
 	if(args.IsConstructCall()) {
+		NanScope();
+
 		// Called like new Bound(...)
 		if(args.Length()>BindClass<Bound>::getArity()) {
-			v8::ThrowException(v8::String::New("Wrong number of arguments"));
-			return(v8::Local<v8::Value>());
+			NanThrowError("Wrong number of arguments");
+			NanReturnNull();
 		}
 
 		auto *constructor=BindClass<Bound>::getConstructor(args.Length());
 
 		if(constructor==nullptr) {
-			v8::ThrowException(v8::String::New("Wrong number of arguments"));
-			return(v8::Local<v8::Value>());
+			NanThrowError("Wrong number of arguments");
+			NanReturnNull();
 		}
 
 		constructor(args)->Wrap(args.This());
 
-		return(args.This());
+		NanReturnThis();
 	} else {
+		NanEscapableScope();
+
 		// Called like Bound(...), add the "new" operator.
 		unsigned int argc=args.Length();
 		std::vector<v8::Handle<v8::Value>> argv(argc);
 
 		for(unsigned int argNum=0;argNum<argc;argNum++) argv[argNum]=args[argNum];
 
-		return scope.Close(BindClass<Bound>::getConstructor()->NewInstance(argc,&argv[0]));
+		return(NanEscapeScope(BindClass<Bound>::getConstructor()->NewInstance(argc,&argv[0])));
 	}
 }
 

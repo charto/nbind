@@ -1,0 +1,13 @@
+{
+  "name": "nbind-example",
+  "version": "0.0.2",
+  "description": "Example of how to use nbind",
+  "license": "BSD-2-Clause",
+  "author": "Juha Järvi",
+  "scripts": {
+    "prepublish": "node-gyp configure && node-gyp build"
+  },
+  "dependencies": {
+    "node-gyp": "~1.0.3"
+  }
+}

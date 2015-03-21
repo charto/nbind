@@ -1,4 +1,7 @@
 {
-	'include_dirs':['.'],
-	'sources':['Binding.cc']
+	"include_dirs": [
+		"<!(node -e \"require('nan')\")",
+		"."
+	],
+	"sources": ["Binding.cc"]
 }

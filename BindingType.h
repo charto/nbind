@@ -28,8 +28,8 @@ public:
 	// Pass any constructor arguments to wrapped class.
 	template<typename... Args>
 		BindWrapper(Args&&... args):bound(args...) {}
-  
-	static WireType create(const v8::Arguments& args);
+
+	static NAN_METHOD(create);
 
 //private:
 
@@ -48,26 +48,26 @@ struct BindingType<ArgType *> {
 	static inline WireType toWireType(ArgType arg);
 };
 
-#define DEFINE_NATIVE_BINDING_TYPE(type,decode,jsClass,encode)  \
+#define DEFINE_NATIVE_BINDING_TYPE(type,decode,jsClass)         \
 template <> struct BindingType<type> {                          \
 	static inline type fromWireType(WireTypeLocal arg) {        \
 		return(arg->decode());                                  \
 	}                                                           \
 	                                                            \
 	static inline WireType toWireType(type arg) {               \
-		return(jsClass::encode(arg));                           \
+		return(NanNew<jsClass>(arg));                           \
 	}                                                           \
 }
 
-DEFINE_NATIVE_BINDING_TYPE(bool,    BooleanValue,v8::Boolean,New);
-DEFINE_NATIVE_BINDING_TYPE(double,  NumberValue, v8::Number, New);
-DEFINE_NATIVE_BINDING_TYPE(float,   NumberValue, v8::Number, New);
-DEFINE_NATIVE_BINDING_TYPE(uint32_t,Uint32Value, v8::Uint32, NewFromUnsigned);
-DEFINE_NATIVE_BINDING_TYPE(uint16_t,Uint32Value, v8::Uint32, NewFromUnsigned);
-DEFINE_NATIVE_BINDING_TYPE(uint8_t, Uint32Value, v8::Uint32, NewFromUnsigned);
-DEFINE_NATIVE_BINDING_TYPE(int32_t, Int32Value,  v8::Int32,  New);
-DEFINE_NATIVE_BINDING_TYPE(int16_t, Int32Value,  v8::Int32,  New);
-DEFINE_NATIVE_BINDING_TYPE(int8_t,  Int32Value,  v8::Int32,  New);
+DEFINE_NATIVE_BINDING_TYPE(bool,    BooleanValue,v8::Boolean);
+DEFINE_NATIVE_BINDING_TYPE(double,  NumberValue, v8::Number);
+DEFINE_NATIVE_BINDING_TYPE(float,   NumberValue, v8::Number);
+DEFINE_NATIVE_BINDING_TYPE(uint32_t,Uint32Value, v8::Uint32);
+DEFINE_NATIVE_BINDING_TYPE(uint16_t,Uint32Value, v8::Uint32);
+DEFINE_NATIVE_BINDING_TYPE(uint8_t, Uint32Value, v8::Uint32);
+DEFINE_NATIVE_BINDING_TYPE(int32_t, Int32Value,  v8::Int32);
+DEFINE_NATIVE_BINDING_TYPE(int16_t, Int32Value,  v8::Int32);
+DEFINE_NATIVE_BINDING_TYPE(int8_t,  Int32Value,  v8::Int32);
 
 template <> struct BindingType<unsigned char *> {
 	static inline unsigned char *fromWireType(WireTypeLocal arg) {
