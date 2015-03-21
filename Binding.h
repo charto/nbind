@@ -16,6 +16,8 @@
 
 namespace nbind {
 
+extern v8::Persistent<v8::Object> constructorStore;
+
 inline static NAN_METHOD(dummyMethod) {NanReturnNull();}
 typedef decltype(dummyMethod) jsMethod;
 
@@ -70,12 +72,9 @@ public:
 		methodList.emplace_front(name,ptr);
 	}
 
-	typedef v8::Persistent<v8::Function> &getConstructorType();
-
 	std::forward_list<methodDef> &getMethodList() {return(methodList);}
 
 	jsMethod *createPtr;
-	getConstructorType *getConstructorPtr;
 
 protected:
 
@@ -88,13 +87,27 @@ template <class Bound> class BindClass : public BindClassBase {
 
 public:
 
+	static const char *&getNameStore() {
+		static const char *name;
+		return(name);
+	}
+
+	static const char *getName() {return(getNameStore());}
+	static void setStaticName(const char *name) {getNameStore()=name;}
+
 	BindClass():BindClassBase() {
 		createPtr=create;
-		getConstructorPtr=getConstructor;
 		setInstance(this);
 	}
 
-	typedef BindWrapper<Bound> *jsConstructor(const v8::Arguments &args);
+	template<typename MethodType> struct NanConstructorTypeBuilder;
+
+	template<typename ReturnType, typename... NanArgs>
+	struct NanConstructorTypeBuilder<ReturnType(NanArgs...)> {
+		typedef BindWrapper<Bound> *type(NanArgs...);
+	};
+
+	typedef typename NanConstructorTypeBuilder<jsMethod>::type jsConstructor;
 
 	void addConstructor(int arity,jsConstructor *ptr) {
 		static std::vector<jsConstructor *> &constructorTbl=constructorTblStore();
@@ -114,17 +127,11 @@ public:
 		return(constructorTblStore().size()-1);
 	}
 
-	static jsConstructor *getConstructor(unsigned int arity) {
+	static jsConstructor *getConstructorWrapper(unsigned int arity) {
 		return(constructorTblStore()[arity]);
 	}
 
-//	static v8::Handle<v8::Value> create(const v8::Arguments &args);
 	static NAN_METHOD(create);
-
-	static v8::Persistent<v8::Function> &getConstructor() {
-		static v8::Persistent<v8::Function> constructor;
-		return(constructor);
-	}
 
 	static BindClass *getInstance() {return(instanceStore());}
 	void setInstance(BindClass *instance) {instanceStore()=instance;}
@@ -147,35 +154,40 @@ template<typename ReturnType,typename ArgList> struct Caller;
 
 template<typename ReturnType,typename... Args>
 struct Caller<ReturnType,TypeList<Args...>> {
-	template <class Bound,typename Method>
-	static v8::Handle<v8::Value> call(Bound &target,Method method,const v8::Arguments &args) {
-		return(BindingType<ReturnType>::toWireType(
-			(target.*method)(Args::get(args)...)
-		));
+
+	template <class Bound, typename Method, typename NanArgs>
+	static ReturnType call(Bound &target, Method method, NanArgs args) {
+		return((target.*method)(Args::get(args)...));
 	}
+
 };
 
 // Specialize Caller for void return type, because called function has no
 // return value to toWireType.
 template<typename... Args>
 struct Caller<void,TypeList<Args...>> {
-	template <class Bound,typename Method>
-	static v8::Handle<v8::Value> call(Bound &target,Method method,const v8::Arguments &args) {
+
+	template <class Bound, typename Method, typename NanArgs>
+	static std::nullptr_t call(Bound &target, Method method, NanArgs args) {
 		(target.*method)(Args::get(args)...);
-		NanReturnUndefined();
+		return(nullptr);
 	}
+
 };
 
 template<size_t Index,typename ArgType>
 struct FromWire {
+
 	typedef struct {
 //		static u32 get(const v8::Arguments &args) {
 //			return(node::Buffer::HasInstance(args[Index]));
 //		}
-		static ArgType get(const v8::Arguments &args) {
+		template <typename NanArgs>
+		static ArgType get(const NanArgs &args) {
 			return(BindingType<ArgType>::fromWireType(args[Index]));
 		}
 	} type;
+
 };
 
 // Templated static class for each possible different method call exposed by the
@@ -183,7 +195,7 @@ struct FromWire {
 // Everything must be static because the V8 JavaScript engine wants a single
 // function pointer to call.
 
-template <class Bound,typename ReturnType,typename... Args>
+template <class Bound, typename ReturnType, typename... Args>
 class MethodInfo {
 
 public:
@@ -198,26 +210,27 @@ public:
 	static void setMethodName(const char *methodName) {methodNameStore()=strdup(methodName);}
 
 	static NAN_METHOD(call) {
-		NanEscapableScope();
+		NanScope();
 		static constexpr decltype(args.Length()) arity=sizeof...(Args);
 
 		if(args.Length()!=arity) {
 //			printf("Wrong number of arguments to %s.%s: expected %ld, got %d.\n",getClassName(),getMethodName(),arity,args.Length());
-			NanThrowError("Wrong number of arguments");
-			NanReturnNull();
+			return(NanThrowError("Wrong number of arguments"));
 		}
 
 		v8::Local<v8::Object> targetWrapped=args.This();
 		Bound &target=node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
 
-		return(NanEscapeScope((Caller<
-			ReturnType,
-			typename emscripten::internal::MapWithIndex<
-				TypeList,
-				FromWire,
-				Args...
-			>::type
-		>::call(target,getMethod(),args))));
+		NanReturnValue(BindingType<ReturnType>::toWireType(
+			Caller<
+				ReturnType,
+				typename emscripten::internal::MapWithIndex<
+					TypeList,
+					FromWire,
+					Args...
+				>::type
+			>::call(target, getMethod(), args)
+		));
 	}
 
 private:
@@ -239,54 +252,23 @@ private:
 
 };
 
-template<class Bound,typename ArgList> struct ConstructorInfo;
+template<class Bound, typename ArgList> struct ConstructorInfo;
 
-template<class Bound,typename... Args>
-struct ConstructorInfo<Bound,TypeList<Args...>> {
+template<class Bound, typename... Args>
+struct ConstructorInfo<Bound, TypeList<Args...>> {
 
 public:
 
-//	static MethodType getMethod() {return(methodStore());}
 	static const char *getClassName() {return(classNameStore());}
-//	static void setMethod(MethodType method) {methodStore()=method;}
 	static void setClassName(const char *className) {classNameStore()=className;}
 
-	static BindWrapper<Bound> *call(const v8::Arguments &args) {
-		return(new BindWrapper<Bound>(Args::get(args)...));
+	template <typename... NanArgs>
+	static BindWrapper<Bound> *call(NanArgs... args) {
+		return(new BindWrapper<Bound>(Args::get(std::forward<NanArgs>(args)...)...));
 	}
 
-/*
-	static v8::Handle<v8::Value> call(const v8::Arguments &args) {
-		v8::HandleScope scope;
-		static constexpr size_t arity=sizeof...(Args);
-
-		if(args.Length()!=arity) {
-			// TODO: Throw JavaScript exception
-			printf("Wrong number of arguments to %s.%s: expected %ld, got %d.\n",getClassName(),getMethodName(),arity,args.Length());
-			v8::ThrowException(v8::String::New("Wrong number of arguments"));
-			return(v8::Local<v8::Value>());
-		}
-
-		v8::Local<v8::Object> targetWrapped=args.This();
-		Bound &target=node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
-
-		return(scope.Close(Caller<
-			ReturnType,
-			typename emscripten::internal::MapWithIndex<
-				TypeList,
-				FromWire,
-				Args...
-			>::type
-		>::call(target,getMethod(),args)));
-	}
-*/
 private:
-/*
-	static MethodType &methodStore() {
-		static MethodType method;
-		return(method);
-	}
-*/
+
 	static const char *&classNameStore() {
 		static const char *className;
 		return(className);
@@ -314,6 +296,7 @@ public:
 	BindDefiner(const char *name):BindDefinerBase(name) {
 		bindClass=BindClass<Bound>::getInstance();
 		bindClass->setName(name);
+		BindClass<Bound>::setStaticName(name);
 
 		Bindings::registerClass(bindClass);
 	}
@@ -367,22 +350,20 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 
 		// Called like new Bound(...)
 		if(args.Length()>BindClass<Bound>::getArity()) {
-			NanThrowError("Wrong number of arguments");
-			NanReturnNull();
+			return(NanThrowError("Wrong number of arguments"));
 		}
 
-		auto *constructor=BindClass<Bound>::getConstructor(args.Length());
+		auto *constructor=BindClass<Bound>::getConstructorWrapper(args.Length());
 
 		if(constructor==nullptr) {
-			NanThrowError("Wrong number of arguments");
-			NanReturnNull();
+			return(NanThrowError("Wrong number of arguments"));
 		}
 
 		constructor(args)->Wrap(args.This());
 
 		NanReturnThis();
 	} else {
-		NanEscapableScope();
+		NanScope();
 
 		// Called like Bound(...), add the "new" operator.
 		unsigned int argc=args.Length();
@@ -390,7 +371,8 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 
 		for(unsigned int argNum=0;argNum<argc;argNum++) argv[argNum]=args[argNum];
 
-		return(NanEscapeScope(BindClass<Bound>::getConstructor()->NewInstance(argc,&argv[0])));
+		auto constructor = v8::Handle<v8::Function>::Cast(NanNew<v8::Object>(constructorStore)->Get(NanNew<v8::String>(BindClass<Bound>::getName())));
+		NanReturnValue(constructor->NewInstance(argc,&argv[0]));
 	}
 }
 

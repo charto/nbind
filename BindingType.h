@@ -78,4 +78,9 @@ template <> struct BindingType<unsigned char *> {
 	static inline WireType toWireType(unsigned char *arg);
 };
 
+template <> struct BindingType<void> {
+	static inline std::nullptr_t fromWireType(WireTypeLocal arg) {return(nullptr);}
+	static inline WireType toWireType(std::nullptr_t arg) {return(NanUndefined());}
+};
+
 } // namespace

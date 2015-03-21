@@ -8,11 +8,17 @@
 using namespace v8;
 using namespace nbind;
 
+namespace nbind {
+	Persistent<Object> constructorStore;
+}
+
 void Bindings :: registerClass(BindClassBase *bindClass) {
 	getClassList().emplace_front(bindClass);
 }
 
 void Bindings :: initModule(Handle<Object> exports) {
+	Local<Object> constructorTbl = NanNew<Object>();
+
 	for(auto *bindClass : getClassList()) {
 		Local<FunctionTemplate> constructorTemplate = NanNew<FunctionTemplate>(bindClass->createPtr);
 
@@ -24,11 +30,14 @@ void Bindings :: initModule(Handle<Object> exports) {
 				NanNew<FunctionTemplate>(method.getMethod())->GetFunction());
 		}
 
-		auto &constructor = bindClass->getConstructorPtr();
-		constructor = Persistent<Function>::New(constructorTemplate->GetFunction());
+		const auto &constructor = constructorTemplate->GetFunction();
+
+		constructorTbl->Set(NanNew<String>(bindClass->getName()), constructor);
 
 		exports->Set(NanNew<String>(bindClass->getName()), constructor);
 	}
+
+	NanAssignPersistent(constructorStore, constructorTbl);
 }
 
 #endif
