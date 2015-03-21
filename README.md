@@ -39,4 +39,4 @@ License
 =======
 
 [The MIT License](https://raw.githubusercontent.com/jjrv/nbind/master/LICENSE)
-Copyright (c) 2014 BusFaster Ltd
+Copyright (c) 2014-2015 BusFaster Ltd
