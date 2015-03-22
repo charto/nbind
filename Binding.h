@@ -18,10 +18,15 @@ namespace nbind {
 
 extern v8::Persistent<v8::Object> constructorStore;
 
+// Get type of method definitions to use in function pointers.
+
 inline static NAN_METHOD(dummyMethod) {NanReturnNull();}
 typedef decltype(dummyMethod) jsMethod;
 
 class BindClassBase;
+
+// Storage for class bindings, populated by BindDefiners created in
+// constructors of static BindInvoker objects.
 
 class Bindings {
 
@@ -92,13 +97,13 @@ public:
 		return(name);
 	}
 
-	static const char *getName() {return(getNameStore());}
-	static void setStaticName(const char *name) {getNameStore()=name;}
-
 	BindClass():BindClassBase() {
 		createPtr=create;
 		setInstance(this);
 	}
+
+	// Use template magic to build a function type with argument types
+	// matching NAN_METHOD and returning a C++ class wrapped inside ObjectWrap.
 
 	template<typename MethodType> struct NanConstructorTypeBuilder;
 
@@ -108,6 +113,9 @@ public:
 	};
 
 	typedef typename NanConstructorTypeBuilder<jsMethod>::type jsConstructor;
+
+	// Store link to constructor, possibly overloaded by arity.
+	// It will be declared with the Node API when this module is initialized.
 
 	void addConstructor(int arity,jsConstructor *ptr) {
 		static std::vector<jsConstructor *> &constructorTbl=constructorTblStore();
@@ -123,15 +131,23 @@ public:
 		constructorTbl[arity]=ptr;
 	}
 
+	// Get maximum arity among overloaded constructors.
+
 	static int getArity() {
 		return(constructorTblStore().size()-1);
 	}
+
+	// Get constructor by arity.
+	// When called, the constructor returns an ObjectWrap.
 
 	static jsConstructor *getConstructorWrapper(unsigned int arity) {
 		return(constructorTblStore()[arity]);
 	}
 
 	static NAN_METHOD(create);
+
+	// Use a static variable inside a static method to provide linkage for a
+	// singleton instance of this class.
 
 	static BindClass *getInstance() {return(instanceStore());}
 	void setInstance(BindClass *instance) {instanceStore()=instance;}
@@ -141,12 +157,18 @@ public:
 		return(instance);
 	}
 
+	// Linkage for a table of overloaded constructors
+	// (overloads must have different arities).
+
 	static std::vector<jsConstructor *> &constructorTblStore() {
 		static std::vector<jsConstructor *> constructorTbl;
 		return(constructorTbl);
 	}
 
 };
+
+// Caller handles the template magic to compose a method call from a class and
+// parts of a method signature extracted from it.
 
 template<typename...> struct TypeList {};
 
@@ -162,8 +184,9 @@ struct Caller<ReturnType,TypeList<Args...>> {
 
 };
 
-// Specialize Caller for void return type, because called function has no
-// return value to toWireType.
+// Specialize Caller for void return type, because toWireType needs a non-void
+// argument.
+
 template<typename... Args>
 struct Caller<void,TypeList<Args...>> {
 
@@ -296,7 +319,6 @@ public:
 	BindDefiner(const char *name):BindDefinerBase(name) {
 		bindClass=BindClass<Bound>::getInstance();
 		bindClass->setName(name);
-		BindClass<Bound>::setStaticName(name);
 
 		Bindings::registerClass(bindClass);
 	}
@@ -371,7 +393,7 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 
 		for(unsigned int argNum=0;argNum<argc;argNum++) argv[argNum]=args[argNum];
 
-		auto constructor = v8::Handle<v8::Function>::Cast(NanNew<v8::Object>(constructorStore)->Get(NanNew<v8::String>(BindClass<Bound>::getName())));
+		auto constructor = v8::Handle<v8::Function>::Cast(NanNew<v8::Object>(constructorStore)->Get(NanNew<v8::String>(BindClass<Bound>::getInstance()->getName())));
 		NanReturnValue(constructor->NewInstance(argc,&argv[0]));
 	}
 }
