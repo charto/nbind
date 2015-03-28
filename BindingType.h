@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 // Convert between JavaScript types used in the V8 engine and native C++ types.
@@ -8,6 +8,7 @@
 #pragma once
 
 #include <utility>
+#include <cstring>
 
 #include <v8.h>
 #include <node.h>
@@ -69,14 +70,32 @@ DEFINE_NATIVE_BINDING_TYPE(int32_t, Int32Value,  v8::Int32);
 DEFINE_NATIVE_BINDING_TYPE(int16_t, Int32Value,  v8::Int32);
 DEFINE_NATIVE_BINDING_TYPE(int8_t,  Int32Value,  v8::Int32);
 
-template <> struct BindingType<unsigned char *> {
-	static inline unsigned char *fromWireType(WireTypeLocal arg) {
-		v8::Local<v8::Object> buffer=arg->ToObject();
-		return(reinterpret_cast<unsigned char *>(node::Buffer::Data(buffer)));
-	}
+#define DEFINE_STRING_BINDING_TYPE(type)										\
+template <> struct BindingType<type> {											\
+	static inline type fromWireType(WireTypeLocal arg) {						\
+		return(reinterpret_cast<type>(*NanUtf8String(arg->ToString())));		\
+	}																			\
+																				\
+	static inline WireType toWireType(type arg) {								\
+		auto buf = reinterpret_cast<const char *>(arg);							\
+		return(NanNew<v8::String>(buf, strlen(buf)));							\
+	}																			\
+}
 
-	static inline WireType toWireType(unsigned char *arg);
-};
+/*
+		TODO: functions accepting nbind::Buffer (class remains unimplemented)
+		as a parameter could be called like this:
+
+		if(node::Buffer::HasInstance(arg)) {
+			v8::Local<v8::Object> buffer = arg->ToObject();
+			auto data = reinterpret_cast<const unsigned char *>(node::Buffer::Data(buffer));
+			size_t len = node::Buffer::Length(buffer);
+			return(nbind::Buffer(data, len));
+		}
+*/
+
+DEFINE_STRING_BINDING_TYPE(const unsigned char *);
+DEFINE_STRING_BINDING_TYPE(const char *);
 
 // void return values are passed to toWireType as null pointers.
 
