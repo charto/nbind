@@ -3,7 +3,7 @@ nbind
 
 nbind is a bindings generator for Node.js plugins inspired by [embind](http://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html) from [emscripten](http://emscripten.org). The bindings are built along with your C++ library without requiring any generated code, using C++11 templates and simple declarations.
 
-It's at an alpha stage and many embind features are missing, but for usage instructions much of the [embind documentation](http://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html) is appropriate. The included example illustrates the basic idea, a simple C++ Point class is defined with no JavaScript-related code. Only the following is required to add support for using it from JavaScript:
+It's at an alpha stage and many embind features are missing, but for usage instructions much of the [embind documentation](http://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html) is appropriate. The included example (available on GitHub, omitted from npm package) illustrates the basic idea, a simple C++ Point class is defined with no JavaScript-related code. Only the following is required to add support for using it from JavaScript:
 
     #include "Binding.h"
 

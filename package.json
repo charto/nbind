@@ -2,8 +2,18 @@
   "name": "nbind",
   "version": "0.0.2",
   "description": "Embind-style bindings generator for Node.js",
+  "homepage": "https://github.com/charto/nbind",
+  "bugs": {
+    "url": "https://github.com/charto/nbind/issues"
+  },
   "license": "BSD-2-Clause",
   "author": "Juha Järvi",
+  "main": "gypi.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/charto/nbind.git"
+  },
+  "os" : [ "darwin", "linux" ],
   "dependencies": {
     "nan": "^1.7.0"
   }

@@ -117,30 +117,35 @@ public:
 	// Store link to constructor, possibly overloaded by arity.
 	// It will be declared with the Node API when this module is initialized.
 
-	void addConstructor(int arity,jsConstructor *ptr) {
-		static std::vector<jsConstructor *> &constructorTbl=constructorTblStore();
-		int oldArity=getArity();
+	void addConstructor(unsigned int arity, jsConstructor *ptr) {
+		static std::vector<jsConstructor *> &constructorTbl = constructorTblStore();
+		signed int oldArity = getArity();
 
-		if(arity>oldArity) {
-			constructorTbl.resize(arity+1);
-			for(int pos=oldArity+1;pos<arity;pos++) {
-				constructorTbl[pos]=nullptr;
+		if(signed(arity) > oldArity) {
+			constructorTbl.resize(arity + 1);
+			for(unsigned int pos = oldArity + 1; pos < arity; pos++) {
+				constructorTbl[pos] = nullptr;
 			}
 		}
 
-		constructorTbl[arity]=ptr;
+		constructorTbl[arity] = ptr;
 	}
 
 	// Get maximum arity among overloaded constructors.
+	// Can be -1 if there are no constructors.
 
-	static int getArity() {
-		return(constructorTblStore().size()-1);
+	static signed int getArity() {
+		return(constructorTblStore().size() - 1);
 	}
 
 	// Get constructor by arity.
 	// When called, the constructor returns an ObjectWrap.
 
 	static jsConstructor *getConstructorWrapper(unsigned int arity) {
+		// Check if constructor was called with more than the maximum number
+		// of arguments it can accept.
+		if(signed(arity) > getArity()) return(nullptr);
+
 		return(constructorTblStore()[arity]);
 	}
 
@@ -368,32 +373,40 @@ NAN_METHOD(BindClass<Bound>::create) {
 template <class Bound>
 NAN_METHOD(BindWrapper<Bound>::create) {
 	if(args.IsConstructCall()) {
+		// Called like new Bound(...)
 		NanScope();
 
-		// Called like new Bound(...)
-		if(args.Length()>BindClass<Bound>::getArity()) {
-			return(NanThrowError("Wrong number of arguments"));
-		}
-
+		// Look up possibly overloaded C++ constructor according to its arity
+		// in the constructor call.
 		auto *constructor=BindClass<Bound>::getConstructorWrapper(args.Length());
 
 		if(constructor==nullptr) {
 			return(NanThrowError("Wrong number of arguments"));
 		}
 
+		// Call C++ constructor and bind the resulting object
+		// to the new JavaScript object being created.
 		constructor(args)->Wrap(args.This());
 
 		NanReturnThis();
 	} else {
+		// Called like Bound(...), add the "new" operator.
 		NanScope();
 
-		// Called like Bound(...), add the "new" operator.
 		unsigned int argc=args.Length();
 		std::vector<v8::Handle<v8::Value>> argv(argc);
 
+		// Copy arguments to a vector because the arguments object type
+		// cannot be passed to another function call as-is.
 		for(unsigned int argNum=0;argNum<argc;argNum++) argv[argNum]=args[argNum];
 
-		auto constructor = v8::Handle<v8::Function>::Cast(NanNew<v8::Object>(constructorStore)->Get(NanNew<v8::String>(BindClass<Bound>::getInstance()->getName())));
+		// Find constructor function by name from a perstistent copy of the
+		// module's exports object. This double lookup might be slow, but
+		// calling the constructor without "new" is wrong anyway.
+		v8::Local<v8::Object> constructorTbl = NanNew<v8::Object>(constructorStore);
+		auto constructor = v8::Handle<v8::Function>::Cast(constructorTbl->Get(NanNew<v8::String>(BindClass<Bound>::getInstance()->getName())));
+
+		// Call the JavaScript constructor with the new operator.
 		NanReturnValue(constructor->NewInstance(argc,&argv[0]));
 	}
 }
