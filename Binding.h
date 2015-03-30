@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 #pragma once
@@ -35,7 +35,15 @@ public:
 	static void registerClass(BindClassBase *bindClass);
 	static void initModule(v8::Handle<v8::Object> exports);
 
+	static inline char *getError() {return(message);}
+	static inline void clearError() {Bindings::message = nullptr;}
+	static inline void setError(char *message) {
+		if(!Bindings::message) Bindings::message = message;
+	}
+
 private:
+
+	static char *message;
 
 	static std::forward_list<BindClassBase *> &getClassList() {
 		static std::forward_list<BindClassBase *> classList;
@@ -249,16 +257,24 @@ public:
 		v8::Local<v8::Object> targetWrapped=args.This();
 		Bound &target=node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
 
-		NanReturnValue(BindingType<ReturnType>::toWireType(
-			Caller<
-				ReturnType,
-				typename emscripten::internal::MapWithIndex<
-					TypeList,
-					FromWire,
-					Args...
-				>::type
-			>::call(target, getMethod(), args)
-		));
+		Bindings::clearError();
+
+		// TODO: Check argument types!
+
+		auto &&result = Caller<
+			ReturnType,
+			typename emscripten::internal::MapWithIndex<
+				TypeList,
+				FromWire,
+				Args...
+			>::type
+		>::call(target, getMethod(), args);
+
+		char *message = Bindings::getError();
+
+		if(message) return(NanThrowError(message));
+
+		NanReturnValue(BindingType<ReturnType>::toWireType(result));
 	}
 
 private:
@@ -384,9 +400,15 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 			return(NanThrowError("Wrong number of arguments"));
 		}
 
+		Bindings::clearError();
+
 		// Call C++ constructor and bind the resulting object
 		// to the new JavaScript object being created.
 		constructor(args)->Wrap(args.This());
+
+		char *message = Bindings::getError();
+
+		if(message) return(NanThrowError(message));
 
 		NanReturnThis();
 	} else {

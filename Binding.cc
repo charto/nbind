@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 #ifdef BUILDING_NODE_EXTENSION
@@ -11,6 +11,8 @@ using namespace nbind;
 namespace nbind {
 	Persistent<Object> constructorStore;
 }
+
+char *Bindings :: message;
 
 void Bindings :: registerClass(BindClassBase *bindClass) {
 	getClassList().emplace_front(bindClass);
