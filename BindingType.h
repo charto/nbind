@@ -104,4 +104,17 @@ template <> struct BindingType<void> {
 	static inline WireType toWireType(std::nullptr_t arg) {return(NanUndefined());}
 };
 
+template<size_t Index,typename ArgType>
+struct FromWire {
+
+	typedef struct {
+
+		template <typename NanArgs>
+		static ArgType get(const NanArgs &args) {
+			return(BindingType<ArgType>::fromWireType(args[Index]));
+		}
+	} type;
+
+};
+
 } // namespace

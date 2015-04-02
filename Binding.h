@@ -12,16 +12,7 @@
 
 #include "BindingType.h"
 
-#include "wire.h"
-
 namespace nbind {
-
-extern v8::Persistent<v8::Object> constructorStore;
-
-// Get type of method definitions to use in function pointers.
-
-inline static NAN_METHOD(dummyMethod) {NanReturnNull();}
-typedef decltype(dummyMethod) jsMethod;
 
 class BindClassBase;
 
@@ -51,6 +42,21 @@ private:
 	}
 
 };
+
+} // namespace
+
+#include "wire.h"
+#include "Caller.h"
+#include "MethodSignature.h"
+
+#include "wire.h"
+
+namespace nbind {
+
+// Get type of method definitions to use in function pointers.
+
+inline static NAN_METHOD(dummyMethod) {NanReturnNull();}
+typedef decltype(dummyMethod) jsMethod;
 
 // Templated singleton class for each C++ class accessible from Node.js.
 // Stores their information defined in static constructors, until the Node.js
@@ -180,122 +186,6 @@ public:
 
 };
 
-// Caller handles the template magic to compose a method call from a class and
-// parts of a method signature extracted from it.
-
-template<typename...> struct TypeList {};
-
-template<typename ReturnType,typename ArgList> struct Caller;
-
-template<typename ReturnType,typename... Args>
-struct Caller<ReturnType,TypeList<Args...>> {
-
-	template <class Bound, typename Method, typename NanArgs>
-	static ReturnType call(Bound &target, Method method, NanArgs args) {
-		return((target.*method)(Args::get(args)...));
-	}
-
-};
-
-// Specialize Caller for void return type, because toWireType needs a non-void
-// argument.
-
-template<typename... Args>
-struct Caller<void,TypeList<Args...>> {
-
-	template <class Bound, typename Method, typename NanArgs>
-	static std::nullptr_t call(Bound &target, Method method, NanArgs args) {
-		(target.*method)(Args::get(args)...);
-		return(nullptr);
-	}
-
-};
-
-template<size_t Index,typename ArgType>
-struct FromWire {
-
-	typedef struct {
-//		static u32 get(const v8::Arguments &args) {
-//			return(node::Buffer::HasInstance(args[Index]));
-//		}
-		template <typename NanArgs>
-		static ArgType get(const NanArgs &args) {
-			return(BindingType<ArgType>::fromWireType(args[Index]));
-		}
-	} type;
-
-};
-
-// Templated static class for each possible different method call exposed by the
-// Node.js plugin. Used to pass arguments and return values between C++ and Node.js.
-// Everything must be static because the V8 JavaScript engine wants a single
-// function pointer to call.
-
-template <class Bound, typename ReturnType, typename... Args>
-class MethodInfo {
-
-public:
-
-	typedef ReturnType(Bound::*MethodType)(Args...);
-
-	static MethodType getMethod() {return(methodStore());}
-	static const char *getClassName() {return(classNameStore());}
-	static const char *getMethodName() {return(methodNameStore());}
-	static void setMethod(MethodType method) {methodStore()=method;}
-	static void setClassName(const char *className) {classNameStore()=className;}
-	static void setMethodName(const char *methodName) {methodNameStore()=strdup(methodName);}
-
-	static NAN_METHOD(call) {
-		NanScope();
-		static constexpr decltype(args.Length()) arity=sizeof...(Args);
-
-		if(args.Length()!=arity) {
-//			printf("Wrong number of arguments to %s.%s: expected %ld, got %d.\n",getClassName(),getMethodName(),arity,args.Length());
-			return(NanThrowError("Wrong number of arguments"));
-		}
-
-		v8::Local<v8::Object> targetWrapped=args.This();
-		Bound &target=node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
-
-		Bindings::clearError();
-
-		// TODO: Check argument types!
-
-		auto &&result = Caller<
-			ReturnType,
-			typename emscripten::internal::MapWithIndex<
-				TypeList,
-				FromWire,
-				Args...
-			>::type
-		>::call(target, getMethod(), args);
-
-		char *message = Bindings::getError();
-
-		if(message) return(NanThrowError(message));
-
-		NanReturnValue(BindingType<ReturnType>::toWireType(result));
-	}
-
-private:
-
-	static MethodType &methodStore() {
-		static MethodType method;
-		return(method);
-	}
-
-	static const char *&classNameStore() {
-		static const char *className;
-		return(className);
-	}
-
-	static const char *&methodNameStore() {
-		static const char *methodName;
-		return(methodName);
-	}
-
-};
-
 template<class Bound, typename ArgList> struct ConstructorInfo;
 
 template<class Bound, typename... Args>
@@ -346,11 +236,12 @@ public:
 
 	template<typename ReturnType,typename... Args,typename... Policies>
 	const BindDefiner &function(const char* name,ReturnType(Bound::*method)(Args...),Policies...) const {
-		typedef MethodInfo<Bound,ReturnType,Args...> Method;
+		typedef MethodSignature<Bound, ReturnType, Args...> Method;
 
-		Method::setMethod(method);
+		Method::setMethod(name, method);
 		Method::setClassName(this->name);
-		Method::setMethodName(name);
+		// TODO BUG FIX: Use Method::getIndex to create a running counter of
+		// all methods with the same signature.
 		bindClass->addMethod(name,Method::call);
 
 		return(*this);
@@ -378,6 +269,8 @@ private:
 	BindClass<Bound> *bindClass;
 
 };
+
+extern v8::Persistent<v8::Object> constructorStore;
 
 // The create function would better fit in BindClass but it needs to call
 // node::ObjectWrap::Wrap which is protected and only inherited by BindWrapper.

@@ -27,7 +27,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		for(auto &method : bindClass->getMethodList()) {
 			NanSetPrototypeTemplate(constructorTemplate, method.getName(),
-				NanNew<FunctionTemplate>(method.getMethod())->GetFunction());
+				NanNew<FunctionTemplate>(method.getMethod(), NanNew<Number>(42))->GetFunction());
 		}
 
 		const auto &constructor = constructorTemplate->GetFunction();
