@@ -29,7 +29,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 		for(auto &method : bindClass->getMethodList()) {
 			NanSetPrototypeTemplate(constructorTemplate, method.getName(),
 				NanNew<FunctionTemplate>(
-					method.getMethod(),
+					method.getSignature(),
 					NanNew<Number>(method.getNum())
 				)->GetFunction()
 			);
