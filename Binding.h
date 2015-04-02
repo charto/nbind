@@ -70,13 +70,16 @@ private:
 
 	public:
 
-		methodDef(const char *name,jsMethod *ptr):name(name),ptr(ptr) {}
+		methodDef(const char *name, unsigned int num, jsMethod *ptr):
+			name(name), num(num), ptr(ptr) {}
 		const char *getName() {return(name);}
+		unsigned int getNum() {return(num);}
 		jsMethod *getMethod() {return(ptr);}
 
 	private:
 
 		const char *name;
+		unsigned int num;
 		jsMethod *ptr;
 	};
 
@@ -87,8 +90,8 @@ public:
 	const char *getName() {return(name);}
 	void setName(const char *name) {this->name=name;}
 
-	void addMethod(const char *name,jsMethod *ptr) {
-		methodList.emplace_front(name,ptr);
+	void addMethod(const char *name, unsigned int num, jsMethod *ptr) {
+		methodList.emplace_front(name, num, ptr);
 	}
 
 	std::forward_list<methodDef> &getMethodList() {return(methodList);}
@@ -132,24 +135,24 @@ public:
 	// It will be declared with the Node API when this module is initialized.
 
 	void addConstructor(unsigned int arity, jsConstructor *ptr) {
-		static std::vector<jsConstructor *> &constructorTbl = constructorTblStore();
+		static std::vector<jsConstructor *> &constructorVect = constructorVectStore();
 		signed int oldArity = getArity();
 
 		if(signed(arity) > oldArity) {
-			constructorTbl.resize(arity + 1);
+			constructorVect.resize(arity + 1);
 			for(unsigned int pos = oldArity + 1; pos < arity; pos++) {
-				constructorTbl[pos] = nullptr;
+				constructorVect[pos] = nullptr;
 			}
 		}
 
-		constructorTbl[arity] = ptr;
+		constructorVect[arity] = ptr;
 	}
 
 	// Get maximum arity among overloaded constructors.
 	// Can be -1 if there are no constructors.
 
 	static signed int getArity() {
-		return(constructorTblStore().size() - 1);
+		return(constructorVectStore().size() - 1);
 	}
 
 	// Get constructor by arity.
@@ -160,7 +163,7 @@ public:
 		// of arguments it can accept.
 		if(signed(arity) > getArity()) return(nullptr);
 
-		return(constructorTblStore()[arity]);
+		return(constructorVectStore()[arity]);
 	}
 
 	static NAN_METHOD(create);
@@ -179,9 +182,9 @@ public:
 	// Linkage for a table of overloaded constructors
 	// (overloads must have different arities).
 
-	static std::vector<jsConstructor *> &constructorTblStore() {
-		static std::vector<jsConstructor *> constructorTbl;
-		return(constructorTbl);
+	static std::vector<jsConstructor *> &constructorVectStore() {
+		static std::vector<jsConstructor *> constructorVect;
+		return(constructorVect);
 	}
 
 };
@@ -236,13 +239,14 @@ public:
 
 	template<typename ReturnType,typename... Args,typename... Policies>
 	const BindDefiner &function(const char* name,ReturnType(Bound::*method)(Args...),Policies...) const {
-		typedef MethodSignature<Bound, ReturnType, Args...> Method;
+		typedef MethodSignature<Bound, ReturnType, Args...> Signature;
 
-		Method::setMethod(name, method);
-		Method::setClassName(this->name);
-		// TODO BUG FIX: Use Method::getIndex to create a running counter of
-		// all methods with the same signature.
-		bindClass->addMethod(name,Method::call);
+		Signature::setClassName(this->name);
+		bindClass->addMethod(
+			name,
+			Signature::addMethod(name, method),
+			Signature::call
+		);
 
 		return(*this);
 	}

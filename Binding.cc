@@ -12,6 +12,7 @@ namespace nbind {
 	Persistent<Object> constructorStore;
 }
 
+// Linkage for module-wide error message.
 char *Bindings :: message;
 
 void Bindings :: registerClass(BindClassBase *bindClass) {
@@ -27,7 +28,11 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		for(auto &method : bindClass->getMethodList()) {
 			NanSetPrototypeTemplate(constructorTemplate, method.getName(),
-				NanNew<FunctionTemplate>(method.getMethod(), NanNew<Number>(42))->GetFunction());
+				NanNew<FunctionTemplate>(
+					method.getMethod(),
+					NanNew<Number>(method.getNum())
+				)->GetFunction()
+			);
 		}
 
 		const auto &constructor = constructorTemplate->GetFunction();

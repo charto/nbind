@@ -10,8 +10,6 @@ namespace nbind {
 // Everything must be static because the V8 JavaScript engine wants a single
 // function pointer to call.
 
-// TODO BUG FIX: For every type of method signature there's only one static methodStore pointer!
-
 template <class Bound, typename ReturnType, typename... Args>
 class MethodSignature {
 
@@ -20,38 +18,45 @@ public:
 	typedef ReturnType(Bound::*MethodType)(Args...);
 
 	struct MethodInfo {
-		MethodInfo() {}
 		MethodInfo(const char *name, MethodType method):name(name), method(method) {}
+
 		const char *name;
 		MethodType method;
 	};
 
 	struct SignatureInfo {
 		const char *className;
-		unsigned int methodCount = 0;
-		std::forward_list<struct MethodInfo> methodList;
+		std::vector<struct MethodInfo> methodVect;
 	};
 
-	static MethodType getMethod() {return(methodStore().method);}
-	static const char *getClassName() {return(signatureStore().className);}
-	static const char *getMethodName() {return(methodStore().name);}
-	static void setClassName(const char *className) {signatureStore().className = className;}
-	static void setMethod(const char *name, MethodType method) {
-		auto &signature = signatureStore();
-		auto &methodInfo = methodStore();
+	static const char *getClassName() {
+		return(signatureStore().className);
+	}
 
-		// printf("COUNT %d\n", signature.methodCount++);
-		signature.methodList.emplace_front(name, method);
+	static void setClassName(const char *className) {
+		signatureStore().className = className;
+	}
 
-		methodInfo.name = strdup(name);
-		methodInfo.method = method;
+	static MethodType getMethod(unsigned int num) {
+		return(signatureStore().methodVect[num].method);
+	}
+
+	static const char *getMethodName(unsigned int num) {
+		return(signatureStore().methodVect[num].name);
+	}
+
+	static unsigned int addMethod(const char *name, MethodType method) {
+		auto &methodVect = signatureStore().methodVect;
+
+		methodVect.emplace_back(name, method);
+
+		return(methodVect.size() - 1);
 	}
 
 	static NAN_METHOD(call) {
-		NanScope();
-		static constexpr decltype(args.Length()) arity=sizeof...(Args);
+		static constexpr decltype(args.Length()) arity = sizeof...(Args);
 
-		// printf("%p\n", args.Data()->IntegerValue());
+		NanScope();
 
 		if(args.Length() != arity) {
 //			printf("Wrong number of arguments to %s.%s: expected %ld, got %d.\n",getClassName(),getMethodName(),arity,args.Length());
@@ -72,7 +77,7 @@ public:
 				FromWire,
 				Args...
 			>::type
-		>::call(target, getMethod(), args);
+		>::call(target, getMethod(args.Data()->IntegerValue()), args);
 
 		char *message = Bindings::getError();
 
@@ -86,11 +91,6 @@ private:
 	static SignatureInfo &signatureStore() {
 		static SignatureInfo signatureInfo;
 		return(signatureInfo);
-	}
-
-	static MethodInfo &methodStore() {
-		static MethodInfo methodInfo;
-		return(methodInfo);
 	}
 
 };
