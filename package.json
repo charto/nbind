@@ -1,12 +1,12 @@
 {
   "name": "nbind",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Embind-style bindings generator for Node.js",
   "homepage": "https://github.com/charto/nbind",
   "bugs": {
     "url": "https://github.com/charto/nbind/issues"
   },
-  "license": "BSD-2-Clause",
+  "license": "MIT",
   "author": "Juha Järvi",
   "main": "gypiresolver.js",
   "repository": {
