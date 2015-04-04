@@ -1,0 +1,8 @@
+{
+	"dependencies": [
+		"nan"
+	],
+	"includes": [
+		"nbind.gypi"
+	]
+}

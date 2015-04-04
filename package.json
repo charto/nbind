@@ -8,7 +8,7 @@
   },
   "license": "BSD-2-Clause",
   "author": "Juha Järvi",
-  "main": "gypi.js",
+  "main": "gypiresolver.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/charto/nbind.git"
