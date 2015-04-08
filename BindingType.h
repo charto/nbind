@@ -49,15 +49,15 @@ struct BindingType<ArgType *> {
 	static inline WireType toWireType(ArgType arg);
 };
 
-#define DEFINE_NATIVE_BINDING_TYPE(type,decode,jsClass)         \
-template <> struct BindingType<type> {                          \
-	static inline type fromWireType(WireTypeLocal arg) {        \
-		return(arg->decode());                                  \
-	}                                                           \
-	                                                            \
-	static inline WireType toWireType(type arg) {               \
-		return(NanNew<jsClass>(arg));                           \
-	}                                                           \
+#define DEFINE_NATIVE_BINDING_TYPE(type,decode,jsClass)     \
+template <> struct BindingType<type> {                      \
+	static inline type fromWireType(WireTypeLocal arg) {    \
+		return(arg->decode());                              \
+	}                                                       \
+	                                                        \
+	static inline WireType toWireType(type arg) {           \
+		return(NanNew<jsClass>(arg));                       \
+	}                                                       \
 }
 
 DEFINE_NATIVE_BINDING_TYPE(bool,    BooleanValue,v8::Boolean);
@@ -70,14 +70,14 @@ DEFINE_NATIVE_BINDING_TYPE(int32_t, Int32Value,  v8::Int32);
 DEFINE_NATIVE_BINDING_TYPE(int16_t, Int32Value,  v8::Int32);
 DEFINE_NATIVE_BINDING_TYPE(int8_t,  Int32Value,  v8::Int32);
 
-#define DEFINE_STRING_BINDING_TYPE(type)										\
-template <> struct BindingType<type> {											\
-	static inline type fromWireType(WireTypeLocal arg);						\
-																				\
-	static inline WireType toWireType(type arg) {								\
-		auto buf = reinterpret_cast<const char *>(arg);							\
-		return(NanNew<v8::String>(buf, strlen(buf)));							\
-	}																			\
+#define DEFINE_STRING_BINDING_TYPE(type)                \
+template <> struct BindingType<type> {                  \
+	static inline type fromWireType(WireTypeLocal arg); \
+                                                        \
+	static inline WireType toWireType(type arg) {       \
+		auto buf = reinterpret_cast<const char *>(arg); \
+		return(NanNew<v8::String>(buf, strlen(buf)));   \
+	}                                                   \
 }
 
 /*
