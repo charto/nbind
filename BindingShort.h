@@ -19,7 +19,7 @@
 	template<class Bound> BindInvoker<Bound>::BindInvoker():definer(#Name)
 
 #define method(name) definer.function(#name, &Bound::name)
-#define constructor definer.constructor
+#define construct definer.constructor
 
 #define NBIND_INIT(moduleName) NODE_MODULE(moduleName, nbind::Bindings::initModule)
 
