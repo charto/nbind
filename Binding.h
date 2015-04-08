@@ -63,7 +63,7 @@ public:
 
 	template <typename... NanArgs>
 	static BindWrapper<Bound> *call(NanArgs... args) {
-		return(new BindWrapper<Bound>(Args::get(std::forward<NanArgs>(args)...)...));
+		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get()...));
 	}
 
 private:

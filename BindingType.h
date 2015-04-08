@@ -72,9 +72,7 @@ DEFINE_NATIVE_BINDING_TYPE(int8_t,  Int32Value,  v8::Int32);
 
 #define DEFINE_STRING_BINDING_TYPE(type)										\
 template <> struct BindingType<type> {											\
-	static inline type fromWireType(WireTypeLocal arg) {						\
-		return(reinterpret_cast<type>(*NanUtf8String(arg->ToString())));		\
-	}																			\
+	static inline type fromWireType(WireTypeLocal arg);						\
 																				\
 	static inline WireType toWireType(type arg) {								\
 		auto buf = reinterpret_cast<const char *>(arg);							\
@@ -107,12 +105,47 @@ template <> struct BindingType<void> {
 template<size_t Index,typename ArgType>
 struct FromWire {
 
-	typedef struct {
+	typedef struct inner {
 
 		template <typename NanArgs>
-		static ArgType get(const NanArgs &args) {
-			return(BindingType<ArgType>::fromWireType(args[Index]));
-		}
+		inner(const NanArgs &args) : val(BindingType<ArgType>::fromWireType(args[Index])) {}
+
+		ArgType get() {return(val);}
+
+		ArgType val;
+
+	} type;
+
+};
+
+template<size_t Index>
+struct FromWire<Index, const char *> {
+
+	typedef struct inner {
+
+		template <typename NanArgs>
+		inner(const NanArgs &args) : val(args[Index]->ToString()) {}
+
+		const char *get() {return(*val);}
+
+		NanUtf8String val;
+
+	} type;
+
+};
+
+template<size_t Index>
+struct FromWire<Index, const unsigned char *> {
+
+	typedef struct inner {
+
+		template <typename NanArgs>
+		inner(const NanArgs &args) : val(args[Index]->ToString()) {}
+
+		const unsigned char *get() {return(reinterpret_cast<const unsigned char *>(*val));}
+
+		NanUtf8String val;
+
 	} type;
 
 };

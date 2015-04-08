@@ -19,7 +19,7 @@ struct Caller<ReturnType,TypeList<Args...>> {
 
 	template <class Bound, typename Method, typename NanArgs>
 	static ReturnType call(Bound &target, Method method, NanArgs args) {
-		return((target.*method)(Args::get(args)...));
+		return((target.*method)(Args(args).get()...));
 	}
 
 };
