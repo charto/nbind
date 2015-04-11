@@ -22,6 +22,11 @@ struct Caller<ReturnType,TypeList<Args...>> {
 		return((target.*method)(Args(args).get()...));
 	}
 
+	template <typename Function, typename NanArgs>
+	static ReturnType call(Function func, NanArgs args) {
+		return((*func)(Args(args).get()...));
+	}
+
 };
 
 // Specialize Caller for void return type, because toWireType needs a non-void
@@ -33,6 +38,12 @@ struct Caller<void,TypeList<Args...>> {
 	template <class Bound, typename Method, typename NanArgs>
 	static std::nullptr_t call(Bound &target, Method method, NanArgs args) {
 		(target.*method)(Args::get(args)...);
+		return(nullptr);
+	}
+
+	template <typename Function, typename NanArgs>
+	static std::nullptr_t call(Function func, NanArgs args) {
+		(*func)(Args::get(args)...);
 		return(nullptr);
 	}
 

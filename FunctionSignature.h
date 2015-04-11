@@ -5,54 +5,45 @@
 
 namespace nbind {
 
-// Templated static class for each different method call signature exposed by the
+// Templated static class for each different function call signature exposed by the
 // Node.js plugin. Used to pass arguments and return values between C++ and Node.js.
 // Everything must be static because the V8 JavaScript engine wants a single
 // function pointer to call.
 
-template <class Bound, typename ReturnType, typename... Args>
-class MethodSignature {
+template <typename ReturnType, typename... Args>
+class FunctionSignature {
 
 public:
 
-	typedef ReturnType(Bound::*MethodType)(Args...);
+	typedef ReturnType(*FunctionType)(Args...);
 
-	struct MethodInfo {
+	struct FunctionInfo {
 
-		MethodInfo(const char *name, MethodType method):name(name), method(method) {}
+		FunctionInfo(const char *name, FunctionType func):name(name), func(func) {}
 
 		const char *name;
-		MethodType method;
+		FunctionType func;
 
 	};
 
 	struct SignatureInfo {
-		const char *className;
-		std::vector<struct MethodInfo> methodVect;
+		std::vector<struct FunctionInfo> funcVect;
 	};
 
-	static const char *getClassName() {
-		return(signatureStore().className);
-	}
-
-	static void setClassName(const char *className) {
-		signatureStore().className = className;
-	}
-
-	static MethodType getMethod(unsigned int num) {
-		return(signatureStore().methodVect[num].method);
+	static FunctionType getFunction(unsigned int num) {
+		return(signatureStore().funcVect[num].func);
 	}
 
 	static const char *getMethodName(unsigned int num) {
-		return(signatureStore().methodVect[num].name);
+		return(signatureStore().funcVect[num].name);
 	}
 
-	static unsigned int addMethod(const char *name, MethodType method) {
-		auto &methodVect = signatureStore().methodVect;
+	static unsigned int addFunction(const char *name, FunctionType func) {
+		auto &funcVect = signatureStore().funcVect;
 
-		methodVect.emplace_back(name, method);
+		funcVect.emplace_back(name, func);
 
-		return(methodVect.size() - 1);
+		return(funcVect.size() - 1);
 	}
 
 	static NAN_METHOD(call) {
@@ -65,9 +56,6 @@ public:
 			return(NanThrowError("Wrong number of arguments"));
 		}
 
-		v8::Local<v8::Object> targetWrapped = args.This();
-		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
-
 		Bindings::clearError();
 
 		// TODO: Check argument types!
@@ -79,7 +67,7 @@ public:
 				FromWire,
 				Args...
 			>::type
-		>::call(target, getMethod(args.Data()->IntegerValue()), args);
+		>::call(getFunction(args.Data()->IntegerValue()), args);
 
 		char *message = Bindings::getError();
 

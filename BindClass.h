@@ -44,18 +44,30 @@ public:
 	const char *getName() {return(name);}
 	void setName(const char *name) {this->name = name;}
 
+	bool isReady() {return(ready);}
+
+	void init() {ready = 1;}
+
 	void addMethod(const char *name, unsigned int num, jsMethod *signature) {
 		methodList.emplace_front(name, num, signature);
 	}
 
+	void addFunction(const char *name, unsigned int num, jsMethod *signature) {
+		funcList.emplace_front(name, num, signature);
+	}
+
 	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
+
+	std::forward_list<MethodDef> &getFunctionList() {return(funcList);}
 
 	jsMethod *createPtr;
 
 protected:
 
+	bool ready = 0;
 	const char *name;
 	std::forward_list<MethodDef> methodList;
+	std::forward_list<MethodDef> funcList;
 
 };
 

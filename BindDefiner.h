@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "FunctionSignature.h"
+#include "MethodSignature.h"
 #include "wire.h"
 
 namespace nbind {
@@ -45,6 +47,23 @@ public:
 		bindClass->addMethod(
 			name,
 			Signature::addMethod(name, method),
+			Signature::call
+		);
+
+		return(*this);
+	}
+
+	template<typename ReturnType, typename... Args, typename... Policies>
+	const BindDefiner &function(
+		const char* name,
+		ReturnType(*func)(Args...),
+		Policies...
+	) const {
+		typedef FunctionSignature<ReturnType, Args...> Signature;
+
+		bindClass->addFunction(
+			name,
+			Signature::addFunction(name, func),
 			Signature::call
 		);
 

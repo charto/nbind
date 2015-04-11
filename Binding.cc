@@ -8,9 +8,9 @@
 using namespace v8;
 using namespace nbind;
 
-namespace nbind {
-	Persistent<Object> constructorStore;
-}
+class NBind {};
+
+Persistent<Object> nbind::constructorStore;
 
 // Linkage for module-wide error message.
 char *Bindings :: message;
@@ -20,7 +20,18 @@ void Bindings :: registerClass(BindClassBase *bindClass) {
 }
 
 void Bindings :: initModule(Handle<Object> exports) {
+	// Register NBind a second time to make sure it's first on the list
+	// of classes and gets defined first, so pointers to it can be added
+	// to other classes to enforce its visibility in npm exports.
+	registerClass(BindClass<NBind>::getInstance());
+
+	Local<v8::Function> nBindConstructor;
+
 	for(auto *bindClass : getClassList()) {
+		if(bindClass->isReady()) continue;
+
+		bindClass->init();
+
 		Local<FunctionTemplate> constructorTemplate = NanNew<FunctionTemplate>(bindClass->createPtr);
 
 		constructorTemplate->SetClassName(NanNew<String>(bindClass->getName()));
@@ -35,13 +46,36 @@ void Bindings :: initModule(Handle<Object> exports) {
 			);
 		}
 
-		const auto &constructor = constructorTemplate->GetFunction();
+		for(auto &func : bindClass->getFunctionList()) {
+			NanSetTemplate(constructorTemplate, func.getName(),
+				NanNew<FunctionTemplate>(
+					func.getSignature(),
+					NanNew<Number>(func.getNum())
+				)->GetFunction()
+			);
+		}
 
-		exports->Set(NanNew<String>(bindClass->getName()), constructor);
+		// Add NBind references to other classes to enforce visibility.
+		if(bindClass == BindClass<NBind>::getInstance()) {
+			nBindConstructor = constructorTemplate->GetFunction();
+		} else {
+			NanSetTemplate(constructorTemplate, "NBind", nBindConstructor);
+		}
+
+		exports->Set(
+			NanNew<String>(bindClass->getName()),
+			constructorTemplate->GetFunction()
+		);
 	}
 
 	// Keep a persistent table of class constructor functions.
 	NanAssignPersistent(constructorStore, exports);
+}
+
+#include "BindingShort.h"
+
+NBIND_CLASS(NBind) {
+	construct<>();
 }
 
 #endif

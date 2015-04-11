@@ -47,7 +47,6 @@ private:
 
 #include "wire.h"
 #include "Caller.h"
-#include "MethodSignature.h"
 #include "BindClass.h"
 #include "BindDefiner.h"
 
