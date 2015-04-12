@@ -37,13 +37,13 @@ struct Caller<void,TypeList<Args...>> {
 
 	template <class Bound, typename Method, typename NanArgs>
 	static std::nullptr_t call(Bound &target, Method method, NanArgs args) {
-		(target.*method)(Args::get(args)...);
+		(target.*method)(Args(args).get()...);
 		return(nullptr);
 	}
 
 	template <typename Function, typename NanArgs>
 	static std::nullptr_t call(Function func, NanArgs args) {
-		(*func)(Args::get(args)...);
+		(*func)(Args(args).get()...);
 		return(nullptr);
 	}
 
