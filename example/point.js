@@ -1,4 +1,4 @@
-var Point=require('./build/Release/example.node').Point;
+var Point=require('bindings')('example').Point;
 
 var a=Point();
 var b=new Point(1,2);

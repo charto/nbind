@@ -8,7 +8,8 @@
     "install": "autogypi && node-gyp configure && node-gyp build"
   },
   "dependencies": {
-    "autogypi": "~0.0.2",
+    "autogypi": "~0.0.3",
+    "bindings": "~1.2.1",
     "node-gyp": "~1.0.3"
   }
 }

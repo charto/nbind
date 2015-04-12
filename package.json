@@ -9,12 +9,23 @@
   "license": "MIT",
   "author": "Juha Järvi",
   "main": "gypiresolver.js",
+  "scripts": {
+    "test": "cd test && autogypi && node-gyp configure && node-gyp build && tap test.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/charto/nbind.git"
   },
-  "os" : [ "darwin", "linux" ],
+  "os": [
+    "darwin",
+    "linux"
+  ],
   "dependencies": {
-    "nan": "^1.7.0"
+    "nan": "~1.7.0"
+  },
+  "devDependencies": {
+    "autogypi": "~0.0.3",
+    "bindings": "~1.2.1",
+    "node-gyp": "~1.0.3"
   }
 }

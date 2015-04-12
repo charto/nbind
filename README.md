@@ -1,11 +1,13 @@
 nbind
 =====
 
+[![build status](http://img.shields.io/travis/charto/nbind.svg)](http://travis-ci.org/charto/nbind) [![npm version](https://img.shields.io/npm/v/nbind.svg)](https://www.npmjs.com/package/nbind)
+
 nbind is a bindings generator for Node.js plugins inspired by [embind](http://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html) from [emscripten](http://emscripten.org). The bindings are built along with your C++ library without requiring any generated code, using C++11 templates and simple declarations.
 
 It's at an alpha stage and many embind features are missing, but for usage instructions much of the [embind documentation](http://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html) is appropriate. The included example (available on GitHub, omitted from npm package) illustrates the basic idea, a simple C++ Point class is defined with no JavaScript-related code. Only the following is required to add support for using it from JavaScript:
 
-    #include "Binding.h"
+    #include "nbind/Binding.h"
 
     using namespace nbind;
 
@@ -21,7 +23,7 @@ It's at an alpha stage and many embind features are missing, but for usage instr
 
 It can then be used like this:
 
-    var Point=require('./build/Release/example.node').Point;
+    var Point=require('bindings')('example').Point;
 
     var a=new Point(1,2);
     var b=new Point(10,20);
@@ -38,5 +40,5 @@ To compile the example, install required packages for both nbind and the example
 License
 =======
 
-[The MIT License](https://raw.githubusercontent.com/jjrv/nbind/master/LICENSE)
+[The MIT License](https://raw.githubusercontent.com/charto/nbind/master/LICENSE)
 Copyright (c) 2014-2015 BusFaster Ltd
