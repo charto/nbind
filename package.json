@@ -26,6 +26,7 @@
   "devDependencies": {
     "autogypi": "~0.0.3",
     "bindings": "~1.2.1",
-    "node-gyp": "~1.0.3"
+    "node-gyp": "~1.0.3",
+    "tap": "~0.7.1"
   }
 }
