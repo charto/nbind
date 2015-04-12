@@ -1,8 +1,8 @@
 {
 	"include_dirs": [
-		"."
+		"include"
 	],
-	"sources": ["Binding.cc"],
+	"sources": ["src/Binding.cc"],
 	"cflags": ["-std=c++11"],
 	"xcode_settings": {
 		"MACOSX_DEPLOYMENT_TARGET": "10.7",

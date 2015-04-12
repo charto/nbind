@@ -3,7 +3,7 @@
 
 #ifdef BUILDING_NODE_EXTENSION
 
-#include "Binding.h"
+#include "nbind/Binding.h"
 
 using namespace v8;
 using namespace nbind;
@@ -72,7 +72,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 	NanAssignPersistent(constructorStore, exports);
 }
 
-#include "BindingShort.h"
+#include "nbind/BindingShort.h"
 
 NBIND_CLASS(NBind) {
 	construct<>();

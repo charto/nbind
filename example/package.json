@@ -1,13 +1,14 @@
 {
   "name": "nbind-example",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Example of how to use nbind",
-  "license": "BSD-2-Clause",
+  "license": "MIT",
   "author": "Juha Järvi",
   "scripts": {
-    "prepublish": "node-gyp configure && node-gyp build"
+    "install": "autogypi && node-gyp configure && node-gyp build"
   },
   "dependencies": {
+    "autogypi": "~0.0.2",
     "node-gyp": "~1.0.3"
   }
 }

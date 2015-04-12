@@ -4,7 +4,7 @@
 #include "Point.h"
 
 #ifdef BUILDING_NODE_EXTENSION
-#include "Binding.h"
+#include "nbind/Binding.h"
 
 using namespace nbind;
 

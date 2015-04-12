@@ -2,7 +2,7 @@
 	"targets": [
 		{
 			"target_name": "example",
-			"includes": ["../nbind.gypi"],
+			"includes": ["auto.gypi"],
 			"sources": ["Point.cc"]
 		}
 	]
