@@ -1,6 +1,8 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+#include <cstring>
+
 class PrimitiveMethods {
 
 public:
@@ -18,6 +20,9 @@ public:
 
 	static int getStateStatic() {return(state);}
 	int getState() {return(state);}
+
+	static int strLengthStatic(const char *x) {return(strlen(x));}
+	int strLength(const unsigned char *x) {return(strlen(reinterpret_cast<const char *>(x)));}
 
 private:
 
@@ -45,6 +50,9 @@ NBIND_CLASS(PrimitiveMethods) {
 
 	method(getStateStatic);
 	method(getState);
+
+	method(strLengthStatic);
+	method(strLength);
 }
 
 #endif

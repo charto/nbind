@@ -4,20 +4,34 @@ var testModule = require('bindings')({
 	bindings: 'test'
 });
 
-var Prim = testModule.PrimitiveMethods;
-var prim = new Prim();
-
 test('Methods and primitive types', function(t) {
-	t.strictEqual(Prim.negateStatic(false), true);
-	t.strictEqual(prim.negate(false), true);
+	var Type = testModule.PrimitiveMethods;
+	var obj = new Type();
 
-	t.strictEqual(Prim.incrementIntStatic(1), 2);
-	t.strictEqual(prim.incrementInt(1), 2);
+	t.strictEqual(Type.negateStatic(false), true);
+	t.strictEqual(obj.negate(false), true);
 
-	t.type(Prim.incrementStateStatic(), 'undefined');
-	t.strictEqual(Prim.getStateStatic(), 1);
-	t.type(prim.incrementState(), 'undefined');
-	t.strictEqual(prim.getState(), 2);
+	t.strictEqual(Type.incrementIntStatic(1), 2);
+	t.strictEqual(obj.incrementInt(1), 2);
+
+	t.type(Type.incrementStateStatic(), 'undefined');
+	t.strictEqual(Type.getStateStatic(), 1);
+	t.type(obj.incrementState(), 'undefined');
+	t.strictEqual(obj.getState(), 2);
+
+	t.strictEqual(Type.strLengthStatic('foo'), 3);
+	t.strictEqual(obj.strLength('foobar'), 6);
+
+	t.end();
+});
+
+test('Getters and setters', function(t) {
+	var Type = testModule.GetterSetter;
+	var obj = new Type();
+
+	t.strictEqual(obj.x, 1);
+	t.strictEqual(obj.y, 2);
+	t.strictEqual(obj.z, 3);
 
 	t.end();
 });

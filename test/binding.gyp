@@ -5,6 +5,7 @@
 			"includes": ["auto.gypi"],
 			"sources": [
 				"PrimitiveMethods.cc",
+				"GetterSetter.cc",
 				"Test.cc"
 			]
 		}
