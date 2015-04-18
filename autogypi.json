@@ -4,5 +4,6 @@
 	],
 	"includes": [
 		"nbind.gypi"
-	]
+	],
+	"resolver": "gypiresolver.js"
 }
