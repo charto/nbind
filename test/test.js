@@ -33,5 +33,11 @@ test('Getters and setters', function(t) {
 	t.strictEqual(obj.y, 2);
 	t.strictEqual(obj.z, 3);
 
+	obj.y = 4;
+	obj.z = 5;
+
+	t.strictEqual(obj.y, 4);
+	t.strictEqual(obj.z, 5);
+
 	t.end();
 });

@@ -11,6 +11,9 @@ public:
 	int Gety() {return(y);}
 	int getZ() {return(z);}
 
+	void setY(int y) {this->y = y;}
+	void setZ(int z) {this->z = z;}
+
 private:
 
 	int x, y, z;
@@ -25,8 +28,8 @@ NBIND_CLASS(GetterSetter) {
 	construct<>();
 
 	getter(get_x);
-	getter(Gety);
-	getter(getZ);
+	getset(Gety, setY);
+	getset(getZ, setZ);
 }
 
 #endif
