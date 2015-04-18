@@ -87,6 +87,60 @@ public:
 		return(*this);
 	}
 
+	template<
+		typename FieldType,
+		typename... Policies
+	>
+	const BindDefiner &property(
+		const char* name,
+		FieldType(Bound::*getter)(),
+		Policies...
+	) const {
+		typedef MethodSignature<Bound, FieldType> Signature;
+
+		Signature::setClassName(this->name);
+		bindClass->addAccessor(
+			name,
+			Signature::addMethod(name, getter),
+			0,
+			Signature::call,
+			nullptr
+		);
+
+		return(*this);
+	}
+
+/*
+	TODO: support properties with both getters and setters.
+	template<
+		typename GetFieldType,
+		typename SetFieldType,
+		typename SetReturnType,
+		typename... Policies
+	>
+	const BindDefiner &property(
+		const char* name,
+		GetFieldType(Bound::*getter)(),
+		SetReturnType(Bound::*setter)(SetFieldType),
+		Policies...
+	) const {
+		typedef MethodSignature<Bound, GetFieldType> GetterSignature;
+		typedef MethodSignature<Bound, SetReturnType, SetFieldType> SetterSignature;
+
+		GetterSignature::setClassName(this->name);
+		SetterSignature::setClassName(this->name);
+		bindClass->addGetSet(
+			name,
+			GetterSignature::addMethod(name, getter),
+			SetterSignature::addMethod(name, setter),
+			GetterSignature::call,
+			SetterSignature::call
+		);
+
+		return(*this);
+	}
+*/
+
 private:
 
 	BindClass<Bound> *bindClass;

@@ -20,6 +20,13 @@
 
 #define method(name) definer.function(#name, &Bound::name)
 #define construct definer.constructor
+#define field(name) definer.field(#name, &Bound::name)
+#define getter(name) definer.property(#name, &Bound::name)
+// TODO: varargs macro also supporting this:
+//#define getter(name, get) definer.property(#name, &Bound::get)
+// TODO: varargs macro supporting these:
+// #define getset(name) definer.property(#name, &Bound::get##name, &Bound::set##name)
+// #define getset(name, get, set) definer.property(#name, &Bound::get, &Bound::set)
 
 #define NBIND_INIT(moduleName) NODE_MODULE(moduleName, nbind::Bindings::initModule)
 

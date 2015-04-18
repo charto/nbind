@@ -39,6 +39,28 @@ public:
 
 	};
 
+	class AccessorDef {
+
+	public:
+
+		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, jsMethod *getterSignature, jsMethod *setterSignature) :
+			name(name), getterNum(getterNum), setterNum(setterNum), getterSignature(getterSignature), setterSignature(setterSignature) {}
+
+		const char *getName() {return(name);}
+		unsigned int getGetterNum() {return(getterNum);}
+		unsigned int getSetterNum() {return(setterNum);}
+//		jsMethod *getSignature() {return(signature);}
+
+	private:
+
+		const char *name;
+		unsigned int getterNum;
+		unsigned int setterNum;
+		jsMethod *getterSignature;
+		jsMethod *setterSignature;
+
+	};
+
 	BindClassBase() {}
 
 	const char *getName() {return(name);}
@@ -56,9 +78,21 @@ public:
 		funcList.emplace_front(name, num, signature);
 	}
 
+	void addAccessor(
+		const char *name,
+		unsigned int getterNum,
+		unsigned int setterNum,
+		jsMethod *getterSignature,
+		jsMethod *setterSignature
+	) {
+		accessList.emplace_front(name, getterNum, setterNum, getterSignature, setterSignature);
+	}
+
 	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
 
 	std::forward_list<MethodDef> &getFunctionList() {return(funcList);}
+
+	std::forward_list<AccessorDef> &getAccessorList() {return(accessList);}
 
 	jsMethod *createPtr;
 
@@ -68,6 +102,7 @@ protected:
 	const char *name;
 	std::forward_list<MethodDef> methodList;
 	std::forward_list<MethodDef> funcList;
+	std::forward_list<AccessorDef> accessList;
 
 };
 

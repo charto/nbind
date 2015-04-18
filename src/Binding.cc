@@ -3,6 +3,8 @@
 
 #ifdef BUILDING_NODE_EXTENSION
 
+#include <cstring>
+
 #include "nbind/Binding.h"
 
 using namespace v8;
@@ -17,6 +19,47 @@ char *Bindings :: message;
 
 void Bindings :: registerClass(BindClassBase *bindClass) {
 	getClassList().emplace_front(bindClass);
+}
+
+NAN_GETTER(getget) {
+	NanScope();
+
+	NanReturnValue(NanNew<Number>(42));
+}
+
+// Convert getter names like "getFoo" into property names like "foo".
+// This could be so much more concisely written with regexps...
+const char *stripGetterPrefix(const char *name, char *&nameBuf) {
+	if((name[0] == 'G' || name[0] == 'g') && name[1] == 'e' && name[2] == 't') {
+		char c = name[3];
+
+		if(c == '_') {
+			// "Get_foo", "get_foo" => Remove 4 first characters.
+
+			name += 4;
+		} else if(c >= 'a' && c <= 'z') {
+			// "Getfoo", "getfoo" => Remove 3 first characters.
+
+			name += 3;
+		} else if(c >= 'A' && c <= 'Z') {
+			// "GetFoo", "getFoo" => Remove 3 first characters,
+			// make a modifiable copy and lowercase first letter.
+
+			if(nameBuf != nullptr) free(nameBuf);
+			nameBuf = strdup(name + 3);
+
+			if(nameBuf != nullptr) {
+				nameBuf[0] = c + ('a' - 'A');
+				name = nameBuf;
+			} else {
+				// Memory allocation failed.
+				// The world will soon end anyway, so just declare
+				// the getter without stripping the "get" prefix.
+			}
+		}
+	}
+
+	return(name);
 }
 
 void Bindings :: initModule(Handle<Object> exports) {
@@ -52,6 +95,18 @@ void Bindings :: initModule(Handle<Object> exports) {
 					func.getSignature(),
 					NanNew<Number>(func.getNum())
 				)->GetFunction()
+			);
+		}
+
+		Local<ObjectTemplate> proto = constructorTemplate->PrototypeTemplate();
+		char *nameBuf = nullptr;
+
+		for(auto &access : bindClass->getAccessorList()) {
+			proto->SetAccessor(
+				NanNew<String>(stripGetterPrefix(access.getName(), nameBuf)),
+				getget,
+				nullptr,
+				NanNew<Number>(access.getGetterNum())
 			);
 		}
 
