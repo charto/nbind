@@ -8,6 +8,12 @@
 
 namespace nbind {
 
+// Getters and setters come in pairs with a single associated metadata value.
+// We need to store separate getter and setter ID numbers as metadata
+// so they're packed as 16-bit values into a single 32-bit int.
+static constexpr unsigned int accessorGetterMask = 0xffff;
+static constexpr unsigned int accessorSetterShift = 16;
+
 // Templated static class for each different method call signature exposed by the
 // Node.js plugin. Used to pass arguments and return values between C++ and Node.js.
 // Everything must be static because the V8 JavaScript engine wants a single
@@ -69,13 +75,39 @@ public:
 		auto &&result = Caller<
 			ReturnType,
 			TypeList<>
-		>::call(target, getMethod(args.Data()->IntegerValue()), args);
+		>::call(target, getMethod(args.Data()->IntegerValue() & accessorGetterMask), args);
 
 		char *message = Bindings::getError();
 
 		if(message) return(NanThrowError(message));
 
 		NanReturnValue(BindingType<ReturnType>::toWireType(result));
+	}
+
+	static NAN_SETTER(setter) {
+		NanScope();
+
+		v8::Local<v8::Object> targetWrapped = args.This();
+		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
+
+		Bindings::clearError();
+
+		auto *valuePtr = &value;
+
+		// TODO: Check argument type!
+
+		Caller<
+			ReturnType,
+			typename emscripten::internal::MapWithIndex<
+				TypeList,
+				FromWire,
+				Args...
+			>::type
+		>::call(target, getMethod(args.Data()->IntegerValue() >> accessorSetterShift), valuePtr);
+
+		char *message = Bindings::getError();
+
+		if(message) NanThrowError(message);
 	}
 
 private:

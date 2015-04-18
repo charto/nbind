@@ -17,8 +17,10 @@ protected:
 
 	inline static NAN_METHOD(dummyMethod) {NanReturnNull();}
 	inline static NAN_GETTER(dummyGetter) {NanReturnNull();}
+	inline static NAN_SETTER(dummySetter) {}
 	typedef decltype(dummyMethod) jsMethod;
 	typedef decltype(dummyGetter) jsGetter;
+	typedef decltype(dummySetter) jsSetter;
 
 public:
 
@@ -45,13 +47,14 @@ public:
 
 	public:
 
-		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, jsGetter *getterSignature, jsMethod *setterSignature) :
+		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, jsGetter *getterSignature, jsSetter *setterSignature) :
 			name(name), getterNum(getterNum), setterNum(setterNum), getterSignature(getterSignature), setterSignature(setterSignature) {}
 
 		const char *getName() {return(name);}
 		unsigned int getGetterNum() {return(getterNum);}
 		unsigned int getSetterNum() {return(setterNum);}
 		jsGetter *getGetterSignature() {return(getterSignature);}
+		jsSetter *getSetterSignature() {return(setterSignature);}
 
 	private:
 
@@ -59,7 +62,7 @@ public:
 		unsigned int getterNum;
 		unsigned int setterNum;
 		jsGetter *getterSignature;
-		jsMethod *setterSignature;
+		jsSetter *setterSignature;
 
 	};
 
@@ -85,7 +88,7 @@ public:
 		unsigned int getterNum,
 		unsigned int setterNum,
 		jsGetter *getterSignature,
-		jsMethod *setterSignature
+		jsSetter *setterSignature
 	) {
 		accessList.emplace_front(name, getterNum, setterNum, getterSignature, setterSignature);
 	}

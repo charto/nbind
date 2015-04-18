@@ -99,8 +99,8 @@ void Bindings :: initModule(Handle<Object> exports) {
 			proto->SetAccessor(
 				NanNew<String>(stripGetterPrefix(access.getName(), nameBuf)),
 				access.getGetterSignature(),
-				nullptr,
-				NanNew<Number>(access.getGetterNum())
+				access.getSetterSignature(),
+				NanNew<Number>((access.getSetterNum() << accessorSetterShift) | access.getGetterNum())
 			);
 		}
 

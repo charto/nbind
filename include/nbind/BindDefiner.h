@@ -100,6 +100,7 @@ public:
 		typedef AccessorSignature<Bound, FieldType> GetterSignature;
 
 		GetterSignature::setClassName(this->name);
+
 		bindClass->addAccessor(
 			name,
 			GetterSignature::addMethod(name, getter),
@@ -111,8 +112,6 @@ public:
 		return(*this);
 	}
 
-/*
-	TODO: support properties with both getters and setters.
 	template<
 		typename GetFieldType,
 		typename SetFieldType,
@@ -125,22 +124,22 @@ public:
 		SetReturnType(Bound::*setter)(SetFieldType),
 		Policies...
 	) const {
-		typedef MethodSignature<Bound, GetFieldType> GetterSignature;
-		typedef MethodSignature<Bound, SetReturnType, SetFieldType> SetterSignature;
+		typedef AccessorSignature<Bound, GetFieldType> GetterSignature;
+		typedef AccessorSignature<Bound, SetReturnType, SetFieldType> SetterSignature;
 
 		GetterSignature::setClassName(this->name);
 		SetterSignature::setClassName(this->name);
-		bindClass->addGetSet(
+
+		bindClass->addAccessor(
 			name,
 			GetterSignature::addMethod(name, getter),
 			SetterSignature::addMethod(name, setter),
-			GetterSignature::call,
-			SetterSignature::call
+			GetterSignature::getter,
+			SetterSignature::setter
 		);
 
 		return(*this);
 	}
-*/
 
 private:
 
