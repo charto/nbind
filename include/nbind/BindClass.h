@@ -16,7 +16,9 @@ protected:
 	// Get type of method definitions to use in function pointers.
 
 	inline static NAN_METHOD(dummyMethod) {NanReturnNull();}
+	inline static NAN_GETTER(dummyGetter) {NanReturnNull();}
 	typedef decltype(dummyMethod) jsMethod;
+	typedef decltype(dummyGetter) jsGetter;
 
 public:
 
@@ -43,20 +45,20 @@ public:
 
 	public:
 
-		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, jsMethod *getterSignature, jsMethod *setterSignature) :
+		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, jsGetter *getterSignature, jsMethod *setterSignature) :
 			name(name), getterNum(getterNum), setterNum(setterNum), getterSignature(getterSignature), setterSignature(setterSignature) {}
 
 		const char *getName() {return(name);}
 		unsigned int getGetterNum() {return(getterNum);}
 		unsigned int getSetterNum() {return(setterNum);}
-//		jsMethod *getSignature() {return(signature);}
+		jsGetter *getGetterSignature() {return(getterSignature);}
 
 	private:
 
 		const char *name;
 		unsigned int getterNum;
 		unsigned int setterNum;
-		jsMethod *getterSignature;
+		jsGetter *getterSignature;
 		jsMethod *setterSignature;
 
 	};
@@ -82,7 +84,7 @@ public:
 		const char *name,
 		unsigned int getterNum,
 		unsigned int setterNum,
-		jsMethod *getterSignature,
+		jsGetter *getterSignature,
 		jsMethod *setterSignature
 	) {
 		accessList.emplace_front(name, getterNum, setterNum, getterSignature, setterSignature);

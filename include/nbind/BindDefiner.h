@@ -3,9 +3,10 @@
 
 #pragma once
 
+#include "wire.h"
 #include "FunctionSignature.h"
 #include "MethodSignature.h"
-#include "wire.h"
+#include "AccessorSignature.h"
 
 namespace nbind {
 
@@ -96,14 +97,14 @@ public:
 		FieldType(Bound::*getter)(),
 		Policies...
 	) const {
-		typedef MethodSignature<Bound, FieldType> Signature;
+		typedef AccessorSignature<Bound, FieldType> GetterSignature;
 
-		Signature::setClassName(this->name);
+		GetterSignature::setClassName(this->name);
 		bindClass->addAccessor(
 			name,
-			Signature::addMethod(name, getter),
+			GetterSignature::addMethod(name, getter),
 			0,
-			Signature::call,
+			GetterSignature::getter,
 			nullptr
 		);
 

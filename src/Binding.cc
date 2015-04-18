@@ -21,12 +21,6 @@ void Bindings :: registerClass(BindClassBase *bindClass) {
 	getClassList().emplace_front(bindClass);
 }
 
-NAN_GETTER(getget) {
-	NanScope();
-
-	NanReturnValue(NanNew<Number>(42));
-}
-
 // Convert getter names like "getFoo" into property names like "foo".
 // This could be so much more concisely written with regexps...
 const char *stripGetterPrefix(const char *name, char *&nameBuf) {
@@ -104,7 +98,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 		for(auto &access : bindClass->getAccessorList()) {
 			proto->SetAccessor(
 				NanNew<String>(stripGetterPrefix(access.getName(), nameBuf)),
-				getget,
+				access.getGetterSignature(),
 				nullptr,
 				NanNew<Number>(access.getGetterNum())
 			);

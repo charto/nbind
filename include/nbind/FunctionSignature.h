@@ -1,8 +1,8 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-// This file is very similar to MethodSignature.h so modify them together
-// or try to remove any duplication.
+// This file is very similar to MethodSignature.h and AccessorSignature.h
+// so modify them together or try to remove any duplication.
 
 #pragma once
 

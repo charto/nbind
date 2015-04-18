@@ -1,7 +1,7 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-// This file is very similar to FunctionSignature.h and AccessorSignature.h
+// This file is very similar to FunctionSignature.h and MethodSignature.h
 // so modify them together or try to remove any duplication.
 
 #pragma once
@@ -14,7 +14,7 @@ namespace nbind {
 // function pointer to call.
 
 template <class Bound, typename ReturnType, typename... Args>
-class MethodSignature {
+class AccessorSignature {
 
 public:
 
@@ -58,30 +58,17 @@ public:
 		return(methodVect.size() - 1);
 	}
 
-	static NAN_METHOD(call) {
-		static constexpr decltype(args.Length()) arity = sizeof...(Args);
-
+	static NAN_GETTER(getter) {
 		NanScope();
-
-		if(args.Length() != arity) {
-//			printf("Wrong number of arguments to %s.%s: expected %ld, got %d.\n",getClassName(),getMethodName(),arity,args.Length());
-			return(NanThrowError("Wrong number of arguments"));
-		}
 
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
 
 		Bindings::clearError();
 
-		// TODO: Check argument types!
-
 		auto &&result = Caller<
 			ReturnType,
-			typename emscripten::internal::MapWithIndex<
-				TypeList,
-				FromWire,
-				Args...
-			>::type
+			TypeList<>
 		>::call(target, getMethod(args.Data()->IntegerValue()), args);
 
 		char *message = Bindings::getError();
