@@ -6,21 +6,28 @@ var testModule = require('bindings')({
 
 test('Methods and primitive types', function(t) {
 	var Type = testModule.PrimitiveMethods;
-	var obj = new Type();
 
-	t.strictEqual(Type.negateStatic(false), true);
-	t.strictEqual(obj.negate(false), true);
+	(function() {
+		var obj = new Type();
 
-	t.strictEqual(Type.incrementIntStatic(1), 2);
-	t.strictEqual(obj.incrementInt(1), 2);
+		t.strictEqual(Type.negateStatic(false), true);
+		t.strictEqual(obj.negate(false), true);
 
-	t.type(Type.incrementStateStatic(), 'undefined');
-	t.strictEqual(Type.getStateStatic(), 1);
-	t.type(obj.incrementState(), 'undefined');
-	t.strictEqual(obj.getState(), 2);
+		t.strictEqual(Type.incrementIntStatic(1), 2);
+		t.strictEqual(obj.incrementInt(1), 2);
 
-	t.strictEqual(Type.strLengthStatic('foo'), 3);
-	t.strictEqual(obj.strLength('foobar'), 6);
+		t.type(Type.incrementStateStatic(), 'undefined');
+		t.strictEqual(Type.getStateStatic(), 1);
+		t.type(obj.incrementState(), 'undefined');
+		t.strictEqual(obj.getState(), 2);
+
+		t.strictEqual(Type.strLengthStatic('foo'), 3);
+		t.strictEqual(obj.strLength('foobar'), 6);
+	})();
+
+	gc();
+	// Destructor should have incremented state again.
+	t.strictEqual(Type.getStateStatic(), 3);
 
 	t.end();
 });

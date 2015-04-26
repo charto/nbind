@@ -8,6 +8,9 @@ class PrimitiveMethods {
 public:
 
 	PrimitiveMethods() {}
+	~PrimitiveMethods() {
+		state++;
+	}
 
 	static bool negateStatic(bool x) {return(!x);}
 	bool negate(bool x) {return(!x);}

@@ -10,7 +10,7 @@
   "author": "Juha Järvi",
   "main": "gypiresolver.js",
   "scripts": {
-    "test": "cd test && autogypi && node-gyp configure && node-gyp build && tap test.js"
+    "test": "cd test && autogypi && node-gyp configure && node-gyp build && tap --gc test.js"
   },
   "repository": {
     "type": "git",
