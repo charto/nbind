@@ -6,48 +6,20 @@
 
 #pragma once
 
+#include "CallableSignature.h"
+
 namespace nbind {
 
-// Templated static class for each different function call signature exposed by the
-// Node.js plugin. Used to pass arguments and return values between C++ and Node.js.
-// Everything must be static because the V8 JavaScript engine wants a single
-// function pointer to call.
+struct FunctionSignatureData {};
+
+// Wrapper for all C++ functions with matching argument and return types.
 
 template <typename ReturnType, typename... Args>
-class FunctionSignature {
+class FunctionSignature : public CallableSignature<ReturnType (*)(Args...), FunctionSignatureData> {
 
 public:
 
-	typedef ReturnType(*FunctionType)(Args...);
-
-	struct FunctionInfo {
-
-		FunctionInfo(const char *name, FunctionType func):name(name), func(func) {}
-
-		const char *name;
-		FunctionType func;
-
-	};
-
-	struct SignatureInfo {
-		std::vector<struct FunctionInfo> funcVect;
-	};
-
-	static FunctionType getFunction(unsigned int num) {
-		return(signatureStore().funcVect[num].func);
-	}
-
-	static const char *getMethodName(unsigned int num) {
-		return(signatureStore().funcVect[num].name);
-	}
-
-	static unsigned int addFunction(const char *name, FunctionType func) {
-		auto &funcVect = signatureStore().funcVect;
-
-		funcVect.emplace_back(name, func);
-
-		return(funcVect.size() - 1);
-	}
+	typedef CallableSignature<ReturnType (*)(Args...), FunctionSignatureData> Parent;
 
 	static NAN_METHOD(call) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);
@@ -70,20 +42,13 @@ public:
 				FromWire,
 				Args...
 			>::type
-		>::call(getFunction(args.Data()->IntegerValue()), args);
+		>::call(Parent::getFunction(args.Data()->IntegerValue()), args);
 
 		char *message = Bindings::getError();
 
 		if(message) return(NanThrowError(message));
 
 		NanReturnValue(BindingType<ReturnType>::toWireType(result));
-	}
-
-private:
-
-	static SignatureInfo &signatureStore() {
-		static SignatureInfo signatureInfo;
-		return(signatureInfo);
 	}
 
 };

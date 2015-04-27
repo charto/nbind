@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "CallableSignature.h"
+
 namespace nbind {
 
 // Getters and setters come in pairs with a single associated metadata value.
@@ -14,54 +16,25 @@ namespace nbind {
 static constexpr unsigned int accessorGetterMask = 0xffff;
 static constexpr unsigned int accessorSetterShift = 16;
 
-// Templated static class for each different method call signature exposed by the
-// Node.js plugin. Used to pass arguments and return values between C++ and Node.js.
-// Everything must be static because the V8 JavaScript engine wants a single
-// function pointer to call.
+struct AccessorSignatureData {
+	const char *className;
+};
+
+// Wrapper for all C++ getters and setters with matching class and data types.
 
 template <class Bound, typename ReturnType, typename... Args>
-class AccessorSignature {
+class AccessorSignature : public CallableSignature<ReturnType (Bound::*)(Args...), AccessorSignatureData> {
 
 public:
 
-	typedef ReturnType(Bound::*MethodType)(Args...);
-
-	struct MethodInfo {
-
-		MethodInfo(const char *name, MethodType method):name(name), method(method) {}
-
-		const char *name;
-		MethodType method;
-
-	};
-
-	struct SignatureInfo {
-		const char *className;
-		std::vector<struct MethodInfo> methodVect;
-	};
+	typedef CallableSignature<ReturnType (Bound::*)(Args...), AccessorSignatureData> Parent;
 
 	static const char *getClassName() {
-		return(signatureStore().className);
+		return(Parent::signatureStore().data.className);
 	}
 
 	static void setClassName(const char *className) {
-		signatureStore().className = className;
-	}
-
-	static MethodType getMethod(unsigned int num) {
-		return(signatureStore().methodVect[num].method);
-	}
-
-	static const char *getMethodName(unsigned int num) {
-		return(signatureStore().methodVect[num].name);
-	}
-
-	static unsigned int addMethod(const char *name, MethodType method) {
-		auto &methodVect = signatureStore().methodVect;
-
-		methodVect.emplace_back(name, method);
-
-		return(methodVect.size() - 1);
+		Parent::signatureStore().data.className = className;
 	}
 
 	static NAN_GETTER(getter) {
@@ -75,7 +48,7 @@ public:
 		auto &&result = Caller<
 			ReturnType,
 			TypeList<>
-		>::call(target, getMethod(args.Data()->IntegerValue() & accessorGetterMask), args);
+		>::call(target, Parent::getFunction(args.Data()->IntegerValue() & accessorGetterMask), args);
 
 		char *message = Bindings::getError();
 
@@ -103,18 +76,11 @@ public:
 				FromWire,
 				Args...
 			>::type
-		>::call(target, getMethod(args.Data()->IntegerValue() >> accessorSetterShift), valuePtr);
+		>::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift), valuePtr);
 
 		char *message = Bindings::getError();
 
 		if(message) NanThrowError(message);
-	}
-
-private:
-
-	static SignatureInfo &signatureStore() {
-		static SignatureInfo signatureInfo;
-		return(signatureInfo);
 	}
 
 };

@@ -47,7 +47,7 @@ public:
 		Signature::setClassName(this->name);
 		bindClass->addMethod(
 			name,
-			Signature::addMethod(name, method),
+			Signature::addFunction(name, method),
 			Signature::call
 		);
 
@@ -103,7 +103,7 @@ public:
 
 		bindClass->addAccessor(
 			name,
-			GetterSignature::addMethod(name, getter),
+			GetterSignature::addFunction(name, getter),
 			0,
 			GetterSignature::getter,
 			nullptr
@@ -132,8 +132,8 @@ public:
 
 		bindClass->addAccessor(
 			name,
-			GetterSignature::addMethod(name, getter),
-			SetterSignature::addMethod(name, setter),
+			GetterSignature::addFunction(name, getter),
+			SetterSignature::addFunction(name, setter),
 			GetterSignature::getter,
 			SetterSignature::setter
 		);
