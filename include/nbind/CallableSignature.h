@@ -10,12 +10,14 @@ namespace nbind {
 // Everything must be static because the V8 JavaScript engine wants a single
 // function pointer to call.
 
-template <typename FunctionType, typename SignatureData>
+template <class Signature>
 class CallableSignature {
 
 public:
 
 	struct FunctionInfo {
+
+		typedef typename Signature::FunctionType FunctionType;
 
 		FunctionInfo(const char *name, FunctionType func):name(name), func(func) {}
 
@@ -26,18 +28,14 @@ public:
 
 	struct SignatureInfo {
 		std::vector<struct FunctionInfo> funcVect;
-		SignatureData data;
+		typename Signature::Data data;
 	};
 
-	static FunctionType getFunction(unsigned int num) {
-		return(signatureStore().funcVect[num].func);
+	static const FunctionInfo &getFunction(unsigned int num) {
+		return(signatureStore().funcVect[num]);
 	}
 
-//	TODO: Maybe this function is useful for better error messages.
-//	static const char *getMethodName(unsigned int num) {
-//		return(signatureStore().funcVect[num].name);
-//	}
-
+	template <typename FunctionType>
 	static unsigned int addFunction(const char *name, FunctionType func) {
 		auto &funcVect = signatureStore().funcVect;
 

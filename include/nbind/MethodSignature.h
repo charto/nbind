@@ -2,7 +2,7 @@
 // Released under the MIT license, see LICENSE.
 
 // This file is very similar to FunctionSignature.h and AccessorSignature.h
-// so modify them together or try to remove any duplication.
+// so modify them together.
 
 #pragma once
 
@@ -12,16 +12,18 @@ namespace nbind {
 
 // Wrapper for all C++ methods with matching class, argument and return types.
 
-struct MethodSignatureData {
-	const char *className;
-};
-
 template <class Bound, typename ReturnType, typename... Args>
-class MethodSignature : public CallableSignature<ReturnType (Bound::*)(Args...), MethodSignatureData> {
+class MethodSignature : public CallableSignature<MethodSignature<Bound, ReturnType, Args...>> {
 
 public:
 
-	typedef CallableSignature<ReturnType (Bound::*)(Args...), MethodSignatureData> Parent;
+	typedef struct {
+		const char *className;
+	} Data;
+
+	typedef ReturnType(Bound::*FunctionType)(Args...);
+
+	typedef CallableSignature<MethodSignature> Parent;
 
 	static const char *getClassName() {
 		return(Parent::signatureStore().data.className);
@@ -55,7 +57,7 @@ public:
 				FromWire,
 				Args...
 			>::type
-		>::call(target, Parent::getFunction(args.Data()->IntegerValue()), args);
+		>::call(target, Parent::getFunction(args.Data()->IntegerValue()).func, args);
 
 		char *message = Bindings::getError();
 

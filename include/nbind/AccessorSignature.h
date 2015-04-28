@@ -2,7 +2,7 @@
 // Released under the MIT license, see LICENSE.
 
 // This file is very similar to FunctionSignature.h and MethodSignature.h
-// so modify them together or try to remove any duplication.
+// so modify them together.
 
 #pragma once
 
@@ -16,18 +16,20 @@ namespace nbind {
 static constexpr unsigned int accessorGetterMask = 0xffff;
 static constexpr unsigned int accessorSetterShift = 16;
 
-struct AccessorSignatureData {
-	const char *className;
-};
-
 // Wrapper for all C++ getters and setters with matching class and data types.
 
 template <class Bound, typename ReturnType, typename... Args>
-class AccessorSignature : public CallableSignature<ReturnType (Bound::*)(Args...), AccessorSignatureData> {
+class AccessorSignature : public CallableSignature<AccessorSignature<Bound, ReturnType, Args...>> {
 
 public:
 
-	typedef CallableSignature<ReturnType (Bound::*)(Args...), AccessorSignatureData> Parent;
+	typedef struct {
+		const char *className;
+	} Data;
+
+	typedef ReturnType(Bound::*FunctionType)(Args...);
+
+	typedef CallableSignature<AccessorSignature> Parent;
 
 	static const char *getClassName() {
 		return(Parent::signatureStore().data.className);
@@ -48,7 +50,7 @@ public:
 		auto &&result = Caller<
 			ReturnType,
 			TypeList<>
-		>::call(target, Parent::getFunction(args.Data()->IntegerValue() & accessorGetterMask), args);
+		>::call(target, Parent::getFunction(args.Data()->IntegerValue() & accessorGetterMask).func, args);
 
 		char *message = Bindings::getError();
 
@@ -76,7 +78,7 @@ public:
 				FromWire,
 				Args...
 			>::type
-		>::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift), valuePtr);
+		>::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
 
 		char *message = Bindings::getError();
 

@@ -2,7 +2,7 @@
 // Released under the MIT license, see LICENSE.
 
 // This file is very similar to MethodSignature.h and AccessorSignature.h
-// so modify them together or try to remove any duplication.
+// so modify them together.
 
 #pragma once
 
@@ -10,16 +10,18 @@
 
 namespace nbind {
 
-struct FunctionSignatureData {};
-
 // Wrapper for all C++ functions with matching argument and return types.
 
 template <typename ReturnType, typename... Args>
-class FunctionSignature : public CallableSignature<ReturnType (*)(Args...), FunctionSignatureData> {
+class FunctionSignature : public CallableSignature<FunctionSignature<ReturnType, Args...>> {
 
 public:
 
-	typedef CallableSignature<ReturnType (*)(Args...), FunctionSignatureData> Parent;
+	typedef struct {} Data;
+
+	typedef ReturnType(*FunctionType)(Args...);
+
+	typedef CallableSignature<FunctionSignature> Parent;
 
 	static NAN_METHOD(call) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);
@@ -42,7 +44,7 @@ public:
 				FromWire,
 				Args...
 			>::type
-		>::call(Parent::getFunction(args.Data()->IntegerValue()), args);
+		>::call(Parent::getFunction(args.Data()->IntegerValue()).func, args);
 
 		char *message = Bindings::getError();
 
