@@ -21,12 +21,12 @@
     "linux"
   ],
   "dependencies": {
-    "nan": "~1.7.0"
+    "nan": "~1.8.4"
   },
   "devDependencies": {
     "autogypi": "~0.0.3",
     "bindings": "~1.2.1",
     "node-gyp": "~1.0.3",
-    "tap": "~0.7.1"
+    "tap": "~1.0.1"
   }
 }
