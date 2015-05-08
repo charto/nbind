@@ -128,8 +128,11 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::type call(Args&&... args) {
-		return(BindingType<ReturnType>::fromWireType(func->Call(0, nullptr)));
+	typename BindingType<ReturnType>::type call(Args... args) {
+		v8::Handle<v8::Value> argv[] = {
+			(BindingType<Args>::toWireType(args))...
+		};
+		return(BindingType<ReturnType>::fromWireType(func->Call(sizeof...(Args), argv)));
 	}
 
 private:
