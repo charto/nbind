@@ -19,11 +19,13 @@ struct Caller<ReturnType,TypeList<Args...>> {
 
 	template <class Bound, typename Method, typename NanArgs>
 	static ReturnType call(Bound &target, Method method, NanArgs args) {
+		(void)args;	// Silence compile warning about unused parameter.
 		return((target.*method)(Args(args).get()...));
 	}
 
 	template <typename Function, typename NanArgs>
 	static ReturnType call(Function func, NanArgs args) {
+		(void)args;	// Silence compile warning about unused parameter.
 		return((*func)(Args(args).get()...));
 	}
 
@@ -37,12 +39,14 @@ struct Caller<void,TypeList<Args...>> {
 
 	template <class Bound, typename Method, typename NanArgs>
 	static std::nullptr_t call(Bound &target, Method method, NanArgs args) {
+		(void)args;	// Silence compile warning about unused parameter.
 		(target.*method)(Args(args).get()...);
 		return(nullptr);
 	}
 
 	template <typename Function, typename NanArgs>
 	static std::nullptr_t call(Function func, NanArgs args) {
+		(void)args;	// Silence compile warning about unused parameter.
 		(*func)(Args(args).get()...);
 		return(nullptr);
 	}
