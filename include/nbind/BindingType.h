@@ -17,7 +17,6 @@
 namespace nbind {
 
 typedef v8::Handle<v8::Value> WireType;
-typedef v8::Local<v8::Value> WireTypeLocal;
 
 // BindWrapper encapsulates a C++ object created in Node.js.
 
@@ -44,7 +43,7 @@ struct BindingType<ArgType *> {
 
 	typedef ArgType *type;
 
-	static inline ArgType *fromWireType(WireTypeLocal arg) {
+	static inline ArgType *fromWireType(WireType arg) {
 		v8::Local<v8::Object> argWrapped=arg->ToObject();
 		return(&node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->bound);
 	}
@@ -57,7 +56,7 @@ struct BindingType<ArgType *> {
 template <> struct BindingType<ArgType> {                   \
 	typedef ArgType type;                                   \
 	                                                        \
-	static inline type fromWireType(WireTypeLocal arg) {    \
+	static inline type fromWireType(WireType arg) {         \
 		return(arg->decode());                              \
 	}                                                       \
 	                                                        \
@@ -80,7 +79,7 @@ DEFINE_NATIVE_BINDING_TYPE(int8_t,  Int32Value,  v8::Int32);
 template <> struct BindingType<ArgType> {               \
 	typedef ArgType type;                               \
 	                                                    \
-	static inline type fromWireType(WireTypeLocal arg); \
+	static inline type fromWireType(WireType arg);      \
 	                                                    \
 	static inline WireType toWireType(type arg) {       \
 		auto buf = reinterpret_cast<const char *>(arg); \
@@ -109,7 +108,7 @@ template <> struct BindingType<void> {
 
 	typedef std::nullptr_t type;
 
-	static inline type fromWireType(WireTypeLocal arg) {return(nullptr);}
+	static inline type fromWireType(WireType arg) {return(nullptr);}
 
 	static inline WireType toWireType(std::nullptr_t arg) {return(NanUndefined());}
 
@@ -122,10 +121,6 @@ class cbFunction {
 
 public:
 	explicit cbFunction(const v8::Handle<v8::Function> &func) : func(new NanCallback(func)) {}
-//	explicit cbFunction(const v8::Handle<v8::Function> &func) {
-//		v8::Local<v8::Function> ptr = func;
-//		this->func = new NanCallback(ptr);
-//	}
 
 	template<typename... Args>
 	void operator()(Args&&... args) {
@@ -134,9 +129,6 @@ public:
 
 	template <typename ReturnType, typename... Args>
 	typename BindingType<ReturnType>::type call(Args&&... args) {
-//		fprintf(stderr, "%p\n",func->GetFunction());
-//		fprintf(stderr, "%p\n",func->Call(0, nullptr));
-//		fprintf(stderr, "%d\n",BindingType<ReturnType>::fromWireType(func->Call(0, nullptr)));
 		return(BindingType<ReturnType>::fromWireType(func->Call(0, nullptr)));
 	}
 
@@ -145,9 +137,7 @@ private:
 	void destroy() {
 		// This cannot be a destructor because cbFunction gets passed by value,
 		// so the destructor would get called multiple times.
-//		fprintf(stderr, "PTR1 %p\n", func);
 		delete(func);
-//		fprintf(stderr, "PTR2 %p\n", func);
 	}
 
 	NanCallback *func;
