@@ -6,6 +6,7 @@
 			"sources": [
 				"PrimitiveMethods.cc",
 				"GetterSetter.cc",
+				"Callback.cc",
 				"Test.cc"
 			]
 		}

@@ -48,3 +48,12 @@ test('Getters and setters', function(t) {
 
 	t.end();
 });
+
+test('Callbacks', function(t) {
+	var Type = testModule.Callback;
+
+	t.strictEqual(Type.callNegate(function(x) {return(!x);}, false), true);
+	t.strictEqual(Type.callIncrementInt(function(x) {return(x + 1);}, 1), 2);
+
+	t.end();
+});

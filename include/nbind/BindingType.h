@@ -28,7 +28,7 @@ public:
 
 	// Pass any constructor arguments to wrapped class.
 	template<typename... Args>
-		BindWrapper(Args&&... args):bound(args...) {}
+	BindWrapper(Args&&... args) : bound(args...) {}
 
 	static NAN_METHOD(create);
 
@@ -41,16 +41,22 @@ template <typename ArgType> struct BindingType;
 
 template <typename ArgType>
 struct BindingType<ArgType *> {
+
+	typedef ArgType *type;
+
 	static inline ArgType *fromWireType(WireTypeLocal arg) {
 		v8::Local<v8::Object> argWrapped=arg->ToObject();
 		return(&node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->bound);
 	}
 
 	static inline WireType toWireType(ArgType arg);
+
 };
 
-#define DEFINE_NATIVE_BINDING_TYPE(type,decode,jsClass)     \
-template <> struct BindingType<type> {                      \
+#define DEFINE_NATIVE_BINDING_TYPE(ArgType,decode,jsClass)  \
+template <> struct BindingType<ArgType> {                   \
+	typedef ArgType type;                                   \
+	                                                        \
 	static inline type fromWireType(WireTypeLocal arg) {    \
 		return(arg->decode());                              \
 	}                                                       \
@@ -70,10 +76,12 @@ DEFINE_NATIVE_BINDING_TYPE(int32_t, Int32Value,  v8::Int32);
 DEFINE_NATIVE_BINDING_TYPE(int16_t, Int32Value,  v8::Int32);
 DEFINE_NATIVE_BINDING_TYPE(int8_t,  Int32Value,  v8::Int32);
 
-#define DEFINE_STRING_BINDING_TYPE(type)                \
-template <> struct BindingType<type> {                  \
+#define DEFINE_STRING_BINDING_TYPE(ArgType)             \
+template <> struct BindingType<ArgType> {               \
+	typedef ArgType type;                               \
+	                                                    \
 	static inline type fromWireType(WireTypeLocal arg); \
-                                                        \
+	                                                    \
 	static inline WireType toWireType(type arg) {       \
 		auto buf = reinterpret_cast<const char *>(arg); \
 		return(NanNew<v8::String>(buf, strlen(buf)));   \
@@ -98,8 +106,52 @@ DEFINE_STRING_BINDING_TYPE(const char *);
 // void return values are passed to toWireType as null pointers.
 
 template <> struct BindingType<void> {
-	static inline std::nullptr_t fromWireType(WireTypeLocal arg) {return(nullptr);}
+
+	typedef std::nullptr_t type;
+
+	static inline type fromWireType(WireTypeLocal arg) {return(nullptr);}
+
 	static inline WireType toWireType(std::nullptr_t arg) {return(NanUndefined());}
+
+};
+
+class cbFunction {
+
+	template<size_t Index,typename ArgType>
+	friend struct FromWire;
+
+public:
+	explicit cbFunction(const v8::Handle<v8::Function> &func) : func(new NanCallback(func)) {}
+//	explicit cbFunction(const v8::Handle<v8::Function> &func) {
+//		v8::Local<v8::Function> ptr = func;
+//		this->func = new NanCallback(ptr);
+//	}
+
+	template<typename... Args>
+	void operator()(Args&&... args) {
+		return(call<void>(args...));
+	}
+
+	template <typename ReturnType, typename... Args>
+	typename BindingType<ReturnType>::type call(Args&&... args) {
+//		fprintf(stderr, "%p\n",func->GetFunction());
+//		fprintf(stderr, "%p\n",func->Call(0, nullptr));
+//		fprintf(stderr, "%d\n",BindingType<ReturnType>::fromWireType(func->Call(0, nullptr)));
+		return(BindingType<ReturnType>::fromWireType(func->Call(0, nullptr)));
+	}
+
+private:
+
+	void destroy() {
+		// This cannot be a destructor because cbFunction gets passed by value,
+		// so the destructor would get called multiple times.
+//		fprintf(stderr, "PTR1 %p\n", func);
+		delete(func);
+//		fprintf(stderr, "PTR2 %p\n", func);
+	}
+
+	NanCallback *func;
+
 };
 
 template<size_t Index,typename ArgType>
@@ -145,6 +197,24 @@ struct FromWire<Index, const unsigned char *> {
 		const unsigned char *get() {return(reinterpret_cast<const unsigned char *>(*val));}
 
 		NanUtf8String val;
+
+	} type;
+
+};
+
+template<size_t Index>
+struct FromWire<Index, cbFunction> {
+
+	typedef struct inner {
+
+		template <typename NanArgs>
+		inner(const NanArgs &args) : val(args[Index].template As<v8::Function>()) {}
+
+		~inner() {val.destroy();}
+
+		const cbFunction get() {return(val);}
+
+		cbFunction val;
 
 	} type;
 
