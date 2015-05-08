@@ -114,6 +114,15 @@ template <> struct BindingType<void> {
 
 };
 
+// cbFunction is a functor that can be called with any number of arguments of any type
+// compatible with JavaScript. Types are autodetected from a parameter pack.
+// Normally the function returns nothing when called, but it has a templated
+// call<ReturnType>() method that accepts the expected return type as a template
+// parameter, and handles conversion automatically.
+
+// TODO: support returning value objects. If the return value doesn't match the expected
+// type, maybe the returned object should be constructed with no arguments?
+
 class cbFunction {
 
 	template<size_t Index,typename ArgType>
@@ -147,6 +156,14 @@ private:
 
 };
 
+// FromWire converts JavaScript types into C++ types, usually with BindingType<>::fromWireType
+// but some types require additional temporary storage, such as a string converted to C style.
+// FromWire is a struct, so wrappers for all objects can be constructed as function arguments,
+// and their actual values passed to the called function are returned by the get() function.
+// The wrappers go out of scope and are destroyed at the end of the function call.
+
+// Handle most C++ types.
+
 template<size_t Index,typename ArgType>
 struct FromWire {
 
@@ -162,6 +179,8 @@ struct FromWire {
 	} type;
 
 };
+
+// Handle char pointers, which will receive a C string representation of any JavaScript value.
 
 template<size_t Index>
 struct FromWire<Index, const char *> {
@@ -179,6 +198,8 @@ struct FromWire<Index, const char *> {
 
 };
 
+// Automatically cast char to unsigned if the C++ function expects it.
+
 template<size_t Index>
 struct FromWire<Index, const unsigned char *> {
 
@@ -194,6 +215,9 @@ struct FromWire<Index, const unsigned char *> {
 	} type;
 
 };
+
+// Handle callback functions. They are converted to a functor of type cbFunction,
+// which can be called directly from C++ with arguments of any type.
 
 template<size_t Index>
 struct FromWire<Index, cbFunction> {
