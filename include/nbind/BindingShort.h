@@ -10,13 +10,13 @@
 #define NBIND_ERR(message) nbind::Bindings::setError(message)
 
 #define NBIND_CLASS(Name) \
-	template<class Bound> struct BindInvoker { \
-		BindInvoker(); \
+	template<class Bound> struct BindInvoker##Name { \
+		BindInvoker##Name(); \
 		nbind::BindClass<Name> linkage; \
 		nbind::BindDefiner<Name> definer; \
 	}; \
-	static struct BindInvoker<Name> bindInvoker##Name; \
-	template<class Bound> BindInvoker<Bound>::BindInvoker():definer(#Name)
+	static struct BindInvoker##Name<Name> bindInvoker##Name; \
+	template<class Bound> BindInvoker##Name<Bound>::BindInvoker##Name():definer(#Name)
 
 #define method(name) definer.function(#name, &Bound::name)
 #define construct definer.constructor
