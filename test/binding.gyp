@@ -7,6 +7,7 @@
 				"PrimitiveMethods.cc",
 				"GetterSetter.cc",
 				"Callback.cc",
+				"Value.cc",
 				"Test.cc"
 			]
 		}

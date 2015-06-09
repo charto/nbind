@@ -17,6 +17,7 @@
 namespace nbind {
 
 typedef v8::Handle<v8::Value> WireType;
+typedef v8::Local<v8::Value> *cbOutput;
 
 // BindWrapper encapsulates a C++ object created in Node.js.
 
@@ -36,7 +37,13 @@ public:
 	Bound bound;
 };
 
-template <typename ArgType> struct BindingType;
+class cbFunction;
+
+template <typename ArgType> struct BindingType {
+
+	static inline WireType toWireType(ArgType arg);
+
+};
 
 template <typename ArgType>
 struct BindingType<ArgType *> {
@@ -125,6 +132,9 @@ template <> struct BindingType<void> {
 
 class cbFunction {
 
+	template<typename ArgType>
+	friend struct BindingType;
+
 	template<size_t Index,typename ArgType>
 	friend struct FromWire;
 
@@ -133,7 +143,7 @@ public:
 
 	template<typename... Args>
 	void operator()(Args&&... args) {
-		return(call<void>(args...));
+		call<void>(args...);
 	}
 
 	template <typename ReturnType, typename... Args>
@@ -142,6 +152,15 @@ public:
 			(BindingType<Args>::toWireType(args))...
 		};
 		return(BindingType<ReturnType>::fromWireType(func->Call(sizeof...(Args), argv)));
+	}
+
+	// TODO: this should be the call operator of a child class, which has "cbOutput output" as a member.
+	template <typename ReturnType, typename... Args>
+	void call(cbOutput output, Args... args) {
+		v8::Handle<v8::Value> argv[] = {
+			(BindingType<Args>::toWireType(args))...
+		};
+		*output = func->Call(sizeof...(Args), argv);
 	}
 
 private:
@@ -155,6 +174,18 @@ private:
 	NanCallback *func;
 
 };
+
+template <typename ArgType>
+inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
+	// TODO: construct needs to be initialized to some JavaScript constructor registered for the value type.
+	cbFunction construct;
+	v8::Local<v8::Value> output;
+
+	arg.toJS(construct, &output);
+	construct.destroy();
+
+	return(output);
+}
 
 // FromWire converts JavaScript types into C++ types, usually with BindingType<>::fromWireType
 // but some types require additional temporary storage, such as a string converted to C style.

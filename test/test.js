@@ -57,3 +57,10 @@ test('Callbacks', function(t) {
 
 	t.end();
 });
+
+test('Value objects', function(t) {
+	var Type = testModule.Value;
+	var obj = new Type();
+
+	t.end();
+});
