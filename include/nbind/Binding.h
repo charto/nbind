@@ -113,9 +113,9 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 		NanScope();
 
 		unsigned int argc = args.Length();
-		std::vector<v8::Handle<v8::Value>> argv(argc);
+		v8::Handle<v8::Value> argv[argc];
 
-		// Copy arguments to a vector because the arguments object type
+		// Copy arguments to a new array because the arguments object type
 		// cannot be passed to another function call as-is.
 		for(unsigned int argNum = 0; argNum < argc; argNum++) {
 			argv[argNum] = args[argNum];
@@ -132,7 +132,7 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 		);
 
 		// Call the JavaScript constructor with the new operator.
-		NanReturnValue(constructor->NewInstance(argc, &argv[0]));
+		NanReturnValue(constructor->NewInstance(argc, argv));
 	}
 }
 
