@@ -121,15 +121,7 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 			argv[argNum] = args[argNum];
 		}
 
-		// Find constructor function by name from a perstistent copy of the
-		// module's exports object. This double lookup might be slow, but
-		// calling the constructor without "new" is wrong anyway.
-		v8::Local<v8::Object> constructorTbl = NanNew<v8::Object>(constructorStore);
-		auto constructor = v8::Handle<v8::Function>::Cast(
-			constructorTbl->Get(
-				NanNew<v8::String>(BindClass<Bound>::getInstance()->getName())
-			)
-		);
+		v8::Local<v8::Function> constructor = BindClass<Bound>::getInstance()->getConstructor();
 
 		// Call the JavaScript constructor with the new operator.
 		NanReturnValue(constructor->NewInstance(argc, argv));

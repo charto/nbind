@@ -62,7 +62,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 	// to other classes to enforce its visibility in npm exports.
 	registerClass(BindClass<NBind>::getInstance());
 
-	Local<v8::Function> nBindConstructor;
+	Local<Function> nBindConstructor;
 
 	for(auto *bindClass : getClassList()) {
 		if(bindClass->isReady()) continue;
@@ -111,9 +111,13 @@ void Bindings :: initModule(Handle<Object> exports) {
 			NanSetTemplate(constructorTemplate, "NBind", nBindConstructor);
 		}
 
+		Local<v8::Function> jsConstructor = constructorTemplate->GetFunction();
+
+		bindClass->setConstructor(jsConstructor);
+
 		exports->Set(
 			NanNew<String>(bindClass->getName()),
-			constructorTemplate->GetFunction()
+			jsConstructor
 		);
 	}
 

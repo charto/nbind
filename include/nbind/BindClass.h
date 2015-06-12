@@ -101,6 +101,14 @@ public:
 
 	jsMethod *createPtr;
 
+	void setConstructor(v8::Handle<v8::Function> func) {
+		jsConstructor.SetFunction(func);
+	}
+
+	v8::Handle<v8::Function> getConstructor() {
+		return(jsConstructor.GetFunction());
+	}
+
 protected:
 
 	bool ready = 0;
@@ -108,6 +116,8 @@ protected:
 	std::forward_list<MethodDef> methodList;
 	std::forward_list<MethodDef> funcList;
 	std::forward_list<AccessorDef> accessList;
+
+	NanCallback jsConstructor;
 
 };
 
