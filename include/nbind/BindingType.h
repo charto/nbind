@@ -17,7 +17,6 @@
 namespace nbind {
 
 typedef v8::Handle<v8::Value> WireType;
-typedef v8::Local<v8::Value> *cbOutput;
 
 // BindWrapper encapsulates a C++ object created in Node.js.
 
@@ -132,9 +131,6 @@ template <> struct BindingType<void> {
 
 class cbFunction {
 
-	template<typename ArgType>
-	friend struct BindingType;
-
 	template<size_t Index,typename ArgType>
 	friend struct FromWire;
 
@@ -154,13 +150,14 @@ public:
 		return(BindingType<ReturnType>::fromWireType(func->Call(sizeof...(Args), argv)));
 	}
 
-	// TODO: this should be the call operator of a child class, which has "cbOutput output" as a member.
-	template <typename ReturnType, typename... Args>
-	void call(cbOutput output, Args... args) {
-		v8::Handle<v8::Value> argv[] = {
-			(BindingType<Args>::toWireType(args))...
-		};
-		*output = func->Call(sizeof...(Args), argv);
+	void registerr() {
+		*globalTestValue() = func;
+	}
+
+	static NanCallback **globalTestValue() {
+		static NanCallback *value = nullptr;
+
+		return(&value);
 	}
 
 private:
@@ -168,20 +165,63 @@ private:
 	void destroy() {
 		// This cannot be a destructor because cbFunction gets passed by value,
 		// so the destructor would get called multiple times.
-		delete(func);
+// TODO: uncomment following line!
+//		delete(func);
 	}
 
 	NanCallback *func;
 
 };
 
+class cbOutput {
+
+	template<typename ArgType>
+	friend struct BindingType;
+
+public:
+
+	cbOutput(void *hmm, v8::Local<v8::Value> *output) :
+		output(output) {}
+
+	// This overload is identical to cbFunction.
+	template<typename... Args>
+	void operator()(Args&&... args) {
+		call<void>(args...);
+	}
+
+	template <typename ReturnType, typename... Args>
+	void call(Args... args) {
+		NanCallback *constructor = *cbFunction::globalTestValue();
+
+		if(constructor == nullptr) return;
+
+		v8::Handle<v8::Value> argv[] = {
+			(BindingType<Args>::toWireType(args))...
+		};
+
+		*output = constructor->GetFunction()->NewInstance(sizeof...(Args), argv);
+	}
+
+private:
+
+	void destroy() {
+		// This cannot be a destructor because cbOutput gets passed by value,
+		// so the destructor would get called multiple times.
+
+		// Nothing needed here at the moment...
+	}
+
+	v8::Local<v8::Value> *output;
+
+};
+
 template <typename ArgType>
 inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 	// TODO: construct needs to be initialized to some JavaScript constructor registered for the value type.
-	cbFunction construct;
-	v8::Local<v8::Value> output;
+	v8::Local<v8::Value> output = NanUndefined();
+	cbOutput construct(nullptr, &output);
 
-	arg.toJS(construct, &output);
+	arg.toJS(construct);
 	construct.destroy();
 
 	return(output);

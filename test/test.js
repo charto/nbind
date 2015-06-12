@@ -23,11 +23,20 @@ test('Methods and primitive types', function(t) {
 
 		t.strictEqual(Type.strLengthStatic('foo'), 3);
 		t.strictEqual(obj.strLength('foobar'), 6);
+
+		// Constructing with or without "new" operator should work identically.
+		obj = Type();
+
+		gc();
+		// Destructor should have incremented state.
+		t.strictEqual(Type.getStateStatic(), 3);
+
+		t.strictEqual(obj.negate(false), true);
 	})();
 
 	gc();
 	// Destructor should have incremented state again.
-	t.strictEqual(Type.getStateStatic(), 3);
+	t.strictEqual(Type.getStateStatic(), 4);
 
 	t.end();
 });
@@ -60,7 +69,17 @@ test('Callbacks', function(t) {
 
 test('Value objects', function(t) {
 	var Type = testModule.Value;
-	var obj = new Type();
+
+	t.type(Type.getCoord(), 'undefined');
+
+Type.registerr(function Coord(x, y) {
+	this.x = x;
+	this.y = y;
+});
+
+//	var obj = new Type();
+
+console.error(Type.getCoord());
 
 	t.end();
 });
