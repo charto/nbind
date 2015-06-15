@@ -113,7 +113,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		Local<v8::Function> jsConstructor = constructorTemplate->GetFunction();
 
-		bindClass->setConstructor(jsConstructor);
+		bindClass->setConstructorHandle(jsConstructor);
 
 		exports->Set(
 			NanNew<String>(bindClass->getName()),

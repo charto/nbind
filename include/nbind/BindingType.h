@@ -150,23 +150,14 @@ public:
 		return(BindingType<ReturnType>::fromWireType(func->Call(sizeof...(Args), argv)));
 	}
 
-	void registerr() {
-		*globalTestValue() = func;
-	}
-
-	static NanCallback **globalTestValue() {
-		static NanCallback *value = nullptr;
-
-		return(&value);
-	}
+	v8::Handle<v8::Function> getJsFunction() {return(func->GetFunction());}
 
 private:
 
 	void destroy() {
 		// This cannot be a destructor because cbFunction gets passed by value,
 		// so the destructor would get called multiple times.
-// TODO: uncomment following line!
-//		delete(func);
+		delete(func);
 	}
 
 	NanCallback *func;
@@ -180,8 +171,8 @@ class cbOutput {
 
 public:
 
-	cbOutput(void *hmm, v8::Local<v8::Value> *output) :
-		output(output) {}
+	cbOutput(v8::Local<v8::Function> jsConstructor, v8::Local<v8::Value> *output) :
+		jsConstructor(jsConstructor), output(output) {}
 
 	// This overload is identical to cbFunction.
 	template<typename... Args>
@@ -191,15 +182,14 @@ public:
 
 	template <typename ReturnType, typename... Args>
 	void call(Args... args) {
-		NanCallback *constructor = *cbFunction::globalTestValue();
-
-		if(constructor == nullptr) return;
+		// TODO: need to check if valueConstructor in BindClass has been initialized properly!
+//		if(constructor == nullptr) return;
 
 		v8::Handle<v8::Value> argv[] = {
 			(BindingType<Args>::toWireType(args))...
 		};
 
-		*output = constructor->GetFunction()->NewInstance(sizeof...(Args), argv);
+		*output = jsConstructor->NewInstance(sizeof...(Args), argv);
 	}
 
 private:
@@ -211,21 +201,25 @@ private:
 		// Nothing needed here at the moment...
 	}
 
+	v8::Local<v8::Function> jsConstructor;
 	v8::Local<v8::Value> *output;
 
 };
 
+/*
 template <typename ArgType>
 inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
-	// TODO: construct needs to be initialized to some JavaScript constructor registered for the value type.
 	v8::Local<v8::Value> output = NanUndefined();
-	cbOutput construct(nullptr, &output);
+	// TODO: need to check if valueConstructor in BindClass has been initialized properly!
+	v8::Local<v8::Function> jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructor();
+	cbOutput construct(jsConstructor, &output);
 
 	arg.toJS(construct);
 	construct.destroy();
 
 	return(output);
 }
+*/
 
 // FromWire converts JavaScript types into C++ types, usually with BindingType<>::fromWireType
 // but some types require additional temporary storage, such as a string converted to C style.

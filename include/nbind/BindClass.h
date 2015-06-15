@@ -101,12 +101,20 @@ public:
 
 	jsMethod *createPtr;
 
-	void setConstructor(v8::Handle<v8::Function> func) {
-		jsConstructor.SetFunction(func);
+	void setConstructorHandle(v8::Handle<v8::Function> func) {
+		jsConstructorHandle.SetFunction(func);
 	}
 
-	v8::Handle<v8::Function> getConstructor() {
-		return(jsConstructor.GetFunction());
+	v8::Handle<v8::Function> getConstructorHandle() {
+		return(jsConstructorHandle.GetFunction());
+	}
+
+	void setValueConstructor(v8::Handle<v8::Function> func) {
+		jsValueConstructor.SetFunction(func);
+	}
+
+	v8::Handle<v8::Function> getValueConstructor() {
+		return(jsValueConstructor.GetFunction());
 	}
 
 protected:
@@ -117,7 +125,8 @@ protected:
 	std::forward_list<MethodDef> funcList;
 	std::forward_list<AccessorDef> accessList;
 
-	NanCallback jsConstructor;
+	NanCallback jsConstructorHandle;
+	NanCallback jsValueConstructor;
 
 };
 
@@ -199,5 +208,18 @@ public:
 	}
 
 };
+
+template <typename ArgType>
+inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
+	v8::Local<v8::Value> output = NanUndefined();
+	// TODO: need to check if valueConstructor in BindClass has been initialized properly!
+	v8::Local<v8::Function> jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructor();
+	cbOutput construct(jsConstructor, &output);
+
+	arg.toJS(construct);
+	construct.destroy();
+
+	return(output);
+}
 
 } // namespace

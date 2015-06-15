@@ -33,7 +33,7 @@ public:
 	}
 
 	static void registerr(nbind::cbFunction func) {
-		func.registerr();
+		nbind::BindClass<Coord>::getInstance()->setValueConstructor(func.getJsFunction());
 	}
 
 };
