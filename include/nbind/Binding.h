@@ -36,6 +36,8 @@ private:
 
 	static char *message;
 
+	// Linkage for a list of all C++ class wrappers.
+
 	static std::forward_list<BindClassBase *> &getClassList() {
 		static std::forward_list<BindClassBase *> classList;
 		return(classList);

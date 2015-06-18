@@ -24,6 +24,8 @@ protected:
 
 public:
 
+	// Storage format for method definitions.
+
 	class MethodDef {
 
 	public:
@@ -42,6 +44,8 @@ public:
 		jsMethod *signature;
 
 	};
+
+	// Storage format for getter and setter definitions.
 
 	class AccessorDef {
 
@@ -75,13 +79,25 @@ public:
 
 	void init() {ready = 1;}
 
+	// Functions called when defining an nbind wrapper for a C++ class.
+	// They are called from the constructor of a static variable,
+	// meaning they run before any other code when the compiled library is loaded.
+	// They add pointers to the wrapped C++ functions, which will be bound to
+	// JavaScript prototype objects by the library's initModule function.
+
+	// Add a method to the class.
+
 	void addMethod(const char *name, unsigned int num, jsMethod *signature) {
 		methodList.emplace_front(name, num, signature);
 	}
 
+	// Add a static method to the class.
+
 	void addFunction(const char *name, unsigned int num, jsMethod *signature) {
 		funcList.emplace_front(name, num, signature);
 	}
+
+	// Add handlers for getting or setting a property of the class from JavaScript.
 
 	void addAccessor(
 		const char *name,
@@ -109,6 +125,16 @@ public:
 		return(jsConstructorHandle.GetFunction());
 	}
 
+	// A JavaScript "value constructor" creates a JavaScript object with
+	// the same data as the equivalent C++ object. This is used for small
+	// objects that should work like primitives, such as coordinate pairs.
+
+	// Calling C++ accessor methods would be much slower than reading
+	// directly from a JavaScript object. Also, using a JIT-compiled
+	// constructor function directly created an object with compact and
+	// fast, in-object properties:
+	// http://jayconrod.com/posts/52/a-tour-of-v8-object-representation
+
 	void setValueConstructor(cbFunction &func) {
 		if(jsValueConstructor != nullptr) delete(jsValueConstructor);
 		jsValueConstructor = new cbFunction(func);
@@ -130,6 +156,9 @@ protected:
 	cbFunction *jsValueConstructor = nullptr;
 
 };
+
+// Templated singleton class used for storing the definitions of a single
+// wrapped C++ class.
 
 template <class Bound> class BindClass : public BindClassBase {
 
@@ -189,11 +218,12 @@ public:
 
 	static NAN_METHOD(create);
 
-	// Use a static variable inside a static method to provide linkage for a
-	// singleton instance of this class.
+	// Use a static variable inside a static method to provide linkage for
+	// a singleton instance of this class.
+	// A reference will be stored in a list of all wrapped classes,
+	// so they can be initialized in initModule.
 
 	static BindClass *getInstance() {return(instanceStore());}
-	void setInstance(BindClass *instance) {instanceStore() = instance;}
 
 	static BindClass *&instanceStore() {
 		static BindClass *instance;
@@ -208,7 +238,21 @@ public:
 		return(constructorVect);
 	}
 
+private:
+
+	// Function called by the constructor, to permanently store a single
+	// object of this singleton class.
+
+	void setInstance(BindClass *instance) {instanceStore() = instance;}
+
 };
+
+// Call the toJS method of a returned C++ object, to convert it into a JavaScript object.
+// This is used when a C++ function is called from JavaScript.
+// A functor capable of calling the correct JavaScript constructor is passed to toJS,
+// which must call the functor with arguments in the correct order.
+// The functor calls the JavaScript constructor and writes a pointer to the resulting object
+// directly into a local handle called "output" which is returned to JavaScript.
 
 template <typename ArgType>
 inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
