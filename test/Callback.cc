@@ -11,9 +11,9 @@ public:
 
 	Callback() {}
 
-	static bool callNegate(nbind::cbFunction negate, bool x) {return(negate.call<bool>(x));}
+	static bool callNegate(nbind::cbFunction &negate, bool x) {return(negate.call<bool>(x));}
 
-	static int callIncrementInt(nbind::cbFunction incrementInt, int x) {return(incrementInt.call<int>(x));}
+	static int callIncrementInt(nbind::cbFunction &incrementInt, int x) {return(incrementInt.call<int>(x));}
 
 //	static void (*incrementState)(nbind::cbFunction);
 

@@ -135,7 +135,7 @@ class cbFunction {
 	friend struct FromWire;
 
 public:
-	explicit cbFunction(const v8::Handle<v8::Function> &func) : func(new NanCallback(func)) {}
+	explicit cbFunction(const v8::Handle<v8::Function> &func) : func(func) {}
 
 	template<typename... Args>
 	void operator()(Args&&... args) {
@@ -147,20 +147,14 @@ public:
 		v8::Handle<v8::Value> argv[] = {
 			(BindingType<Args>::toWireType(args))...
 		};
-		return(BindingType<ReturnType>::fromWireType(func->Call(sizeof...(Args), argv)));
+		return(BindingType<ReturnType>::fromWireType(func.Call(sizeof...(Args), argv)));
 	}
 
-	v8::Handle<v8::Function> getJsFunction() {return(func->GetFunction());}
+	v8::Handle<v8::Function> getJsFunction() {return(func.GetFunction());}
 
 private:
 
-	void destroy() {
-		// This cannot be a destructor because cbFunction gets passed by value,
-		// so the destructor would get called multiple times.
-		delete(func);
-	}
-
-	NanCallback *func;
+	NanCallback func;
 
 };
 
@@ -194,32 +188,10 @@ public:
 
 private:
 
-	void destroy() {
-		// This cannot be a destructor because cbOutput gets passed by value,
-		// so the destructor would get called multiple times.
-
-		// Nothing needed here at the moment...
-	}
-
 	v8::Local<v8::Function> jsConstructor;
 	v8::Local<v8::Value> *output;
 
 };
-
-/*
-template <typename ArgType>
-inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
-	v8::Local<v8::Value> output = NanUndefined();
-	// TODO: need to check if valueConstructor in BindClass has been initialized properly!
-	v8::Local<v8::Function> jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructor();
-	cbOutput construct(jsConstructor, &output);
-
-	arg.toJS(construct);
-	construct.destroy();
-
-	return(output);
-}
-*/
 
 // FromWire converts JavaScript types into C++ types, usually with BindingType<>::fromWireType
 // but some types require additional temporary storage, such as a string converted to C style.
@@ -285,16 +257,14 @@ struct FromWire<Index, const unsigned char *> {
 // which can be called directly from C++ with arguments of any type.
 
 template<size_t Index>
-struct FromWire<Index, cbFunction> {
+struct FromWire<Index, cbFunction &> {
 
 	typedef struct inner {
 
 		template <typename NanArgs>
 		inner(const NanArgs &args) : val(args[Index].template As<v8::Function>()) {}
 
-		~inner() {val.destroy();}
-
-		const cbFunction get() {return(val);}
+		cbFunction &get() {return(val);}
 
 		cbFunction val;
 

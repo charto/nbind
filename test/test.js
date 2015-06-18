@@ -70,7 +70,7 @@ test('Callbacks', function(t) {
 test('Value objects', function(t) {
 	var Type = testModule.Value;
 
-//	t.type(Type.getCoord(), 'undefined');
+	t.type(Type.getCoord(), 'undefined');
 
 Type.registerr(function Coord(x, y) {
 	this.x = x;
