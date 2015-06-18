@@ -135,7 +135,10 @@ class cbFunction {
 	friend struct FromWire;
 
 public:
+
 	explicit cbFunction(const v8::Handle<v8::Function> &func) : func(func) {}
+
+	explicit cbFunction(const cbFunction &func) : func(func.getJsFunction()) {}
 
 	template<typename... Args>
 	void operator()(Args&&... args) {
@@ -150,7 +153,7 @@ public:
 		return(BindingType<ReturnType>::fromWireType(func.Call(sizeof...(Args), argv)));
 	}
 
-	v8::Handle<v8::Function> getJsFunction() {return(func.GetFunction());}
+	v8::Handle<v8::Function> getJsFunction() const {return(func.GetFunction());}
 
 private:
 
@@ -165,7 +168,7 @@ class cbOutput {
 
 public:
 
-	cbOutput(v8::Local<v8::Function> jsConstructor, v8::Local<v8::Value> *output) :
+	cbOutput(cbFunction &jsConstructor, v8::Local<v8::Value> *output) :
 		jsConstructor(jsConstructor), output(output) {}
 
 	// This overload is identical to cbFunction.
@@ -176,19 +179,16 @@ public:
 
 	template <typename ReturnType, typename... Args>
 	void call(Args... args) {
-		// TODO: need to check if valueConstructor in BindClass has been initialized properly!
-//		if(constructor == nullptr) return;
-
 		v8::Handle<v8::Value> argv[] = {
 			(BindingType<Args>::toWireType(args))...
 		};
 
-		*output = jsConstructor->NewInstance(sizeof...(Args), argv);
+		*output = jsConstructor.getJsFunction()->NewInstance(sizeof...(Args), argv);
 	}
 
 private:
 
-	v8::Local<v8::Function> jsConstructor;
+	cbFunction &jsConstructor;
 	v8::Local<v8::Value> *output;
 
 };

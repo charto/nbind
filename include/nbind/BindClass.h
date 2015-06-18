@@ -109,7 +109,8 @@ public:
 		return(jsConstructorHandle.GetFunction());
 	}
 
-	void setValueConstructor(v8::Handle<v8::Function> func) {
+	void setValueConstructor(cbFunction &func) {
+		if(jsValueConstructor != nullptr) delete(jsValueConstructor);
 		jsValueConstructor = new cbFunction(func);
 	}
 
@@ -126,7 +127,7 @@ protected:
 	std::forward_list<AccessorDef> accessList;
 
 	NanCallback jsConstructorHandle;
-	cbFunction *jsValueConstructor;
+	cbFunction *jsValueConstructor = nullptr;
 
 };
 
@@ -212,11 +213,10 @@ public:
 template <typename ArgType>
 inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 	v8::Local<v8::Value> output = NanUndefined();
-	cbFunction *func = BindClass<ArgType>::getInstance()->getValueConstructor();
+	cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructor();
 
-	if(func != nullptr) {
-		v8::Local<v8::Function> jsConstructor = func->getJsFunction();
-		cbOutput construct(jsConstructor, &output);
+	if(jsConstructor != nullptr) {
+		cbOutput construct(*jsConstructor, &output);
 
 		arg.toJS(construct);
 	}
