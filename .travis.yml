@@ -22,8 +22,6 @@ addons:
 matrix:
   allow_failures:
     - env: CC=clang-3.6 CXX=clang++-3.6
-      node_js: "iojs"
-    - env: CC=clang-3.6 CXX=clang++-3.6
       node_js: "0.10"
     - env: CC=clang-3.6 CXX=clang++-3.6
       node_js: "0.12"
