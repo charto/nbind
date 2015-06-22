@@ -70,14 +70,14 @@ public:
 		auto *valuePtr = &value;
 
 		if(!AccessorSignature::typesAreValid(valuePtr)) {
-			return(NanThrowTypeError("Type mismatch"));
+			NanThrowTypeError("Type mismatch");
+		} else {
+			Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
+
+			char *message = Bindings::getError();
+
+			if(message) NanThrowError(message);
 		}
-
-		Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
-
-		char *message = Bindings::getError();
-
-		if(message) NanThrowError(message);
 	}
 
 };

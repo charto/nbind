@@ -95,9 +95,10 @@ Type.registerr(function Coord(x, y) {
 	this.y = y;
 });
 
-//	var obj = new Type();
+	var xy = Type.getCoord();
 
-console.error(Type.getCoord());
+	t.strictEqual(xy.x, 1);
+	t.strictEqual(xy.y, 2);
 
 	t.end();
 });

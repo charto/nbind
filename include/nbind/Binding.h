@@ -123,7 +123,7 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 			argv[argNum] = args[argNum];
 		}
 
-		v8::Local<v8::Function> constructor = BindClass<Bound>::getInstance()->getConstructorHandle();
+		v8::Handle<v8::Function> constructor = BindClass<Bound>::getInstance()->getConstructorHandle();
 
 		// Call the JavaScript constructor with the new operator.
 		NanReturnValue(constructor->NewInstance(argc, argv));
