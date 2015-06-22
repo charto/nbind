@@ -13,7 +13,7 @@ namespace nbind {
 // Wrapper for all C++ functions with matching argument and return types.
 
 template <typename ReturnType, typename... Args>
-class FunctionSignature : public CallableSignature<FunctionSignature<ReturnType, Args...>> {
+class FunctionSignature : public CallableSignature<FunctionSignature<ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
@@ -21,7 +21,7 @@ public:
 
 	typedef ReturnType(*FunctionType)(Args...);
 
-	typedef CallableSignature<FunctionSignature> Parent;
+	typedef CallableSignature<FunctionSignature, ReturnType, Args...> Parent;
 
 	static NAN_METHOD(call) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);
@@ -33,22 +33,26 @@ public:
 			return(NanThrowError("Wrong number of arguments"));
 		}
 
+		if(!FunctionSignature::typesAreValid(args)) {
+			return(NanThrowTypeError("Type mismatch"));
+		}
+
 		Bindings::clearError();
 
-		// TODO: Check argument types!
-
-		auto &&result = Caller<
+		typedef Caller<
 			ReturnType,
 			typename emscripten::internal::MapWithIndex<
 				TypeList,
 				FromWire,
 				Args...
 			>::type
-		>::call(Parent::getFunction(args.Data()->IntegerValue()).func, args);
+		> caller;
+
+		auto result = caller::call(Parent::getFunction(args.Data()->IntegerValue()).func, args);
 
 		char *message = Bindings::getError();
 
-		if(message) return(NanThrowError(message));
+		if(message != nullptr) return(NanThrowError(message));
 
 		NanReturnValue(BindingType<ReturnType>::toWireType(result));
 	}

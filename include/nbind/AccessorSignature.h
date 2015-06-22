@@ -19,7 +19,7 @@ static constexpr unsigned int accessorSetterShift = 16;
 // Wrapper for all C++ getters and setters with matching class and data types.
 
 template <class Bound, typename ReturnType, typename... Args>
-class AccessorSignature : public CallableSignature<AccessorSignature<Bound, ReturnType, Args...>> {
+class AccessorSignature : public CallableSignature<AccessorSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
@@ -29,7 +29,7 @@ public:
 
 	typedef ReturnType(Bound::*FunctionType)(Args...);
 
-	typedef CallableSignature<AccessorSignature> Parent;
+	typedef CallableSignature<AccessorSignature, ReturnType, Args...> Parent;
 
 	static const char *getClassName() {
 		return(Parent::signatureStore().data.className);
@@ -69,7 +69,9 @@ public:
 
 		auto *valuePtr = &value;
 
-		// TODO: Check argument type!
+		if(!AccessorSignature::typesAreValid(valuePtr)) {
+			return(NanThrowTypeError("Type mismatch"));
+		}
 
 		Caller<
 			ReturnType,

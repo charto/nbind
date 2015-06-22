@@ -13,7 +13,7 @@ namespace nbind {
 // Wrapper for all C++ methods with matching class, argument and return types.
 
 template <class Bound, typename ReturnType, typename... Args>
-class MethodSignature : public CallableSignature<MethodSignature<Bound, ReturnType, Args...>> {
+class MethodSignature : public CallableSignature<MethodSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
@@ -23,7 +23,7 @@ public:
 
 	typedef ReturnType(Bound::*FunctionType)(Args...);
 
-	typedef CallableSignature<MethodSignature> Parent;
+	typedef CallableSignature<MethodSignature, ReturnType, Args...> Parent;
 
 	static const char *getClassName() {
 		return(Parent::signatureStore().data.className);
@@ -43,14 +43,16 @@ public:
 			return(NanThrowError("Wrong number of arguments"));
 		}
 
+		if(!MethodSignature::typesAreValid(args)) {
+			return(NanThrowTypeError("Type mismatch"));
+		}
+
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
 
 		Bindings::clearError();
 
-		// TODO: Check argument types!
-
-		auto &&result = Caller<
+		auto result = Caller<
 			ReturnType,
 			typename emscripten::internal::MapWithIndex<
 				TypeList,

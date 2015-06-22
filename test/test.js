@@ -24,6 +24,10 @@ test('Methods and primitive types', function(t) {
 		t.strictEqual(Type.strLengthStatic('foo'), 3);
 		t.strictEqual(obj.strLength('foobar'), 6);
 
+		t.throws(function() {
+			Type.strLengthStatic({});
+		}, {message: 'Type mismatch'});
+
 		// Constructing with or without "new" operator should work identically.
 		obj = Type();
 
@@ -48,12 +52,19 @@ test('Getters and setters', function(t) {
 	t.strictEqual(obj.x, 1);
 	t.strictEqual(obj.y, 2);
 	t.strictEqual(obj.z, 3);
+	t.strictEqual(obj.t, 6);
 
 	obj.y = 4;
 	obj.z = 5;
+	obj.t = 'foo';
 
 	t.strictEqual(obj.y, 4);
 	t.strictEqual(obj.z, 5);
+	t.strictEqual(obj.t, 3);
+
+	t.throws(function() {
+		obj.t = 0;
+	}, {message: 'Type mismatch'});
 
 	t.end();
 });
@@ -63,6 +74,10 @@ test('Callbacks', function(t) {
 
 	t.strictEqual(Type.callNegate(function(x) {return(!x);}, false), true);
 	t.strictEqual(Type.callIncrementInt(function(x) {return(x + 1);}, 1), 2);
+
+	t.throws(function() {
+		Type.callNegate({}, true);
+	}, {message: 'Type mismatch'});
 
 	t.end();
 });

@@ -38,19 +38,34 @@ public:
 
 class cbFunction;
 
+// Generic C++ object.
+
 template <typename ArgType> struct BindingType {
+
+	typedef ArgType type;
+
+	static inline bool checkType(WireType arg) {
+		return(true);
+	}
 
 	static inline WireType toWireType(ArgType arg);
 
 };
+
+// Object pointer.
 
 template <typename ArgType>
 struct BindingType<ArgType *> {
 
 	typedef ArgType *type;
 
+	static inline bool checkType(WireType arg) {
+		// TODO: Also check type of object!
+		return(arg->IsObject());
+	}
+
 	static inline ArgType *fromWireType(WireType arg) {
-		v8::Local<v8::Object> argWrapped=arg->ToObject();
+		v8::Local<v8::Object> argWrapped = arg->ToObject();
 		return(&node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->bound);
 	}
 
@@ -61,6 +76,10 @@ struct BindingType<ArgType *> {
 #define DEFINE_NATIVE_BINDING_TYPE(ArgType,decode,jsClass)  \
 template <> struct BindingType<ArgType> {                   \
 	typedef ArgType type;                                   \
+	                                                        \
+	static inline bool checkType(WireType arg) {            \
+		return(true);                                       \
+	}                                                       \
 	                                                        \
 	static inline type fromWireType(WireType arg) {         \
 		return(arg->decode());                              \
@@ -85,7 +104,9 @@ DEFINE_NATIVE_BINDING_TYPE(int8_t,  Int32Value,  v8::Int32);
 template <> struct BindingType<ArgType> {               \
 	typedef ArgType type;                               \
 	                                                    \
-	static inline type fromWireType(WireType arg);      \
+	static inline bool checkType(WireType arg) {        \
+		return(arg->IsString());                        \
+	}                                                   \
 	                                                    \
 	static inline WireType toWireType(type arg) {       \
 		auto buf = reinterpret_cast<const char *>(arg); \
@@ -117,6 +138,16 @@ template <> struct BindingType<void> {
 	static inline type fromWireType(WireType arg) {return(nullptr);}
 
 	static inline WireType toWireType(std::nullptr_t arg) {return(NanUndefined());}
+
+};
+
+template <> struct BindingType<cbFunction &> {
+
+	typedef cbFunction &type;
+
+	static inline bool checkType(WireType arg) {
+		return(arg->IsFunction());
+	}
 
 };
 
@@ -190,6 +221,20 @@ private:
 
 	cbFunction &jsConstructor;
 	v8::Local<v8::Value> *output;
+
+};
+
+template<size_t Index,typename ArgType>
+struct CheckWire {
+
+	typedef struct {
+
+		template <typename NanArgs>
+		static inline bool check(const NanArgs &args) {
+			return(BindingType<ArgType>::checkType(args[Index]));
+		}
+
+	} type;
 
 };
 

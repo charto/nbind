@@ -10,7 +10,7 @@ namespace nbind {
 // Everything must be static because the V8 JavaScript engine wants a single
 // function pointer to call.
 
-template <class Signature>
+template <class Signature, typename ReturnType, typename... Args>
 class CallableSignature {
 
 public:
@@ -42,6 +42,19 @@ public:
 		funcVect.emplace_back(name, func);
 
 		return(funcVect.size() - 1);
+	}
+
+	template <typename NanArgs>
+	static bool typesAreValid(NanArgs args) {
+		typedef Checker<
+			typename emscripten::internal::MapWithIndex<
+				TypeList,
+				CheckWire,
+				Args...
+			>::type
+		> checker;
+
+		return(checker::typesAreValid(args));
 	}
 
 protected:

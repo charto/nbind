@@ -1,22 +1,29 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+#include <cstring>
+
 class GetterSetter {
 
 public:
 
-	GetterSetter() : x(1), y(2), z(3) {}
+	GetterSetter() {}
 
 	int get_x() {return(x);}
 	int Gety() {return(y);}
 	int getZ() {return(z);}
 
-	void setY(int y) {this->y = y;}
+	int gett() {return(strlen(t));}
+
+	void Sety(int y) {this->y = y;}
 	void setZ(int z) {this->z = z;}
+
+	void sett(const char *t) {this->t = strdup(t);}
 
 private:
 
-	int x, y, z;
+	int x = 1, y = 2, z = 3;
+	const char *t = "foobar";
 
 };
 
@@ -28,8 +35,9 @@ NBIND_CLASS(GetterSetter) {
 	construct<>();
 
 	getter(get_x);
-	getset(Gety, setY);
+	getset(Gety, Sety);
 	getset(getZ, setZ);
+	getset(gett, sett);
 }
 
 #endif
