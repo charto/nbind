@@ -27,13 +27,27 @@ public:
 	static int strLengthStatic(const char *x) {return(strlen(x));}
 	int strLength(const unsigned char *x) {return(strlen(reinterpret_cast<const char *>(x)));}
 
+	static char *catenateStatic(const char *x, const char *y) {
+		strcpy(buf, x);
+		strcat(buf, y);
+		return(buf);
+	}
+
+	unsigned char *catenate(const unsigned char *x, const unsigned char *y) {
+		strcpy(buf, (char *)x);
+		strcat(buf, (char *)y);
+		return((unsigned char *)buf);
+	}
+
 private:
 
+	static char buf[12];
 	static int state;
 
 };
 
 int PrimitiveMethods::state = 0;
+char PrimitiveMethods::buf[12];
 
 #include "nbind/BindingShort.h"
 
@@ -56,6 +70,9 @@ NBIND_CLASS(PrimitiveMethods) {
 
 	method(strLengthStatic);
 	method(strLength);
+
+	method(catenateStatic);
+	method(catenate);
 }
 
 #endif

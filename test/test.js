@@ -24,6 +24,9 @@ test('Methods and primitive types', function(t) {
 		t.strictEqual(Type.strLengthStatic('foo'), 3);
 		t.strictEqual(obj.strLength('foobar'), 6);
 
+		t.strictEqual(Type.catenateStatic('foo', 'bar'), 'foobar');
+		t.strictEqual(obj.catenate('Java', 'Script'), 'JavaScript');
+
 		t.throws(function() {
 			Type.strLengthStatic({});
 		}, {message: 'Type mismatch'});
@@ -52,7 +55,7 @@ test('Getters and setters', function(t) {
 	t.strictEqual(obj.x, 1);
 	t.strictEqual(obj.y, 2);
 	t.strictEqual(obj.z, 3);
-	t.strictEqual(obj.t, 6);
+	t.strictEqual(obj.t, 'foobar');
 
 	obj.y = 4;
 	obj.z = 5;
@@ -60,7 +63,7 @@ test('Getters and setters', function(t) {
 
 	t.strictEqual(obj.y, 4);
 	t.strictEqual(obj.z, 5);
-	t.strictEqual(obj.t, 3);
+	t.strictEqual(obj.t, 'foo');
 
 	t.throws(function() {
 		obj.t = 0;

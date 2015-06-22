@@ -126,6 +126,8 @@ template <> struct BindingType<ArgType> {               \
 		}
 */
 
+DEFINE_STRING_BINDING_TYPE(unsigned char *);
+DEFINE_STRING_BINDING_TYPE(char *);
 DEFINE_STRING_BINDING_TYPE(const unsigned char *);
 DEFINE_STRING_BINDING_TYPE(const char *);
 

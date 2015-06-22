@@ -13,7 +13,7 @@ public:
 	int Gety() {return(y);}
 	int getZ() {return(z);}
 
-	int gett() {return(strlen(t));}
+	const char *gett() {return(t);}
 
 	void Sety(int y) {this->y = y;}
 	void setZ(int z) {this->z = z;}
