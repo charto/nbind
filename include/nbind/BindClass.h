@@ -118,11 +118,15 @@ public:
 	jsMethod *createPtr;
 
 	void setConstructorHandle(v8::Handle<v8::Function> func) {
-		jsConstructorHandle.SetFunction(func);
+		if(jsConstructorHandle == nullptr) {
+			jsConstructorHandle = new NanCallback(func);
+		} else {
+			jsConstructorHandle->SetFunction(func);
+		}
 	}
 
 	v8::Handle<v8::Function> getConstructorHandle() {
-		return(jsConstructorHandle.GetFunction());
+		return(jsConstructorHandle->GetFunction());
 	}
 
 	// A JavaScript "value constructor" creates a JavaScript object with
@@ -152,7 +156,7 @@ protected:
 	std::forward_list<MethodDef> funcList;
 	std::forward_list<AccessorDef> accessList;
 
-	NanCallback jsConstructorHandle;
+	NanCallback *jsConstructorHandle = nullptr;
 	cbFunction *jsValueConstructor = nullptr;
 
 };

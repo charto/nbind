@@ -6,14 +6,24 @@ node_js:
   - "iojs"
 
 env:
-  global:
-    - CC=gcc-4.8
-    - CXX=g++-4.8
+  - CC=gcc-4.8 CXX=g++-4.8
+  - CC=clang-3.6 CXX=clang++-3.6
 
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.6
     packages:
       - gcc-4.8
       - g++-4.8
+      - clang-3.6
+
+matrix:
+  allow_failures:
+    - env: CC=clang-3.6 CXX=clang++-3.6
+      node_js: "iojs"
+    - env: CC=clang-3.6 CXX=clang++-3.6
+      node_js: "0.10"
+    - env: CC=clang-3.6 CXX=clang++-3.6
+      node_js: "0.12"
