@@ -44,6 +44,15 @@ public:
 		return(funcVect.size() - 1);
 	}
 
+	typedef Caller<
+		ReturnType,
+		typename emscripten::internal::MapWithIndex<
+			TypeList,
+			FromWire,
+			Args...
+		>::type
+	> CallWrapper;
+
 	template <typename NanArgs>
 	static bool typesAreValid(NanArgs args) {
 		typedef Checker<

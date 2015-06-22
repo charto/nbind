@@ -52,14 +52,7 @@ public:
 
 		Bindings::clearError();
 
-		auto result = Caller<
-			ReturnType,
-			typename emscripten::internal::MapWithIndex<
-				TypeList,
-				FromWire,
-				Args...
-			>::type
-		>::call(target, Parent::getFunction(args.Data()->IntegerValue()).func, args);
+		auto result = Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue()).func, args);
 
 		char *message = Bindings::getError();
 

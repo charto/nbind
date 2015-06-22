@@ -73,14 +73,7 @@ public:
 			return(NanThrowTypeError("Type mismatch"));
 		}
 
-		Caller<
-			ReturnType,
-			typename emscripten::internal::MapWithIndex<
-				TypeList,
-				FromWire,
-				Args...
-			>::type
-		>::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
+		Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
 
 		char *message = Bindings::getError();
 
