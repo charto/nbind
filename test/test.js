@@ -90,10 +90,10 @@ test('Value objects', function(t) {
 
 	t.type(Type.getCoord(), 'undefined');
 
-Type.registerr(function Coord(x, y) {
-	this.x = x;
-	this.y = y;
-});
+	testModule.NBind.bind('Coord', function Coord(x, y) {
+		this.x = x;
+		this.y = y;
+	});
 
 	var xy = Type.getCoord();
 

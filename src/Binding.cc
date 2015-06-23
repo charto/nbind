@@ -10,7 +10,24 @@
 using namespace v8;
 using namespace nbind;
 
-class NBind {};
+class NBind {
+
+public:
+
+	static void bind(const char *name, cbFunction &func) {
+		Bindings::setValueConstructorByName(name, func);
+	}
+
+};
+
+void Bindings :: setValueConstructorByName(const char *name, cbFunction &func) {
+	for(auto *bindClass : getClassList()) {
+		if(strcmp(bindClass->getName(), name) == 0) {
+			bindClass->setValueConstructor(func);
+			break;
+		}
+	}
+}
 
 // Linkage for module-wide error message.
 char *Bindings :: message;
@@ -63,6 +80,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 	Local<Function> nBindConstructor;
 
 	for(auto *bindClass : getClassList()) {
+		// Avoid registering the same class twice.
 		if(bindClass->isReady()) continue;
 
 		bindClass->init();
@@ -124,6 +142,8 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 NBIND_CLASS(NBind) {
 	construct<>();
+
+	method(bind);
 }
 
 #endif

@@ -32,24 +32,17 @@ public:
 		return(Coord(1,2));
 	}
 
-	static void registerr(nbind::cbFunction &func) {
-		nbind::BindClass<Coord>::getInstance()->setValueConstructor(func);
-	}
-
 };
 
 #include "nbind/BindingShort.h"
 
 #ifdef NBIND_CLASS
 
-NBIND_CLASS(Coord) {
-	construct<unsigned int, unsigned int>();
-}
+NBIND_CLASS(Coord) {}
 
 NBIND_CLASS(Value) {
 	construct<>();
 	method(getCoord);
-	method(registerr);
 }
 
 #endif

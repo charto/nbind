@@ -25,6 +25,7 @@ public:
 
 	static void registerClass(BindClassBase *bindClass);
 	static void initModule(v8::Handle<v8::Object> exports);
+	static void setValueConstructorByName(const char *name, cbFunction &func);
 
 	static inline char *getError() {return(message);}
 	static inline void clearError() {Bindings::message = nullptr;}
