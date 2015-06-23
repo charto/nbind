@@ -12,8 +12,6 @@ using namespace nbind;
 
 class NBind {};
 
-Persistent<Object> nbind::constructorStore;
-
 // Linkage for module-wide error message.
 char *Bindings :: message;
 
@@ -120,9 +118,6 @@ void Bindings :: initModule(Handle<Object> exports) {
 			jsConstructor
 		);
 	}
-
-	// Keep a persistent table of class constructor functions.
-	NanAssignPersistent(constructorStore, exports);
 }
 
 #include "nbind/BindingShort.h"
