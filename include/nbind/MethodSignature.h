@@ -48,7 +48,7 @@ public:
 		}
 
 		v8::Local<v8::Object> targetWrapped = args.This();
-		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->bound;
+		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
 		Bindings::clearError();
 

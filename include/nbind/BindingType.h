@@ -27,13 +27,17 @@ public:
 
 	// Pass any constructor arguments to wrapped class.
 	template<typename... Args>
-	BindWrapper(Args&&... args) : bound(args...) {}
+	BindWrapper(Args&&... args) : bound(new Bound(args...)) {}
+
+	~BindWrapper() {delete(bound);}
 
 	static NAN_METHOD(create);
 
-//private:
+	Bound &getBound() {return(*bound);}
 
-	Bound bound;
+private:
+
+	Bound *bound;
 };
 
 class cbFunction;
@@ -66,7 +70,7 @@ struct BindingType<ArgType *> {
 
 	static inline ArgType *fromWireType(WireType arg) {
 		v8::Local<v8::Object> argWrapped = arg->ToObject();
-		return(&node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->bound);
+		return(&node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
 	}
 
 	static inline WireType toWireType(ArgType arg);
