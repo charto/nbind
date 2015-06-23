@@ -8,7 +8,7 @@ namespace nbind {
 // Templated static class for each different function call signature exposed by the
 // Node.js plugin. Used to pass arguments and return values between C++ and Node.js.
 // Everything must be static because the V8 JavaScript engine wants a single
-// function pointer to call.
+// function pointer to call, so each template variant is a singleton class.
 
 template <class Signature, typename ReturnType, typename... Args>
 class CallableSignature {

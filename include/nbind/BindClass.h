@@ -40,7 +40,9 @@ public:
 	private:
 
 		const char *name;
+		// Index to distinguish between functions with identical signatures.
 		unsigned int num;
+		// Signature represents return and argument types.
 		jsMethod *signature;
 
 	};
@@ -156,7 +158,15 @@ protected:
 	std::forward_list<MethodDef> funcList;
 	std::forward_list<AccessorDef> accessList;
 
+	// This has to be a pointer instead of a member object so the
+	// destructor won't get called. Otherwise NanCallback's destructor
+	// segfaults when freeing V8 resources because the surrounding
+	// object gets destroyed after the V8 engine.
 	NanCallback *jsConstructorHandle = nullptr;
+
+	// Suitable JavaScript constructor called by a toJS C++ function
+	// when converting this object into a plain JavaScript object,
+	// if possible.
 	cbFunction *jsValueConstructor = nullptr;
 
 };
