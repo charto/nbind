@@ -64,8 +64,13 @@ public:
 	static void setClassName(const char *className) {classNameStore() = className;}
 
 	template <typename... NanArgs>
-	static BindWrapper<Bound> *call(NanArgs... args) {
+	static BindWrapper<Bound> *makeWrapper(NanArgs... args) {
 		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get()...));
+	}
+
+	template <typename... NanArgs>
+	static Bound makeValue(NanArgs... args) {
+		return(Bound(Args(std::forward<NanArgs>(args)...).get()...));
 	}
 
 private:
@@ -94,7 +99,7 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 
 		// Look up possibly overloaded C++ constructor according to its arity
 		// in the constructor call.
-		auto *constructor = BindClass<Bound>::getConstructorWrapper(args.Length());
+		auto *constructor = BindClass<Bound>::getWrapperConstructor(args.Length());
 
 		if(constructor == nullptr) {
 			return(NanThrowError("Wrong number of arguments"));

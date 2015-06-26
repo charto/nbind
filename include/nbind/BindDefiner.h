@@ -83,7 +83,7 @@ public:
 		> Constructor;
 
 		Constructor::setClassName(this->name);
-		bindClass->addConstructor(sizeof...(Args), Constructor::call);
+		bindClass->addConstructor(sizeof...(Args), Constructor::makeWrapper, Constructor::makeValue);
 
 		return(*this);
 	}

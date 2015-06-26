@@ -90,15 +90,24 @@ test('Value objects', function(t) {
 
 	t.type(Type.getCoord(), 'undefined');
 
-	testModule.NBind.bind('Coord', function Coord(x, y) {
+	function Coord(x, y) {
 		this.x = x;
 		this.y = y;
-	});
+	}
+
+	Coord.prototype.fromJS = function(output) {
+		console.error('FOOBAR');
+		output(this.x, this.y);
+	}
+
+	testModule.NBind.bind('Coord', Coord);
 
 	var xy = Type.getCoord();
 
 	t.strictEqual(xy.x, 1);
 	t.strictEqual(xy.y, 2);
+
+	Type.foo(xy);
 
 	t.end();
 });

@@ -23,7 +23,7 @@ public:
 void Bindings :: setValueConstructorByName(const char *name, cbFunction &func) {
 	for(auto *bindClass : getClassList()) {
 		if(strcmp(bindClass->getName(), name) == 0) {
-			bindClass->setValueConstructor(func);
+			bindClass->setValueConstructorJS(func);
 			break;
 		}
 	}

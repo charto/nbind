@@ -49,7 +49,22 @@ template <typename ArgType> struct BindingType {
 	typedef ArgType type;
 
 	static inline bool checkType(WireType arg) {
-		return(true);
+		// TODO: Also check type of object!
+		return(arg->IsObject());
+	}
+
+	static inline ArgType fromWireType(WireType arg) {
+		NanScope();
+
+		auto fromJS = arg->ToObject()->Get(NanNew<v8::String>("fromJS"));
+
+		NanCallback converter(v8::Handle<v8::Function>::Cast(fromJS));
+
+		converter.Call(0, nullptr);
+
+//		BindClass<ArgType>
+		// TODO: call object's "fromJS" JavaScript method with a cbOutput style functor.
+		return(ArgType());
 	}
 
 	static inline WireType toWireType(ArgType arg);
@@ -162,9 +177,6 @@ template <> struct BindingType<cbFunction &> {
 // Normally the function returns nothing when called, but it has a templated
 // call<ReturnType>() method that accepts the expected return type as a template
 // parameter, and handles conversion automatically.
-
-// TODO: support returning value objects. If the return value doesn't match the expected
-// type, maybe the returned object should be constructed with no arguments?
 
 class cbFunction {
 

@@ -141,12 +141,12 @@ public:
 	// fast, in-object properties:
 	// http://jayconrod.com/posts/52/a-tour-of-v8-object-representation
 
-	void setValueConstructor(cbFunction &func) {
+	void setValueConstructorJS(cbFunction &func) {
 		if(jsValueConstructor != nullptr) delete(jsValueConstructor);
 		jsValueConstructor = new cbFunction(func);
 	}
 
-	cbFunction *getValueConstructor() {
+	cbFunction *getValueConstructorJS() {
 		return(jsValueConstructor);
 	}
 
@@ -186,20 +186,27 @@ public:
 	// Use template magic to build a function type with argument types
 	// matching NAN_METHOD and returning a C++ class wrapped inside ObjectWrap.
 
-	template<typename MethodType> struct NanConstructorTypeBuilder;
+	template<typename MethodType> struct NanWrapperConstructorTypeBuilder;
+	template<typename MethodType> struct NanValueConstructorTypeBuilder;
 
 	template<typename ReturnType, typename... NanArgs>
-	struct NanConstructorTypeBuilder<ReturnType(NanArgs...)> {
+	struct NanWrapperConstructorTypeBuilder<ReturnType(NanArgs...)> {
 		typedef BindWrapper<Bound> *type(NanArgs...);
 	};
 
-	typedef typename NanConstructorTypeBuilder<jsMethod>::type jsConstructor;
+	template<typename ReturnType, typename... NanArgs>
+	struct NanValueConstructorTypeBuilder<ReturnType(NanArgs...)> {
+		typedef Bound type(NanArgs...);
+	};
+
+	typedef typename NanWrapperConstructorTypeBuilder<jsMethod>::type jsWrapperConstructor;
+	typedef typename NanValueConstructorTypeBuilder<jsMethod>::type jsValueConstructor;
 
 	// Store link to constructor, possibly overloaded by arity.
 	// It will be declared with the Node API when this module is initialized.
 
-	void addConstructor(unsigned int arity, jsConstructor *ptr) {
-		static std::vector<jsConstructor *> &constructorVect = constructorVectStore();
+	void addConstructor(unsigned int arity, jsWrapperConstructor *funcWrapper, jsValueConstructor *funcValue) {
+		static std::vector<jsWrapperConstructor *> &constructorVect = wrapperConstructorVectStore();
 		signed int oldArity = getArity();
 
 		if(signed(arity) > oldArity) {
@@ -209,25 +216,34 @@ public:
 			}
 		}
 
-		constructorVect[arity] = ptr;
+		constructorVect[arity] = funcWrapper;
 	}
 
 	// Get maximum arity among overloaded constructors.
 	// Can be -1 if there are no constructors.
 
 	static signed int getArity() {
-		return(constructorVectStore().size() - 1);
+		return(wrapperConstructorVectStore().size() - 1);
 	}
 
 	// Get constructor by arity.
 	// When called, the constructor returns an ObjectWrap.
 
-	static jsConstructor *getConstructorWrapper(unsigned int arity) {
+	static jsWrapperConstructor *getWrapperConstructor(unsigned int arity) {
 		// Check if constructor was called with more than the maximum number
 		// of arguments it can accept.
 		if(signed(arity) > getArity()) return(nullptr);
 
-		return(constructorVectStore()[arity]);
+		return(wrapperConstructorVectStore()[arity]);
+	}
+
+	static jsValueConstructor *getValueConstructor(unsigned int arity) {
+		// Check if constructor was called with more than the maximum number
+		// of arguments it can accept.
+		if(signed(arity) > getArity()) return(nullptr);
+
+//		return(wrapperConstructorVectStore()[arity]);
+		return(nullptr);
 	}
 
 	static NAN_METHOD(create);
@@ -247,8 +263,8 @@ public:
 	// Linkage for a table of overloaded constructors
 	// (overloads must have different arities).
 
-	static std::vector<jsConstructor *> &constructorVectStore() {
-		static std::vector<jsConstructor *> constructorVect;
+	static std::vector<jsWrapperConstructor *> &wrapperConstructorVectStore() {
+		static std::vector<jsWrapperConstructor *> constructorVect;
 		return(constructorVect);
 	}
 
@@ -271,7 +287,7 @@ private:
 template <typename ArgType>
 inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 	v8::Local<v8::Value> output = NanUndefined();
-	cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructor();
+	cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
 
 	if(jsConstructor != nullptr) {
 		cbOutput construct(*jsConstructor, &output);
