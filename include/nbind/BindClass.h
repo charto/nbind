@@ -51,7 +51,7 @@ public:
 	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
 	template <typename... NanArgs>
 	static BindWrapper<Bound> *makeWrapper(NanArgs... args) {
-		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get()...));
+		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get(args...)...));
 	}
 
 	// Old code that returned a constructed object by value:
@@ -63,7 +63,7 @@ public:
 	// Make sure prototype matches NanValueConstructorTypeBuilder!
 	template <typename... NanArgs>
 	static void makeValue(ArgStorage<Bound> &storage, NanArgs... args) {
-		storage.init(Args(std::forward<NanArgs>(args)...).get()...);
+		storage.init(Args(std::forward<NanArgs>(args)...).get(args...)...);
 	}
 
 private:

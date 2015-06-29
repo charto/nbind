@@ -274,11 +274,12 @@ struct FromWire {
 	typedef struct inner {
 
 		template <typename NanArgs>
-		inner(const NanArgs &args) : val(BindingType<ArgType>::fromWireType(args[Index])) {}
+		inner(const NanArgs &args) {}
 
-		ArgType get() {return(val);}
-
-		ArgType val;
+		template <typename NanArgs>
+		inline ArgType get(const NanArgs &args) {
+			return(BindingType<ArgType>::fromWireType(args[Index]));
+		}
 
 	} type;
 
@@ -294,7 +295,10 @@ struct FromWire<Index, const char *> {
 		template <typename NanArgs>
 		inner(const NanArgs &args) : val(args[Index]->ToString()) {}
 
-		const char *get() {return(*val);}
+		template <typename NanArgs>
+		inline const char *get(const NanArgs &args) {
+			return(*val);
+		}
 
 		NanUtf8String val;
 
@@ -312,7 +316,10 @@ struct FromWire<Index, const unsigned char *> {
 		template <typename NanArgs>
 		inner(const NanArgs &args) : val(args[Index]->ToString()) {}
 
-		const unsigned char *get() {return(reinterpret_cast<const unsigned char *>(*val));}
+		template <typename NanArgs>
+		inline const unsigned char *get(const NanArgs &args) {
+			return(reinterpret_cast<const unsigned char *>(*val));
+		}
 
 		NanUtf8String val;
 
@@ -331,7 +338,10 @@ struct FromWire<Index, cbFunction &> {
 		template <typename NanArgs>
 		inner(const NanArgs &args) : val(args[Index].template As<v8::Function>()) {}
 
-		cbFunction &get() {return(val);}
+		template <typename NanArgs>
+		inline cbFunction &get(const NanArgs &args) {
+			return(val);
+		}
 
 		cbFunction val;
 
