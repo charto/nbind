@@ -53,19 +53,7 @@ template <typename ArgType> struct BindingType {
 		return(arg->IsObject());
 	}
 
-	static inline ArgType fromWireType(WireType arg) {
-		NanScope();
-
-		auto fromJS = arg->ToObject()->Get(NanNew<v8::String>("fromJS"));
-
-		NanCallback converter(v8::Handle<v8::Function>::Cast(fromJS));
-
-		converter.Call(0, nullptr);
-
-//		BindClass<ArgType>
-		// TODO: call object's "fromJS" JavaScript method with a cbOutput style functor.
-		return(ArgType());
-	}
+	static inline ArgType fromWireType(WireType arg);
 
 	static inline WireType toWireType(ArgType arg);
 
@@ -172,6 +160,12 @@ template <> struct BindingType<cbFunction &> {
 
 };
 
+template <> struct BindingType<v8::Local<v8::Function>> {
+
+	static inline WireType toWireType(v8::Local<v8::Function> arg);
+
+};
+
 // cbFunction is a functor that can be called with any number of arguments of any type
 // compatible with JavaScript. Types are autodetected from a parameter pack.
 // Normally the function returns nothing when called, but it has a templated
@@ -187,11 +181,11 @@ public:
 
 	explicit cbFunction(const v8::Handle<v8::Function> &func) : func(func) {}
 
-	explicit cbFunction(const cbFunction &func) : func(func.getJsFunction()) {}
+	cbFunction(const cbFunction &func) : func(func.getJsFunction()) {}
 
 	template<typename... Args>
 	void operator()(Args&&... args) {
-		call<void>(args...);
+		call<void>(std::forward<Args>(args)...);
 	}
 
 	template <typename ReturnType, typename... Args>
@@ -200,6 +194,14 @@ public:
 			(BindingType<Args>::toWireType(args))...
 		};
 		return(BindingType<ReturnType>::fromWireType(func.Call(sizeof...(Args), argv)));
+	}
+
+	template <typename ReturnType, typename... Args>
+	typename BindingType<ReturnType>::type callMethod(v8::Handle<v8::Object> target, Args... args) {
+		v8::Handle<v8::Value> argv[] = {
+			(BindingType<Args>::toWireType(args))...
+		};
+		return(BindingType<ReturnType>::fromWireType(func.Call(target, sizeof...(Args), argv)));
 	}
 
 	v8::Handle<v8::Function> getJsFunction() const {return(func.GetFunction());}
@@ -241,6 +243,8 @@ private:
 	v8::Local<v8::Value> *output;
 
 };
+
+// CheckWire verifies if the type of a JavaScript handle corresponds to a C++ type.
 
 template<size_t Index,typename ArgType>
 struct CheckWire {
@@ -334,5 +338,9 @@ struct FromWire<Index, cbFunction &> {
 	} type;
 
 };
+
+WireType BindingType<v8::Local<v8::Function>> :: toWireType(v8::Local<v8::Function> arg) {
+	return(arg);
+}
 
 } // namespace

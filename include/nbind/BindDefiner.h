@@ -10,8 +10,6 @@
 
 namespace nbind {
 
-template<class Bound, typename ArgList> struct ConstructorInfo;
-
 // BindDefiner is a helper class to make class definition syntax match embind.
 
 class BindDefinerBase {

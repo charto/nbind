@@ -5,6 +5,76 @@
 
 namespace nbind {
 
+// Wrapper for C++ objects converted from corresponding JavaScript objects.
+// Needed for allocating an empty placeholder object before JavaScript calls
+// its constructor. See:
+// http://stackoverflow.com/questions/31091223/placement-new-return-by-value-and-safely-dispose-temporary-copies
+
+template <typename Bound>
+class ArgStorage {
+
+public:
+
+	~ArgStorage() {
+		if(isValid) reinterpret_cast<Bound *>(&data)->~Bound();
+		isValid = false;
+	}
+
+	template <typename... Args>
+	void init(Args&&... args) {
+		::new(&data) Bound(std::forward<Args>(args)...);
+		isValid = true;
+	}
+
+	Bound getBound() {
+		return(std::move(*reinterpret_cast<Bound *>(&data)));
+	}
+
+private:
+
+	typename std::aligned_storage<sizeof(Bound), alignof(Bound)>::type data;
+
+	bool isValid = false;
+
+};
+
+template<class Bound, typename ArgList> struct ConstructorInfo;
+
+template<class Bound, typename... Args>
+struct ConstructorInfo<Bound, TypeList<Args...>> {
+
+public:
+
+	static const char *getClassName() {return(classNameStore());}
+	static void setClassName(const char *className) {classNameStore() = className;}
+
+	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
+	template <typename... NanArgs>
+	static BindWrapper<Bound> *makeWrapper(NanArgs... args) {
+		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get()...));
+	}
+
+	// Old code that returned a constructed object by value:
+	// template <typename... NanArgs>
+	// static Bound makeValue(ArgStorage<Bound> &wrapper, NanArgs... args) {
+	//	return(Bound(Args(std::forward<NanArgs>(args)...).get()...));
+	// }
+
+	// Make sure prototype matches NanValueConstructorTypeBuilder!
+	template <typename... NanArgs>
+	static void makeValue(ArgStorage<Bound> &storage, NanArgs... args) {
+		storage.init(Args(std::forward<NanArgs>(args)...).get()...);
+	}
+
+private:
+
+	static const char *&classNameStore() {
+		static const char *className;
+		return(className);
+	}
+
+};
+
 // Templated singleton class for each C++ class accessible from Node.js.
 // Stores their information defined in static constructors, until the Node.js
 // plugin is initialized.
@@ -142,12 +212,12 @@ public:
 	// http://jayconrod.com/posts/52/a-tour-of-v8-object-representation
 
 	void setValueConstructorJS(cbFunction &func) {
-		if(jsValueConstructor != nullptr) delete(jsValueConstructor);
-		jsValueConstructor = new cbFunction(func);
+		if(valueConstructorJS != nullptr) delete(valueConstructorJS);
+		valueConstructorJS = new cbFunction(func);
 	}
 
 	cbFunction *getValueConstructorJS() {
-		return(jsValueConstructor);
+		return(valueConstructorJS);
 	}
 
 protected:
@@ -158,16 +228,18 @@ protected:
 	std::forward_list<MethodDef> funcList;
 	std::forward_list<AccessorDef> accessList;
 
-	// This has to be a pointer instead of a member object so the
+	// These have to be pointers instead of a member objects so the
 	// destructor won't get called. Otherwise NanCallback's destructor
 	// segfaults when freeing V8 resources because the surrounding
 	// object gets destroyed after the V8 engine.
+
+	// Constructor called by JavaScript's "new" operator.
 	NanCallback *jsConstructorHandle = nullptr;
 
 	// Suitable JavaScript constructor called by a toJS C++ function
 	// when converting this object into a plain JavaScript object,
 	// if possible.
-	cbFunction *jsValueConstructor = nullptr;
+	cbFunction *valueConstructorJS = nullptr;
 
 };
 
@@ -183,8 +255,25 @@ public:
 		setInstance(this);
 	}
 
-	// Use template magic to build a function type with argument types
-	// matching NAN_METHOD and returning a C++ class wrapped inside ObjectWrap.
+	// Wrapper that calls the C++ constructor when called from a
+	// fromJS function written in JavaScript.
+
+	static NAN_METHOD(valueConstructorCaller) {
+		auto *constructor = BindClass<Bound>::getValueConstructor(args.Length());
+
+//		if(constructor == nullptr) {
+//			return(NanThrowError("Wrong number of arguments in value binding"));
+//		}
+
+		ArgStorage<Bound> &storage = *static_cast<ArgStorage<Bound> *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
+
+		constructor(storage, args);
+	}
+
+	// TODO: is there something to replace ??? on these lines?
+	// typedef decltype(&ConstructorInfo<Bound, ???>::makeWrapper) jsWrapperConstructor;
+	// typedef decltype(&ConstructorInfo<Bound, ???>::makeValue) jsValueConstructor;
+	// Until then, use type builder helper classes to create the typedefs.
 
 	template<typename MethodType> struct NanWrapperConstructorTypeBuilder;
 	template<typename MethodType> struct NanValueConstructorTypeBuilder;
@@ -196,7 +285,7 @@ public:
 
 	template<typename ReturnType, typename... NanArgs>
 	struct NanValueConstructorTypeBuilder<ReturnType(NanArgs...)> {
-		typedef Bound type(NanArgs...);
+		typedef void type(ArgStorage<Bound> &storage, NanArgs...);
 	};
 
 	typedef typename NanWrapperConstructorTypeBuilder<jsMethod>::type jsWrapperConstructor;
@@ -205,6 +294,7 @@ public:
 	// Store link to constructor, possibly overloaded by arity.
 	// It will be declared with the Node API when this module is initialized.
 
+// TODO: clean up duplicated code!
 	void addConstructor(unsigned int arity, jsWrapperConstructor *funcWrapper, jsValueConstructor *funcValue) {
 		static std::vector<jsWrapperConstructor *> &constructorVect = wrapperConstructorVectStore();
 		signed int oldArity = getArity();
@@ -217,6 +307,20 @@ public:
 		}
 
 		constructorVect[arity] = funcWrapper;
+
+
+
+
+		static std::vector<jsValueConstructor *> &constructorVect2 = valueConstructorVectStore();
+
+		if(signed(arity) > oldArity) {
+			constructorVect2.resize(arity + 1);
+			for(unsigned int pos = oldArity + 1; pos < arity; pos++) {
+				constructorVect2[pos] = nullptr;
+			}
+		}
+
+		constructorVect2[arity] = funcValue;
 	}
 
 	// Get maximum arity among overloaded constructors.
@@ -242,8 +346,7 @@ public:
 		// of arguments it can accept.
 		if(signed(arity) > getArity()) return(nullptr);
 
-//		return(wrapperConstructorVectStore()[arity]);
-		return(nullptr);
+		return(valueConstructorVectStore()[arity]);
 	}
 
 	static NAN_METHOD(create);
@@ -265,6 +368,11 @@ public:
 
 	static std::vector<jsWrapperConstructor *> &wrapperConstructorVectStore() {
 		static std::vector<jsWrapperConstructor *> constructorVect;
+		return(constructorVect);
+	}
+
+	static std::vector<jsValueConstructor *> &valueConstructorVectStore() {
+		static std::vector<jsValueConstructor *> constructorVect;
 		return(constructorVect);
 	}
 
@@ -296,6 +404,35 @@ inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 	}
 
 	return(output);
+}
+
+template <typename ArgType>
+ArgType BindingType<ArgType>::fromWireType(WireType arg) {
+	NanScope();
+
+	auto target = arg->ToObject();
+	auto fromJS = target->Get(NanNew<v8::String>("fromJS"));
+
+	ArgStorage<ArgType> wrapper;
+
+	cbFunction converter(v8::Handle<v8::Function>::Cast(fromJS));
+
+//	cbFunction *constructor = BindClass<ArgType>::getInstance()->getValueConstructorCC();
+
+	v8::Local<v8::FunctionTemplate> constructorTemplate = NanNew<v8::FunctionTemplate>(
+		&BindClass<ArgType>::valueConstructorCaller,
+		NanNew<v8::External>(&wrapper)
+	);
+//	cbFunction constructor(constructorTemplate->GetFunction());
+	auto constructor = constructorTemplate->GetFunction();
+
+	converter.callMethod<void>(target, constructor);
+
+//	wrapper.init();
+
+fprintf(stderr, "MOI\n");
+
+	return(wrapper.getBound());
 }
 
 } // namespace

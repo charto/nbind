@@ -55,33 +55,6 @@ private:
 
 namespace nbind {
 
-template<class Bound, typename... Args>
-struct ConstructorInfo<Bound, TypeList<Args...>> {
-
-public:
-
-	static const char *getClassName() {return(classNameStore());}
-	static void setClassName(const char *className) {classNameStore() = className;}
-
-	template <typename... NanArgs>
-	static BindWrapper<Bound> *makeWrapper(NanArgs... args) {
-		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get()...));
-	}
-
-	template <typename... NanArgs>
-	static Bound makeValue(NanArgs... args) {
-		return(Bound(Args(std::forward<NanArgs>(args)...).get()...));
-	}
-
-private:
-
-	static const char *&classNameStore() {
-		static const char *className;
-		return(className);
-	}
-
-};
-
 extern v8::Persistent<v8::Object> constructorStore;
 
 // The create function would better fit in BindClass but it needs to call
