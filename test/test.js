@@ -96,7 +96,6 @@ test('Value objects', function(t) {
 	}
 
 	Coord.prototype.fromJS = function(output) {
-		console.error('FOOBAR ' + this.x + ' ' + this.y);
 		output(this.x, this.y);
 	}
 

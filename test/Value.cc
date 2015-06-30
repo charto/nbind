@@ -41,7 +41,6 @@ public:
 	Value() {}
 
 	static Coord getCoord() {
-fprintf(stderr, "MOI\n");
 		return(Coord(1,2));
 	}
 

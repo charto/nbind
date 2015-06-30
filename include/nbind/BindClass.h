@@ -417,20 +417,14 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) {
 
 	cbFunction converter(v8::Handle<v8::Function>::Cast(fromJS));
 
-//	cbFunction *constructor = BindClass<ArgType>::getInstance()->getValueConstructorCC();
-
 	v8::Local<v8::FunctionTemplate> constructorTemplate = NanNew<v8::FunctionTemplate>(
 		&BindClass<ArgType>::valueConstructorCaller,
 		NanNew<v8::External>(&wrapper)
 	);
-//	cbFunction constructor(constructorTemplate->GetFunction());
+
 	auto constructor = constructorTemplate->GetFunction();
 
 	converter.callMethod<void>(target, constructor);
-
-//	wrapper.init();
-
-fprintf(stderr, "MOI\n");
 
 	return(wrapper.getBound());
 }
