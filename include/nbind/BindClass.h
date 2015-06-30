@@ -268,6 +268,8 @@ public:
 		ArgStorage<Bound> &storage = *static_cast<ArgStorage<Bound> *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
 
 		constructor(storage, args);
+
+		NanReturnUndefined();
 	}
 
 	// TODO: is there something to replace ??? on these lines?
