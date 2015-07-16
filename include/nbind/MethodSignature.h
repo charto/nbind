@@ -54,7 +54,7 @@ public:
 
 		auto result = Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue()).func, args);
 
-		char *message = Bindings::getError();
+		const char *message = Bindings::getError();
 
 		if(message) return(NanThrowError(message));
 

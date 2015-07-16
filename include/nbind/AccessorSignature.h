@@ -52,7 +52,7 @@ public:
 			TypeList<>
 		>::call(target, Parent::getFunction(args.Data()->IntegerValue() & accessorGetterMask).func, args);
 
-		char *message = Bindings::getError();
+		const char *message = Bindings::getError();
 
 		if(message) return(NanThrowError(message));
 
@@ -74,7 +74,7 @@ public:
 		} else {
 			Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
 
-			char *message = Bindings::getError();
+			const char *message = Bindings::getError();
 
 			if(message) NanThrowError(message);
 		}

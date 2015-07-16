@@ -28,15 +28,15 @@ public:
 	static void initModule(v8::Handle<v8::Object> exports);
 	static void setValueConstructorByName(const char *name, cbFunction &func);
 
-	static inline char *getError() {return(message);}
+	static inline const char *getError() {return(message);}
 	static inline void clearError() {Bindings::message = nullptr;}
-	static inline void setError(char *message) {
+	static inline void setError(const char *message) {
 		if(!Bindings::message) Bindings::message = message;
 	}
 
 private:
 
-	static char *message;
+	static const char *message;
 
 	// Linkage for a list of all C++ class wrappers.
 
@@ -90,7 +90,7 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 			// and gets thrown to JS below.
 		}
 
-		char *message = Bindings::getError();
+		const char *message = Bindings::getError();
 
 		if(message) return(NanThrowError(message));
 
