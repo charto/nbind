@@ -49,8 +49,9 @@ public:
 	static void setClassName(const char *className) {classNameStore() = className;}
 
 	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
+	// Note that Args().get may throw.
 	template <typename... NanArgs>
-	static BindWrapper<Bound> *makeWrapper(NanArgs... args) {
+	static BindWrapper<Bound> *makeWrapper(NanArgs... args) noexcept(false) {
 		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get(args...)...));
 	}
 
@@ -261,9 +262,13 @@ public:
 	static NAN_METHOD(valueConstructorCaller) {
 		auto *constructor = BindClass<Bound>::getValueConstructor(args.Length());
 
-//		if(constructor == nullptr) {
-//			return(NanThrowError("Wrong number of arguments in value binding"));
-//		}
+		if(constructor == nullptr) {
+			// Can't use throw here because there's V8 code
+			// (lacking C++ exception support) on the stack
+			// above the catch statement.
+			Bindings::setError("Wrong number of arguments in value binding");
+			NanReturnUndefined();
+		}
 
 		ArgStorage<Bound> &storage = *static_cast<ArgStorage<Bound> *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
 
@@ -409,7 +414,7 @@ inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 }
 
 template <typename ArgType>
-ArgType BindingType<ArgType>::fromWireType(WireType arg) {
+ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 	NanScope();
 
 	auto target = arg->ToObject();
@@ -427,6 +432,9 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) {
 	auto constructor = constructorTemplate->GetFunction();
 
 	converter.callMethod<void>(target, constructor);
+
+	char *message = Bindings::getError();
+	if(message) throw(std::runtime_error(message));
 
 	return(wrapper.getBound());
 }

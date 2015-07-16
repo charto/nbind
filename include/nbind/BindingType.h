@@ -277,7 +277,7 @@ struct FromWire {
 		inner(const NanArgs &args) {}
 
 		template <typename NanArgs>
-		inline ArgType get(const NanArgs &args) {
+		inline ArgType get(const NanArgs &args) noexcept(false) {
 			return(BindingType<ArgType>::fromWireType(args[Index]));
 		}
 

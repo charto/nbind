@@ -3,8 +3,10 @@
 		"include"
 	],
 	"sources": ["src/Binding.cc"],
-	"cflags": ["-std=c++11"],
+	"cflags_cc": ["-std=c++11", "-fexceptions"],
 	"xcode_settings": {
+		"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+		"CLANG_CXX_LANGUAGE_STANDARD":"c++11",
 		"MACOSX_DEPLOYMENT_TARGET": "10.7",
 		"OTHER_CPLUSPLUSFLAGS":[
 			"-std=c++11",

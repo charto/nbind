@@ -5,6 +5,7 @@
 
 #include <forward_list>
 #include <vector>
+#include <stdexcept>
 
 #include <v8.h>
 #include <node.h>
@@ -82,7 +83,12 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 
 		// Call C++ constructor and bind the resulting object
 		// to the new JavaScript object being created.
-		constructor(args)->Wrap(args.This());
+		try {
+			constructor(args)->Wrap(args.This());
+		} catch(const std::exception &ex) {
+			// Bindings::getError() should be already set
+			// and gets thrown to JS below.
+		}
 
 		char *message = Bindings::getError();
 
