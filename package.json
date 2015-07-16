@@ -18,7 +18,8 @@
   },
   "os": [
     "darwin",
-    "linux"
+    "linux",
+    "win32"
   ],
   "dependencies": {
     "nan": "~1.8.4"
