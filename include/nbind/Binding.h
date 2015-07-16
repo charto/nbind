@@ -85,16 +85,19 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 		// to the new JavaScript object being created.
 		try {
 			constructor(args)->Wrap(args.This());
+
+			const char *message = Bindings::getError();
+
+			if(message) return(NanThrowError(message));
+
+			NanReturnThis();
 		} catch(const std::exception &ex) {
-			// Bindings::getError() should be already set
-			// and gets thrown to JS below.
+			const char *message = Bindings::getError();
+
+			if(message == nullptr) message = ex.what();
+
+			NanThrowError(message);
 		}
-
-		const char *message = Bindings::getError();
-
-		if(message) return(NanThrowError(message));
-
-		NanReturnThis();
 	} else {
 		// Constructor was called like Bound(...), add the "new" operator.
 		NanScope();

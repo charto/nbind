@@ -49,9 +49,9 @@ public:
 	static void setClassName(const char *className) {classNameStore() = className;}
 
 	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
-	// Note that Args().get may throw.
 	template <typename... NanArgs>
 	static BindWrapper<Bound> *makeWrapper(NanArgs... args) noexcept(false) {
+		// Note that Args().get may throw.
 		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get(args...)...));
 	}
 

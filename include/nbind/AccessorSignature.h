@@ -47,16 +47,24 @@ public:
 
 		Bindings::clearError();
 
-		auto &&result = Caller<
-			ReturnType,
-			TypeList<>
-		>::call(target, Parent::getFunction(args.Data()->IntegerValue() & accessorGetterMask).func, args);
+		try {
+			auto &&result = Caller<
+				ReturnType,
+				TypeList<>
+			>::call(target, Parent::getFunction(args.Data()->IntegerValue() & accessorGetterMask).func, args);
 
-		const char *message = Bindings::getError();
+			const char *message = Bindings::getError();
 
-		if(message) return(NanThrowError(message));
+			if(message) return(NanThrowError(message));
 
-		NanReturnValue(BindingType<ReturnType>::toWireType(result));
+			NanReturnValue(BindingType<ReturnType>::toWireType(result));
+		} catch(const std::exception &ex) {
+			const char *message = Bindings::getError();
+
+			if(message == nullptr) message = ex.what();
+
+			NanThrowError(message);
+		}
 	}
 
 	static NAN_SETTER(setter) {
@@ -72,11 +80,19 @@ public:
 		if(!AccessorSignature::typesAreValid(valuePtr)) {
 			NanThrowTypeError("Type mismatch");
 		} else {
-			Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
+			try {
+				Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
 
-			const char *message = Bindings::getError();
+				const char *message = Bindings::getError();
 
-			if(message) NanThrowError(message);
+				if(message) NanThrowError(message);
+			} catch(const std::exception &ex) {
+				const char *message = Bindings::getError();
+
+				if(message == nullptr) message = ex.what();
+
+				NanThrowError(message);
+			}
 		}
 	}
 

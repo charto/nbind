@@ -39,13 +39,21 @@ public:
 
 		Bindings::clearError();
 
-		auto result = Parent::CallWrapper::call(Parent::getFunction(args.Data()->IntegerValue()).func, args);
+		try {
+			auto result = Parent::CallWrapper::call(Parent::getFunction(args.Data()->IntegerValue()).func, args);
 
-		const char *message = Bindings::getError();
+			const char *message = Bindings::getError();
 
-		if(message != nullptr) return(NanThrowError(message));
+			if(message != nullptr) return(NanThrowError(message));
 
-		NanReturnValue(BindingType<ReturnType>::toWireType(result));
+			NanReturnValue(BindingType<ReturnType>::toWireType(result));
+		} catch(const std::exception &ex) {
+			const char *message = Bindings::getError();
+
+			if(message == nullptr) message = ex.what();
+
+			NanThrowError(message);
+		}
 	}
 
 };
