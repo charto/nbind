@@ -437,6 +437,8 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 	auto target = arg->ToObject();
 	auto fromJS = target->Get(NanNew<v8::String>("fromJS"));
 
+	if(!fromJS->IsFunction()) throw(std::runtime_error("Type mismatch"));
+
 	ArgStorage<ArgType> wrapper;
 
 	cbFunction converter(v8::Handle<v8::Function>::Cast(fromJS));
