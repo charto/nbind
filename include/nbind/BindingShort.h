@@ -7,7 +7,22 @@
 
 #include "Binding.h"
 
+// Support overloading macros by number of arguments.
+// See http://stackoverflow.com/a/16683147/16509
+
+#define VA_CONCAT(A, B) A ## B
+#define VA_SELECT_HELPER(NAME, ARGC) VA_CONCAT(NAME ## _, ARGC)
+
+#define VA_SIZE_HELPER(_1, _2, _3, ARGC, ...) ARGC
+#define VA_SIZE(...) VA_SIZE_HELPER(__VA_ARGS__, 3, 2, 1)
+
+#define VA_SELECT(NAME, ...) VA_SELECT_HELPER(NAME, VA_SIZE(__VA_ARGS__))(__VA_ARGS__)
+
+// Macro to report an error when exceptions are not available.
+
 #define NBIND_ERR(message) nbind::Bindings::setError(message)
+
+// Define bindings for a C++ class using a syntax that looks like a function definition.
 
 #define NBIND_CLASS(Name) \
 	template<class Bound> struct BindInvoker##Name { \
@@ -18,8 +33,19 @@
 	static struct BindInvoker##Name<Name> bindInvoker##Name; \
 	template<class Bound> BindInvoker##Name<Bound>::BindInvoker##Name():definer(#Name)
 
-#define method(name) definer.function(#name, &Bound::name)
+// Define a method passing its name, and optionally the original C++ method name
+// if the name visible to JavaScript should be different.
+
+#define method_1(name) definer.function(#name, &Bound::name)
+#define method_2(name, boundName) definer.function(#name, &Bound::boundName)
+#define method(...) VA_SELECT(method, __VA_ARGS__)
+
+// Define a constructor.
+// Constructor argument types must be appended as template arguments like:
+// construct<int, int>()
+
 #define construct definer.constructor
+
 #define field(name) definer.field(#name, &Bound::name)
 #define getter(name) definer.property(#name, &Bound::name)
 // TODO: varargs macro also supporting this:
