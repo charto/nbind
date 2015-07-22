@@ -15,8 +15,10 @@ class ArgStorage {
 
 public:
 
+	ArgStorage() : dummy(0) {}
+
 	~ArgStorage() {
-		if(isValid) reinterpret_cast<Bound *>(&data)->~Bound();
+		if(isValid) data.~Bound();
 		isValid = false;
 	}
 
@@ -27,12 +29,15 @@ public:
 	}
 
 	Bound getBound() {
-		return(std::move(*reinterpret_cast<Bound *>(&data)));
+		return(std::move(data));
 	}
 
 private:
 
-	typename std::aligned_storage<sizeof(Bound), alignof(Bound)>::type data;
+	union {
+		int dummy;
+		Bound data;
+	};
 
 	bool isValid = false;
 

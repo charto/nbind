@@ -10,12 +10,13 @@
 // Support overloading macros by number of arguments.
 // See http://stackoverflow.com/a/16683147/16509
 
-#define VA_CONCAT(A, B) A ## B
-#define VA_SELECT_HELPER(NAME, ARGC) VA_CONCAT(NAME ## _, ARGC)
-
-#define VA_SIZE_HELPER(_1, _2, _3, ARGC, ...) ARGC
+// _1, _2... are dummy parameters to discard original macro arguments.
+#define VA_SIZE_HELPER(_3, _2, _1, ARGC, ...) ARGC
 #define VA_SIZE(...) VA_SIZE_HELPER(__VA_ARGS__, 3, 2, 1)
 
+#define VA_CONCAT(A, B) A ## B
+
+#define VA_SELECT_HELPER(NAME, ARGC) VA_CONCAT(NAME ## _, ARGC)
 #define VA_SELECT(NAME, ...) VA_SELECT_HELPER(NAME, VA_SIZE(__VA_ARGS__))(__VA_ARGS__)
 
 // Macro to report an error when exceptions are not available.
