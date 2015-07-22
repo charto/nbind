@@ -400,6 +400,23 @@ private:
 // directly into a local handle called "output" which is returned to JavaScript.
 
 template <typename ArgType>
+inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
+	v8::Local<v8::Value> output = NanUndefined();
+
+	if(arg != nullptr) {
+		cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
+
+		if(jsConstructor != nullptr) {
+			cbOutput construct(*jsConstructor, &output);
+
+			arg->toJS(construct);
+		}
+	}
+
+	return(output);
+}
+
+template <typename ArgType>
 inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 	v8::Local<v8::Value> output = NanUndefined();
 	cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();

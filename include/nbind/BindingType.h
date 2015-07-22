@@ -76,7 +76,7 @@ struct BindingType<ArgType *> {
 		return(&node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
 	}
 
-	static inline WireType toWireType(ArgType arg);
+	static inline WireType toWireType(ArgType *arg);
 
 };
 
