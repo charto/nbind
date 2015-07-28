@@ -57,7 +57,7 @@ public:
 
 			if(message) return(NanThrowError(message));
 
-			NanReturnValue(BindingType<ReturnType>::toWireType(result));
+			NanReturnValue(BindingType<ReturnType>::toWireType(std::move(result)));
 		} catch(const std::exception &ex) {
 			const char *message = Bindings::getError();
 

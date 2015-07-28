@@ -55,7 +55,7 @@ template <typename ArgType> struct BindingType {
 
 	static inline ArgType fromWireType(WireType arg);
 
-	static inline WireType toWireType(ArgType arg);
+	static inline WireType toWireType(ArgType &&arg);
 
 };
 
@@ -71,12 +71,12 @@ struct BindingType<ArgType *> {
 		return(arg->IsObject());
 	}
 
-	static inline ArgType *fromWireType(WireType arg) {
+	static inline type fromWireType(WireType arg) {
 		v8::Local<v8::Object> argWrapped = arg->ToObject();
 		return(&node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
 	}
 
-	static inline WireType toWireType(ArgType *arg);
+	static inline WireType toWireType(type arg);
 
 };
 
@@ -146,13 +146,13 @@ template <> struct BindingType<void> {
 
 	static inline type fromWireType(WireType arg) {return(nullptr);}
 
-	static inline WireType toWireType(std::nullptr_t arg) {return(NanUndefined());}
+	static inline WireType toWireType(type arg) {return(NanUndefined());}
 
 };
 
 template <> struct BindingType<cbFunction &> {
 
-	typedef cbFunction &type;
+	typedef const cbFunction &type;
 
 	static inline bool checkType(WireType arg) {
 		return(arg->IsFunction());
@@ -268,7 +268,7 @@ struct CheckWire {
 
 // Handle most C++ types.
 
-template<size_t Index,typename ArgType>
+template<size_t Index, typename ArgType>
 struct FromWire {
 
 	typedef struct inner {

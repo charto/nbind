@@ -415,6 +415,8 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 			cbOutput construct(*jsConstructor, &output);
 
 			arg->toJS(construct);
+		} else {
+			// Throw error here?
 		}
 	}
 
@@ -422,7 +424,7 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 }
 
 template <typename ArgType>
-inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
+inline WireType BindingType<ArgType>::toWireType(ArgType &&arg) {
 	v8::Local<v8::Value> output = NanUndefined();
 	cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
 
@@ -430,6 +432,8 @@ inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 		cbOutput construct(*jsConstructor, &output);
 
 		arg.toJS(construct);
+	} else {
+		// Throw error here?
 	}
 
 	return(output);
