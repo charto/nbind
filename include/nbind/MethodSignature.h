@@ -10,6 +10,46 @@
 
 namespace nbind {
 
+template<typename ReturnType> struct MethodResultConverter {
+
+	template <typename Bound>
+	static inline auto toWireType(ReturnType &&result, Bound *t) -> typename std::remove_reference<decltype(
+		// SFINAE, use this template only if Bound::toJS(ReturnType, cbOutput) exists.
+		t->toJS(*(ReturnType *)nullptr, *(cbOutput *)nullptr),
+		// Actual return type of this function: WireType (decltype adds a reference, which is removed).
+		*(WireType *)nullptr
+	)>::type {
+		// This function is similar to BindingType<ArgType>::toWireType(ArgType &&arg).
+
+		v8::Local<v8::Value> output = NanUndefined();
+		cbFunction *jsConstructor = BindClass<typename std::remove_pointer<ReturnType>::type>::getInstance()->getValueConstructorJS();
+
+		if(jsConstructor != nullptr) {
+			cbOutput construct(*jsConstructor, &output);
+
+			t->toJS(std::move(result), construct);
+		} else {
+			// Throw error here?
+		}
+
+		return(output);
+	}
+
+	// If Bound::toJS(ReturnType, cbOutput) is missing, fall back to ReturnType::toJS(cbOutput).
+	static inline WireType toWireType(ReturnType &&result, ...) {
+		return(BindingType<ReturnType>::toWireType(std::move(result)));
+	}
+
+};
+
+// Convert void return values to undefined.
+
+template<> struct MethodResultConverter<void> {
+	static inline WireType toWireType(std::nullptr_t result, ...) {
+		return(NanUndefined());
+	}
+};
+
 // Wrapper for all C++ methods with matching class, argument and return types.
 
 template <class Bound, typename ReturnType, typename... Args>
@@ -59,7 +99,7 @@ public:
 
 			if(message) return(NanThrowError(message));
 
-			NanReturnValue(BindingType<ReturnType>::toWireType(std::move(result)));
+			NanReturnValue(MethodResultConverter<ReturnType>::toWireType(std::move(result), &target));
 		} catch(const std::exception &ex) {
 			const char *message = Bindings::getError();
 
