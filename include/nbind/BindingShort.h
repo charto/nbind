@@ -19,10 +19,6 @@
 #define VA_SELECT_HELPER(NAME, ARGC) VA_CONCAT(NAME ## _, ARGC)
 #define VA_SELECT(NAME, ...) VA_SELECT_HELPER(NAME, VA_SIZE(__VA_ARGS__))(__VA_ARGS__)
 
-// Macro to report an error when exceptions are not available.
-
-#define NBIND_ERR(message) nbind::Bindings::setError(message)
-
 // Define bindings for a C++ class using a syntax that looks like a function definition.
 
 #define NBIND_CLASS(Name) \
@@ -56,9 +52,5 @@
 // #define getset(name, get, set) definer.property(#name, &Bound::get, &Bound::set)
 
 #define NBIND_INIT(moduleName) NODE_MODULE(moduleName, nbind::Bindings::initModule)
-
-#else
-
-#define NBIND_ERR(message)
 
 #endif

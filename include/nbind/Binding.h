@@ -3,6 +3,10 @@
 
 #pragma once
 
+#ifdef BUILDING_NODE_EXTENSION
+
+#define NBIND 1
+
 #include <forward_list>
 #include <vector>
 #include <stdexcept>
@@ -12,6 +16,10 @@
 #include <nan.h>
 
 #include "BindingType.h"
+
+// Macro to report an error when exceptions are not available.
+
+#define NBIND_ERR(message) nbind::Bindings::setError(message)
 
 namespace nbind {
 
@@ -130,3 +138,9 @@ struct allow_raw_pointers {};
 	BindInvoker##Bound::BindInvoker##Bound(BindClass<Bound> &bindClass)
 
 } // namespace
+
+#else // !BUILDING_NODE_EXTENSION
+
+#define NBIND_ERR(message)
+
+#endif // BUILDING_NODE_EXTENSION
