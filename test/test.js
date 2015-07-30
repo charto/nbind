@@ -1,6 +1,10 @@
 var test = require('tap').test;
 
-var testModule = require('..')(__dirname);
+var nbind = require('..');
+
+var testModule = nbind.module;
+
+nbind.init(__dirname);
 
 test('Methods and primitive types', function(t) {
 	var Type = testModule.PrimitiveMethods;
@@ -99,7 +103,7 @@ test('Value objects', function(t) {
 		output(this.x, this.y);
 	}
 
-	testModule.NBind.bind('Coord', Coord);
+	nbind.bind('Coord', Coord);
 
 	var xy = Type.getCoord();
 
