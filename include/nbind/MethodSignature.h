@@ -105,7 +105,7 @@ public:
 
 			if(message == nullptr) message = ex.what();
 
-			NanThrowError(message);
+			return(NanThrowError(message));
 		}
 	}
 

@@ -104,7 +104,7 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 
 			if(message == nullptr) message = ex.what();
 
-			NanThrowError(message);
+			return(NanThrowError(message));
 		}
 	} else {
 		// Constructor was called like Bound(...), add the "new" operator.
