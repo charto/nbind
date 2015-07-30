@@ -271,7 +271,7 @@ public:
 			// Can't use throw here because there's V8 code
 			// (lacking C++ exception support) on the stack
 			// above the catch statement.
-			Bindings::setError("Wrong number of arguments in value binding");
+			NBIND_ERR("Wrong number of arguments in value binding");
 			NanReturnUndefined();
 		}
 
@@ -416,7 +416,7 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 
 			arg->toJS(construct);
 		} else {
-			// Throw error here?
+			throw(std::runtime_error("Value type JavaScript class is missing or not registered"));
 		}
 	}
 
@@ -424,7 +424,7 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 }
 
 template <typename ArgType>
-inline WireType BindingType<ArgType>::toWireType(ArgType &&arg) {
+inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 	v8::Local<v8::Value> output = NanUndefined();
 	cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
 
@@ -433,7 +433,7 @@ inline WireType BindingType<ArgType>::toWireType(ArgType &&arg) {
 
 		arg.toJS(construct);
 	} else {
-		// Throw error here?
+		throw(std::runtime_error("Value type JavaScript class is missing or not registered"));
 	}
 
 	return(output);

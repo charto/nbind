@@ -15,11 +15,11 @@
 #include <node.h>
 #include <nan.h>
 
-#include "BindingType.h"
-
 // Macro to report an error when exceptions are not available.
 
 #define NBIND_ERR(message) nbind::Bindings::setError(message)
+
+#include "BindingType.h"
 
 namespace nbind {
 

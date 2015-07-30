@@ -55,7 +55,7 @@ template <typename ArgType> struct BindingType {
 
 	static inline ArgType fromWireType(WireType arg);
 
-	static inline WireType toWireType(ArgType &&arg);
+	static inline WireType toWireType(ArgType arg);
 
 };
 
