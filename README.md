@@ -1,7 +1,7 @@
 nbind
 =====
 
-[![build status](https://travis-ci.org/charto/nbind.svg?branch=master)](http://travis-ci.org/charto/nbind) [![npm version](https://img.shields.io/npm/v/nbind.svg)](https://www.npmjs.com/package/nbind)
+[![build status](https://travis-ci.org/charto/nbind.svg?branch=master)](http://travis-ci.org/charto/nbind) [![npm version](https://img.shields.io/npm/v/nbind.svg)](https://www.npmjs.com/package/nbind) [![dependency status](https://david-dm.org/charto/nbind.svg)](https://david-dm.org/charto/nbind)
 
 nbind is a bindings generator for Node.js plugins inspired by [embind](http://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html) from [emscripten](http://emscripten.org). The bindings are built along with your C++ library without requiring any generated code, using C++11 templates and simple declarations.
 
