@@ -1,4 +1,5 @@
 {
+	"target_name": "nbind",
 	"include_dirs": [
 		"include"
 	],

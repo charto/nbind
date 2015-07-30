@@ -8,7 +8,7 @@
   },
   "license": "MIT",
   "author": "Juha Järvi",
-  "main": "gypiresolver.js",
+  "main": "index.js",
   "scripts": {
     "test": "cd test && autogypi && node-gyp configure && node-gyp build && tap --gc test.js"
   },
@@ -22,11 +22,11 @@
     "win32"
   ],
   "dependencies": {
+    "bindings": "^1.2.1",
     "nan": "~1.8.4"
   },
   "devDependencies": {
     "autogypi": "~0.0.3",
-    "bindings": "~1.2.1",
     "node-gyp": "~1.0.3",
     "tap": "~1.2.1"
   }

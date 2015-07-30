@@ -146,4 +146,6 @@ NBIND_CLASS(NBind) {
 	method(bind);
 }
 
+NODE_MODULE(nbind, nbind::Bindings::initModule)
+
 #endif

@@ -1,8 +1,6 @@
 var test = require('tap').test;
-var testModule = require('bindings')({
-	module_root: __dirname,
-	bindings: 'test'
-});
+
+var testModule = require('..')(__dirname);
 
 test('Methods and primitive types', function(t) {
 	var Type = testModule.PrimitiveMethods;

@@ -54,6 +54,4 @@
 // TODO: varargs macro also supporting this:
 // #define getset(name, get, set) definer.property(#name, &Bound::get, &Bound::set)
 
-#define NBIND_INIT(moduleName) NODE_MODULE(moduleName, nbind::Bindings::initModule)
-
 #endif
