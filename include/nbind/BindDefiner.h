@@ -3,10 +3,12 @@
 
 #pragma once
 
+#ifdef BUILDING_NODE_EXTENSION
 #include "wire.h"
 #include "FunctionSignature.h"
 #include "MethodSignature.h"
 #include "AccessorSignature.h"
+#endif // BUILDING_NODE_EXTENSION
 
 namespace nbind {
 
@@ -31,7 +33,11 @@ public:
 		bindClass = BindClass<Bound>::getInstance();
 		bindClass->setName(name);
 
+#ifdef BUILDING_NODE_EXTENSION
 		Bindings::registerClass(bindClass);
+#else
+_nbind_register_class(name);
+#endif // BUILDING_NODE_EXTENSION
 	}
 
 	template<typename ReturnType, typename... Args, typename... Policies>
@@ -40,6 +46,7 @@ public:
 		ReturnType(Bound::*method)(Args...),
 		Policies...
 	) const {
+#ifdef BUILDING_NODE_EXTENSION
 		typedef MethodSignature<Bound, ReturnType, Args...> Signature;
 
 		Signature::setClassName(this->name);
@@ -48,7 +55,9 @@ public:
 			Signature::addFunction(name, method),
 			Signature::call
 		);
-
+#else
+_nbind_register_method(name);
+#endif // BUILDING_NODE_EXTENSION
 		return(*this);
 	}
 
@@ -58,6 +67,7 @@ public:
 		ReturnType(*func)(Args...),
 		Policies...
 	) const {
+#ifdef BUILDING_NODE_EXTENSION
 		typedef FunctionSignature<ReturnType, Args...> Signature;
 
 		bindClass->addFunction(
@@ -65,12 +75,15 @@ public:
 			Signature::addFunction(name, func),
 			Signature::call
 		);
-
+#else
+_nbind_register_function(name);
+#endif // BUILDING_NODE_EXTENSION
 		return(*this);
 	}
 
 	template<typename... Args, typename... Policies>
 	const BindDefiner &constructor(Policies...) const {
+#ifdef BUILDING_NODE_EXTENSION
 		typedef ConstructorInfo<
 			Bound,
 			typename emscripten::internal::MapWithIndex<
@@ -82,6 +95,7 @@ public:
 
 		Constructor::setClassName(this->name);
 		bindClass->addConstructor(sizeof...(Args), Constructor::makeWrapper, Constructor::makeValue);
+#endif // BUILDING_NODE_EXTENSION
 
 		return(*this);
 	}
@@ -95,6 +109,7 @@ public:
 		FieldType(Bound::*getter)(),
 		Policies...
 	) const {
+#ifdef BUILDING_NODE_EXTENSION
 		typedef AccessorSignature<Bound, FieldType> GetterSignature;
 
 		GetterSignature::setClassName(this->name);
@@ -106,6 +121,7 @@ public:
 			GetterSignature::getter,
 			nullptr
 		);
+#endif // BUILDING_NODE_EXTENSION
 
 		return(*this);
 	}
@@ -122,6 +138,7 @@ public:
 		SetReturnType(Bound::*setter)(SetFieldType),
 		Policies...
 	) const {
+#ifdef BUILDING_NODE_EXTENSION
 		typedef AccessorSignature<Bound, GetFieldType> GetterSignature;
 		typedef AccessorSignature<Bound, SetReturnType, SetFieldType> SetterSignature;
 
@@ -135,6 +152,7 @@ public:
 			GetterSignature::getter,
 			SetterSignature::setter
 		);
+#endif // BUILDING_NODE_EXTENSION
 
 		return(*this);
 	}

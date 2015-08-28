@@ -3,9 +3,13 @@
 
 #pragma once
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION) || defined(EMSCRIPTEN)
 
+#ifdef BUILDING_NODE_EXTENSION
 #include "Binding.h"
+#else
+#include "Binding2.h"
+#endif
 
 // Support overloading macros by number of arguments.
 // See http://stackoverflow.com/a/16683147/16509

@@ -1,6 +1,12 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+#ifdef EMSCRIPTEN
+
+#include "nbind/Binding2.h"
+
+#endif
+
 #ifdef BUILDING_NODE_EXTENSION
 
 #include <cstring>

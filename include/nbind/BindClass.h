@@ -45,6 +45,7 @@ private:
 
 template<class Bound, typename ArgList> struct ConstructorInfo;
 
+#ifdef BUILDING_NODE_EXTENSION
 template<class Bound, typename... Args>
 struct ConstructorInfo<Bound, TypeList<Args...>> {
 
@@ -80,6 +81,7 @@ private:
 	}
 
 };
+#endif // BUILDING_NODE_EXTENSION
 
 // Templated singleton class for each C++ class accessible from Node.js.
 // Stores their information defined in static constructors, until the Node.js
@@ -91,9 +93,16 @@ protected:
 
 	// Get type of method definitions to use in function pointers.
 
+#ifdef BUILDING_NODE_EXTENSION
 	inline static NAN_METHOD(dummyMethod) {NanReturnNull();}
 	inline static NAN_GETTER(dummyGetter) {NanReturnNull();}
 	inline static NAN_SETTER(dummySetter) {}
+#else
+	inline static void *dummyMethod() {return(nullptr);}
+	inline static void *dummyGetter() {return(nullptr);}
+	inline static void *dummySetter() {return(nullptr);}
+#endif // BUILDING_NODE_EXTENSION
+
 	typedef decltype(dummyMethod) jsMethod;
 	typedef decltype(dummyGetter) jsGetter;
 	typedef decltype(dummySetter) jsSetter;
@@ -194,6 +203,7 @@ public:
 	std::forward_list<AccessorDef> &getAccessorList() {return(accessList);}
 
 	jsMethod *createPtr;
+#ifdef BUILDING_NODE_EXTENSION
 
 	void setConstructorHandle(v8::Handle<v8::Function> func) {
 		if(jsConstructorHandle == nullptr) {
@@ -225,6 +235,7 @@ public:
 	cbFunction *getValueConstructorJS() {
 		return(valueConstructorJS);
 	}
+#endif // BUILDING_NODE_EXTENSION
 
 protected:
 
@@ -239,6 +250,7 @@ protected:
 	// segfaults when freeing V8 resources because the surrounding
 	// object gets destroyed after the V8 engine.
 
+#ifdef BUILDING_NODE_EXTENSION
 	// Constructor called by JavaScript's "new" operator.
 	NanCallback *jsConstructorHandle = nullptr;
 
@@ -246,6 +258,7 @@ protected:
 	// when converting this object into a plain JavaScript object,
 	// if possible.
 	cbFunction *valueConstructorJS = nullptr;
+#endif // BUILDING_NODE_EXTENSION
 
 };
 
@@ -257,10 +270,12 @@ template <class Bound> class BindClass : public BindClassBase {
 public:
 
 	BindClass() : BindClassBase() {
+#ifdef BUILDING_NODE_EXTENSION
 		createPtr = create;
+#endif // BUILDING_NODE_EXTENSION
 		setInstance(this);
 	}
-
+#ifdef BUILDING_NODE_EXTENSION
 	// Wrapper that calls the C++ constructor when called from a
 	// fromJS function written in JavaScript.
 
@@ -367,7 +382,7 @@ public:
 	// a singleton instance of this class.
 	// A reference will be stored in a list of all wrapped classes,
 	// so they can be initialized in initModule.
-
+#endif // BUILDING_NODE_EXTENSION
 	static BindClass *getInstance() {return(instanceStore());}
 
 	static BindClass *&instanceStore() {
@@ -378,6 +393,7 @@ public:
 	// Linkage for a table of overloaded constructors
 	// (overloads must have different arities).
 
+#ifdef BUILDING_NODE_EXTENSION
 	static std::vector<jsWrapperConstructor *> &wrapperConstructorVectStore() {
 		static std::vector<jsWrapperConstructor *> constructorVect;
 		return(constructorVect);
@@ -387,6 +403,7 @@ public:
 		static std::vector<jsValueConstructor *> constructorVect;
 		return(constructorVect);
 	}
+#endif // BUILDING_NODE_EXTENSION
 
 private:
 
@@ -403,7 +420,7 @@ private:
 // which must call the functor with arguments in the correct order.
 // The functor calls the JavaScript constructor and writes a pointer to the resulting object
 // directly into a local handle called "output" which is returned to JavaScript.
-
+#ifdef BUILDING_NODE_EXTENSION
 template <typename ArgType>
 inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 	v8::Local<v8::Value> output = NanUndefined();
@@ -466,5 +483,5 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 
 	return(wrapper.getBound());
 }
-
+#endif // BUILDING_NODE_EXTENSION
 } // namespace
