@@ -44,6 +44,7 @@ public:
 		return(funcVect.size() - 1);
 	}
 
+#ifdef BUILDING_NODE_EXTENSION
 	typedef Caller<
 		ReturnType,
 		typename emscripten::internal::MapWithIndex<
@@ -65,6 +66,7 @@ public:
 
 		return(checker::typesAreValid(args));
 	}
+#endif // BUILDING_NODE_EXTENSION
 
 protected:
 

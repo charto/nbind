@@ -7,6 +7,11 @@
 
 #define NBIND 1
 
+namespace nbind {
+	typedef void (*funcPtr)();
+}
+
+#include <type_traits>
 #include <forward_list>
 #include <vector>
 #include <stdexcept>
@@ -68,10 +73,10 @@ extern v8::Persistent<v8::Object> constructorStore;
 
 // The create function would better fit in BindClass but it needs to call
 // node::ObjectWrap::Wrap which is protected and only inherited by BindWrapper.
-template <class Bound>
-NAN_METHOD(BindClass<Bound>::create) {
-	return(BindWrapper<Bound>::create(args));
-}
+//template <class Bound>
+//NAN_METHOD(BindClass<Bound>::create) {
+//	return(BindWrapper<Bound>::create(args));
+//}
 
 template <class Bound>
 NAN_METHOD(BindWrapper<Bound>::create) {

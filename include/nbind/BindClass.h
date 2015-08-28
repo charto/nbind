@@ -45,7 +45,6 @@ private:
 
 template<class Bound, typename ArgList> struct ConstructorInfo;
 
-#ifdef BUILDING_NODE_EXTENSION
 template<class Bound, typename... Args>
 struct ConstructorInfo<Bound, TypeList<Args...>> {
 
@@ -54,6 +53,7 @@ public:
 	static const char *getClassName() {return(classNameStore());}
 	static void setClassName(const char *className) {classNameStore() = className;}
 
+#ifdef BUILDING_NODE_EXTENSION
 	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
 	template <typename... NanArgs>
 	static BindWrapper<Bound> *makeWrapper(NanArgs... args) noexcept(false) {
@@ -72,6 +72,7 @@ public:
 	static void makeValue(ArgStorage<Bound> &storage, NanArgs... args) {
 		storage.init(Args(std::forward<NanArgs>(args)...).get(args...)...);
 	}
+#endif // BUILDING_NODE_EXTENSION
 
 private:
 
@@ -81,7 +82,6 @@ private:
 	}
 
 };
-#endif // BUILDING_NODE_EXTENSION
 
 // Templated singleton class for each C++ class accessible from Node.js.
 // Stores their information defined in static constructors, until the Node.js
@@ -89,7 +89,7 @@ private:
 
 class BindClassBase {
 
-protected:
+private:
 
 	// Get type of method definitions to use in function pointers.
 
@@ -103,11 +103,11 @@ protected:
 	inline static void *dummySetter() {return(nullptr);}
 #endif // BUILDING_NODE_EXTENSION
 
+public:
+
 	typedef decltype(dummyMethod) jsMethod;
 	typedef decltype(dummyGetter) jsGetter;
 	typedef decltype(dummySetter) jsSetter;
-
-public:
 
 	// Storage format for method definitions.
 
@@ -115,12 +115,12 @@ public:
 
 	public:
 
-		MethodDef(const char *name, unsigned int num, jsMethod *signature) :
+		MethodDef(const char *name, unsigned int num, funcPtr signature) :
 			name(name), num(num), signature(signature) {}
 
 		const char *getName() {return(name);}
 		unsigned int getNum() {return(num);}
-		jsMethod *getSignature() {return(signature);}
+		funcPtr getSignature() {return(signature);}
 
 	private:
 
@@ -128,7 +128,7 @@ public:
 		// Index to distinguish between functions with identical signatures.
 		unsigned int num;
 		// Signature represents return and argument types.
-		jsMethod *signature;
+		funcPtr signature;
 
 	};
 
@@ -138,22 +138,22 @@ public:
 
 	public:
 
-		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, jsGetter *getterSignature, jsSetter *setterSignature) :
+		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, funcPtr getterSignature, funcPtr setterSignature) :
 			name(name), getterNum(getterNum), setterNum(setterNum), getterSignature(getterSignature), setterSignature(setterSignature) {}
 
 		const char *getName() {return(name);}
 		unsigned int getGetterNum() {return(getterNum);}
 		unsigned int getSetterNum() {return(setterNum);}
-		jsGetter *getGetterSignature() {return(getterSignature);}
-		jsSetter *getSetterSignature() {return(setterSignature);}
+		funcPtr getGetterSignature() {return(getterSignature);}
+		funcPtr getSetterSignature() {return(setterSignature);}
 
 	private:
 
 		const char *name;
 		unsigned int getterNum;
 		unsigned int setterNum;
-		jsGetter *getterSignature;
-		jsSetter *setterSignature;
+		funcPtr getterSignature;
+		funcPtr setterSignature;
 
 	};
 
@@ -174,13 +174,13 @@ public:
 
 	// Add a method to the class.
 
-	void addMethod(const char *name, unsigned int num, jsMethod *signature) {
+	void addMethod(const char *name, unsigned int num, funcPtr signature) {
 		methodList.emplace_front(name, num, signature);
 	}
 
 	// Add a static method to the class.
 
-	void addFunction(const char *name, unsigned int num, jsMethod *signature) {
+	void addFunction(const char *name, unsigned int num, funcPtr signature) {
 		funcList.emplace_front(name, num, signature);
 	}
 
@@ -190,8 +190,8 @@ public:
 		const char *name,
 		unsigned int getterNum,
 		unsigned int setterNum,
-		jsGetter *getterSignature,
-		jsSetter *setterSignature
+		funcPtr getterSignature,
+		funcPtr setterSignature
 	) {
 		accessList.emplace_front(name, getterNum, setterNum, getterSignature, setterSignature);
 	}
@@ -203,8 +203,8 @@ public:
 	std::forward_list<AccessorDef> &getAccessorList() {return(accessList);}
 
 	jsMethod *createPtr;
-#ifdef BUILDING_NODE_EXTENSION
 
+#ifdef BUILDING_NODE_EXTENSION
 	void setConstructorHandle(v8::Handle<v8::Function> func) {
 		if(jsConstructorHandle == nullptr) {
 			jsConstructorHandle = new NanCallback(func);
@@ -271,7 +271,7 @@ public:
 
 	BindClass() : BindClassBase() {
 #ifdef BUILDING_NODE_EXTENSION
-		createPtr = create;
+		createPtr = BindWrapper<Bound>::create;
 #endif // BUILDING_NODE_EXTENSION
 		setInstance(this);
 	}
@@ -376,7 +376,7 @@ public:
 		return(valueConstructorVectStore()[arity]);
 	}
 
-	static NAN_METHOD(create);
+//	static NAN_METHOD(create);
 
 	// Use a static variable inside a static method to provide linkage for
 	// a singleton instance of this class.

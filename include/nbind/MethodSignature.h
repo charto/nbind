@@ -10,6 +10,7 @@
 
 namespace nbind {
 
+#ifdef BUILDING_NODE_EXTENSION
 template<typename ReturnType> struct MethodResultConverter {
 
 	template <typename Bound>
@@ -49,6 +50,7 @@ template<> struct MethodResultConverter<void> {
 		return(NanUndefined());
 	}
 };
+#endif // BUILDING_NODE_EXTENSION
 
 // Wrapper for all C++ methods with matching class, argument and return types.
 
@@ -73,6 +75,7 @@ public:
 		Parent::signatureStore().data.className = className;
 	}
 
+#ifdef BUILDING_NODE_EXTENSION
 	static NAN_METHOD(call) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);
 
@@ -108,6 +111,9 @@ public:
 			return(NanThrowError(message));
 		}
 	}
+#else
+	static void call() {}
+#endif // BUILDING_NODE_EXTENSION
 
 };
 

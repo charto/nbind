@@ -39,6 +39,7 @@ public:
 		Parent::signatureStore().data.className = className;
 	}
 
+#ifdef BUILDING_NODE_EXTENSION
 	static NAN_GETTER(getter) {
 		NanScope();
 
@@ -95,6 +96,10 @@ public:
 			}
 		}
 	}
+#else
+	static void getter() {}
+	static void setter() {}
+#endif // BUILDING_NODE_EXTENSION
 
 };
 

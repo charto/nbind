@@ -3,12 +3,10 @@
 
 #pragma once
 
-#ifdef BUILDING_NODE_EXTENSION
 #include "wire.h"
 #include "FunctionSignature.h"
 #include "MethodSignature.h"
 #include "AccessorSignature.h"
-#endif // BUILDING_NODE_EXTENSION
 
 namespace nbind {
 
@@ -33,9 +31,8 @@ public:
 		bindClass = BindClass<Bound>::getInstance();
 		bindClass->setName(name);
 
-#ifdef BUILDING_NODE_EXTENSION
 		Bindings::registerClass(bindClass);
-#else
+#ifdef EMSCRIPTEN
 _nbind_register_class(name);
 #endif // BUILDING_NODE_EXTENSION
 	}
@@ -46,18 +43,17 @@ _nbind_register_class(name);
 		ReturnType(Bound::*method)(Args...),
 		Policies...
 	) const {
-#ifdef BUILDING_NODE_EXTENSION
 		typedef MethodSignature<Bound, ReturnType, Args...> Signature;
 
 		Signature::setClassName(this->name);
 		bindClass->addMethod(
 			name,
 			Signature::addFunction(name, method),
-			Signature::call
+			reinterpret_cast<funcPtr>(Signature::call)
 		);
-#else
+#ifdef EMSCRIPTEN
 _nbind_register_method(name);
-#endif // BUILDING_NODE_EXTENSION
+#endif // EMSCRIPTEN
 		return(*this);
 	}
 
@@ -67,17 +63,16 @@ _nbind_register_method(name);
 		ReturnType(*func)(Args...),
 		Policies...
 	) const {
-#ifdef BUILDING_NODE_EXTENSION
 		typedef FunctionSignature<ReturnType, Args...> Signature;
 
 		bindClass->addFunction(
 			name,
 			Signature::addFunction(name, func),
-			Signature::call
+			reinterpret_cast<funcPtr>(Signature::call)
 		);
-#else
+#ifdef EMSCRIPTEN
 _nbind_register_function(name);
-#endif // BUILDING_NODE_EXTENSION
+#endif // EMSCRIPTEN
 		return(*this);
 	}
 
@@ -109,7 +104,6 @@ _nbind_register_function(name);
 		FieldType(Bound::*getter)(),
 		Policies...
 	) const {
-#ifdef BUILDING_NODE_EXTENSION
 		typedef AccessorSignature<Bound, FieldType> GetterSignature;
 
 		GetterSignature::setClassName(this->name);
@@ -118,10 +112,9 @@ _nbind_register_function(name);
 			name,
 			GetterSignature::addFunction(name, getter),
 			0,
-			GetterSignature::getter,
+			reinterpret_cast<funcPtr>(GetterSignature::getter),
 			nullptr
 		);
-#endif // BUILDING_NODE_EXTENSION
 
 		return(*this);
 	}
@@ -138,7 +131,6 @@ _nbind_register_function(name);
 		SetReturnType(Bound::*setter)(SetFieldType),
 		Policies...
 	) const {
-#ifdef BUILDING_NODE_EXTENSION
 		typedef AccessorSignature<Bound, GetFieldType> GetterSignature;
 		typedef AccessorSignature<Bound, SetReturnType, SetFieldType> SetterSignature;
 
@@ -149,10 +141,9 @@ _nbind_register_function(name);
 			name,
 			GetterSignature::addFunction(name, getter),
 			SetterSignature::addFunction(name, setter),
-			GetterSignature::getter,
-			SetterSignature::setter
+			reinterpret_cast<funcPtr>(GetterSignature::getter),
+			reinterpret_cast<funcPtr>(SetterSignature::setter)
 		);
-#endif // BUILDING_NODE_EXTENSION
 
 		return(*this);
 	}

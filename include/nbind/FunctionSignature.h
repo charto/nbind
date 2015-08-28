@@ -23,6 +23,7 @@ public:
 
 	typedef CallableSignature<FunctionSignature, ReturnType, Args...> Parent;
 
+#ifdef BUILDING_NODE_EXTENSION
 	static NAN_METHOD(call) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);
 
@@ -55,6 +56,9 @@ public:
 			return(NanThrowError(message));
 		}
 	}
+#else
+	static void call() {}
+#endif // BUILDING_NODE_EXTENSION
 
 };
 

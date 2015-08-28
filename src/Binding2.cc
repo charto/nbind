@@ -7,15 +7,17 @@
 
 #endif
 
-#ifdef BUILDING_NODE_EXTENSION
+//#ifdef BUILDING_NODE_EXTENSION
 
+#include <cstdlib>
 #include <cstring>
 
-#include "nbind/Binding.h"
+//#include "nbind/Binding.h"
 
-using namespace v8;
+//using namespace v8;
 using namespace nbind;
 
+/*
 class NBind {
 
 public:
@@ -34,6 +36,7 @@ void Bindings :: setValueConstructorByName(const char *name, cbFunction &func) {
 		}
 	}
 }
+*/
 
 // Linkage for module-wide error message.
 const char *Bindings :: message;
@@ -77,6 +80,7 @@ const char *stripGetterPrefix(const char *name, char *&nameBuf) {
 	return(name);
 }
 
+/*
 void Bindings :: initModule(Handle<Object> exports) {
 	// Register NBind a second time to make sure it's first on the list
 	// of classes and gets defined first, so pointers to it can be added
@@ -153,5 +157,6 @@ NBIND_CLASS(NBind) {
 }
 
 NODE_MODULE(nbind, nbind::Bindings::initModule)
+*/
 
-#endif
+//#endif
