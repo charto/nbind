@@ -71,7 +71,7 @@ public:
 		}
 	}
 
-	static void setter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<v8::Value> &args) {
+	static void setter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {
 //	static NAN_SETTER(setter) {
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
