@@ -3,7 +3,7 @@
 
 #include <cstring>
 
-#include "nbind/BindingShort.h"
+#include "nbind/api.h"
 
 class Callback {
 
@@ -20,6 +20,8 @@ public:
 //	static int (*getState)(nbind::cbFunction);
 
 };
+
+#include "nbind/BindingShort.h"
 
 #ifdef NBIND_CLASS
 

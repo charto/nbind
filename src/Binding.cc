@@ -36,7 +36,7 @@ void Bindings :: setValueConstructorByName(const char *name, cbFunction &func) {
 }
 
 // Linkage for module-wide error message.
-const char *Bindings :: message;
+const char *Status :: message;
 
 void Bindings :: registerClass(BindClassBase *bindClass) {
 	getClassList().emplace_front(bindClass);

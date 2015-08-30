@@ -478,7 +478,7 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 
 	converter.callMethod<void>(target, constructor);
 
-	const char *message = Bindings::getError();
+	const char *message = Status::getError();
 	if(message) throw(std::runtime_error(message));
 
 	return(wrapper.getBound());

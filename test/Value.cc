@@ -3,7 +3,7 @@
 
 #include <cstring>
 
-#include "nbind/Binding.h"
+#include "nbind/api.h"
 
 class Coord {
 

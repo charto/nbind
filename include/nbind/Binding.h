@@ -7,10 +7,6 @@
 
 #define NBIND 1
 
-namespace nbind {
-	typedef void (*funcPtr)();
-}
-
 #include <type_traits>
 #include <forward_list>
 #include <vector>
@@ -22,9 +18,7 @@ namespace nbind {
 
 // Macro to report an error when exceptions are not available.
 
-#define NBIND_ERR(message) nbind::Bindings::setError(message)
-
-#include "BindingType.h"
+#include "api.h"
 
 namespace nbind {
 
@@ -41,15 +35,7 @@ public:
 	static void initModule(v8::Handle<v8::Object> exports);
 	static void setValueConstructorByName(const char *name, cbFunction &func);
 
-	static inline const char *getError() {return(message);}
-	static inline void clearError() {Bindings::message = nullptr;}
-	static inline void setError(const char *message) {
-		if(!Bindings::message) Bindings::message = message;
-	}
-
 private:
-
-	static const char *message;
 
 	// Linkage for a list of all C++ class wrappers.
 
@@ -92,20 +78,20 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 			return(NanThrowError("Wrong number of arguments"));
 		}
 
-		Bindings::clearError();
+		Status::clearError();
 
 		// Call C++ constructor and bind the resulting object
 		// to the new JavaScript object being created.
 		try {
 			constructor(args)->Wrap(args.This());
 
-			const char *message = Bindings::getError();
+			const char *message = Status::getError();
 
 			if(message) return(NanThrowError(message));
 
 			NanReturnThis();
 		} catch(const std::exception &ex) {
-			const char *message = Bindings::getError();
+			const char *message = Status::getError();
 
 			if(message == nullptr) message = ex.what();
 
@@ -143,9 +129,5 @@ struct allow_raw_pointers {};
 	BindInvoker##Bound::BindInvoker##Bound(BindClass<Bound> &bindClass)
 
 } // namespace
-
-#else // !BUILDING_NODE_EXTENSION
-
-#define NBIND_ERR(message)
 
 #endif // BUILDING_NODE_EXTENSION

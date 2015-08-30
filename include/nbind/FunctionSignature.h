@@ -38,18 +38,18 @@ public:
 			return(NanThrowTypeError("Type mismatch"));
 		}
 
-		Bindings::clearError();
+		Status::clearError();
 
 		try {
 			auto result = Parent::CallWrapper::call(Parent::getFunction(args.Data()->IntegerValue()).func, args);
 
-			const char *message = Bindings::getError();
+			const char *message = Status::getError();
 
 			if(message != nullptr) return(NanThrowError(message));
 
 			NanReturnValue(BindingType<ReturnType>::toWireType(std::move(result)));
 		} catch(const std::exception &ex) {
-			const char *message = Bindings::getError();
+			const char *message = Status::getError();
 
 			if(message == nullptr) message = ex.what();
 

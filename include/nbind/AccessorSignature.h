@@ -46,7 +46,7 @@ public:
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
-		Bindings::clearError();
+		Status::clearError();
 
 		try {
 			auto &&result = Caller<
@@ -54,13 +54,13 @@ public:
 				TypeList<>
 			>::call(target, Parent::getFunction(args.Data()->IntegerValue() & accessorGetterMask).func, args);
 
-			const char *message = Bindings::getError();
+			const char *message = Status::getError();
 
 			if(message) return(NanThrowError(message));
 
 			NanReturnValue(BindingType<ReturnType>::toWireType(std::move(result)));
 		} catch(const std::exception &ex) {
-			const char *message = Bindings::getError();
+			const char *message = Status::getError();
 
 			if(message == nullptr) message = ex.what();
 
@@ -74,7 +74,7 @@ public:
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
-		Bindings::clearError();
+		Status::clearError();
 
 		auto *valuePtr = &value;
 
@@ -84,11 +84,11 @@ public:
 			try {
 				Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
 
-				const char *message = Bindings::getError();
+				const char *message = Status::getError();
 
 				if(message) NanThrowError(message);
 			} catch(const std::exception &ex) {
-				const char *message = Bindings::getError();
+				const char *message = Status::getError();
 
 				if(message == nullptr) message = ex.what();
 

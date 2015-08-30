@@ -93,18 +93,18 @@ public:
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
-		Bindings::clearError();
+		Status::clearError();
 
 		try {
 			auto result = Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue()).func, args);
 
-			const char *message = Bindings::getError();
+			const char *message = Status::getError();
 
 			if(message) return(NanThrowError(message));
 
 			NanReturnValue(MethodResultConverter<ReturnType>::toWireType(std::move(result), &target));
 		} catch(const std::exception &ex) {
-			const char *message = Bindings::getError();
+			const char *message = Status::getError();
 
 			if(message == nullptr) message = ex.what();
 
