@@ -188,8 +188,22 @@ npm test
 Usage and syntax
 ================
 
-nbind headers
--------------
+JavaScript side
+---------------
+
+`nbind` is intended to be used together with [autogypi](https://www.npmjs.com/package/autogypi) for easier dependency management. Declare it as a dependency in `autogypi.json`, run `autogypi` and include the resulting `auto.gypi` from your `binding.gyp` file. See the example section above for sample contents of these configuration files.
+
+Your code might depend on other npm packages that also contain `nbind` exports. `autogypi` will make sure that when you run `node-gyp`, their sources will also get compiled and their includes will be in the include path when your code is compiled. When you run `node-gyp` it produces a module with all the exported classes from all packages you've included. Then you just do in the root directory of your package:
+
+```javascript
+var nbind = require('nbind');
+nbind.init(__dirname);
+```
+
+This allows nbind to find the module you compiled. Afterwards, `nbind.module` will contain all the exported classes.
+
+C++ nbind headers
+-----------------
 
 Use `#include "nbind/BindingShort.h"` at the end of your source file with only the bindings after it. The header defines macros with names like `construct` that are otherwise likely to break the code implementing your C++ class.
 
@@ -220,12 +234,15 @@ Property setters are exported together with getters using a macro call `getset(g
 Callbacks and value objects
 ---------------------------
 
-Callbacks can be passed to C++ methods by simply adding an argument of type `nbind::cbFunction &` to their declaration. They can be called with any number of any supported types without having to declare in any way what they accept. The JavaScript code will receive the parameters as JavaScript variables to do with them as it pleases. A callback argument `arg´ can be called like `arg("foobar", 42);` in which case the return value is ignored. If the return value is needed, it must be called like `arg.call<type>("foobar", 42);` where `type` is the desired C++ type that the return value should be converted to.
+Callbacks can be passed to C++ methods by simply adding an argument of type `nbind::cbFunction &` to their declaration. They can be called with any number of any supported types without having to declare in any way what they accept. The JavaScript code will receive the parameters as JavaScript variables to do with them as it pleases. A callback argument `arg` can be called like `arg("foobar", 42);` in which case the return value is ignored. If the return value is needed, it must be called like `arg.call<type>("foobar", 42);` where `type` is the desired C++ type that the return value should be converted to.
 
-TODO: Value objects are the most advanced concept supported so far.
+Value objects are the most advanced concept supported so far. They're based on a `toJS` function on the C++ side and a `fromJS` function on the JavaScript side. Both receive a callback as an argument, and calling it with any parameters calls the constructor of the equivalent type in the other language. TODO: more details.
+
+
 
 License
 =======
 
 [The MIT License](https://raw.githubusercontent.com/charto/nbind/master/LICENSE)
+
 Copyright (c) 2014-2015 BusFaster Ltd
