@@ -182,7 +182,7 @@ class cbFunction {
 
 public:
 
-	explicit cbFunction(const v8::Handle<v8::Function> &func) : func(func) {}
+	explicit cbFunction(const v8::Local<v8::Function> &func) : func(func) {}
 
 	cbFunction(const cbFunction &func) : func(func.getJsFunction()) {}
 
@@ -200,14 +200,14 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::type callMethod(v8::Handle<v8::Object> target, Args... args) {
+	typename BindingType<ReturnType>::type callMethod(v8::Local<v8::Object> target, Args... args) {
 		v8::Local<v8::Value> argv[] = {
 			(BindingType<Args>::toWireType(args))...
 		};
 		return(BindingType<ReturnType>::fromWireType(func.Call(target, sizeof...(Args), argv)));
 	}
 
-	v8::Handle<v8::Function> getJsFunction() const {return(func.GetFunction());}
+	v8::Local<v8::Function> getJsFunction() const {return(func.GetFunction());}
 
 private:
 

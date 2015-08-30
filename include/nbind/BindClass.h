@@ -209,7 +209,7 @@ public:
 	jsMethod *createPtr;
 
 #ifdef BUILDING_NODE_EXTENSION
-	void setConstructorHandle(v8::Handle<v8::Function> func) {
+	void setConstructorHandle(v8::Local<v8::Function> func) {
 		if(jsConstructorHandle == nullptr) {
 			jsConstructorHandle = new Nan::Callback(func);
 		} else {
@@ -474,7 +474,7 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 
 	ArgStorage<ArgType> wrapper;
 
-	cbFunction converter(v8::Handle<v8::Function>::Cast(fromJS));
+	cbFunction converter(v8::Local<v8::Function>::Cast(fromJS));
 
 	v8::Local<v8::FunctionTemplate> constructorTemplate = Nan::New<v8::FunctionTemplate>(
 		&BindClass<ArgType>::valueConstructorCaller,
