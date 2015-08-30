@@ -65,17 +65,18 @@ extern v8::Persistent<v8::Object> constructorStore;
 //}
 
 template <class Bound>
-NAN_METHOD(BindWrapper<Bound>::create) {
+void BindWrapper<Bound>::create(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+//NAN_METHOD(BindWrapper<Bound>::create) {
 	if(args.IsConstructCall()) {
 		// Constructor was called like new Bound(...)
-		NanScope();
 
 		// Look up possibly overloaded C++ constructor according to its arity
 		// in the constructor call.
 		auto *constructor = BindClass<Bound>::getWrapperConstructor(args.Length());
 
 		if(constructor == nullptr) {
-			return(NanThrowError("Wrong number of arguments"));
+			Nan::ThrowError("Wrong number of arguments");
+			return;
 		}
 
 		Status::clearError();
@@ -87,19 +88,21 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 
 			const char *message = Status::getError();
 
-			if(message) return(NanThrowError(message));
+			if(message) {
+				Nan::ThrowError(message);
+				return;
+			}
 
-			NanReturnThis();
+			args.GetReturnValue().Set(args.This());
 		} catch(const std::exception &ex) {
 			const char *message = Status::getError();
 
 			if(message == nullptr) message = ex.what();
 
-			return(NanThrowError(message));
+			Nan::ThrowError(message);
 		}
 	} else {
 		// Constructor was called like Bound(...), add the "new" operator.
-		NanScope();
 
 		unsigned int argc = args.Length();
 		std::vector<v8::Handle<v8::Value>> argv(argc);
@@ -113,7 +116,7 @@ NAN_METHOD(BindWrapper<Bound>::create) {
 		v8::Handle<v8::Function> constructor = BindClass<Bound>::getInstance()->getConstructorHandle();
 
 		// Call the JavaScript constructor with the new operator.
-		NanReturnValue(constructor->NewInstance(argc, &argv[0]));
+		args.GetReturnValue().Set(constructor->NewInstance(argc, &argv[0]));
 	}
 }
 

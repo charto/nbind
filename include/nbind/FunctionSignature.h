@@ -24,18 +24,19 @@ public:
 	typedef CallableSignature<FunctionSignature, ReturnType, Args...> Parent;
 
 #ifdef BUILDING_NODE_EXTENSION
-	static NAN_METHOD(call) {
+	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+//	static NAN_METHOD(call) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);
-
-		NanScope();
 
 		if(args.Length() != arity) {
 //			printf("Wrong number of arguments to %s.%s: expected %ld, got %d.\n",getClassName(),getMethodName(),arity,args.Length());
-			return(NanThrowError("Wrong number of arguments"));
+			Nan::ThrowError("Wrong number of arguments");
+			return;
 		}
 
 		if(!FunctionSignature::typesAreValid(args)) {
-			return(NanThrowTypeError("Type mismatch"));
+			Nan::ThrowTypeError("Type mismatch");
+			return;
 		}
 
 		Status::clearError();
@@ -45,15 +46,19 @@ public:
 
 			const char *message = Status::getError();
 
-			if(message != nullptr) return(NanThrowError(message));
+			if(message != nullptr) {
+				Nan::ThrowError(message);
+				return;
+			}
 
-			NanReturnValue(BindingType<ReturnType>::toWireType(std::move(result)));
+			args.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
 		} catch(const std::exception &ex) {
 			const char *message = Status::getError();
 
 			if(message == nullptr) message = ex.what();
 
-			return(NanThrowError(message));
+			Nan::ThrowError(message);
+			return;
 		}
 	}
 #else

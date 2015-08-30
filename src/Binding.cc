@@ -91,25 +91,25 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		bindClass->init();
 
-		Local<FunctionTemplate> constructorTemplate = NanNew<FunctionTemplate>(bindClass->createPtr);
+		Local<FunctionTemplate> constructorTemplate = Nan::New<FunctionTemplate>(bindClass->createPtr);
 
-		constructorTemplate->SetClassName(NanNew<String>(bindClass->getName()));
+		constructorTemplate->SetClassName(Nan::New<String>(bindClass->getName()).ToLocalChecked());
 		constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 
 		for(auto &method : bindClass->getMethodList()) {
-			NanSetPrototypeTemplate(constructorTemplate, method.getName(),
-				NanNew<FunctionTemplate>(
+			Nan::SetPrototypeTemplate(constructorTemplate, method.getName(),
+				Nan::New<FunctionTemplate>(
 					reinterpret_cast<BindClassBase::jsMethod *>(method.getSignature()),
-					NanNew<Number>(method.getNum())
+					Nan::New<Number>(method.getNum())
 				)->GetFunction()
 			);
 		}
 
 		for(auto &func : bindClass->getFunctionList()) {
-			NanSetTemplate(constructorTemplate, func.getName(),
-				NanNew<FunctionTemplate>(
+			Nan::SetTemplate(constructorTemplate, func.getName(),
+				Nan::New<FunctionTemplate>(
 					reinterpret_cast<BindClassBase::jsMethod *>(func.getSignature()),
-					NanNew<Number>(func.getNum())
+					Nan::New<Number>(func.getNum())
 				)->GetFunction()
 			);
 		}
@@ -118,11 +118,12 @@ void Bindings :: initModule(Handle<Object> exports) {
 		char *nameBuf = nullptr;
 
 		for(auto &access : bindClass->getAccessorList()) {
-			proto->SetAccessor(
-				NanNew<String>(stripGetterPrefix(access.getName(), nameBuf)),
+			Nan::SetAccessor(
+				proto,
+				Nan::New<String>(stripGetterPrefix(access.getName(), nameBuf)).ToLocalChecked(),
 				reinterpret_cast<BindClassBase::jsGetter *>(access.getGetterSignature()),
 				reinterpret_cast<BindClassBase::jsSetter *>(access.getSetterSignature()),
-				NanNew<Number>((access.getSetterNum() << accessorSetterShift) | access.getGetterNum())
+				Nan::New<Number>((access.getSetterNum() << accessorSetterShift) | access.getGetterNum())
 			);
 		}
 
@@ -130,7 +131,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 		if(bindClass == BindClass<NBind>::getInstance()) {
 			nBindConstructor = constructorTemplate->GetFunction();
 		} else {
-			NanSetTemplate(constructorTemplate, "NBind", nBindConstructor);
+			Nan::SetTemplate(constructorTemplate, "NBind", nBindConstructor);
 		}
 
 		Local<v8::Function> jsConstructor = constructorTemplate->GetFunction();
@@ -138,7 +139,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 		bindClass->setConstructorHandle(jsConstructor);
 
 		exports->Set(
-			NanNew<String>(bindClass->getName()),
+			Nan::New<String>(bindClass->getName()).ToLocalChecked(),
 			jsConstructor
 		);
 	}

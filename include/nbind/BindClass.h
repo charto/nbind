@@ -94,9 +94,13 @@ private:
 	// Get type of method definitions to use in function pointers.
 
 #ifdef BUILDING_NODE_EXTENSION
-	inline static NAN_METHOD(dummyMethod) {NanReturnNull();}
-	inline static NAN_GETTER(dummyGetter) {NanReturnNull();}
-	inline static NAN_SETTER(dummySetter) {}
+//	typedef Nan::FunctionCallback *jsMethod;
+//	typedef Nan::GetterCallback *jsGetter;
+//	typedef Nan::SetterCallback *jsSetter;
+
+	inline static void dummyMethod(const Nan::FunctionCallbackInfo<v8::Value> &args) {}
+	inline static void dummyGetter(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {}
+	inline static void dummySetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {}
 #else
 	inline static void *dummyMethod() {return(nullptr);}
 	inline static void *dummyGetter() {return(nullptr);}
@@ -207,7 +211,7 @@ public:
 #ifdef BUILDING_NODE_EXTENSION
 	void setConstructorHandle(v8::Handle<v8::Function> func) {
 		if(jsConstructorHandle == nullptr) {
-			jsConstructorHandle = new NanCallback(func);
+			jsConstructorHandle = new Nan::Callback(func);
 		} else {
 			jsConstructorHandle->SetFunction(func);
 		}
@@ -252,7 +256,7 @@ protected:
 
 #ifdef BUILDING_NODE_EXTENSION
 	// Constructor called by JavaScript's "new" operator.
-	NanCallback *jsConstructorHandle = nullptr;
+	Nan::Callback *jsConstructorHandle = nullptr;
 
 	// Suitable JavaScript constructor called by a toJS C++ function
 	// when converting this object into a plain JavaScript object,
@@ -279,7 +283,8 @@ public:
 	// Wrapper that calls the C++ constructor when called from a
 	// fromJS function written in JavaScript.
 
-	static NAN_METHOD(valueConstructorCaller) {
+	static void valueConstructorCaller(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+//	static NAN_METHOD(valueConstructorCaller) {
 		auto *constructor = BindClass<Bound>::getValueConstructor(args.Length());
 
 		if(constructor == nullptr) {
@@ -287,14 +292,16 @@ public:
 			// (lacking C++ exception support) on the stack
 			// above the catch statement.
 			NBIND_ERR("Wrong number of arguments in value binding");
-			NanReturnUndefined();
+			args.GetReturnValue().Set(Nan::Undefined());
+
+			return;
 		}
 
 		ArgStorage<Bound> &storage = *static_cast<ArgStorage<Bound> *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
 
 		constructor(storage, args);
 
-		NanReturnUndefined();
+		args.GetReturnValue().Set(Nan::Undefined());
 	}
 
 	// TODO: is there something to replace ??? on these lines?
@@ -423,7 +430,7 @@ private:
 #ifdef BUILDING_NODE_EXTENSION
 template <typename ArgType>
 inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
-	v8::Local<v8::Value> output = NanUndefined();
+	v8::Local<v8::Value> output = Nan::Undefined();
 
 	if(arg != nullptr) {
 		cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
@@ -442,7 +449,7 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 
 template <typename ArgType>
 inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
-	v8::Local<v8::Value> output = NanUndefined();
+	v8::Local<v8::Value> output = Nan::Undefined();
 	cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
 
 	if(jsConstructor != nullptr) {
@@ -458,10 +465,10 @@ inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 
 template <typename ArgType>
 ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
-	NanScope();
+	Nan::HandleScope();
 
 	auto target = arg->ToObject();
-	auto fromJS = target->Get(NanNew<v8::String>("fromJS"));
+	auto fromJS = target->Get(Nan::New<v8::String>("fromJS").ToLocalChecked());
 
 	if(!fromJS->IsFunction()) throw(std::runtime_error("Type mismatch"));
 
@@ -469,9 +476,9 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 
 	cbFunction converter(v8::Handle<v8::Function>::Cast(fromJS));
 
-	v8::Local<v8::FunctionTemplate> constructorTemplate = NanNew<v8::FunctionTemplate>(
+	v8::Local<v8::FunctionTemplate> constructorTemplate = Nan::New<v8::FunctionTemplate>(
 		&BindClass<ArgType>::valueConstructorCaller,
-		NanNew<v8::External>(&wrapper)
+		Nan::New<v8::External>(&wrapper)
 	);
 
 	auto constructor = constructorTemplate->GetFunction();

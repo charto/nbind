@@ -17,7 +17,8 @@
 
 namespace nbind {
 
-typedef v8::Handle<v8::Value> WireType;
+typedef v8::Local<v8::Value> WireType;
+// typedef Nan::MaybeLocal<v8::Value> WireType;
 
 // BindWrapper encapsulates a C++ object created in Node.js.
 
@@ -32,7 +33,8 @@ public:
 
 	~BindWrapper() {delete(bound);}
 
-	static NAN_METHOD(create);
+	static void create(const Nan::FunctionCallbackInfo<v8::Value> &args);
+//	static NAN_METHOD(create);
 
 	Bound &getBound() {return(*bound);}
 
@@ -94,7 +96,7 @@ template <> struct BindingType<ArgType> {                   \
 	}                                                       \
 	                                                        \
 	static inline WireType toWireType(type arg) {           \
-		return(NanNew<jsClass>(arg));                       \
+		return(Nan::New<jsClass>(arg));                       \
 	}                                                       \
 }
 
@@ -118,7 +120,7 @@ template <> struct BindingType<ArgType> {               \
 	                                                    \
 	static inline WireType toWireType(type arg) {       \
 		auto buf = reinterpret_cast<const char *>(arg); \
-		return(NanNew<v8::String>(buf, strlen(buf)));   \
+		return(Nan::New<v8::String>(buf, strlen(buf)).ToLocalChecked());   \
 	}                                                   \
 }
 
@@ -147,7 +149,7 @@ template <> struct BindingType<void> {
 
 	static inline type fromWireType(WireType arg) {return(nullptr);}
 
-	static inline WireType toWireType(type arg) {return(NanUndefined());}
+	static inline WireType toWireType(type arg) {return(Nan::Undefined());}
 
 };
 
@@ -191,7 +193,7 @@ public:
 
 	template <typename ReturnType, typename... Args>
 	typename BindingType<ReturnType>::type call(Args... args) {
-		v8::Handle<v8::Value> argv[] = {
+		v8::Local<v8::Value> argv[] = {
 			(BindingType<Args>::toWireType(args))...
 		};
 		return(BindingType<ReturnType>::fromWireType(func.Call(sizeof...(Args), argv)));
@@ -199,7 +201,7 @@ public:
 
 	template <typename ReturnType, typename... Args>
 	typename BindingType<ReturnType>::type callMethod(v8::Handle<v8::Object> target, Args... args) {
-		v8::Handle<v8::Value> argv[] = {
+		v8::Local<v8::Value> argv[] = {
 			(BindingType<Args>::toWireType(args))...
 		};
 		return(BindingType<ReturnType>::fromWireType(func.Call(target, sizeof...(Args), argv)));
@@ -209,7 +211,7 @@ public:
 
 private:
 
-	NanCallback func;
+	Nan::Callback func;
 
 };
 
@@ -231,7 +233,7 @@ public:
 
 	template <typename ReturnType, typename... Args>
 	void call(Args... args) {
-		v8::Handle<v8::Value> argv[] = {
+		v8::Local<v8::Value> argv[] = {
 			(BindingType<Args>::toWireType(args))...
 		};
 
@@ -301,7 +303,7 @@ struct FromWire<Index, const char *> {
 			return(*val);
 		}
 
-		NanUtf8String val;
+		Nan::Utf8String val;
 
 	} type;
 
@@ -322,7 +324,7 @@ struct FromWire<Index, const unsigned char *> {
 			return(reinterpret_cast<const unsigned char *>(*val));
 		}
 
-		NanUtf8String val;
+		Nan::Utf8String val;
 
 	} type;
 

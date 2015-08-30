@@ -40,9 +40,8 @@ public:
 	}
 
 #ifdef BUILDING_NODE_EXTENSION
-	static NAN_GETTER(getter) {
-		NanScope();
-
+	static void getter(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
+//	static NAN_GETTER(getter) {
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
@@ -56,21 +55,24 @@ public:
 
 			const char *message = Status::getError();
 
-			if(message) return(NanThrowError(message));
+			if(message) {
+				Nan::ThrowError(message);
+				return;
+			}
 
-			NanReturnValue(BindingType<ReturnType>::toWireType(std::move(result)));
+			args.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
 		} catch(const std::exception &ex) {
 			const char *message = Status::getError();
 
 			if(message == nullptr) message = ex.what();
 
-			return(NanThrowError(message));
+			Nan::ThrowError(message);
+			return;
 		}
 	}
 
-	static NAN_SETTER(setter) {
-		NanScope();
-
+	static void setter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<v8::Value> &args) {
+//	static NAN_SETTER(setter) {
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
@@ -79,20 +81,20 @@ public:
 		auto *valuePtr = &value;
 
 		if(!AccessorSignature::typesAreValid(valuePtr)) {
-			NanThrowTypeError("Type mismatch");
+			Nan::ThrowTypeError("Type mismatch");
 		} else {
 			try {
 				Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
 
 				const char *message = Status::getError();
 
-				if(message) NanThrowError(message);
+				if(message) Nan::ThrowError(message);
 			} catch(const std::exception &ex) {
 				const char *message = Status::getError();
 
 				if(message == nullptr) message = ex.what();
 
-				NanThrowError(message);
+				Nan::ThrowError(message);
 			}
 		}
 	}

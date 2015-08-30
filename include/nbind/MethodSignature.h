@@ -22,7 +22,7 @@ template<typename ReturnType> struct MethodResultConverter {
 	)>::type {
 		// This function is similar to BindingType<ArgType>::toWireType(ArgType &&arg).
 
-		v8::Local<v8::Value> output = NanUndefined();
+		v8::Local<v8::Value> output = Nan::Undefined();
 		cbFunction *jsConstructor = BindClass<typename std::remove_pointer<ReturnType>::type>::getInstance()->getValueConstructorJS();
 
 		if(jsConstructor != nullptr) {
@@ -47,7 +47,7 @@ template<typename ReturnType> struct MethodResultConverter {
 
 template<> struct MethodResultConverter<void> {
 	static inline WireType toWireType(std::nullptr_t result, ...) {
-		return(NanUndefined());
+		return(Nan::Undefined());
 	}
 };
 #endif // BUILDING_NODE_EXTENSION
@@ -76,18 +76,19 @@ public:
 	}
 
 #ifdef BUILDING_NODE_EXTENSION
-	static NAN_METHOD(call) {
+	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+//	static NAN_METHOD(call) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);
-
-		NanScope();
 
 		if(args.Length() != arity) {
 //			printf("Wrong number of arguments to %s.%s: expected %ld, got %d.\n",getClassName(),getMethodName(),arity,args.Length());
-			return(NanThrowError("Wrong number of arguments"));
+			Nan::ThrowError("Wrong number of arguments");
+			return;
 		}
 
 		if(!MethodSignature::typesAreValid(args)) {
-			return(NanThrowTypeError("Type mismatch"));
+			Nan::ThrowTypeError("Type mismatch");
+			return;
 		}
 
 		v8::Local<v8::Object> targetWrapped = args.This();
@@ -100,15 +101,19 @@ public:
 
 			const char *message = Status::getError();
 
-			if(message) return(NanThrowError(message));
+			if(message) {
+				Nan::ThrowError(message);
+				return;
+			}
 
-			NanReturnValue(MethodResultConverter<ReturnType>::toWireType(std::move(result), &target));
+			args.GetReturnValue().Set(MethodResultConverter<ReturnType>::toWireType(std::move(result), &target));
 		} catch(const std::exception &ex) {
 			const char *message = Status::getError();
 
 			if(message == nullptr) message = ex.what();
 
-			return(NanThrowError(message));
+			Nan::ThrowError(message);
+			return;
 		}
 	}
 #else

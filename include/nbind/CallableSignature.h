@@ -55,7 +55,7 @@ public:
 	> CallWrapper;
 
 	template <typename NanArgs>
-	static bool typesAreValid(NanArgs args) {
+	static bool typesAreValid(NanArgs &args) {
 		typedef Checker<
 			typename emscripten::internal::MapWithIndex<
 				TypeList,
