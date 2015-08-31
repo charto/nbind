@@ -63,6 +63,7 @@ Let's look at a concrete example. Suppose we have a C++ class:
 #include "nbind/api.h"
 
 class Test {
+
 public:
 
     // Can be constructed with or without an initial state.
@@ -117,7 +118,7 @@ Then we can call it from JavaScript:
 ```javascript
 // test.js
 var nbind = require('nbind');
-var pkg = require('nbind').module;
+var pkg = nbind.module;
 
 nbind.init(__dirname);
 
@@ -236,9 +237,122 @@ Callbacks and value objects
 
 Callbacks can be passed to C++ methods by simply adding an argument of type `nbind::cbFunction &` to their declaration. They can be called with any number of any supported types without having to declare in any way what they accept. The JavaScript code will receive the parameters as JavaScript variables to do with them as it pleases. A callback argument `arg` can be called like `arg("foobar", 42);` in which case the return value is ignored. If the return value is needed, it must be called like `arg.call<type>("foobar", 42);` where `type` is the desired C++ type that the return value should be converted to.
 
-Value objects are the most advanced concept supported so far. They're based on a `toJS` function on the C++ side and a `fromJS` function on the JavaScript side. Both receive a callback as an argument, and calling it with any parameters calls the constructor of the equivalent type in the other language. TODO: more details.
+Value objects are the most advanced concept supported so far. They're based on a `toJS` function on the C++ side and a `fromJS` function on the JavaScript side. Both receive a callback as an argument, and calling it with any parameters calls the constructor of the equivalent type in the other language (the bindings use [SFINAE](https://en.wikipedia.org/wiki/Substitution_failure_is_not_an_error) to detect the toJS function and turn the class into a value type). The callback on the C++ side is of type `nbind::cbOutput`. Value objects are passed **by value** on the C++ side to and from the exported function. `nbind` uses C++11 move semantics to avoid creating some additional copies on the way.
 
+The equivalent JavaScript constructor must be registered on the JavaScript side by calling `nbind.bind('CppClassName', JSClassName);`, so `nbind` knows which types to translate between each other.
 
+So if we have a file `test.cc` (can be tested by replacing the file with the same name in the example above):
+
+```C++
+#include "nbind/api.h"
+
+int copies = 0;
+int moves = 0;
+
+// Coordinate pair, a value type we'll bind to an equivalent JavaScript type.
+
+class Coord {
+
+public:
+
+    Coord(int x = 0, int y = 0) : x(x), y(y) {}
+
+    // Let's count copy and move constructor usage.
+
+    Coord(Coord &&other) : x(other.x), y(other.y) { ++copies; }
+
+    Coord(const Coord &other) : x(other.x), y(other.y) { ++moves; }
+
+    void addFrom(const Coord &other) {
+        x += other.x;
+        y += other.y;
+    }
+
+    // This is the magic function for nbind, which calls a constructor in JavaScript.
+
+    void toJS(nbind::cbOutput output) {
+        output(x, y);
+    }
+
+private:
+
+    int x, y;
+};
+
+// This just sums coordinate pairs and returns them for testing.
+
+class Accumulator {
+
+public:
+
+    Coord add(Coord other) {
+        xy.addFrom(other);
+
+        // a copy is made here.
+        return(xy);
+    }
+
+    // This is a convenient place to read debug output, since we can't call methods of Coord
+    // from JavaScript (it sees methods defined on the JavaScript object instead).
+
+    int getCopies() { return(copies); }
+
+    int getMoves() { return(moves); }
+
+private:
+
+    Coord xy;
+};
+
+#include "nbind/BindingShort.h"
+
+#ifdef NBIND_CLASS
+
+NBIND_CLASS(Coord) {
+    construct<>();
+    construct<int, int>();
+}
+
+NBIND_CLASS(Accumulator) {
+    construct<>();
+
+    method(add);
+    getter(getCopies);
+    getter(getMoves);
+}
+
+#endif
+```
+
+We can use it from a JavaScript file `test.js` like so:
+
+```javascript
+var nbind = require('nbind');
+
+nbind.init(__dirname);
+
+function Coord(x, y) {
+    this.x = x;
+    this.y = y;
+}
+
+Coord.prototype.fromJS = function(output) {
+    output(this.x, this.y);
+}
+
+nbind.bind('Coord', Coord);
+
+var accu = new nbind.module.Accumulator();
+
+// Prints: { x: 2, y: 4 }
+console.log(accu.add(new Coord(2, 4)));
+
+// Prints: { x: 12, y: 34 }
+console.log(accu.add(new Coord(10, 30)));
+
+// Prints: 4 copies, 2 moves.
+console.log(accu.copies + ' copies, ' + accu.moves + ' moves.');
+```
 
 License
 =======
