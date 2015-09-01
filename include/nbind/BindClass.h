@@ -61,12 +61,6 @@ public:
 		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get(args...)...));
 	}
 
-	// Old code that returned a constructed object by value:
-	// template <typename... NanArgs>
-	// static Bound makeValue(ArgStorage<Bound> &wrapper, NanArgs... args) {
-	//	return(Bound(Args(std::forward<NanArgs>(args)...).get()...));
-	// }
-
 	// Make sure prototype matches NanValueConstructorTypeBuilder!
 	template <typename... NanArgs>
 	static void makeValue(ArgStorage<Bound> &storage, NanArgs... args) {
@@ -284,7 +278,6 @@ public:
 	// fromJS function written in JavaScript.
 
 	static void valueConstructorCaller(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-//	static NAN_METHOD(valueConstructorCaller) {
 		auto *constructor = BindClass<Bound>::getValueConstructor(args.Length());
 
 		if(constructor == nullptr) {
@@ -382,8 +375,6 @@ public:
 
 		return(valueConstructorVectStore()[arity]);
 	}
-
-//	static NAN_METHOD(create);
 
 	// Use a static variable inside a static method to provide linkage for
 	// a singleton instance of this class.

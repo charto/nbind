@@ -23,25 +23,13 @@ class AccessorSignature : public CallableSignature<AccessorSignature<Bound, Retu
 
 public:
 
-	typedef struct {
-		const char *className;
-	} Data;
-
 	typedef ReturnType(Bound::*FunctionType)(Args...);
 
 	typedef CallableSignature<AccessorSignature, ReturnType, Args...> Parent;
 
-	static const char *getClassName() {
-		return(Parent::signatureStore().data.className);
-	}
-
-	static void setClassName(const char *className) {
-		Parent::signatureStore().data.className = className;
-	}
-
 #ifdef BUILDING_NODE_EXTENSION
 	static void getter(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
-//	static NAN_GETTER(getter) {
+
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
@@ -72,7 +60,7 @@ public:
 	}
 
 	static void setter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {
-//	static NAN_SETTER(setter) {
+
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 

@@ -59,25 +59,12 @@ class MethodSignature : public CallableSignature<MethodSignature<Bound, ReturnTy
 
 public:
 
-	typedef struct {
-		const char *className;
-	} Data;
-
 	typedef ReturnType(Bound::*FunctionType)(Args...);
 
 	typedef CallableSignature<MethodSignature, ReturnType, Args...> Parent;
 
-	static const char *getClassName() {
-		return(Parent::signatureStore().data.className);
-	}
-
-	static void setClassName(const char *className) {
-		Parent::signatureStore().data.className = className;
-	}
-
 #ifdef BUILDING_NODE_EXTENSION
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-//	static NAN_METHOD(call) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);
 
 		if(args.Length() != arity) {

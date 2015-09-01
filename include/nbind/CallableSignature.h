@@ -42,9 +42,8 @@ public:
 
 		typedef typename Signature::FunctionType FunctionType;
 
-		FunctionInfo(const char *name, FunctionType func):name(name), func(func) {}
+		FunctionInfo(FunctionType func) : func(func) {}
 
-		const char *name;
 		FunctionType func;
 
 	};
@@ -53,7 +52,6 @@ public:
 
 	struct SignatureInfo {
 		std::vector<struct FunctionInfo> funcVect;
-		typename Signature::Data data;
 #ifdef EMSCRIPTEN
 		const char *emSignature = getEmSignature<typename EmMangleMap<ReturnType>::type, typename EmMangleMap<Args>::type...>();
 #endif
@@ -64,10 +62,10 @@ public:
 	}
 
 	template <typename FunctionType>
-	static unsigned int addFunction(const char *name, FunctionType func) {
+	static unsigned int addFunction(FunctionType func) {
 		auto &funcVect = signatureStore().funcVect;
 
-		funcVect.emplace_back(name, func);
+		funcVect.emplace_back(func);
 
 		return(funcVect.size() - 1);
 	}

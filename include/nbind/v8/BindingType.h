@@ -34,7 +34,6 @@ public:
 	~BindWrapper() {delete(bound);}
 
 	static void create(const Nan::FunctionCallbackInfo<v8::Value> &args);
-//	static NAN_METHOD(create);
 
 	Bound &getBound() {return(*bound);}
 

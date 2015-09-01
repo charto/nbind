@@ -56,10 +56,9 @@ public:
 	) const {
 		typedef MethodSignature<Bound, ReturnType, Args...> Signature;
 
-		Signature::setClassName(this->name);
 		bindClass->addMethod(
 			name,
-			Signature::addFunction(name, method),
+			Signature::addFunction(method),
 			reinterpret_cast<funcPtr>(Signature::call)
 		);
 
@@ -76,7 +75,7 @@ public:
 
 		bindClass->addFunction(
 			name,
-			Signature::addFunction(name, func),
+			Signature::addFunction(func),
 			reinterpret_cast<funcPtr>(Signature::call)
 		);
 
@@ -113,11 +112,9 @@ public:
 	) const {
 		typedef AccessorSignature<Bound, FieldType> GetterSignature;
 
-		GetterSignature::setClassName(this->name);
-
 		bindClass->addAccessor(
 			name,
-			GetterSignature::addFunction(name, getter),
+			GetterSignature::addFunction(getter),
 			0,
 			reinterpret_cast<funcPtr>(GetterSignature::getter),
 			nullptr
@@ -141,13 +138,10 @@ public:
 		typedef AccessorSignature<Bound, GetFieldType> GetterSignature;
 		typedef AccessorSignature<Bound, SetReturnType, SetFieldType> SetterSignature;
 
-		GetterSignature::setClassName(this->name);
-		SetterSignature::setClassName(this->name);
-
 		bindClass->addAccessor(
 			name,
-			GetterSignature::addFunction(name, getter),
-			SetterSignature::addFunction(name, setter),
+			GetterSignature::addFunction(getter),
+			SetterSignature::addFunction(setter),
 			reinterpret_cast<funcPtr>(GetterSignature::getter),
 			reinterpret_cast<funcPtr>(SetterSignature::setter)
 		);

@@ -17,8 +17,6 @@ class FunctionSignature : public CallableSignature<FunctionSignature<ReturnType,
 
 public:
 
-	typedef struct {} Data;
-
 	typedef ReturnType(*FunctionType)(Args...);
 
 	typedef CallableSignature<FunctionSignature, ReturnType, Args...> Parent;
