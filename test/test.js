@@ -111,7 +111,11 @@ test('Value objects', function(t) {
 	t.strictEqual(xy.y, 2);
 
 	xy.fromJS(function() {});
-	Type.foo(xy);
+	Type.callWithCoord(function(coord) {
+		console.log(coord.x + ', ' + coord.y);
+		// TODO: if we don't return Coord here as expected by the C++ side, it crashes!
+		return(coord);
+	}, xy);
 
 	t.end();
 });

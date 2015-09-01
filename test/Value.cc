@@ -4,35 +4,7 @@
 #include <cstring>
 
 #include "nbind/api.h"
-
-class Coord {
-
-public:
-
-	Coord() : x(0), y(0) {}
-
-	Coord(unsigned int x, unsigned int y) : x(x), y(y) {}
-
-	Coord(const Coord &other) {
-x=other.x;
-y=other.y;
-		fprintf(stderr, "Copy %d, %d\n", x, y);
-	}
-
-	Coord(Coord &&other) {
-x=other.x;
-y=other.y;
-		fprintf(stderr, "Move %d, %d\n", x, y);
-	}
-
-	void toJS(nbind::cbOutput output) {
-		output(x, y);
-	}
-
-	unsigned int x;
-	unsigned int y;
-
-};
+#include "Coord.h"
 
 class Value {
 
@@ -44,8 +16,8 @@ public:
 		return(Coord(1,2));
 	}
 
-	static void foo(Coord a) {
-		fprintf(stderr, "%d, %d\n", a.x, a.y);
+	static Coord callWithCoord(nbind::cbFunction &callback, Coord a) {
+		return(callback.call<Coord>(a));
 	}
 
 };
@@ -62,7 +34,7 @@ NBIND_CLASS(Value) {
 	construct<>();
 
 	method(getCoord);
-	method(foo);
+	method(callWithCoord);
 }
 
 #endif
