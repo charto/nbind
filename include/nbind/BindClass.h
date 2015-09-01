@@ -5,77 +5,8 @@
 
 namespace nbind {
 
-// Wrapper for C++ objects converted from corresponding JavaScript objects.
-// Needed for allocating an empty placeholder object before JavaScript calls
-// its constructor. See:
-// http://stackoverflow.com/questions/31091223/placement-new-return-by-value-and-safely-dispose-temporary-copies
-
 template <typename Bound>
-class ArgStorage {
-
-public:
-
-	ArgStorage() : dummy(0) {}
-
-	~ArgStorage() {
-		if(isValid) data.~Bound();
-		isValid = false;
-	}
-
-	template <typename... Args>
-	void init(Args&&... args) {
-		::new(&data) Bound(std::forward<Args>(args)...);
-		isValid = true;
-	}
-
-	Bound getBound() {
-		return(std::move(data));
-	}
-
-private:
-
-	union {
-		int dummy;
-		Bound data;
-	};
-
-	bool isValid = false;
-
-};
-
-template<class Bound, typename ArgList> struct ConstructorInfo;
-
-template<class Bound, typename... Args>
-struct ConstructorInfo<Bound, TypeList<Args...>> {
-
-public:
-
-	static const char *getClassName() {return(classNameStore());}
-	static void setClassName(const char *className) {classNameStore() = className;}
-
-#ifdef BUILDING_NODE_EXTENSION
-	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
-	template <typename... NanArgs>
-	static BindWrapper<Bound> *makeWrapper(NanArgs... args) noexcept(false) {
-		// Note that Args().get may throw.
-		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get(args...)...));
-	}
-
-	// Make sure prototype matches NanValueConstructorTypeBuilder!
-	template <typename... NanArgs>
-	static void makeValue(ArgStorage<Bound> &storage, NanArgs... args) {
-		storage.init(Args(std::forward<NanArgs>(args)...).get(args...)...);
-	}
-#endif // BUILDING_NODE_EXTENSION
-
-private:
-
-	static const char *&classNameStore() {
-		static const char *className;
-		return(className);
-	}
-
-};
+class ArgStorage;
 
 // Templated singleton class for each C++ class accessible from Node.js.
 // Stores their information defined in static constructors, until the Node.js
@@ -83,29 +14,19 @@ private:
 
 class BindClassBase {
 
-private:
+public:
 
 	// Get type of method definitions to use in function pointers.
 
 #ifdef BUILDING_NODE_EXTENSION
-//	typedef Nan::FunctionCallback *jsMethod;
-//	typedef Nan::GetterCallback *jsGetter;
-//	typedef Nan::SetterCallback *jsSetter;
-
-	inline static void dummyMethod(const Nan::FunctionCallbackInfo<v8::Value> &args) {}
-	inline static void dummyGetter(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {}
-	inline static void dummySetter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {}
+	typedef std::remove_pointer<Nan::FunctionCallback>::type jsMethod;
+	typedef std::remove_pointer<Nan::GetterCallback>::type jsGetter;
+	typedef std::remove_pointer<Nan::SetterCallback>::type jsSetter;
 #else
-	inline static void *dummyMethod() {return(nullptr);}
-	inline static void *dummyGetter() {return(nullptr);}
-	inline static void *dummySetter() {return(nullptr);}
+	typedef void (*jsMethod)();
+	typedef void (*jsGetter)();
+	typedef void (*jsSetter)();
 #endif // BUILDING_NODE_EXTENSION
-
-public:
-
-	typedef decltype(dummyMethod) jsMethod;
-	typedef decltype(dummyGetter) jsGetter;
-	typedef decltype(dummySetter) jsSetter;
 
 	// Storage format for method definitions.
 
@@ -297,11 +218,6 @@ public:
 		args.GetReturnValue().Set(Nan::Undefined());
 	}
 
-	// TODO: is there something to replace ??? on these lines?
-	// typedef decltype(&ConstructorInfo<Bound, ???>::makeWrapper) jsWrapperConstructor;
-	// typedef decltype(&ConstructorInfo<Bound, ???>::makeValue) jsValueConstructor;
-	// Until then, use type builder helper classes to create the typedefs.
-
 	template<typename MethodType> struct NanWrapperConstructorTypeBuilder;
 	template<typename MethodType> struct NanValueConstructorTypeBuilder;
 
@@ -315,65 +231,53 @@ public:
 		typedef void type(ArgStorage<Bound> &storage, NanArgs...);
 	};
 
-	typedef typename NanWrapperConstructorTypeBuilder<jsMethod>::type jsWrapperConstructor;
-	typedef typename NanValueConstructorTypeBuilder<jsMethod>::type jsValueConstructor;
+	struct jsConstructors {
+		typedef typename NanWrapperConstructorTypeBuilder<jsMethod>::type wrapperType;
+		typedef typename NanValueConstructorTypeBuilder<jsMethod>::type valueType;
+
+		jsConstructors(wrapperType *wrapper = nullptr, valueType *value = nullptr) : wrapper(wrapper), value(value) {}
+
+		wrapperType *wrapper;
+		valueType *value;
+	};
 
 	// Store link to constructor, possibly overloaded by arity.
 	// It will be declared with the Node API when this module is initialized.
 
-// TODO: clean up duplicated code!
-	void addConstructor(unsigned int arity, jsWrapperConstructor *funcWrapper, jsValueConstructor *funcValue) {
-		static std::vector<jsWrapperConstructor *> &constructorVect = wrapperConstructorVectStore();
+	void addConstructor(unsigned int arity, typename jsConstructors::wrapperType *funcWrapper, typename jsConstructors::valueType *funcValue) {
+		static std::vector<jsConstructors> &constructorVect = constructorVectStore();
 		signed int oldArity = getArity();
 
-		if(signed(arity) > oldArity) {
-			constructorVect.resize(arity + 1);
-			for(unsigned int pos = oldArity + 1; pos < arity; pos++) {
-				constructorVect[pos] = nullptr;
-			}
-		}
+		if(signed(arity) > oldArity) constructorVect.resize(arity + 1);
 
-		constructorVect[arity] = funcWrapper;
-
-
-
-
-		static std::vector<jsValueConstructor *> &constructorVect2 = valueConstructorVectStore();
-
-		if(signed(arity) > oldArity) {
-			constructorVect2.resize(arity + 1);
-			for(unsigned int pos = oldArity + 1; pos < arity; pos++) {
-				constructorVect2[pos] = nullptr;
-			}
-		}
-
-		constructorVect2[arity] = funcValue;
+		constructorVect[arity].wrapper = funcWrapper;
+		constructorVect[arity].value = funcValue;
 	}
 
 	// Get maximum arity among overloaded constructors.
 	// Can be -1 if there are no constructors.
 
 	static signed int getArity() {
-		return(wrapperConstructorVectStore().size() - 1);
+		return(constructorVectStore().size() - 1);
 	}
 
 	// Get constructor by arity.
 	// When called, the constructor returns an ObjectWrap.
 
-	static jsWrapperConstructor *getWrapperConstructor(unsigned int arity) {
+	static typename jsConstructors::wrapperType *getWrapperConstructor(unsigned int arity) {
 		// Check if constructor was called with more than the maximum number
 		// of arguments it can accept.
 		if(signed(arity) > getArity()) return(nullptr);
 
-		return(wrapperConstructorVectStore()[arity]);
+		return(constructorVectStore()[arity].wrapper);
 	}
 
-	static jsValueConstructor *getValueConstructor(unsigned int arity) {
+	static typename jsConstructors::valueType *getValueConstructor(unsigned int arity) {
 		// Check if constructor was called with more than the maximum number
 		// of arguments it can accept.
 		if(signed(arity) > getArity()) return(nullptr);
 
-		return(valueConstructorVectStore()[arity]);
+		return(constructorVectStore()[arity].value);
 	}
 
 	// Use a static variable inside a static method to provide linkage for
@@ -392,13 +296,8 @@ public:
 	// (overloads must have different arities).
 
 #ifdef BUILDING_NODE_EXTENSION
-	static std::vector<jsWrapperConstructor *> &wrapperConstructorVectStore() {
-		static std::vector<jsWrapperConstructor *> constructorVect;
-		return(constructorVect);
-	}
-
-	static std::vector<jsValueConstructor *> &valueConstructorVectStore() {
-		static std::vector<jsValueConstructor *> constructorVect;
+	static std::vector<jsConstructors> &constructorVectStore() {
+		static std::vector<jsConstructors> constructorVect;
 		return(constructorVect);
 	}
 #endif // BUILDING_NODE_EXTENSION
@@ -412,74 +311,4 @@ private:
 
 };
 
-// Call the toJS method of a returned C++ object, to convert it into a JavaScript object.
-// This is used when a C++ function is called from JavaScript.
-// A functor capable of calling the correct JavaScript constructor is passed to toJS,
-// which must call the functor with arguments in the correct order.
-// The functor calls the JavaScript constructor and writes a pointer to the resulting object
-// directly into a local handle called "output" which is returned to JavaScript.
-#ifdef BUILDING_NODE_EXTENSION
-template <typename ArgType>
-inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
-	v8::Local<v8::Value> output = Nan::Undefined();
-
-	if(arg != nullptr) {
-		cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
-
-		if(jsConstructor != nullptr) {
-			cbOutput construct(*jsConstructor, &output);
-
-			arg->toJS(construct);
-		} else {
-			throw(std::runtime_error("Value type JavaScript class is missing or not registered"));
-		}
-	}
-
-	return(output);
-}
-
-template <typename ArgType>
-inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
-	v8::Local<v8::Value> output = Nan::Undefined();
-	cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
-
-	if(jsConstructor != nullptr) {
-		cbOutput construct(*jsConstructor, &output);
-
-		arg.toJS(construct);
-	} else {
-		throw(std::runtime_error("Value type JavaScript class is missing or not registered"));
-	}
-
-	return(output);
-}
-
-template <typename ArgType>
-ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
-	Nan::HandleScope();
-
-	auto target = arg->ToObject();
-	auto fromJS = target->Get(Nan::New<v8::String>("fromJS").ToLocalChecked());
-
-	if(!fromJS->IsFunction()) throw(std::runtime_error("Type mismatch"));
-
-	ArgStorage<ArgType> wrapper;
-
-	cbFunction converter(v8::Local<v8::Function>::Cast(fromJS));
-
-	v8::Local<v8::FunctionTemplate> constructorTemplate = Nan::New<v8::FunctionTemplate>(
-		&BindClass<ArgType>::valueConstructorCaller,
-		Nan::New<v8::External>(&wrapper)
-	);
-
-	auto constructor = constructorTemplate->GetFunction();
-
-	converter.callMethod<void>(target, constructor);
-
-	const char *message = Status::getError();
-	if(message) throw(std::runtime_error(message));
-
-	return(wrapper.getBound());
-}
-#endif // BUILDING_NODE_EXTENSION
 } // namespace

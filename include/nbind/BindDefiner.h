@@ -13,6 +13,7 @@
 #include "Caller.h"
 #include "BindClass.h"
 #ifdef BUILDING_NODE_EXTENSION
+#include "v8/ValueObj.h"
 #include "v8/Binding.h"
 #elif EMSCRIPTEN
 #include "em/Binding.h"
