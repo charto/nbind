@@ -1,17 +1,11 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-#ifdef EMSCRIPTEN
-
-#include "nbind/Binding2.h"
-
-#endif
-
 #ifdef BUILDING_NODE_EXTENSION
 
 #include <cstring>
 
-#include "nbind/Binding.h"
+#include "nbind/BindDefiner.h"
 
 using namespace v8;
 using namespace nbind;

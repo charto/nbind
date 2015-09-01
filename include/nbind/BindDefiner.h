@@ -3,7 +3,21 @@
 
 #pragma once
 
+#include <type_traits>
+#include <forward_list>
+#include <vector>
+#include <stdexcept>
+
+#include <v8.h>
+#include <node.h>
+#include <nan.h>
+
+#include "api.h"
 #include "wire.h"
+#include "Caller.h"
+#include "BindClass.h"
+#include "Binding.h"
+
 #include "FunctionSignature.h"
 #include "MethodSignature.h"
 #include "AccessorSignature.h"

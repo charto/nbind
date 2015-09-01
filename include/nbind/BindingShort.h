@@ -6,7 +6,7 @@
 #if defined(BUILDING_NODE_EXTENSION) || defined(EMSCRIPTEN)
 
 #ifdef BUILDING_NODE_EXTENSION
-#include "Binding.h"
+#include "BindDefiner.h"
 #else
 #include "Binding2.h"
 #endif

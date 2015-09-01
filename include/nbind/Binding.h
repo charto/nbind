@@ -7,22 +7,7 @@
 
 #define NBIND 1
 
-#include <type_traits>
-#include <forward_list>
-#include <vector>
-#include <stdexcept>
-
-#include <v8.h>
-#include <node.h>
-#include <nan.h>
-
-// Macro to report an error when exceptions are not available.
-
-#include "api.h"
-
 namespace nbind {
-
-class BindClassBase;
 
 // Storage for class bindings, populated by BindDefiners created in
 // constructors of static BindInvoker objects.
@@ -45,15 +30,6 @@ private:
 	}
 
 };
-
-} // namespace
-
-#include "wire.h"
-#include "Caller.h"
-#include "BindClass.h"
-#include "BindDefiner.h"
-
-namespace nbind {
 
 extern v8::Persistent<v8::Object> constructorStore;
 
@@ -119,17 +95,6 @@ void BindWrapper<Bound>::create(const Nan::FunctionCallbackInfo<v8::Value> &args
 		args.GetReturnValue().Set(constructor->NewInstance(argc, &argv[0]));
 	}
 }
-
-// For embind compatibility.
-#define class_ BindDefiner
-struct allow_raw_pointers {};
-
-// Use the constructor of a dummy global object to register bindings for a
-// class before Node.js module initialization gets run.
-#define NODEJS_BINDINGS(Bound) \
-	BindClass<Bound> bindClass##Bound; \
-	static struct BindInvoker##Bound {BindInvoker##Bound(BindClass<Bound> &bindClass);} bindInvoker##Bound(bindClass##Bound); \
-	BindInvoker##Bound::BindInvoker##Bound(BindClass<Bound> &bindClass)
 
 } // namespace
 
