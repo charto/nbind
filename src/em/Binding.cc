@@ -3,19 +3,19 @@
 
 #ifdef EMSCRIPTEN
 
-#include "nbind/Binding2.h"
-
-#endif
-
-//#ifdef BUILDING_NODE_EXTENSION
-
 #include <cstdlib>
 #include <cstring>
 
-//#include "nbind/Binding.h"
+#include "nbind/BindDefiner.h"
 
 //using namespace v8;
 using namespace nbind;
+
+extern "C" {
+	extern void _nbind_register_class(const char *msg);
+	extern void _nbind_register_function(const char *msg);
+	extern void _nbind_register_method(const char *msg);
+}
 
 /*
 class NBind {
@@ -45,41 +45,6 @@ void Bindings :: registerClass(BindClassBase *bindClass) {
 	getClassList().emplace_front(bindClass);
 }
 
-// Convert getter names like "getFoo" into property names like "foo".
-// This could be so much more concisely written with regexps...
-const char *stripGetterPrefix(const char *name, char *&nameBuf) {
-	if((name[0] == 'G' || name[0] == 'g') && name[1] == 'e' && name[2] == 't') {
-		char c = name[3];
-
-		if(c == '_') {
-			// "Get_foo", "get_foo" => Remove 4 first characters.
-
-			name += 4;
-		} else if(c >= 'a' && c <= 'z') {
-			// "Getfoo", "getfoo" => Remove 3 first characters.
-
-			name += 3;
-		} else if(c >= 'A' && c <= 'Z') {
-			// "GetFoo", "getFoo" => Remove 3 first characters,
-			// make a modifiable copy and lowercase first letter.
-
-			if(nameBuf != nullptr) free(nameBuf);
-			nameBuf = strdup(name + 3);
-
-			if(nameBuf != nullptr) {
-				nameBuf[0] = c + ('a' - 'A');
-				name = nameBuf;
-			} else {
-				// Memory allocation failed.
-				// The world will soon end anyway, so just declare
-				// the getter without stripping the "get" prefix.
-			}
-		}
-	}
-
-	return(name);
-}
-
 /*
 void Bindings :: initModule(Handle<Object> exports) {
 	// Register NBind a second time to make sure it's first on the list
@@ -87,19 +52,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 	// to other classes to enforce its visibility in npm exports.
 	registerClass(BindClass<NBind>::getInstance());
 
-	Local<Function> nBindConstructor;
-
 	for(auto *bindClass : getClassList()) {
-		// Avoid registering the same class twice.
-		if(bindClass->isReady()) continue;
-
-		bindClass->init();
-
-		Local<FunctionTemplate> constructorTemplate = NanNew<FunctionTemplate>(bindClass->createPtr);
-
-		constructorTemplate->SetClassName(NanNew<String>(bindClass->getName()));
-		constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
-
 		for(auto &method : bindClass->getMethodList()) {
 			NanSetPrototypeTemplate(constructorTemplate, method.getName(),
 				NanNew<FunctionTemplate>(
@@ -136,15 +89,6 @@ void Bindings :: initModule(Handle<Object> exports) {
 		} else {
 			NanSetTemplate(constructorTemplate, "NBind", nBindConstructor);
 		}
-
-		Local<v8::Function> jsConstructor = constructorTemplate->GetFunction();
-
-		bindClass->setConstructorHandle(jsConstructor);
-
-		exports->Set(
-			NanNew<String>(bindClass->getName()),
-			jsConstructor
-		);
 	}
 }
 
@@ -159,4 +103,29 @@ NBIND_CLASS(NBind) {
 NODE_MODULE(nbind, nbind::Bindings::initModule)
 */
 
-//#endif
+void Bindings :: initModule() {
+	for(auto *bindClass : getClassList()) {
+		// Avoid registering the same class twice.
+		if(bindClass->isReady()) continue;
+
+		bindClass->init();
+
+		_nbind_register_class(bindClass->getName());
+
+		for(auto &method : bindClass->getMethodList()) {
+			_nbind_register_method(method.getName());
+		}
+
+		for(auto &func : bindClass->getFunctionList()) {
+			_nbind_register_function(func.getName());
+		}
+	}
+}
+
+int main(void) {
+	Bindings::initModule();
+
+	return(EXIT_SUCCESS);
+}
+
+#endif

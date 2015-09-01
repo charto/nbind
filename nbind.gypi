@@ -3,7 +3,7 @@
 	"include_dirs": [
 		"include"
 	],
-	"sources": ["src/Binding.cc"],
+	"sources": ["src/v8/Binding.cc"],
 	"cflags_cc": ["-std=c++11", "-fexceptions"],
 	"xcode_settings": {
 		"GCC_ENABLE_CPP_EXCEPTIONS": "YES",

@@ -8,15 +8,15 @@
 #include <vector>
 #include <stdexcept>
 
-#include <v8.h>
-#include <node.h>
-#include <nan.h>
-
 #include "api.h"
 #include "wire.h"
 #include "Caller.h"
 #include "BindClass.h"
-#include "Binding.h"
+#ifdef BUILDING_NODE_EXTENSION
+#include "v8/Binding.h"
+#elif EMSCRIPTEN
+#include "em/Binding.h"
+#endif
 
 #include "FunctionSignature.h"
 #include "MethodSignature.h"
@@ -46,9 +46,6 @@ public:
 		bindClass->setName(name);
 
 		Bindings::registerClass(bindClass);
-#ifdef EMSCRIPTEN
-_nbind_register_class(name);
-#endif // BUILDING_NODE_EXTENSION
 	}
 
 	template<typename ReturnType, typename... Args, typename... Policies>
@@ -65,9 +62,7 @@ _nbind_register_class(name);
 			Signature::addFunction(name, method),
 			reinterpret_cast<funcPtr>(Signature::call)
 		);
-#ifdef EMSCRIPTEN
-_nbind_register_method(name);
-#endif // EMSCRIPTEN
+
 		return(*this);
 	}
 
@@ -84,9 +79,7 @@ _nbind_register_method(name);
 			Signature::addFunction(name, func),
 			reinterpret_cast<funcPtr>(Signature::call)
 		);
-#ifdef EMSCRIPTEN
-_nbind_register_function(name);
-#endif // EMSCRIPTEN
+
 		return(*this);
 	}
 

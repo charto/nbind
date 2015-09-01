@@ -10,10 +10,33 @@ namespace nbind {
 // Everything must be static because the V8 JavaScript engine wants a single
 // function pointer to call, so each template variant is a singleton class.
 
+#ifdef EMSCRIPTEN
+template<typename ArgType> constexpr char emMangle();
+
+template<> constexpr char emMangle<int>() {return('i');}
+template<> constexpr char emMangle<void>() {return('v');}
+template<> constexpr char emMangle<float>() {return('f');}
+template<> constexpr char emMangle<double>() {return('d');}
+
+template<typename... Args>
+const char* getEmSignature() {
+	static constexpr char signature[] = { emMangle<Args>()..., 0 };
+
+	return(signature);
+}
+
+template<typename ArgType> struct EmMangleMap { typedef int type; };
+template<> struct EmMangleMap<void> { typedef void type; };
+template<> struct EmMangleMap<float> { typedef float type; };
+template<> struct EmMangleMap<double> { typedef double type; };
+#endif // EMSCRIPTEN
+
 template <class Signature, typename ReturnType, typename... Args>
 class CallableSignature {
 
 public:
+
+	// Information about a single named function.
 
 	struct FunctionInfo {
 
@@ -26,9 +49,14 @@ public:
 
 	};
 
+	// Information about a class of functions with matching return and argument types.
+
 	struct SignatureInfo {
 		std::vector<struct FunctionInfo> funcVect;
 		typename Signature::Data data;
+#ifdef EMSCRIPTEN
+		const char *emSignature = getEmSignature<typename EmMangleMap<ReturnType>::type, typename EmMangleMap<Args>::type...>();
+#endif
 	};
 
 	static const FunctionInfo &getFunction(unsigned int num) {
@@ -66,7 +94,8 @@ public:
 
 		return(checker::typesAreValid(args));
 	}
-#endif // BUILDING_NODE_EXTENSION
+#elif EMSCRIPTEN
+#endif // BUILDING_NODE_EXTENSION || EMSCRIPTEN
 
 protected:
 
