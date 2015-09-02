@@ -90,10 +90,11 @@ void Bindings :: initModule(Handle<Object> exports) {
 		constructorTemplate->SetClassName(Nan::New<String>(bindClass->getName()).ToLocalChecked());
 		constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 
+/*
 		for(auto &method : bindClass->getMethodList()) {
 			Nan::SetPrototypeTemplate(constructorTemplate, method.getName(),
 				Nan::New<FunctionTemplate>(
-					reinterpret_cast<BindClassBase::jsMethod *>(method.getSignature()),
+					reinterpret_cast<BindClassBase::jsMethod *>(method.getCaller()),
 					Nan::New<Number>(method.getNum())
 				)->GetFunction()
 			);
@@ -102,10 +103,35 @@ void Bindings :: initModule(Handle<Object> exports) {
 		for(auto &func : bindClass->getFunctionList()) {
 			Nan::SetTemplate(constructorTemplate, func.getName(),
 				Nan::New<FunctionTemplate>(
-					reinterpret_cast<BindClassBase::jsMethod *>(func.getSignature()),
+					reinterpret_cast<BindClassBase::jsMethod *>(func.getCaller()),
 					Nan::New<Number>(func.getNum())
 				)->GetFunction()
 			);
+		}
+*/
+
+		for(auto &func : bindClass->getMethodList()) {
+			switch(func.getType()) {
+				case BindClassBase::MethodDef::Type::method:
+					Nan::SetPrototypeTemplate(constructorTemplate, func.getName(),
+						Nan::New<FunctionTemplate>(
+							reinterpret_cast<BindClassBase::jsMethod *>(func.getCaller()),
+							Nan::New<Number>(func.getNum())
+						)->GetFunction()
+					);
+
+					break;
+
+				case BindClassBase::MethodDef::Type::function:
+					Nan::SetTemplate(constructorTemplate, func.getName(),
+						Nan::New<FunctionTemplate>(
+							reinterpret_cast<BindClassBase::jsMethod *>(func.getCaller()),
+							Nan::New<Number>(func.getNum())
+						)->GetFunction()
+					);
+
+					break;
+			}
 		}
 
 		Local<ObjectTemplate> proto = constructorTemplate->PrototypeTemplate();
@@ -115,11 +141,13 @@ void Bindings :: initModule(Handle<Object> exports) {
 			Nan::SetAccessor(
 				proto,
 				Nan::New<String>(stripGetterPrefix(access.getName(), nameBuf)).ToLocalChecked(),
-				reinterpret_cast<BindClassBase::jsGetter *>(access.getGetterSignature()),
-				reinterpret_cast<BindClassBase::jsSetter *>(access.getSetterSignature()),
+				reinterpret_cast<BindClassBase::jsGetter *>(access.getGetterCaller()),
+				reinterpret_cast<BindClassBase::jsSetter *>(access.getSetterCaller()),
 				Nan::New<Number>((access.getSetterNum() << accessorSetterShift) | access.getGetterNum())
 			);
 		}
+
+		if(nameBuf != nullptr) free(nameBuf);
 
 		// Add NBind references to other classes to enforce visibility.
 		if(bindClass == BindClass<NBind>::getInstance()) {

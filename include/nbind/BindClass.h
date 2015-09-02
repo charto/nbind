@@ -34,20 +34,24 @@ public:
 
 	public:
 
-		MethodDef(const char *name, unsigned int num, funcPtr signature) :
-			name(name), num(num), signature(signature) {}
+		enum class Type {function, method, getter, setter};
+
+		MethodDef(Type type, const char *name, unsigned int num, funcPtr caller) :
+			type(type), name(name), num(num), caller(caller) {}
 
 		const char *getName() {return(name);}
 		unsigned int getNum() {return(num);}
-		funcPtr getSignature() {return(signature);}
+		funcPtr getCaller() {return(caller);}
+		Type getType() {return(type);}
 
 	private:
 
+		Type type;
 		const char *name;
 		// Index to distinguish between functions with identical signatures.
 		unsigned int num;
 		// Signature represents return and argument types.
-		funcPtr signature;
+		funcPtr caller;
 
 	};
 
@@ -57,22 +61,22 @@ public:
 
 	public:
 
-		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, funcPtr getterSignature, funcPtr setterSignature) :
-			name(name), getterNum(getterNum), setterNum(setterNum), getterSignature(getterSignature), setterSignature(setterSignature) {}
+		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, funcPtr getterCaller, funcPtr setterCaller) :
+			name(name), getterNum(getterNum), setterNum(setterNum), getterCaller(getterCaller), setterCaller(setterCaller) {}
 
 		const char *getName() {return(name);}
 		unsigned int getGetterNum() {return(getterNum);}
 		unsigned int getSetterNum() {return(setterNum);}
-		funcPtr getGetterSignature() {return(getterSignature);}
-		funcPtr getSetterSignature() {return(setterSignature);}
+		funcPtr getGetterCaller() {return(getterCaller);}
+		funcPtr getSetterCaller() {return(setterCaller);}
 
 	private:
 
 		const char *name;
 		unsigned int getterNum;
 		unsigned int setterNum;
-		funcPtr getterSignature;
-		funcPtr setterSignature;
+		funcPtr getterCaller;
+		funcPtr setterCaller;
 
 	};
 
@@ -93,14 +97,9 @@ public:
 
 	// Add a method to the class.
 
-	void addMethod(const char *name, unsigned int num, funcPtr signature) {
-		methodList.emplace_front(name, num, signature);
-	}
-
-	// Add a static method to the class.
-
-	void addFunction(const char *name, unsigned int num, funcPtr signature) {
-		funcList.emplace_front(name, num, signature);
+	MethodDef &addMethod(MethodDef::Type type, const char *name, unsigned int num, funcPtr caller) {
+		methodList.emplace_front(type, name, num, caller);
+		return(methodList.front());
 	}
 
 	// Add handlers for getting or setting a property of the class from JavaScript.
@@ -109,15 +108,13 @@ public:
 		const char *name,
 		unsigned int getterNum,
 		unsigned int setterNum,
-		funcPtr getterSignature,
-		funcPtr setterSignature
+		funcPtr getterCaller,
+		funcPtr setterCaller
 	) {
-		accessList.emplace_front(name, getterNum, setterNum, getterSignature, setterSignature);
+		accessList.emplace_front(name, getterNum, setterNum, getterCaller, setterCaller);
 	}
 
 	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
-
-	std::forward_list<MethodDef> &getFunctionList() {return(funcList);}
 
 	std::forward_list<AccessorDef> &getAccessorList() {return(accessList);}
 
@@ -161,7 +158,6 @@ protected:
 	bool ready = 0;
 	const char *name;
 	std::forward_list<MethodDef> methodList;
-	std::forward_list<MethodDef> funcList;
 	std::forward_list<AccessorDef> accessList;
 
 	// These have to be pointers instead of a member objects so the

@@ -38,31 +38,31 @@ public:
 
 	// Information about a single named function.
 
-	struct FunctionInfo {
+	struct MethodInfo {
 
-		typedef typename Signature::FunctionType FunctionType;
+		typedef typename Signature::MethodType MethodType;
 
-		FunctionInfo(FunctionType func) : func(func) {}
+		MethodInfo(MethodType func) : func(func) {}
 
-		FunctionType func;
+		MethodType func;
 
 	};
 
 	// Information about a class of functions with matching return and argument types.
 
 	struct SignatureInfo {
-		std::vector<struct FunctionInfo> funcVect;
+		std::vector<struct MethodInfo> funcVect;
 #ifdef EMSCRIPTEN
 		const char *emSignature = getEmSignature<typename EmMangleMap<ReturnType>::type, typename EmMangleMap<Args>::type...>();
 #endif
 	};
 
-	static const FunctionInfo &getFunction(unsigned int num) {
+	static const MethodInfo &getMethod(unsigned int num) {
 		return(signatureStore().funcVect[num]);
 	}
 
-	template <typename FunctionType>
-	static unsigned int addFunction(FunctionType func) {
+	template <typename MethodType>
+	static unsigned int addMethod(MethodType func) {
 		auto &funcVect = signatureStore().funcVect;
 
 		funcVect.emplace_back(func);

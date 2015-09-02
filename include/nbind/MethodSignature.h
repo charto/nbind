@@ -59,7 +59,7 @@ class MethodSignature : public CallableSignature<MethodSignature<Bound, ReturnTy
 
 public:
 
-	typedef ReturnType(Bound::*FunctionType)(Args...);
+	typedef ReturnType(Bound::*MethodType)(Args...);
 
 	typedef CallableSignature<MethodSignature, ReturnType, Args...> Parent;
 
@@ -84,7 +84,7 @@ public:
 		Status::clearError();
 
 		try {
-			auto result = Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue()).func, args);
+			auto result = Parent::CallWrapper::call(target, Parent::getMethod(args.Data()->IntegerValue()).func, args);
 
 			const char *message = Status::getError();
 

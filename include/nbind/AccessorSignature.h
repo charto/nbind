@@ -23,7 +23,7 @@ class AccessorSignature : public CallableSignature<AccessorSignature<Bound, Retu
 
 public:
 
-	typedef ReturnType(Bound::*FunctionType)(Args...);
+	typedef ReturnType(Bound::*MethodType)(Args...);
 
 	typedef CallableSignature<AccessorSignature, ReturnType, Args...> Parent;
 
@@ -39,7 +39,7 @@ public:
 			auto &&result = Caller<
 				ReturnType,
 				TypeList<>
-			>::call(target, Parent::getFunction(args.Data()->IntegerValue() & accessorGetterMask).func, args);
+			>::call(target, Parent::getMethod(args.Data()->IntegerValue() & accessorGetterMask).func, args);
 
 			const char *message = Status::getError();
 
@@ -72,7 +72,7 @@ public:
 			Nan::ThrowTypeError("Type mismatch");
 		} else {
 			try {
-				Parent::CallWrapper::call(target, Parent::getFunction(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
+				Parent::CallWrapper::call(target, Parent::getMethod(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
 
 				const char *message = Status::getError();
 

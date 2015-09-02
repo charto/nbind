@@ -17,7 +17,7 @@ class FunctionSignature : public CallableSignature<FunctionSignature<ReturnType,
 
 public:
 
-	typedef ReturnType(*FunctionType)(Args...);
+	typedef ReturnType(*MethodType)(Args...);
 
 	typedef CallableSignature<FunctionSignature, ReturnType, Args...> Parent;
 
@@ -40,7 +40,7 @@ public:
 		Status::clearError();
 
 		try {
-			auto result = Parent::CallWrapper::call(Parent::getFunction(args.Data()->IntegerValue()).func, args);
+			auto result = Parent::CallWrapper::call(Parent::getMethod(args.Data()->IntegerValue()).func, args);
 
 			const char *message = Status::getError();
 
