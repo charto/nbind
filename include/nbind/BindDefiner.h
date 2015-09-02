@@ -19,9 +19,10 @@
 #include "em/Binding.h"
 #endif
 
-#include "FunctionSignature.h"
-#include "MethodSignature.h"
-#include "AccessorSignature.h"
+#include "signature/FunctionSignature.h"
+#include "signature/MethodSignature.h"
+#include "signature/GetterSignature.h"
+#include "signature/SetterSignature.h"
 
 namespace nbind {
 
@@ -49,19 +50,26 @@ public:
 		Bindings::registerClass(bindClass);
 	}
 
+	template<class Signature, typename MethodType>
+	void addMethod(BindClassBase::MethodDef::Type type, const char *name, MethodType method) const {
+		bindClass->addMethod(
+			type,
+			name,
+			Signature::addMethod(method),
+			reinterpret_cast<funcPtr>(Signature::call)
+		);
+	}
+
 	template<typename ReturnType, typename... Args, typename... Policies>
 	const BindDefiner &function(
 		const char* name,
 		ReturnType(Bound::*method)(Args...),
 		Policies...
 	) const {
-		typedef MethodSignature<Bound, ReturnType, Args...> Signature;
-
-		bindClass->addMethod(
+		addMethod<MethodSignature<Bound, ReturnType, Args...>>(
 			BindClassBase::MethodDef::Type::method,
 			name,
-			Signature::addMethod(method),
-			reinterpret_cast<funcPtr>(Signature::call)
+			method
 		);
 
 		return(*this);
@@ -73,13 +81,10 @@ public:
 		ReturnType(*func)(Args...),
 		Policies...
 	) const {
-		typedef FunctionSignature<ReturnType, Args...> Signature;
-
-		bindClass->addMethod(
+		addMethod<FunctionSignature<ReturnType, Args...>>(
 			BindClassBase::MethodDef::Type::function,
 			name,
-			Signature::addMethod(func),
-			reinterpret_cast<funcPtr>(Signature::call)
+			func
 		);
 
 		return(*this);
@@ -113,20 +118,15 @@ public:
 		FieldType(Bound::*getter)(),
 		Policies...
 	) const {
-		typedef AccessorSignature<Bound, FieldType> GetterSignature;
-
-		bindClass->addMethod(
+		addMethod<GetterSignature<Bound, FieldType>>(
 			BindClassBase::MethodDef::Type::getter,
 			name,
-			GetterSignature::addMethod(getter),
-			reinterpret_cast<funcPtr>(GetterSignature::getter)
+			getter
 		);
 
 		bindClass->addMethod(
 			BindClassBase::MethodDef::Type::setter,
-			name,
-			0,
-			nullptr
+			name
 		);
 
 		return(*this);
@@ -144,23 +144,17 @@ public:
 		SetReturnType(Bound::*setter)(SetFieldType),
 		Policies...
 	) const {
-		typedef AccessorSignature<Bound, GetFieldType> GetterSignature;
-		typedef AccessorSignature<Bound, SetReturnType, SetFieldType> SetterSignature;
-
-		bindClass->addMethod(
+		addMethod<GetterSignature<Bound, GetFieldType>>(
 			BindClassBase::MethodDef::Type::getter,
 			name,
-			GetterSignature::addMethod(getter),
-			reinterpret_cast<funcPtr>(GetterSignature::getter)
+			getter
 		);
 
-		bindClass->addMethod(
+		addMethod<SetterSignature<Bound, SetReturnType, SetFieldType>>(
 			BindClassBase::MethodDef::Type::setter,
 			name,
-			SetterSignature::addMethod(setter),
-			reinterpret_cast<funcPtr>(SetterSignature::setter)
+			setter
 		);
-
 		return(*this);
 	}
 

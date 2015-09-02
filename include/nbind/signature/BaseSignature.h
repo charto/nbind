@@ -32,7 +32,7 @@ template<> struct EmMangleMap<double> { typedef double type; };
 #endif // EMSCRIPTEN
 
 template <class Signature, typename ReturnType, typename... Args>
-class CallableSignature {
+class BaseSignature {
 
 public:
 

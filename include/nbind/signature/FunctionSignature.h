@@ -6,20 +6,20 @@
 
 #pragma once
 
-#include "CallableSignature.h"
+#include "BaseSignature.h"
 
 namespace nbind {
 
 // Wrapper for all C++ functions with matching argument and return types.
 
 template <typename ReturnType, typename... Args>
-class FunctionSignature : public CallableSignature<FunctionSignature<ReturnType, Args...>, ReturnType, Args...> {
+class FunctionSignature : public BaseSignature<FunctionSignature<ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
 	typedef ReturnType(*MethodType)(Args...);
 
-	typedef CallableSignature<FunctionSignature, ReturnType, Args...> Parent;
+	typedef BaseSignature<FunctionSignature, ReturnType, Args...> Parent;
 
 #ifdef BUILDING_NODE_EXTENSION
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {

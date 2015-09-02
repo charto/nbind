@@ -72,7 +72,7 @@ public:
 
 	// Add a method to the class.
 
-	MethodDef &addMethod(MethodDef::Type type, const char *name, unsigned int num, funcPtr caller) {
+	MethodDef &addMethod(MethodDef::Type type, const char *name, unsigned int num = 0, funcPtr caller = nullptr) {
 		methodList.emplace_front(type, name, num, caller);
 		return(methodList.front());
 	}

@@ -6,60 +6,28 @@
 
 #pragma once
 
-#include "CallableSignature.h"
+#include "BaseSignature.h"
 
 namespace nbind {
 
 // Getters and setters come in pairs with a single associated metadata value.
 // We need to store separate getter and setter ID numbers as metadata
 // so they're packed as 16-bit values into a single 32-bit int.
-static constexpr unsigned int accessorGetterMask = 0xffff;
 static constexpr unsigned int accessorSetterShift = 16;
 
 // Wrapper for all C++ getters and setters with matching class and data types.
 
 template <class Bound, typename ReturnType, typename... Args>
-class AccessorSignature : public CallableSignature<AccessorSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
+class SetterSignature : public BaseSignature<SetterSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
 	typedef ReturnType(Bound::*MethodType)(Args...);
 
-	typedef CallableSignature<AccessorSignature, ReturnType, Args...> Parent;
+	typedef BaseSignature<SetterSignature, ReturnType, Args...> Parent;
 
 #ifdef BUILDING_NODE_EXTENSION
-	static void getter(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
-
-		v8::Local<v8::Object> targetWrapped = args.This();
-		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
-
-		Status::clearError();
-
-		try {
-			auto &&result = Caller<
-				ReturnType,
-				TypeList<>
-			>::call(target, Parent::getMethod(args.Data()->IntegerValue() & accessorGetterMask).func, args);
-
-			const char *message = Status::getError();
-
-			if(message) {
-				Nan::ThrowError(message);
-				return;
-			}
-
-			args.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
-		} catch(const std::exception &ex) {
-			const char *message = Status::getError();
-
-			if(message == nullptr) message = ex.what();
-
-			Nan::ThrowError(message);
-			return;
-		}
-	}
-
-	static void setter(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {
+	static void call(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {
 
 		v8::Local<v8::Object> targetWrapped = args.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
@@ -68,7 +36,7 @@ public:
 
 		auto *valuePtr = &value;
 
-		if(!AccessorSignature::typesAreValid(valuePtr)) {
+		if(!SetterSignature::typesAreValid(valuePtr)) {
 			Nan::ThrowTypeError("Type mismatch");
 		} else {
 			try {
@@ -87,8 +55,7 @@ public:
 		}
 	}
 #else
-	static void getter() {}
-	static void setter() {}
+	static void call() {}
 #endif // BUILDING_NODE_EXTENSION
 
 };
