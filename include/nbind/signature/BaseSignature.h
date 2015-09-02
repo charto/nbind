@@ -10,27 +10,6 @@ namespace nbind {
 // Everything must be static because the V8 JavaScript engine wants a single
 // function pointer to call, so each template variant is a singleton class.
 
-#ifdef EMSCRIPTEN
-template<typename ArgType> constexpr char emMangle();
-
-template<> constexpr char emMangle<int>() {return('i');}
-template<> constexpr char emMangle<void>() {return('v');}
-template<> constexpr char emMangle<float>() {return('f');}
-template<> constexpr char emMangle<double>() {return('d');}
-
-template<typename... Args>
-const char* buildEmSignature() {
-	static constexpr char signature[] = { emMangle<Args>()..., 0 };
-
-	return(signature);
-}
-
-template<typename ArgType> struct EmMangleMap { typedef int type; };
-template<> struct EmMangleMap<void> { typedef void type; };
-template<> struct EmMangleMap<float> { typedef float type; };
-template<> struct EmMangleMap<double> { typedef double type; };
-#endif // EMSCRIPTEN
-
 template <class Signature, typename ReturnType, typename... Args>
 class BaseSignature {
 

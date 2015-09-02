@@ -3,10 +3,6 @@
 
 #pragma once
 
-#ifdef EMSCRIPTEN
-
-#define NBIND 1
-
 template<typename...> struct TypeList {};
 
 namespace nbind {
@@ -31,5 +27,3 @@ private:
 };
 
 } // namespace
-
-#endif // EMSCRIPTEN

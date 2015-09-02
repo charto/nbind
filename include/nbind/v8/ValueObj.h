@@ -43,40 +43,6 @@ private:
 
 };
 
-template<class Bound, typename ArgList> struct ConstructorInfo;
-
-template<class Bound, typename... Args>
-struct ConstructorInfo<Bound, TypeList<Args...>> {
-
-public:
-
-	static const char *getClassName() {return(classNameStore());}
-	static void setClassName(const char *className) {classNameStore() = className;}
-
-#ifdef BUILDING_NODE_EXTENSION
-	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
-	template <typename... NanArgs>
-	static BindWrapper<Bound> *makeWrapper(NanArgs... args) noexcept(false) {
-		// Note that Args().get may throw.
-		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get(args...)...));
-	}
-
-	// Make sure prototype matches NanValueConstructorTypeBuilder!
-	template <typename... NanArgs>
-	static void makeValue(ArgStorage<Bound> &storage, NanArgs... args) {
-		storage.init(Args(std::forward<NanArgs>(args)...).get(args...)...);
-	}
-#endif // BUILDING_NODE_EXTENSION
-
-private:
-
-	static const char *&classNameStore() {
-		static const char *className;
-		return(className);
-	}
-
-};
-
 // Call the toJS method of a returned C++ object, to convert it into a JavaScript object.
 // This is used when a C++ function is called from JavaScript.
 // A functor capable of calling the correct JavaScript constructor is passed to toJS,

@@ -97,6 +97,8 @@ void Bindings :: initModule(Handle<Object> exports) {
 		unsigned int setterNum = 0;
 
 		for(auto &func : bindClass->getMethodList()) {
+			// TODO: Support for function overloading goes here.
+
 			switch(func.getType()) {
 				case MethodDef::Type::method:
 					Nan::SetPrototypeTemplate(constructorTemplate, func.getName(),

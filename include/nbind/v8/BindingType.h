@@ -33,7 +33,9 @@ public:
 
 	~BindWrapper() {delete(bound);}
 
-	static void create(const Nan::FunctionCallbackInfo<v8::Value> &args);
+	void wrap(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+		this->Wrap(args.This());
+	}
 
 	Bound &getBound() {return(*bound);}
 

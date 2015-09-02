@@ -67,8 +67,9 @@ public:
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);
 
+		// TODO: For method overloading support, this test needs to be moved elsewhere.
+
 		if(args.Length() != arity) {
-//			printf("Wrong number of arguments to %s.%s: expected %ld, got %d.\n",getClassName(),getMethodName(),arity,args.Length());
 			Nan::ThrowError("Wrong number of arguments");
 			return;
 		}

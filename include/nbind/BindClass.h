@@ -1,12 +1,15 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// TODO: This file is still ugly.
+// The constructor stuff from here and Binding.h should be moved to ConstructorOverload.h.
+
 #pragma once
 
 namespace nbind {
 
-template <typename Bound>
-class ArgStorage;
+//template <typename Bound>
+//class ArgStorage;
 
 // Templated singleton class for each C++ class accessible from Node.js.
 // Stores their information defined in static constructors, until the Node.js
@@ -119,7 +122,7 @@ public:
 
 	BindClass() : BindClassBase() {
 #ifdef BUILDING_NODE_EXTENSION
-		createPtr = BindWrapper<Bound>::create;
+		createPtr = ConstructorOverload<Bound>::call;
 #endif // BUILDING_NODE_EXTENSION
 		setInstance(this);
 	}
