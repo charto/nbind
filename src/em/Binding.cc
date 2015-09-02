@@ -112,12 +112,18 @@ void Bindings :: initModule() {
 
 		_nbind_register_class(bindClass->getName());
 
-		for(auto &method : bindClass->getMethodList()) {
-			_nbind_register_method(method.getName());
-		}
+		for(auto &func : bindClass->getMethodList()) {
+			switch(func.getType()) {
+				case BindClassBase::MethodDef::Type::method:
+					_nbind_register_method(func.getName());
 
-		for(auto &func : bindClass->getFunctionList()) {
-			_nbind_register_function(func.getName());
+					break;
+
+				case BindClassBase::MethodDef::Type::function:
+					_nbind_register_function(func.getName());
+
+					break;
+			}
 		}
 	}
 }

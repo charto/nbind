@@ -19,7 +19,7 @@ template<> constexpr char emMangle<float>() {return('f');}
 template<> constexpr char emMangle<double>() {return('d');}
 
 template<typename... Args>
-const char* getEmSignature() {
+const char* buildEmSignature() {
 	static constexpr char signature[] = { emMangle<Args>()..., 0 };
 
 	return(signature);
@@ -53,7 +53,7 @@ public:
 	struct SignatureInfo {
 		std::vector<struct MethodInfo> funcVect;
 #ifdef EMSCRIPTEN
-		const char *emSignature = getEmSignature<typename EmMangleMap<ReturnType>::type, typename EmMangleMap<Args>::type...>();
+		const char *emSignature = buildEmSignature<typename EmMangleMap<ReturnType>::type, typename EmMangleMap<Args>::type...>();
 #endif
 	};
 
@@ -93,6 +93,9 @@ public:
 		return(checker::typesAreValid(args));
 	}
 #elif EMSCRIPTEN
+	static const char *getEmSignature() {
+		return(signatureStore().emSignature);
+	}
 #endif // BUILDING_NODE_EXTENSION || EMSCRIPTEN
 
 protected:
