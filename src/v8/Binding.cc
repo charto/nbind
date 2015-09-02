@@ -90,25 +90,11 @@ void Bindings :: initModule(Handle<Object> exports) {
 		constructorTemplate->SetClassName(Nan::New<String>(bindClass->getName()).ToLocalChecked());
 		constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 
-/*
-		for(auto &method : bindClass->getMethodList()) {
-			Nan::SetPrototypeTemplate(constructorTemplate, method.getName(),
-				Nan::New<FunctionTemplate>(
-					reinterpret_cast<BindClassBase::jsMethod *>(method.getCaller()),
-					Nan::New<Number>(method.getNum())
-				)->GetFunction()
-			);
-		}
+		Local<ObjectTemplate> proto = constructorTemplate->PrototypeTemplate();
+		char *nameBuf = nullptr;
 
-		for(auto &func : bindClass->getFunctionList()) {
-			Nan::SetTemplate(constructorTemplate, func.getName(),
-				Nan::New<FunctionTemplate>(
-					reinterpret_cast<BindClassBase::jsMethod *>(func.getCaller()),
-					Nan::New<Number>(func.getNum())
-				)->GetFunction()
-			);
-		}
-*/
+		funcPtr setter = nullptr;
+		unsigned int setterNum = 0;
 
 		for(auto &func : bindClass->getMethodList()) {
 			switch(func.getType()) {
@@ -131,20 +117,24 @@ void Bindings :: initModule(Handle<Object> exports) {
 					);
 
 					break;
+
+				case BindClassBase::MethodDef::Type::setter:
+					setter = func.getCaller();
+					setterNum = func.getNum();
+
+					break;
+
+				case BindClassBase::MethodDef::Type::getter:
+					Nan::SetAccessor(
+						proto,
+						Nan::New<String>(stripGetterPrefix(func.getName(), nameBuf)).ToLocalChecked(),
+						reinterpret_cast<BindClassBase::jsGetter *>(func.getCaller()),
+						reinterpret_cast<BindClassBase::jsSetter *>(setter),
+						Nan::New<Number>((setterNum << accessorSetterShift) | func.getNum())
+					);
+
+					break;
 			}
-		}
-
-		Local<ObjectTemplate> proto = constructorTemplate->PrototypeTemplate();
-		char *nameBuf = nullptr;
-
-		for(auto &access : bindClass->getAccessorList()) {
-			Nan::SetAccessor(
-				proto,
-				Nan::New<String>(stripGetterPrefix(access.getName(), nameBuf)).ToLocalChecked(),
-				reinterpret_cast<BindClassBase::jsGetter *>(access.getGetterCaller()),
-				reinterpret_cast<BindClassBase::jsSetter *>(access.getSetterCaller()),
-				Nan::New<Number>((access.getSetterNum() << accessorSetterShift) | access.getGetterNum())
-			);
 		}
 
 		if(nameBuf != nullptr) free(nameBuf);

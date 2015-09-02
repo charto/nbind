@@ -115,11 +115,17 @@ public:
 	) const {
 		typedef AccessorSignature<Bound, FieldType> GetterSignature;
 
-		bindClass->addAccessor(
+		bindClass->addMethod(
+			BindClassBase::MethodDef::Type::getter,
 			name,
 			GetterSignature::addMethod(getter),
+			reinterpret_cast<funcPtr>(GetterSignature::getter)
+		);
+
+		bindClass->addMethod(
+			BindClassBase::MethodDef::Type::setter,
+			name,
 			0,
-			reinterpret_cast<funcPtr>(GetterSignature::getter),
 			nullptr
 		);
 
@@ -141,11 +147,17 @@ public:
 		typedef AccessorSignature<Bound, GetFieldType> GetterSignature;
 		typedef AccessorSignature<Bound, SetReturnType, SetFieldType> SetterSignature;
 
-		bindClass->addAccessor(
+		bindClass->addMethod(
+			BindClassBase::MethodDef::Type::getter,
 			name,
 			GetterSignature::addMethod(getter),
+			reinterpret_cast<funcPtr>(GetterSignature::getter)
+		);
+
+		bindClass->addMethod(
+			BindClassBase::MethodDef::Type::setter,
+			name,
 			SetterSignature::addMethod(setter),
-			reinterpret_cast<funcPtr>(GetterSignature::getter),
 			reinterpret_cast<funcPtr>(SetterSignature::setter)
 		);
 

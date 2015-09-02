@@ -55,31 +55,6 @@ public:
 
 	};
 
-	// Storage format for getter and setter definitions.
-
-	class AccessorDef {
-
-	public:
-
-		AccessorDef(const char *name, unsigned int getterNum, unsigned int setterNum, funcPtr getterCaller, funcPtr setterCaller) :
-			name(name), getterNum(getterNum), setterNum(setterNum), getterCaller(getterCaller), setterCaller(setterCaller) {}
-
-		const char *getName() {return(name);}
-		unsigned int getGetterNum() {return(getterNum);}
-		unsigned int getSetterNum() {return(setterNum);}
-		funcPtr getGetterCaller() {return(getterCaller);}
-		funcPtr getSetterCaller() {return(setterCaller);}
-
-	private:
-
-		const char *name;
-		unsigned int getterNum;
-		unsigned int setterNum;
-		funcPtr getterCaller;
-		funcPtr setterCaller;
-
-	};
-
 	BindClassBase() {}
 
 	const char *getName() {return(name);}
@@ -102,21 +77,7 @@ public:
 		return(methodList.front());
 	}
 
-	// Add handlers for getting or setting a property of the class from JavaScript.
-
-	void addAccessor(
-		const char *name,
-		unsigned int getterNum,
-		unsigned int setterNum,
-		funcPtr getterCaller,
-		funcPtr setterCaller
-	) {
-		accessList.emplace_front(name, getterNum, setterNum, getterCaller, setterCaller);
-	}
-
 	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
-
-	std::forward_list<AccessorDef> &getAccessorList() {return(accessList);}
 
 	jsMethod *createPtr;
 
@@ -158,7 +119,6 @@ protected:
 	bool ready = 0;
 	const char *name;
 	std::forward_list<MethodDef> methodList;
-	std::forward_list<AccessorDef> accessList;
 
 	// These have to be pointers instead of a member objects so the
 	// destructor won't get called. Otherwise NanCallback's destructor
