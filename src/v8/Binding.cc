@@ -98,7 +98,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		for(auto &func : bindClass->getMethodList()) {
 			switch(func.getType()) {
-				case BindClassBase::MethodDef::Type::method:
+				case MethodDef::Type::method:
 					Nan::SetPrototypeTemplate(constructorTemplate, func.getName(),
 						Nan::New<FunctionTemplate>(
 							reinterpret_cast<BindClassBase::jsMethod *>(func.getCaller()),
@@ -108,7 +108,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 					break;
 
-				case BindClassBase::MethodDef::Type::function:
+				case MethodDef::Type::function:
 					Nan::SetTemplate(constructorTemplate, func.getName(),
 						Nan::New<FunctionTemplate>(
 							reinterpret_cast<BindClassBase::jsMethod *>(func.getCaller()),
@@ -118,13 +118,13 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 					break;
 
-				case BindClassBase::MethodDef::Type::setter:
+				case MethodDef::Type::setter:
 					setter = func.getCaller();
 					setterNum = func.getNum();
 
 					break;
 
-				case BindClassBase::MethodDef::Type::getter:
+				case MethodDef::Type::getter:
 					Nan::SetAccessor(
 						proto,
 						Nan::New<String>(stripGetterPrefix(func.getName(), nameBuf)).ToLocalChecked(),

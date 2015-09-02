@@ -28,33 +28,6 @@ public:
 	typedef void (*jsSetter)();
 #endif // BUILDING_NODE_EXTENSION
 
-	// Storage format for method definitions.
-
-	class MethodDef {
-
-	public:
-
-		enum class Type {function, method, getter, setter};
-
-		MethodDef(Type type, const char *name, unsigned int num, funcPtr caller) :
-			type(type), name(name), num(num), caller(caller) {}
-
-		const char *getName() {return(name);}
-		unsigned int getNum() {return(num);}
-		funcPtr getCaller() {return(caller);}
-		Type getType() {return(type);}
-
-	private:
-
-		Type type;
-		const char *name;
-		// Index to distinguish between functions with identical signatures.
-		unsigned int num;
-		// Signature represents return and argument types.
-		funcPtr caller;
-
-	};
-
 	BindClassBase() {}
 
 	const char *getName() {return(name);}

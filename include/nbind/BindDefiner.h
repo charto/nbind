@@ -11,6 +11,7 @@
 #include "api.h"
 #include "wire.h"
 #include "Caller.h"
+#include "MethodDef.h"
 #include "BindClass.h"
 #ifdef BUILDING_NODE_EXTENSION
 #include "v8/ValueObj.h"
@@ -51,13 +52,19 @@ public:
 	}
 
 	template<class Signature, typename MethodType>
-	void addMethod(BindClassBase::MethodDef::Type type, const char *name, MethodType method) const {
-		bindClass->addMethod(
+	void addMethod(MethodDef::Type type, const char *name, MethodType method) const {
+		auto &def = bindClass->addMethod(
 			type,
 			name,
 			Signature::addMethod(method),
 			reinterpret_cast<funcPtr>(Signature::call)
 		);
+
+#ifdef EMSCRIPTEN
+		def.emInit(Signature::getEmSignature());
+#else
+		(void)def;
+#endif
 	}
 
 	template<typename ReturnType, typename... Args, typename... Policies>
@@ -67,7 +74,7 @@ public:
 		Policies...
 	) const {
 		addMethod<MethodSignature<Bound, ReturnType, Args...>>(
-			BindClassBase::MethodDef::Type::method,
+			MethodDef::Type::method,
 			name,
 			method
 		);
@@ -82,7 +89,7 @@ public:
 		Policies...
 	) const {
 		addMethod<FunctionSignature<ReturnType, Args...>>(
-			BindClassBase::MethodDef::Type::function,
+			MethodDef::Type::function,
 			name,
 			func
 		);
@@ -119,13 +126,13 @@ public:
 		Policies...
 	) const {
 		addMethod<GetterSignature<Bound, FieldType>>(
-			BindClassBase::MethodDef::Type::getter,
+			MethodDef::Type::getter,
 			name,
 			getter
 		);
 
 		bindClass->addMethod(
-			BindClassBase::MethodDef::Type::setter,
+			MethodDef::Type::setter,
 			name
 		);
 
@@ -145,13 +152,13 @@ public:
 		Policies...
 	) const {
 		addMethod<GetterSignature<Bound, GetFieldType>>(
-			BindClassBase::MethodDef::Type::getter,
+			MethodDef::Type::getter,
 			name,
 			getter
 		);
 
 		addMethod<SetterSignature<Bound, SetReturnType, SetFieldType>>(
-			BindClassBase::MethodDef::Type::setter,
+			MethodDef::Type::setter,
 			name,
 			setter
 		);

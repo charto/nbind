@@ -13,8 +13,8 @@ using namespace nbind;
 
 extern "C" {
 	extern void _nbind_register_class(const char *msg);
-	extern void _nbind_register_function(const char *msg);
-	extern void _nbind_register_method(const char *msg);
+	extern void _nbind_register_function(const char *msg, const char *sig);
+	extern void _nbind_register_method(const char *msg, const char *sig);
 }
 
 /*
@@ -114,13 +114,13 @@ void Bindings :: initModule() {
 
 		for(auto &func : bindClass->getMethodList()) {
 			switch(func.getType()) {
-				case BindClassBase::MethodDef::Type::method:
-					_nbind_register_method(func.getName());
+				case MethodDef::Type::method:
+					_nbind_register_method(func.getName(), func.getEmSignature());
 
 					break;
 
-				case BindClassBase::MethodDef::Type::function:
-					_nbind_register_function(func.getName());
+				case MethodDef::Type::function:
+					_nbind_register_function(func.getName(), func.getEmSignature());
 
 					break;
 			}
