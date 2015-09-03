@@ -9,9 +9,12 @@ class BaseSignature {
 
 public:
 
-	BaseSignature() {}
-
 	enum class Type {function, method, getter, setter};
+
+	BaseSignature(Type type, funcPtr caller) : type(type), caller(caller) {}
+
+	Type getType() { return(type); }
+	funcPtr getCaller() { return(caller); }
 
 private:
 
@@ -30,9 +33,14 @@ class TemplatedBaseSignature : public BaseSignature {
 
 public:
 
-	static BaseSignature *getInstance() {
+	TemplatedBaseSignature() : BaseSignature(
+		Signature::typeExpr,
+		reinterpret_cast<funcPtr>(Signature::call)
+	) {}
+
+	static BaseSignature &getInstance() {
 		static Signature instance;
-		return(&instance);
+		return(instance);
 	}
 
 	// Information about a single named function.

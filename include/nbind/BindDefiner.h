@@ -33,6 +33,9 @@
 
 namespace nbind {
 
+extern const char *emptyGetter;
+extern const char *emptySetter;
+
 // BindDefiner is a helper class to make class definition syntax match embind.
 
 class BindDefinerBase {
@@ -58,13 +61,11 @@ public:
 	}
 
 	template<class Signature, typename MethodType>
-	void addMethod(MethodDef::Type type, const char *name, MethodType method) const {
+	void addMethod(const char *name, MethodType method) const {
 		auto &def = bindClass->addMethod(
-			type,
 			name,
 			Signature::addMethod(method),
-			Signature::getInstance(),
-			reinterpret_cast<funcPtr>(Signature::call)
+			&Signature::getInstance()
 		);
 
 #ifdef EMSCRIPTEN
@@ -80,11 +81,7 @@ public:
 		ReturnType(Bound::*method)(Args...),
 		Policies...
 	) const {
-		addMethod<MethodSignature<Bound, ReturnType, Args...>>(
-			MethodDef::Type::method,
-			name,
-			method
-		);
+		addMethod<MethodSignature<Bound, ReturnType, Args...>>(name, method);
 
 		return(*this);
 	}
@@ -95,11 +92,7 @@ public:
 		ReturnType(*func)(Args...),
 		Policies...
 	) const {
-		addMethod<FunctionSignature<ReturnType, Args...>>(
-			MethodDef::Type::function,
-			name,
-			func
-		);
+		addMethod<FunctionSignature<ReturnType, Args...>>(name, func);
 
 		return(*this);
 	}
@@ -124,16 +117,9 @@ public:
 		FieldType(Bound::*getter)(),
 		Policies...
 	) const {
-		addMethod<GetterSignature<Bound, FieldType>>(
-			MethodDef::Type::getter,
-			name,
-			getter
-		);
+		addMethod<GetterSignature<Bound, FieldType>>(name, getter);
 
-		bindClass->addMethod(
-			MethodDef::Type::setter,
-			name
-		);
+		bindClass->addMethod(emptySetter);
 
 		return(*this);
 	}
@@ -150,17 +136,10 @@ public:
 		SetReturnType(Bound::*setter)(SetFieldType),
 		Policies...
 	) const {
-		addMethod<GetterSignature<Bound, GetFieldType>>(
-			MethodDef::Type::getter,
-			name,
-			getter
-		);
+		addMethod<GetterSignature<Bound, GetFieldType>>(name, getter);
 
-		addMethod<SetterSignature<Bound, SetReturnType, SetFieldType>>(
-			MethodDef::Type::setter,
-			name,
-			setter
-		);
+		addMethod<SetterSignature<Bound, SetReturnType, SetFieldType>>(name,setter);
+
 		return(*this);
 	}
 

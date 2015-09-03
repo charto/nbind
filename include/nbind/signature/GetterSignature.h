@@ -26,6 +26,8 @@ public:
 
 	typedef TemplatedBaseSignature<GetterSignature, ReturnType, Args...> Parent;
 
+	static constexpr auto typeExpr = BaseSignature::Type::getter;
+
 #ifdef BUILDING_NODE_EXTENSION
 	static void call(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
 

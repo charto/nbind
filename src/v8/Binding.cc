@@ -10,6 +10,9 @@
 using namespace v8;
 using namespace nbind;
 
+const char *nbind :: emptyGetter = "";
+const char *nbind :: emptySetter = "";
+
 class NBind {
 
 public:
@@ -71,6 +74,8 @@ const char *stripGetterPrefix(const char *name, char *&nameBuf) {
 	return(name);
 }
 
+typedef BaseSignature::Type SigType;
+
 void Bindings :: initModule(Handle<Object> exports) {
 	// Register NBind a second time to make sure it's first on the list
 	// of classes and gets defined first, so pointers to it can be added
@@ -94,45 +99,67 @@ void Bindings :: initModule(Handle<Object> exports) {
 		char *nameBuf = nullptr;
 
 		funcPtr setter = nullptr;
+		funcPtr getter = nullptr;
+		unsigned int getterNum = 0;
 		unsigned int setterNum = 0;
 
 		for(auto &func : bindClass->getMethodList()) {
 			// TODO: Support for function overloading goes here.
 
-			switch(func.getType()) {
-				case MethodDef::Type::method:
+			BaseSignature *signature = func.getSignature();
+
+			if(signature == nullptr) {
+
+				if(func.getName() == emptyGetter) {
+					getter = nullptr;
+					getterNum = 0;
+				}
+
+				if(func.getName() == emptySetter) {
+					setter = nullptr;
+					setterNum = 0;
+				}
+
+				continue;
+			}
+
+			switch(signature->getType()) {
+				case SigType::method:
 					Nan::SetPrototypeTemplate(constructorTemplate, func.getName(),
 						Nan::New<FunctionTemplate>(
-							reinterpret_cast<BindClassBase::jsMethod *>(func.getCaller()),
+							reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
 							Nan::New<Number>(func.getNum())
 						)->GetFunction()
 					);
 
 					break;
 
-				case MethodDef::Type::function:
+				case SigType::function:
 					Nan::SetTemplate(constructorTemplate, func.getName(),
 						Nan::New<FunctionTemplate>(
-							reinterpret_cast<BindClassBase::jsMethod *>(func.getCaller()),
+							reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
 							Nan::New<Number>(func.getNum())
 						)->GetFunction()
 					);
 
 					break;
 
-				case MethodDef::Type::setter:
-					setter = func.getCaller();
+				case SigType::setter:
+					setter = signature->getCaller();
 					setterNum = func.getNum();
 
 					break;
 
-				case MethodDef::Type::getter:
+				case SigType::getter:
+					getter = signature->getCaller();
+					getterNum = func.getNum();
+
 					Nan::SetAccessor(
 						proto,
 						Nan::New<String>(stripGetterPrefix(func.getName(), nameBuf)).ToLocalChecked(),
-						reinterpret_cast<BindClassBase::jsGetter *>(func.getCaller()),
+						reinterpret_cast<BindClassBase::jsGetter *>(getter),
 						reinterpret_cast<BindClassBase::jsSetter *>(setter),
-						Nan::New<Number>((setterNum << accessorSetterShift) | func.getNum())
+						Nan::New<Number>((setterNum << accessorSetterShift) | getterNum)
 					);
 
 					break;

@@ -23,6 +23,9 @@ extern "C" {
 	extern void _nbind_init();
 }
 
+const char *nbind :: emptyGetter = "";
+const char *nbind :: emptySetter = "";
+
 /*
 class NBind {
 
@@ -109,6 +112,8 @@ NBIND_CLASS(NBind) {
 NODE_MODULE(nbind, nbind::Bindings::initModule)
 */
 
+typedef BaseSignature::Type SigType;
+
 void Bindings :: initModule() {
 	_nbind_register_type(makeTypeID<void>(), "void");
 	_nbind_register_type(makeTypeID<bool>(), "bool");
@@ -138,13 +143,20 @@ void Bindings :: initModule() {
 		_nbind_register_class(bindClass->getTypeID(), bindClass->getName());
 
 		for(auto &func : bindClass->getMethodList()) {
-			switch(func.getType()) {
-				case MethodDef::Type::method:
+
+			BaseSignature *signature = func.getSignature();
+
+			if(signature == nullptr) {
+				continue;
+			}
+
+			switch(signature->getType()) {
+				case SigType::method:
 					_nbind_register_method(func.getName(), func.getEmSignature());
 
 					break;
 
-				case MethodDef::Type::function:
+				case SigType::function:
 					_nbind_register_function(func.getName(), func.getEmSignature());
 
 					break;
