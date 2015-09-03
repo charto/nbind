@@ -55,13 +55,13 @@ template<> struct MethodResultConverter<void> {
 // Wrapper for all C++ methods with matching class, argument and return types.
 
 template <class Bound, typename ReturnType, typename... Args>
-class MethodSignature : public BaseSignature<MethodSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
+class MethodSignature : public TemplatedBaseSignature<MethodSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
 	typedef ReturnType(Bound::*MethodType)(Args...);
 
-	typedef BaseSignature<MethodSignature, ReturnType, Args...> Parent;
+	typedef TemplatedBaseSignature<MethodSignature, ReturnType, Args...> Parent;
 
 #ifdef BUILDING_NODE_EXTENSION
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {

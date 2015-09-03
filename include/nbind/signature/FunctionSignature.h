@@ -13,13 +13,13 @@ namespace nbind {
 // Wrapper for all C++ functions with matching argument and return types.
 
 template <typename ReturnType, typename... Args>
-class FunctionSignature : public BaseSignature<FunctionSignature<ReturnType, Args...>, ReturnType, Args...> {
+class FunctionSignature : public TemplatedBaseSignature<FunctionSignature<ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
 	typedef ReturnType(*MethodType)(Args...);
 
-	typedef BaseSignature<FunctionSignature, ReturnType, Args...> Parent;
+	typedef TemplatedBaseSignature<FunctionSignature, ReturnType, Args...> Parent;
 
 #ifdef BUILDING_NODE_EXTENSION
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {

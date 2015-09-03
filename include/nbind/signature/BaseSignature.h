@@ -5,15 +5,35 @@
 
 namespace nbind {
 
+class BaseSignature {
+
+public:
+
+	BaseSignature() {}
+
+	enum class Type {function, method, getter, setter};
+
+private:
+
+	Type type;
+	funcPtr caller;
+
+};
+
 // Templated static class for each different function call signature exposed by the
 // Node.js plugin. Used to pass arguments and return values between C++ and Node.js.
 // Everything must be static because the V8 JavaScript engine wants a single
 // function pointer to call, so each template variant is a singleton class.
 
 template <class Signature, typename ReturnType, typename... Args>
-class BaseSignature {
+class TemplatedBaseSignature : public BaseSignature {
 
 public:
+
+	static BaseSignature *getInstance() {
+		static Signature instance;
+		return(&instance);
+	}
 
 	// Information about a single named function.
 

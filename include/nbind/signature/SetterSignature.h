@@ -18,13 +18,13 @@ static constexpr unsigned int accessorSetterShift = 16;
 // Wrapper for all C++ getters and setters with matching class and data types.
 
 template <class Bound, typename ReturnType, typename... Args>
-class SetterSignature : public BaseSignature<SetterSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
+class SetterSignature : public TemplatedBaseSignature<SetterSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
 	typedef ReturnType(Bound::*MethodType)(Args...);
 
-	typedef BaseSignature<SetterSignature, ReturnType, Args...> Parent;
+	typedef TemplatedBaseSignature<SetterSignature, ReturnType, Args...> Parent;
 
 #ifdef BUILDING_NODE_EXTENSION
 	static void call(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {

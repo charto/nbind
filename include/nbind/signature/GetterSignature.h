@@ -18,13 +18,13 @@ static constexpr unsigned int accessorGetterMask = 0xffff;
 // Wrapper for all C++ getters and setters with matching class and data types.
 
 template <class Bound, typename ReturnType, typename... Args>
-class GetterSignature : public BaseSignature<GetterSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
+class GetterSignature : public TemplatedBaseSignature<GetterSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
 	typedef ReturnType(Bound::*MethodType)(Args...);
 
-	typedef BaseSignature<GetterSignature, ReturnType, Args...> Parent;
+	typedef TemplatedBaseSignature<GetterSignature, ReturnType, Args...> Parent;
 
 #ifdef BUILDING_NODE_EXTENSION
 	static void call(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {

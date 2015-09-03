@@ -63,6 +63,7 @@ public:
 			type,
 			name,
 			Signature::addMethod(method),
+			Signature::getInstance(),
 			reinterpret_cast<funcPtr>(Signature::call)
 		);
 

@@ -7,14 +7,16 @@ namespace nbind {
 
 // Storage format for method definitions.
 
+class BaseSignature;
+
 class MethodDef {
 
 public:
 
 	enum class Type {function, method, getter, setter};
 
-	MethodDef(Type type, const char *name, unsigned int num, funcPtr caller) :
-		type(type), name(name), num(num), caller(caller) {}
+	MethodDef(Type type, const char *name, unsigned int num, BaseSignature *signature, funcPtr caller) :
+		type(type), name(name), num(num), signature(signature), caller(caller) {}
 
 	const char *getName() {return(name);}
 	unsigned int getNum() {return(num);}
@@ -38,6 +40,7 @@ private:
 	// Index to distinguish between functions with identical signatures.
 	unsigned int num;
 	// Signature and its caller represent return and argument types.
+	BaseSignature *signature;
 	funcPtr caller;
 
 #ifdef EMSCRIPTEN
