@@ -14,14 +14,14 @@
 #include "MethodDef.h"
 #ifdef BUILDING_NODE_EXTENSION
 #include "v8/ConstructorOverload.h"
-#endif
 #include "BindClass.h"
-#ifdef BUILDING_NODE_EXTENSION
-#include "v8/ConstructorOverload2.h"
 #include "v8/ValueObj.h"
 #include "v8/Creator.h"
 #include "v8/Binding.h"
+#include "v8/ConstructorSignature.h"
 #elif EMSCRIPTEN
+#include "BindClass.h"
+#include "em/Creator.h"
 #include "em/Binding.h"
 #include "em/TypeID.h"
 #endif
@@ -106,17 +106,9 @@ public:
 	template<typename... Args, typename... Policies>
 	const BindDefiner &constructor(Policies...) const {
 #ifdef BUILDING_NODE_EXTENSION
-		typedef Creator<
-			Bound,
-			typename emscripten::internal::MapWithIndex<
-				TypeList,
-				FromWire,
-				Args...
-			>::type
-		> Constructor;
+		typedef typename ConstructorSignature<Bound, Args...>::ConstructWrapper Constructor;
 
-//		Constructor::setClassName(this->name);
-		bindClass->addConstructor(sizeof...(Args), Constructor::makeWrapper, Constructor::makeValue);
+		ConstructorOverload<Bound>::addConstructor(sizeof...(Args), Constructor::makeWrapper, Constructor::makeValue);
 #endif // BUILDING_NODE_EXTENSION
 
 		return(*this);

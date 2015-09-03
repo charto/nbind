@@ -99,7 +99,7 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 	cbFunction converter(v8::Local<v8::Function>::Cast(fromJS));
 
 	v8::Local<v8::FunctionTemplate> constructorTemplate = Nan::New<v8::FunctionTemplate>(
-		&BindClass<ArgType>::valueConstructorCaller,
+		&ConstructorOverload<ArgType>::valueConstructorCaller,
 		Nan::New<v8::External>(&wrapper)
 	);
 

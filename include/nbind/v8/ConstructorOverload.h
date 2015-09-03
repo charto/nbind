@@ -14,12 +14,12 @@ class ConstructorOverload {
 public:
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args);
-/*
+
 	// Wrapper that calls the C++ constructor when called from a
 	// fromJS function written in JavaScript.
 
 	static void valueConstructorCaller(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		auto *constructor = BindClass<Bound>::getValueConstructor(args.Length());
+		auto *constructor = ConstructorOverload::getValueConstructor(args.Length());
 
 		if(constructor == nullptr) {
 			// Can't use throw here because there's V8 code
@@ -66,7 +66,7 @@ public:
 	// Store link to constructor, possibly overloaded by arity.
 	// It will be declared with the Node API when this module is initialized.
 
-	void addConstructor(unsigned int arity, typename jsConstructors::wrapperType *funcWrapper, typename jsConstructors::valueType *funcValue) {
+	static void addConstructor(unsigned int arity, typename jsConstructors::wrapperType *funcWrapper, typename jsConstructors::valueType *funcValue) {
 		static std::vector<jsConstructors> &constructorVect = constructorVectStore();
 		signed int oldArity = getArity();
 
@@ -114,7 +114,6 @@ public:
 		static std::vector<jsConstructors> constructorVect;
 		return(constructorVect);
 	}
-*/
 };
 
 } // namespace

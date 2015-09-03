@@ -5,10 +5,21 @@
 
 namespace nbind {
 
-//template <class Bound>
-//class CreateSignature {
+template <class Bound, typename... Args>
+class ConstructorSignature {
 
-//public:
+public:
+
+	typedef Creator<
+		Bound,
+		typename emscripten::internal::MapWithIndex<
+			TypeList,
+			FromWire,
+			Args...
+		>::type
+	> ConstructWrapper;
+
+};
 
 template <class Bound>
 	void ConstructorOverload<Bound>::call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
@@ -18,7 +29,7 @@ template <class Bound>
 
 			// Look up possibly overloaded C++ constructor according to its arity
 			// in the constructor call.
-			auto *constructor = BindClass<Bound>::getWrapperConstructor(args.Length());
+			auto *constructor = getWrapperConstructor(args.Length());
 
 			if(constructor == nullptr) {
 				Nan::ThrowError("Wrong number of arguments");
@@ -65,6 +76,5 @@ template <class Bound>
 			args.GetReturnValue().Set(constructor->NewInstance(argc, &argv[0]));
 		}
 	}
-//}
 
 } // namespace
