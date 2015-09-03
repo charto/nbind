@@ -1,6 +1,8 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+#include "../../PrimitiveMethods.h"
+
 #ifdef EMSCRIPTEN
 
 #include <cstdlib>
@@ -12,9 +14,13 @@
 using namespace nbind;
 
 extern "C" {
-	extern void _nbind_register_class(const char *msg);
-	extern void _nbind_register_function(const char *msg, const char *sig);
-	extern void _nbind_register_method(const char *msg, const char *sig);
+	extern void _nbind_register_type(TYPEID type, const char *name);
+	extern void _nbind_register_types(void **data);
+	extern void _nbind_register_class(TYPEID type, const char *name);
+	extern void _nbind_register_constructor(TYPEID type, const char *sig, funcPtr func);
+	extern void _nbind_register_function(const char *name, const char *sig);
+	extern void _nbind_register_method(const char *name, const char *sig);
+	extern void _nbind_init();
 }
 
 /*
@@ -104,13 +110,32 @@ NODE_MODULE(nbind, nbind::Bindings::initModule)
 */
 
 void Bindings :: initModule() {
+	_nbind_register_type(makeTypeID<void>(), "void");
+	_nbind_register_type(makeTypeID<bool>(), "bool");
+
+	_nbind_register_types(defineTypes<
+		unsigned char,  signed char,    char,
+		unsigned short, signed short,
+		unsigned int,   signed int,
+		unsigned long,  signed long,
+
+		float, double,
+
+		unsigned char *, const unsigned char *,
+		signed   char *, const signed   char *,
+		         char *, const          char *
+	>());
+
+//	_nbind_register_type("cbOutput", listTypes<cbOutput>());
+//	_nbind_register_type("cbFunction", listTypes<cbFunction>());
+
 	for(auto *bindClass : getClassList()) {
 		// Avoid registering the same class twice.
 		if(bindClass->isReady()) continue;
 
 		bindClass->init();
 
-		_nbind_register_class(bindClass->getName());
+		_nbind_register_class(bindClass->getTypeID(), bindClass->getName());
 
 		for(auto &func : bindClass->getMethodList()) {
 			switch(func.getType()) {
@@ -125,7 +150,11 @@ void Bindings :: initModule() {
 					break;
 			}
 		}
+
+		_nbind_register_constructor(0, "ii", reinterpret_cast<funcPtr>(&Creator<PrimitiveMethods, int>::call));
 	}
+
+	_nbind_init();
 }
 
 int main(void) {

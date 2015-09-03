@@ -34,3 +34,5 @@ private:
 #elif EMSCRIPTEN
 #include "nbind/em/BindingType.h"
 #endif
+
+#include "TypeID.h"

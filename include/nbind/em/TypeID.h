@@ -5,37 +5,6 @@
 
 namespace nbind {
 
-// Type ID system.
-
-typedef const void *TYPEID;
-
-template <typename ArgType>
-struct TypeStore {
-	// Reserve a single byte of memory to uniquely represent a type.
-	// The address of this byte is a unique type-specific constant.
-	static char placeholder;
-
-	static constexpr TYPEID get() {
-		return(&placeholder);
-	}
-};
-
-// Linkage for placeholder bytes representing types.
-template<typename ArgType>
-char TypeStore<ArgType>::placeholder;
-
-template<typename ArgType>
-struct TypeID {
-	static constexpr TYPEID get() {
-		return(TypeStore<ArgType>::get());
-	}
-};
-
-template <typename ArgType>
-static constexpr TYPEID getTypeID() {
-	return(TypeStore<ArgType>::get());
-}
-
 // Function signature string generation.
 
 template<typename ArgType> constexpr char emMangle();
@@ -47,7 +16,7 @@ template<> constexpr char emMangle<double>() {return('d');}
 
 template<typename... Args>
 const char* buildEmSignature() {
-	static constexpr char signature[] = { emMangle<Args>()..., 0 };
+	static constexpr char signature[] = { emMangle<Args>()..., '\0' };
 
 	return(signature);
 }

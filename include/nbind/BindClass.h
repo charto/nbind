@@ -30,12 +30,14 @@ public:
 
 	BindClassBase() {}
 
-	const char *getName() {return(name);}
-	void setName(const char *name) {this->name = name;}
+	TYPEID getTypeID() { return(id); }
 
-	bool isReady() {return(ready);}
+	const char *getName() { return(name); }
+	void setName(const char *name) { this->name = name; }
 
-	void init() {ready = 1;}
+	bool isReady() { return(ready); }
+
+	void init() { ready = 1; }
 
 	// Functions called when defining an nbind wrapper for a C++ class.
 	// They are called from the constructor of a static variable,
@@ -89,8 +91,12 @@ public:
 
 protected:
 
+	TYPEID id;
+
 	bool ready = 0;
+
 	const char *name;
+
 	std::forward_list<MethodDef> methodList;
 
 	// These have to be pointers instead of a member objects so the
@@ -118,12 +124,13 @@ template <class Bound> class BindClass : public BindClassBase {
 public:
 
 	BindClass() : BindClassBase() {
+		this->id = makeTypeID<Bound>();
 #ifdef BUILDING_NODE_EXTENSION
 		createPtr = ConstructorOverload<Bound>::call;
-#endif // BUILDING_NODE_EXTENSION
+#elif EMSCRIPTEN
+#endif
 		setInstance(this);
 	}
-
 	static BindClass *getInstance() {return(instanceStore());}
 
 	static BindClass *&instanceStore() {
