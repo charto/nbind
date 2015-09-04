@@ -15,6 +15,8 @@ NBIND_CLASS(X) {
 }
 ```
 
+Warning to git committers: rebase is used within feature branches (but not master).
+
 Quick start
 -----------
 
@@ -146,7 +148,7 @@ Only a bit more configuration is needed to get everything installed, compiled an
 {
   "name": "nbind-demo",
   "scripts": {
-    "prepublish": "autogypi && node-gyp configure && node-gyp build",
+    "install": "autogypi && node-gyp configure && node-gyp build",
     "test": "node test.js"
   },
   "dependencies": {
