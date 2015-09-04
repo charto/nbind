@@ -8,6 +8,8 @@
 #include <vector>
 #include <stdexcept>
 
+#include <stdlib.h>
+
 #include "api.h"
 #include "wire.h"
 #include "Caller.h"
@@ -42,7 +44,7 @@ class BindDefinerBase {
 
 protected:
 
-	BindDefinerBase(const char *name) : name(strdup(name)) {}
+	BindDefinerBase(const char *name) : name(name) {}
 
 	const char *name;
 
@@ -53,11 +55,15 @@ class BindDefiner : public BindDefinerBase {
 
 public:
 
-	BindDefiner(const char *name) : BindDefinerBase(name) {
+	BindDefiner(const char *name) : BindDefinerBase(strdup(name)) {
 		bindClass = BindClass<Bound>::getInstance();
 		bindClass->setName(name);
 
 		Bindings::registerClass(bindClass);
+	}
+
+	~BindDefiner() {
+		free((void *)name);
 	}
 
 	template<class Signature, typename MethodType>
