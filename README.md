@@ -23,13 +23,14 @@ Quick start
 To compile and run some C++ code through JavaScript, just do:
 
 ```bash
+npm install -g npm
 git clone https://github.com/charto/nbind.git
 cd nbind
 npm install
 npm test
 ```
 
-You'll need to install Git, Node.js (0.10 or 0.12 or io.js) and a C++ compiler first.
+You'll need to install Git, Node.js (0.10 or 0.12 or io.js) and a C++ compiler first. You can omit the first command if you have a recent npm (at least 2.7.0 should work, 2.14.0 is safer).
 
 Working C++ compilers are at least:
 - GCC 4.8 or above
@@ -186,6 +187,12 @@ That's it! Install, compile, test:
 ```bash
 npm install
 npm test
+```
+
+If it doesn't work, your `npm` might be too old. Try compiling again after running this command:
+
+```bash
+npm install -g npm
 ```
 
 Usage and syntax
