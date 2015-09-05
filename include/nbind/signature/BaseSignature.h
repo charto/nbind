@@ -38,12 +38,14 @@ public:
 		reinterpret_cast<funcPtr>(Signature::call)
 	) {}
 
-	static BaseSignature &getInstance() {
+	static Signature &getInstance() {
 		static Signature instance;
 		return(instance);
 	}
 
 	// Information about a single named function.
+	// This wrapper around Signature::MethodType is needed because TemplatedBaseSignature itself cannot see the type directly.
+	// It's passed as a CRTP argument and is not fully defined here, but inside an inner class that doesn't matter.
 
 	struct MethodInfo {
 
@@ -55,22 +57,13 @@ public:
 
 	};
 
-	// Information about a class of functions with matching return and argument types.
-
-	struct SignatureInfo {
-		std::vector<struct MethodInfo> funcVect;
-#ifdef EMSCRIPTEN
-		const char *emSignature = buildEmSignature<typename EmMangleMap<ReturnType>::type, typename EmMangleMap<Args>::type...>();
-#endif
-	};
-
 	static const MethodInfo &getMethod(unsigned int num) {
-		return(signatureStore().funcVect[num]);
+		return(getInstance().funcVect[num]);
 	}
 
 	template <typename MethodType>
 	static unsigned int addMethod(MethodType func) {
-		auto &funcVect = signatureStore().funcVect;
+		auto &funcVect = getInstance().funcVect;
 
 		funcVect.emplace_back(func);
 
@@ -101,16 +94,17 @@ public:
 	}
 #elif EMSCRIPTEN
 	static const char *getEmSignature() {
-		return(signatureStore().emSignature);
+		return(getInstance().emSignature);
 	}
 #endif // BUILDING_NODE_EXTENSION || EMSCRIPTEN
 
-protected:
+	// The funcVect vector cannot be moved to BaseSignature because it can contain pointers to
+	// functions or class methods, and there isn't a single pointer type able to hold both.
 
-	static SignatureInfo &signatureStore() {
-		static SignatureInfo signatureInfo;
-		return(signatureInfo);
-	}
+	std::vector<struct MethodInfo> funcVect;
+#ifdef EMSCRIPTEN
+	const char *emSignature = buildEmSignature<typename EmMangleMap<ReturnType>::type, typename EmMangleMap<Args>::type...>();
+#endif
 
 };
 
