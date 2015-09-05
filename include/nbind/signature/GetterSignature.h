@@ -28,6 +28,8 @@ public:
 
 	static constexpr auto typeExpr = BaseSignature::Type::getter;
 
+	GetterSignature() : Parent(listTypes<Bound, ReturnType, Args...>()) {}
+
 #ifdef BUILDING_NODE_EXTENSION
 	static void call(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
 

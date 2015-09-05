@@ -11,15 +11,18 @@ public:
 
 	enum class Type {function, method, getter, setter};
 
-	BaseSignature(Type type, funcPtr caller) : type(type), caller(caller) {}
+	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList) :
+		type(type), caller(caller), typeList(typeList) {}
 
 	Type getType() { return(type); }
 	funcPtr getCaller() { return(caller); }
+	const TYPEID *getTypeList() { return(typeList); }
 
 private:
 
 	Type type;
 	funcPtr caller;
+	const TYPEID *typeList;
 
 };
 
@@ -33,9 +36,10 @@ class TemplatedBaseSignature : public BaseSignature {
 
 public:
 
-	TemplatedBaseSignature() : BaseSignature(
+	TemplatedBaseSignature(const TYPEID *typeList) : BaseSignature(
 		Signature::typeExpr,
-		reinterpret_cast<funcPtr>(Signature::call)
+		reinterpret_cast<funcPtr>(Signature::call),
+		typeList
 	) {}
 
 	static Signature &getInstance() {

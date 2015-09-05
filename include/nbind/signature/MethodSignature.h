@@ -65,6 +65,8 @@ public:
 
 	static constexpr auto typeExpr = BaseSignature::Type::method;
 
+	MethodSignature() : Parent(listTypes<Bound, ReturnType, Args...>()) {}
+
 #ifdef BUILDING_NODE_EXTENSION
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		static constexpr decltype(args.Length()) arity = sizeof...(Args);

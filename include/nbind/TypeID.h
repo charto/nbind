@@ -65,7 +65,7 @@ void **defineTypes() {
 }
 
 template<typename... Args>
-TYPEID *listTypes() {
+const TYPEID *listTypes() {
 	static constexpr TYPEID typeList[] = { TypeID<Args>::get()... };
 	return(typeList);
 }

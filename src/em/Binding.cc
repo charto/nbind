@@ -18,8 +18,8 @@ extern "C" {
 	extern void _nbind_register_types(void **data);
 	extern void _nbind_register_class(TYPEID type, const char *name);
 	extern void _nbind_register_constructor(TYPEID type, const char *sig, funcPtr func);
-	extern void _nbind_register_function(const char *name, const char *sig);
-	extern void _nbind_register_method(const char *name, const char *sig);
+	extern void _nbind_register_function(const char *name, const char *sig, const TYPEID *types);
+	extern void _nbind_register_method(const char *name, const char *sig, const TYPEID *types);
 	extern void _nbind_init();
 }
 
@@ -152,12 +152,12 @@ void Bindings :: initModule() {
 
 			switch(signature->getType()) {
 				case SigType::method:
-					_nbind_register_method(func.getName(), func.getEmSignature());
+					_nbind_register_method(func.getName(), func.getEmSignature(), signature->getTypeList());
 
 					break;
 
 				case SigType::function:
-					_nbind_register_function(func.getName(), func.getEmSignature());
+					_nbind_register_function(func.getName(), func.getEmSignature(), signature->getTypeList());
 
 					break;
 			}
