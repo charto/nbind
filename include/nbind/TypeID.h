@@ -24,13 +24,6 @@ struct TypeStore {
 template<typename ArgType>
 char TypeStore<ArgType>::placeholder;
 
-template<typename ArgType>
-struct TypeID {
-	static constexpr TYPEID get() {
-		return(TypeStore<ArgType>::get());
-	}
-};
-
 template <typename ArgType>
 static constexpr TYPEID makeTypeID() {
 	return(TypeStore<ArgType>::get());
@@ -66,7 +59,7 @@ void **defineTypes() {
 
 template<typename... Args>
 const TYPEID *listTypes() {
-	static constexpr TYPEID typeList[] = { TypeID<Args>::get()... };
+	static constexpr TYPEID typeList[] = { makeTypeID<Args>()... };
 	return(typeList);
 }
 
