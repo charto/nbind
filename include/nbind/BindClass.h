@@ -35,9 +35,12 @@ public:
 	const char *getName() { return(name); }
 	void setName(const char *name) { this->name = name; }
 
-	bool isReady() { return(ready); }
+	bool isReady() { return(readyState & 1); }
+	bool isDuplicate() { return(readyState & 2); }
 
-	void init() { ready = 1; }
+	void setDuplicate() { readyState |= 2; }
+
+	void init() { readyState |= 1; }
 
 	// Functions called when defining an nbind wrapper for a C++ class.
 	// They are called from the constructor of a static variable,
@@ -47,9 +50,8 @@ public:
 
 	// Add a method to the class.
 
-	MethodDef &addMethod(const char *name, unsigned int num = 0, BaseSignature *signature = nullptr) {
-		methodList.emplace_front(name, num, signature);
-		return(methodList.front());
+	void addMethod(const char *name, funcPtr ptr = nullptr, unsigned int num = 0, BaseSignature *signature = nullptr) {
+		methodList.emplace_front(name, ptr, num, signature);
 	}
 
 	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
@@ -93,7 +95,7 @@ protected:
 
 	TYPEID id;
 
-	bool ready = 0;
+	int readyState = 0;
 
 	const char *name;
 

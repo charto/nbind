@@ -11,18 +11,20 @@ public:
 
 	enum class Type {function, method, getter, setter};
 
-	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList) :
-		type(type), caller(caller), typeList(typeList) {}
+	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList, unsigned int typeCount) :
+		type(type), caller(caller), typeList(typeList), typeCount(typeCount) {}
 
 	Type getType() { return(type); }
 	funcPtr getCaller() { return(caller); }
 	const TYPEID *getTypeList() { return(typeList); }
+	unsigned int getTypeCount() { return(typeCount); }
 
 private:
 
 	Type type;
 	funcPtr caller;
 	const TYPEID *typeList;
+	unsigned int typeCount;
 
 };
 
@@ -36,10 +38,11 @@ class TemplatedBaseSignature : public BaseSignature {
 
 public:
 
-	TemplatedBaseSignature(const TYPEID *typeList) : BaseSignature(
+	TemplatedBaseSignature() : BaseSignature(
 		Signature::typeExpr,
 		reinterpret_cast<funcPtr>(Signature::call),
-		typeList
+		listTypes<ReturnType, Args...>(),
+		sizeof...(Args) + 1
 	) {}
 
 	static Signature &getInstance() {
@@ -96,19 +99,12 @@ public:
 
 		return(checker::typesAreValid(args));
 	}
-#elif EMSCRIPTEN
-	static const char *getEmSignature() {
-		return(getInstance().emSignature);
-	}
 #endif // BUILDING_NODE_EXTENSION || EMSCRIPTEN
 
 	// The funcVect vector cannot be moved to BaseSignature because it can contain pointers to
 	// functions or class methods, and there isn't a single pointer type able to hold both.
 
 	std::vector<struct MethodInfo> funcVect;
-#ifdef EMSCRIPTEN
-	const char *emSignature = buildEmSignature<typename EmMangleMap<ReturnType>::type, typename EmMangleMap<Args>::type...>();
-#endif
 
 };
 

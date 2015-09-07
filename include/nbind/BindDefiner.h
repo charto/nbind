@@ -23,7 +23,6 @@
 #include "BindClass.h"
 #include "em/Creator.h"
 #include "em/Binding.h"
-#include "em/TypeID.h"
 #endif
 
 #include "signature/FunctionSignature.h"
@@ -61,18 +60,13 @@ public:
 	}
 
 	template<class Signature, typename MethodType>
-	void addMethod(const char *name, MethodType method) const {
-		auto &def = bindClass->addMethod(
+	void addMethod(const char *name, funcPtr ptr, MethodType method) const {
+		bindClass->addMethod(
 			name,
+			ptr,
 			Signature::addMethod(method),
 			&Signature::getInstance()
 		);
-
-#ifdef EMSCRIPTEN
-		def.emInit(Signature::getEmSignature());
-#else
-		(void)def;
-#endif
 	}
 
 	template<typename ReturnType, typename... Args, typename... Policies>
@@ -81,7 +75,7 @@ public:
 		ReturnType(Bound::*method)(Args...),
 		Policies...
 	) const {
-		addMethod<MethodSignature<Bound, ReturnType, Args...>>(name, method);
+		addMethod<MethodSignature<Bound, ReturnType, Args...>>(name, nullptr, method);
 
 		return(*this);
 	}
@@ -92,7 +86,7 @@ public:
 		ReturnType(*func)(Args...),
 		Policies...
 	) const {
-		addMethod<FunctionSignature<ReturnType, Args...>>(name, func);
+		addMethod<FunctionSignature<ReturnType, Args...>>(name, reinterpret_cast<funcPtr>(func), func);
 
 		return(*this);
 	}
@@ -117,7 +111,7 @@ public:
 		FieldType(Bound::*getter)(),
 		Policies...
 	) const {
-		addMethod<GetterSignature<Bound, FieldType>>(name, getter);
+		addMethod<GetterSignature<Bound, FieldType>>(name, nullptr, getter);
 
 		bindClass->addMethod(emptySetter);
 
@@ -136,9 +130,9 @@ public:
 		SetReturnType(Bound::*setter)(SetFieldType),
 		Policies...
 	) const {
-		addMethod<GetterSignature<Bound, GetFieldType>>(name, getter);
+		addMethod<GetterSignature<Bound, GetFieldType>>(name, nullptr, getter);
 
-		addMethod<SetterSignature<Bound, SetReturnType, SetFieldType>>(name,setter);
+		addMethod<SetterSignature<Bound, SetReturnType, SetFieldType>>(name, nullptr, setter);
 
 		return(*this);
 	}
