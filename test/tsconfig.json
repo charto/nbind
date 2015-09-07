@@ -1,0 +1,12 @@
+{
+	"compilerOptions": {
+		"declaration": false,
+		"target": "es5",
+		"noImplicitAny": true,
+		"experimentalDecorators": true,
+		"out": "nbind.js"
+	},
+	"files": [
+		"../src/em/nbind.ts"
+	]
+}
