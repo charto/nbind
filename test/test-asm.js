@@ -3,7 +3,7 @@ var testModule;
 var nbind;
 
 eval(require('fs').readFileSync('foo.js', 'utf-8'));
-Module.ccall('init');
+Module.ccall('nbind_init');
 testModule = Module;
 
 test('Methods and primitive types', function(t) {

@@ -88,7 +88,7 @@ function _readAsciiString(ptr: number) {
 
 	while(HEAPU8[endPtr++]);
 
-	return(String.fromCharCode.apply('', Array.prototype.slice.call(HEAPU8, ptr, endPtr-1)));
+	return(String.fromCharCode.apply('', HEAPU8.subarray(ptr, endPtr-1)));
 }
 
 @exportLibrary
@@ -180,14 +180,5 @@ class nbind {
 		var signature = _nbind.makeSignature(typeList);
 
 		(<any>(<_nbind.BindClass>_nbind.typeList[typeID]).proto).prototype[name] = function() {};
-	}
-
-	@dep('_initNamespaces', '__extends', '__decorate', '_defineHidden')
-	static _nbind_init() {
-		_initNamespaces();
-	}
-
-	@dep('_nbind')
-	static _nbind_apply_bindings() {
 	}
 };

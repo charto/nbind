@@ -11,15 +11,13 @@
 using namespace nbind;
 
 extern "C" {
-	extern void _nbind_init();
 	extern void _nbind_register_type(TYPEID id, const char *name);
 	extern void _nbind_register_types(void **data);
 	extern void _nbind_register_class(TYPEID type, const char *name);
 	extern void _nbind_register_constructor(TYPEID classType, funcPtr func);
 	extern void _nbind_register_function(TYPEID classType, funcPtr func, const char *name, const TYPEID *types, unsigned int typeCount);
 	extern void _nbind_register_method(TYPEID classType, const char *name, const TYPEID *types, unsigned int typeCount);
-	extern void _nbind_apply_bindings();
-	void init();
+	void nbind_init();
 }
 
 const char *nbind :: emptyGetter = "";
@@ -114,8 +112,6 @@ NODE_MODULE(nbind, nbind::Bindings::initModule)
 typedef BaseSignature::Type SigType;
 
 void Bindings :: initModule() {
-	_nbind_init();
-
 	_nbind_register_type(makeTypeID<void>(), "void");
 	_nbind_register_type(makeTypeID<bool>(), "bool");
 
@@ -175,11 +171,9 @@ void Bindings :: initModule() {
 			}
 		}
 	}
-
-	_nbind_apply_bindings();
 }
 
-void init(void) {
+void nbind_init(void) {
 	Bindings::initModule();
 }
 

@@ -10,7 +10,7 @@
   "author": "Juha Järvi",
   "main": "index.js",
   "scripts": {
-    "test-asm": "cd test && tsc && emcc -std=c++11 -stdlib=libc++ -I../include -O3 -o foo.js ../src/em/Binding.cc PrimitiveMethods.cc --js-library nbind.js -s DISABLE_EXCEPTION_CATCHING=1 -s NO_FILESYSTEM=1 -s NO_BROWSER=1 -s EXPORTED_FUNCTIONS=\"['_init']\" && tap --gc test-asm.js",
+    "test-asm": "cd test && tsc && emcc -std=c++11 -stdlib=libc++ -I../include -O3 -o foo.js ../src/em/Binding.cc PrimitiveMethods.cc --js-library nbind.js -s DISABLE_EXCEPTION_CATCHING=1 -s NO_FILESYSTEM=1 -s NO_BROWSER=1 -s EXPORTED_FUNCTIONS=\"['_nbind_init']\" && tap --gc test-asm.js",
     "test": "cd test && autogypi && node-gyp configure && node-gyp build && tap --gc test.js"
   },
   "repository": {
@@ -24,12 +24,12 @@
   ],
   "dependencies": {
     "bindings": "^1.2.1",
-    "emscripten-library-decorator": "~0.1.0",
+    "emscripten-library-decorator": "~0.1.1",
     "nan": "^2.0.8"
   },
   "devDependencies": {
     "autogypi": "~0.1.0",
-    "node-gyp": "~2.0.2",
+    "node-gyp": "~3.0.0",
     "tap": "~1.4.0",
     "typescript": "~1.5.3"
   }
