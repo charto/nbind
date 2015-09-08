@@ -42,7 +42,7 @@ class BindDefinerBase {
 
 protected:
 
-	BindDefinerBase(const char *name) : name(strdup(name)) {}
+	BindDefinerBase(const char *name) : name(name) {}
 
 	const char *name;
 
