@@ -12,6 +12,7 @@
 #include "wire.h"
 #include "Caller.h"
 #include "MethodDef.h"
+#include "signature/BaseSignature.h"
 #ifdef BUILDING_NODE_EXTENSION
 // TODO: remove following line.
 #include "v8/Overloader.h"

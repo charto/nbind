@@ -81,12 +81,12 @@ void Bindings :: initModule() {
 
 			switch(signature->getType()) {
 				case SigType::method:
-					_nbind_register_method(bindClass->getTypeID(), signature->getCaller(), func.getNum(), func.getName(), signature->getTypeList(), signature->getTypeCount());
+					_nbind_register_method(bindClass->getTypeID(), signature->getCaller(), func.getNum(), func.getName(), signature->getTypeList(), signature->getArity() + 1);
 
 					break;
 
 				case SigType::function:
-					_nbind_register_function(bindClass->getTypeID(), func.getPtr(), func.getName(), signature->getTypeList(), signature->getTypeCount());
+					_nbind_register_function(bindClass->getTypeID(), func.getPtr(), func.getName(), signature->getTypeList(), signature->getArity() + 1);
 
 					break;
 			}

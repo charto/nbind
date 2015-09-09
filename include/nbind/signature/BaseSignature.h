@@ -5,26 +5,29 @@
 
 namespace nbind {
 
+static constexpr unsigned int overloadShift = 16;
+static constexpr unsigned int signatureMemberMask = 0xffff;
+
 class BaseSignature {
 
 public:
 
 	enum class Type {function, method, getter, setter, constructor};
 
-	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList, unsigned int typeCount) :
-		type(type), caller(caller), typeList(typeList), typeCount(typeCount) {}
+	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList, unsigned int arity) :
+		type(type), caller(caller), typeList(typeList), arity(arity) {}
 
 	Type getType() { return(type); }
 	funcPtr getCaller() { return(caller); }
 	const TYPEID *getTypeList() { return(typeList); }
-	unsigned int getTypeCount() { return(typeCount); }
+	unsigned int getArity() { return(arity); }
 
 private:
 
 	Type type;
 	funcPtr caller;
 	const TYPEID *typeList;
-	unsigned int typeCount;
+	unsigned int arity;
 
 };
 
@@ -42,7 +45,7 @@ public:
 		Signature::typeExpr,
 		reinterpret_cast<funcPtr>(Signature::call),
 		listTypes<ReturnType, Args...>(),
-		sizeof...(Args) + 1
+		sizeof...(Args)
 	) {}
 
 	static Signature &getInstance() {

@@ -13,8 +13,6 @@ class ConstructorOverload {
 
 public:
 
-	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args);
-
 	// Wrapper that calls the C++ constructor when called from a
 	// fromJS function written in JavaScript.
 

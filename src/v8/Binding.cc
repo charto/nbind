@@ -90,7 +90,11 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		bindClass->init();
 
-		Local<FunctionTemplate> constructorTemplate = Nan::New<FunctionTemplate>(bindClass->createPtr);
+//		Local<FunctionTemplate> constructorTemplate = Nan::New<FunctionTemplate>(bindClass->createPtr);
+		Local<FunctionTemplate> constructorTemplate = Nan::New<FunctionTemplate>(
+			Overloader::create,
+			Nan::New<Number>(bindClass->wrapperConstructorNum << overloadShift)
+		);
 
 		constructorTemplate->SetClassName(Nan::New<String>(bindClass->getName()).ToLocalChecked());
 		constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
@@ -177,7 +181,8 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		Local<v8::Function> jsConstructor = constructorTemplate->GetFunction();
 
-		bindClass->setConstructorHandle(jsConstructor);
+//		bindClass->setConstructorHandle(jsConstructor);
+		Overloader::setConstructorJS(bindClass->wrapperConstructorNum, jsConstructor);
 
 		exports->Set(
 			Nan::New<String>(bindClass->getName()).ToLocalChecked(),

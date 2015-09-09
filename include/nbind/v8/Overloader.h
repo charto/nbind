@@ -27,8 +27,8 @@ based on the least significant bits (& signatureMemberMask) of the reference num
 
 namespace nbind {
 
-static constexpr unsigned int overloadShift = 16;
-static constexpr unsigned int signatureMemberMask = 0xffff;
+//static constexpr unsigned int overloadShift = 16;
+//static constexpr unsigned int signatureMemberMask = 0xffff;
 
 // It would be possible to add the bound C++ class as a template argument,
 // allowing unlimited classes and a per-class instead of a global limit of overloaded methods,
@@ -42,6 +42,9 @@ public:
 
 	struct OverloadDef {
 		std::vector<jsMethod> methodVect;
+
+		// Constructor called by JavaScript's "new" operator.
+		Nan::Callback *constructorJS = nullptr;
 	};
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
@@ -55,7 +58,7 @@ public:
 		// Check if method was called with more than the maximum number
 		// of arguments it can accept.
 		if(signed(argc) <= maxArity) {
-			auto specializedCall = methodVect[argc];
+			jsMethod specializedCall = methodVect[argc];
 
 			if(specializedCall != nullptr) {
 				specializedCall(args);
@@ -67,8 +70,37 @@ public:
 		// In that case there's V8 code (lacking C++ exception support) on the stack
 		// above the catch statement.
 
-		NBIND_ERR("Wrong number of arguments in value binding");
-		args.GetReturnValue().Set(Nan::Undefined());
+//		NBIND_ERR("Wrong number of arguments in value binding");
+//		args.GetReturnValue().Set(Nan::Undefined());
+		Nan::ThrowError("Wrong number of arguments");
+	}
+
+	static void create(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+		if(args.IsConstructCall()) {
+			// Constructor was called like new Bound(...)
+			call(args);
+			return;
+		}
+
+		// Constructor was called like Bound(...), add the "new" operator.
+
+		static std::vector<OverloadDef> &overloadVect = overloadVectStore();
+		OverloadDef &def = overloadVect[args.Data()->IntegerValue() >> overloadShift];
+
+		unsigned int argc = args.Length();
+		std::vector<v8::Handle<v8::Value>> argv(argc);
+
+		// Copy arguments to a vector because the arguments object type
+		// cannot be passed to another function call as-is.
+
+		for(unsigned int argNum = 0; argNum < argc; argNum++) {
+			argv[argNum] = args[argNum];
+		}
+
+		v8::Local<v8::Function> constructor = def.constructorJS->GetFunction();
+
+		// Call the JavaScript constructor with the new operator.
+		args.GetReturnValue().Set(constructor->NewInstance(argc, &argv[0]));
 	}
 
 	static unsigned int addGroup() {
@@ -94,6 +126,17 @@ public:
 		if(signed(arity) > oldArity) methodVect.resize(arity + 1);
 
 		methodVect[arity] = method;
+	}
+
+	static void setConstructorJS(unsigned int num, v8::Local<v8::Function> func) {
+		std::vector<OverloadDef> &overloadVect = overloadVectStore();
+		OverloadDef &def = overloadVect[num];
+
+		if(def.constructorJS == nullptr) {
+			def.constructorJS = new Nan::Callback(func);
+		} else {
+			def.constructorJS->SetFunction(func);
+		}
 	}
 
 	// Linkage for a table of overloaded methods

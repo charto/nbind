@@ -48,7 +48,13 @@ public:
 	void init() { readyState |= 1; }
 
 	void addConstructor(BaseSignature *signature) {
-//		Overloader::addMethod(wrapperConstructorNum, arity, signature->getCaller());
+#ifdef BUILDING_NODE_EXTENSION
+		Overloader::addMethod(
+			wrapperConstructorNum,
+			signature->getArity(),
+			reinterpret_cast<jsMethod *>(signature->getCaller())
+		);
+#endif // BUILDING_NODE_EXTENSION
 	}
 
 	// Functions called when defining an nbind wrapper for a C++ class.
@@ -68,22 +74,6 @@ public:
 #ifdef BUILDING_NODE_EXTENSION
 	unsigned int wrapperConstructorNum;
 	unsigned int valueConstructorNum;
-#endif // BUILDING_NODE_EXTENSION
-
-	jsMethod *createPtr;
-
-#ifdef BUILDING_NODE_EXTENSION
-	void setConstructorHandle(v8::Local<v8::Function> func) {
-		if(jsConstructorHandle == nullptr) {
-			jsConstructorHandle = new Nan::Callback(func);
-		} else {
-			jsConstructorHandle->SetFunction(func);
-		}
-	}
-
-	v8::Handle<v8::Function> getConstructorHandle() {
-		return(jsConstructorHandle->GetFunction());
-	}
 
 	// A JavaScript "value constructor" creates a JavaScript object with
 	// the same data as the equivalent C++ object. This is used for small
@@ -121,9 +111,6 @@ protected:
 	// object gets destroyed after the V8 engine.
 
 #ifdef BUILDING_NODE_EXTENSION
-	// Constructor called by JavaScript's "new" operator.
-	Nan::Callback *jsConstructorHandle = nullptr;
-
 	// Suitable JavaScript constructor called by a toJS C++ function
 	// when converting this object into a plain JavaScript object,
 	// if possible.
@@ -141,16 +128,14 @@ public:
 
 	BindClass() : BindClassBase() {
 		this->id = makeTypeID<Bound>();
-#ifdef BUILDING_NODE_EXTENSION
-		createPtr = ConstructorOverload<Bound>::call;
-#elif EMSCRIPTEN
-#endif
+
 		setInstance(this);
 	}
 	static BindClass *getInstance() {return(instanceStore());}
 
 	static BindClass *&instanceStore() {
 		static BindClass *instance;
+
 		return(instance);
 	}
 
