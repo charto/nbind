@@ -33,6 +33,7 @@ public:
 
 		ArgStorage<Bound> &storage = *static_cast<ArgStorage<Bound> *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
 
+		// the contents of makeValue from Creator.h belong here.
 		constructor(storage, args);
 
 		args.GetReturnValue().Set(Nan::Undefined());

@@ -41,6 +41,7 @@ template <class Bound>
 			// Call C++ constructor and bind the resulting object
 			// to the new JavaScript object being created.
 			try {
+				// the contents of makeWrapper from Creator.h belong here.
 				constructor(args)->wrap(args);
 
 				const char *message = Status::getError();

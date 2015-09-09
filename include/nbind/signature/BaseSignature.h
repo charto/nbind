@@ -9,7 +9,7 @@ class BaseSignature {
 
 public:
 
-	enum class Type {function, method, getter, setter};
+	enum class Type {function, method, getter, setter, constructor};
 
 	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList, unsigned int typeCount) :
 		type(type), caller(caller), typeList(typeList), typeCount(typeCount) {}
@@ -71,6 +71,13 @@ public:
 	template <typename MethodType>
 	static unsigned int addMethod(MethodType func) {
 		auto &funcVect = getInstance().funcVect;
+
+#ifdef BUILDING_NODE_EXTENSION
+		if(funcVect.size() >= signatureMemberMask) {
+			// TODO:
+			// ABORT ABORT ABORT too many functions with the same signature!
+		}
+#endif // BUILDING_NODE_EXTENSION
 
 		funcVect.emplace_back(func);
 

@@ -40,7 +40,11 @@ public:
 			auto &&result = Caller<
 				ReturnType,
 				TypeList<>
-			>::call(target, Parent::getMethod(args.Data()->IntegerValue() & accessorGetterMask).func, args);
+			>::call(
+				target,
+				Parent::getMethod(args.Data()->IntegerValue() & accessorGetterMask).func,
+				args
+			);
 
 			const char *message = Status::getError();
 

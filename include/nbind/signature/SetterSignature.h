@@ -42,7 +42,11 @@ public:
 			Nan::ThrowTypeError("Type mismatch");
 		} else {
 			try {
-				Parent::CallWrapper::call(target, Parent::getMethod(args.Data()->IntegerValue() >> accessorSetterShift).func, valuePtr);
+				Parent::CallWrapper::call(
+					target,
+					Parent::getMethod(args.Data()->IntegerValue() >> accessorSetterShift).func,
+					valuePtr
+				);
 
 				const char *message = Status::getError();
 

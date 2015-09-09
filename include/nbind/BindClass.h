@@ -28,7 +28,12 @@ public:
 	typedef void (*jsSetter)();
 #endif // BUILDING_NODE_EXTENSION
 
-	BindClassBase() {}
+	BindClassBase() {
+#ifdef BUILDING_NODE_EXTENSION
+		wrapperConstructorNum = Overloader::addGroup();
+		valueConstructorNum = Overloader::addGroup();
+#endif // BUILDING_NODE_EXTENSION
+	}
 
 	TYPEID getTypeID() { return(id); }
 
@@ -41,6 +46,10 @@ public:
 	void setDuplicate() { readyState |= 2; }
 
 	void init() { readyState |= 1; }
+
+	void addConstructor(BaseSignature *signature) {
+//		Overloader::addMethod(wrapperConstructorNum, arity, signature->getCaller());
+	}
 
 	// Functions called when defining an nbind wrapper for a C++ class.
 	// They are called from the constructor of a static variable,
@@ -55,6 +64,11 @@ public:
 	}
 
 	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
+
+#ifdef BUILDING_NODE_EXTENSION
+	unsigned int wrapperConstructorNum;
+	unsigned int valueConstructorNum;
+#endif // BUILDING_NODE_EXTENSION
 
 	jsMethod *createPtr;
 

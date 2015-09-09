@@ -13,11 +13,14 @@
 #include "Caller.h"
 #include "MethodDef.h"
 #ifdef BUILDING_NODE_EXTENSION
+// TODO: remove following line.
+#include "v8/Overloader.h"
 #include "v8/ConstructorOverload.h"
 #include "BindClass.h"
 #include "v8/ValueObj.h"
 #include "v8/Creator.h"
 #include "v8/Binding.h"
+// TODO: remove following line.
 #include "v8/ConstructorSignature.h"
 #elif EMSCRIPTEN
 #include "BindClass.h"
@@ -29,6 +32,7 @@
 #include "signature/MethodSignature.h"
 #include "signature/GetterSignature.h"
 #include "signature/SetterSignature.h"
+#include "signature/ConstructorSignature.h"
 
 namespace nbind {
 
@@ -93,10 +97,15 @@ public:
 
 	template<typename... Args, typename... Policies>
 	const BindDefiner &constructor(Policies...) const {
+		typedef ConstructorSignature2<Bound, Args...> Signature;
+
+		bindClass->addConstructor(&Signature::getInstance());
+
+// TODO: remove following block.
 #ifdef BUILDING_NODE_EXTENSION
 		typedef typename ConstructorSignature<Bound, Args...>::ConstructWrapper Constructor;
 
-		ConstructorOverload<Bound>::addConstructor(sizeof...(Args), Constructor::makeWrapper, Constructor::makeValue);
+		ConstructorOverload<Bound>::addConstructor(sizeof...(Args), Constructor::create, Constructor::createValue);
 #endif // BUILDING_NODE_EXTENSION
 
 		return(*this);

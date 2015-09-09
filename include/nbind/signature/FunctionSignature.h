@@ -42,7 +42,10 @@ public:
 		Status::clearError();
 
 		try {
-			auto result = Parent::CallWrapper::call(Parent::getMethod(args.Data()->IntegerValue()).func, args);
+			auto result = Parent::CallWrapper::call(
+				Parent::getMethod(args.Data()->IntegerValue() & signatureMemberMask).func,
+				args
+			);
 
 			const char *message = Status::getError();
 
