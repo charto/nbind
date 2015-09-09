@@ -21,8 +21,6 @@
 #include "v8/ValueObj.h"
 #include "v8/Creator.h"
 #include "v8/Binding.h"
-// TODO: remove following line.
-#include "v8/ConstructorSignature.h"
 #elif EMSCRIPTEN
 #include "BindClass.h"
 #include "em/Creator.h"
@@ -104,9 +102,16 @@ public:
 
 // TODO: remove following block.
 #ifdef BUILDING_NODE_EXTENSION
-		typedef typename ConstructorSignature<Bound, Args...>::ConstructWrapper Constructor;
+		typedef Creator<
+			Bound,
+			typename emscripten::internal::MapWithIndex<
+				TypeList,
+				FromWire,
+				Args...
+			>::type
+		> Constructor;
 
-		ConstructorOverload<Bound>::addConstructor(sizeof...(Args), Constructor::create, Constructor::createValue);
+		ConstructorOverload<Bound>::addConstructor(sizeof...(Args), Constructor::createValue);
 #endif // BUILDING_NODE_EXTENSION
 
 		return(*this);

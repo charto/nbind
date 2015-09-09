@@ -1,6 +1,8 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// TODO: Remove this file.
+
 #pragma once
 
 namespace nbind {
@@ -37,13 +39,7 @@ public:
 		args.GetReturnValue().Set(Nan::Undefined());
 	}
 
-	template<typename MethodType> struct NanWrapperConstructorTypeBuilder;
 	template<typename MethodType> struct NanValueConstructorTypeBuilder;
-
-	template<typename ReturnType, typename... NanArgs>
-	struct NanWrapperConstructorTypeBuilder<ReturnType(NanArgs...)> {
-		typedef BindWrapper<Bound> *type(NanArgs...);
-	};
 
 	template<typename ReturnType, typename... NanArgs>
 	struct NanValueConstructorTypeBuilder<ReturnType(NanArgs...)> {
@@ -53,25 +49,22 @@ public:
 	typedef std::remove_pointer<Nan::FunctionCallback>::type jsMethod;
 
 	struct jsConstructors {
-		typedef typename NanWrapperConstructorTypeBuilder<jsMethod>::type wrapperType;
 		typedef typename NanValueConstructorTypeBuilder<jsMethod>::type valueType;
 
-		jsConstructors(wrapperType *wrapper = nullptr, valueType *value = nullptr) : wrapper(wrapper), value(value) {}
+		jsConstructors(valueType *value = nullptr) : value(value) {}
 
-		wrapperType *wrapper;
 		valueType *value;
 	};
 
 	// Store link to constructor, possibly overloaded by arity.
 	// It will be declared with the Node API when this module is initialized.
 
-	static void addConstructor(unsigned int arity, typename jsConstructors::wrapperType *funcWrapper, typename jsConstructors::valueType *funcValue) {
+	static void addConstructor(unsigned int arity, typename jsConstructors::valueType *funcValue) {
 		static std::vector<jsConstructors> &constructorVect = constructorVectStore();
 		signed int oldArity = getArity();
 
 		if(signed(arity) > oldArity) constructorVect.resize(arity + 1);
 
-		constructorVect[arity].wrapper = funcWrapper;
 		constructorVect[arity].value = funcValue;
 	}
 
@@ -80,17 +73,6 @@ public:
 
 	static signed int getArity() {
 		return(constructorVectStore().size() - 1);
-	}
-
-	// Get constructor by arity.
-	// When called, the constructor returns an ObjectWrap.
-
-	static typename jsConstructors::wrapperType *getWrapperConstructor(unsigned int arity) {
-		// Check if constructor was called with more than the maximum number
-		// of arguments it can accept.
-		if(signed(arity) > getArity()) return(nullptr);
-
-		return(constructorVectStore()[arity].wrapper);
 	}
 
 	static typename jsConstructors::valueType *getValueConstructor(unsigned int arity) {

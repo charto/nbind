@@ -36,7 +36,7 @@ public:
 		// to the new JavaScript object being created.
 
 		try {
-			ConstructWrapper::create2(args);
+			ConstructWrapper::create(args);
 
 			const char *message = Status::getError();
 

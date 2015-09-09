@@ -13,13 +13,7 @@ struct Creator<Bound, TypeList<Args...>> {
 public:
 
 	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
-	static BindWrapper<Bound> *create(const Nan::FunctionCallbackInfo<v8::Value> &args) noexcept(false) {
-		// Note that Args().get may throw.
-		return(new BindWrapper<Bound>(Args(args).get(args)...));
-	}
-
-	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
-	static void create2(const Nan::FunctionCallbackInfo<v8::Value> &args) noexcept(false) {
+	static void create(const Nan::FunctionCallbackInfo<v8::Value> &args) noexcept(false) {
 		// Note that Args().get may throw.
 		(new BindWrapper<Bound>(Args(args).get(args)...))->wrap(args);
 	}
