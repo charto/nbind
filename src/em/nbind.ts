@@ -30,13 +30,8 @@ namespace _nbind {
 	}
 
 	export class Wrapper {
-		constructor(...args: any[]) {
-			console.log(args.length)
-			console.log(this.__asmConstructor[args.length]);
-		}
-
-		@_defineHidden(['a', 'b', 'c', 'd'])
-		__asmConstructor: any[];
+		__nbindConstructor: any[];
+		__nbindPtr: number;
 	}
 
 	export function makeSignature(typeList: number[]) {
@@ -49,6 +44,26 @@ namespace _nbind {
 		return(typeList.map((id: number) => (mangleMap[_nbind.typeList[id].name] || 'i')).join(''));
 	}
 
+	export function makeMethodCaller(dynCall: (ptr: number, ...args: any[]) => any, ptr: number, num: number, argCount: number) {
+		switch(argCount) {
+			case 0: return(function() {return(
+			        dynCall(ptr, num, this.__nbindPtr));});
+			case 1: return(function(                   a1: any) {return(
+			        dynCall(ptr, num, this.__nbindPtr, a1       ));});
+			case 2: return(function(                   a1: any, a2: any) {return(
+			        dynCall(ptr, num, this.__nbindPtr, a1,      a2       ));});
+			case 3: return(function(                   a1: any, a2: any, a3: any) {return(
+			        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3       ));});
+			default:
+				// Function takes over 3 arguments.
+				// Let's create the invoker dynamically then.
+
+				var argList = Array.apply(null, Array(argCount)).map((x: any, i: number) => ('a' + (i + 1)));
+
+				return(eval('(function(' + argList + '){return(dynCall(ptr,num,this.__nbindPtr,' + argList + '));})'));
+		}
+	}
+
 	export function makeCaller(dynCall: (ptr: number, ...args: any[]) => any, ptr: number, argCount: number) {
 		switch(argCount) {
 			case 0: return(() =>
@@ -59,20 +74,13 @@ namespace _nbind {
 			        dynCall(ptr, a1,      a2       ));
 			case 3: return((     a1: any, a2: any, a3: any) =>
 			        dynCall(ptr, a1,      a2,      a3       ));
-			case 4: return((     a1: any, a2: any, a3: any, a4: any) =>
-			        dynCall(ptr, a1,      a2,      a3,      a4       ));
-			case 5: return((     a1: any, a2: any, a3: any, a4: any, a5: any) =>
-			        dynCall(ptr, a1,      a2,      a3,      a4,      a5       ));
-			case 6: return((     a1: any, a2: any, a3: any, a4: any, a5: any, a6: any) =>
-			        dynCall(ptr, a1,      a2,      a3,      a4,      a5,      a6       ));
 			default:
-				// Function takes over 6 arguments.
-				// Please read "Clean Code" by Robert C. Martin.
+				// Function takes over 3 arguments.
 				// Let's create the invoker dynamically then.
 
 				var argList = Array.apply(null, Array(argCount)).map((x: any, i: number) => ('a' + (i + 1)));
 
-				return(eval('(function(' + argList + ') {dynCall(ptr,' + argList + ');})'));
+				return(eval('(function(' + argList + ') {return(dynCall(ptr,' + argList + '));})'));
 		}
 	}
 
@@ -143,25 +151,31 @@ class nbind {
 	static _nbind_register_class(id: number, namePtr: number) {
 		var name = _readAsciiString(namePtr);
 
-//		function Bound() {
-//			_nbind.Wrapper.apply(this, arguments);
-//		}
+		function Bound(...args: any[]) {
+			var create = this.__nbindConstructor[args.length];
 
-		function Bound() {
-			console.log(this.__asmConstructor[arguments.length]);
+			if(create) _defineHidden(create.apply(this, arguments))(this, '__nbindPtr');
+
+			// TODO: remove this debug statement, which gets an already constructed object's address as a parameter to the constructor.
+			else _defineHidden(args[0])(this, '__nbindPtr');
 		}
 
 		// Make "Bound" a subclass of "Wrapper".
 		__extends(Bound, _nbind.Wrapper);
+
+//		_defineHidden([])(Bound.prototype, '__nbindConstructor');
+Bound.prototype.__nbindConstructor=[];
 
 		new _nbind.BindClass(id, name, <_nbind.Wrapper><any>Bound);
 
 		Module[name] = Bound;
 	}
 
-	@dep('_nbind', _readAsciiString)
-	static _nbind_register_constructor(typeID: number, signaturePtr: number, a: number) {
-		var signature = _readAsciiString(signaturePtr);
+	static _nbind_register_constructor(typeID: number, ptr: number, typeListPtr: number, typeCount: number) {
+		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
+		var signature = _nbind.makeSignature(typeList);
+
+		var constructorList = (<any>(<_nbind.BindClass>_nbind.typeList[typeID]).proto).prototype.__nbindConstructor;
 	}
 
 	@dep('_nbind', _readAsciiString)
@@ -170,15 +184,23 @@ class nbind {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 		var signature = _nbind.makeSignature(typeList);
 
-		(<any>(<_nbind.BindClass>_nbind.typeList[typeID]).proto)[name] = _nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
+		(<any>(<_nbind.BindClass>_nbind.typeList[typeID]).proto)[name] =
+			_nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
 	}
 
 	@dep('_nbind', _readAsciiString)
-	static _nbind_register_method(typeID: number, namePtr: number, typeListPtr: number, typeCount: number) {
+	static _nbind_register_method(typeID: number, ptr: number, num: number, namePtr: number, typeListPtr: number, typeCount: number) {
 		var name = _readAsciiString(namePtr);
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
+
+		// The method invoker function has two additional arguments compared to the method itself:
+		// Target object and number of the method in a list of methods with identical signatures.
+
+		typeList.splice(1, 0, _nbind.typeTbl['uint32_t'].id, typeID)
+
 		var signature = _nbind.makeSignature(typeList);
 
-		(<any>(<_nbind.BindClass>_nbind.typeList[typeID]).proto).prototype[name] = function() {};
+		(<any>(<_nbind.BindClass>_nbind.typeList[typeID]).proto).prototype[name] =
+			_nbind.makeMethodCaller(Module['dynCall_' + signature], ptr, num, typeCount - 1);
 	}
 };

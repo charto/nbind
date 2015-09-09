@@ -106,8 +106,12 @@ public:
 			return;
 		}
 	}
-#else
-	static void call() {}
+#elif EMSCRIPTEN
+	// Args are wire types! They must be received by value.
+	static ReturnType call(unsigned int num, Bound *target, Args... args) {
+		auto method = Parent::getMethod(num).func;
+		return((target->*method)(args...));
+	}
 #endif // BUILDING_NODE_EXTENSION
 
 };
