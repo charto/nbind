@@ -1,6 +1,16 @@
 /// <reference path="../../node_modules/emscripten-library-decorator/index.ts" />
 
+// Generic table and list of functions.
+
+type FuncTbl = { [name: string]: (...args: any[]) => any; };
+type FuncList = { (...args: any[]): any }[];
+
+// Namespace that will be made available inside Emscripten compiled module.
+
 namespace _nbind {
+
+	// A type definition, which registers itself upon construction.
+
 	export class BindType {
 		constructor(id: number, name: string) {
 			this.id = id;
@@ -19,20 +29,32 @@ namespace _nbind {
 		invokerSignature: string;
 	}
 
+	export class Wrapper {
+		__nbindConstructor: FuncList;
+		__nbindPtr: number;
+	}
+
+	// Any subtype (not instance but type) of Wrapper.
+	// Declared as anything that constructs something compatible with Wrapper.
+
+	export interface WrapperClass {
+		new(...args: any[]): Wrapper;
+	}
+
+	// Base class for all bound C++ classes, also inheriting from a generic type definition.
+
 	export class BindClass extends BindType {
-		constructor(id: number, name: string, proto: Wrapper) {
+		constructor(id: number, name: string, proto: WrapperClass) {
 			super(id, name);
 
 			this.proto = proto;
 		}
 
-		proto: Wrapper;
+		proto: WrapperClass;
 	}
 
-	export class Wrapper {
-		__nbindConstructor: any[];
-		__nbindPtr: number;
-	}
+	// Generate mangled signature from argument types.
+	// Emscripten generates invoker functions with signatures appended to their names.
 
 	export function makeSignature(typeList: number[]) {
 		var mangleMap: { [name: string]: string; } = {
@@ -43,6 +65,8 @@ namespace _nbind {
 
 		return(typeList.map((id: number) => (mangleMap[_nbind.typeList[id].name] || 'i')).join(''));
 	}
+
+	// Dynamically create an invoker function for a C++ class method.
 
 	export function makeMethodCaller(dynCall: (ptr: number, ...args: any[]) => any, ptr: number, num: number, argCount: number) {
 		switch(argCount) {
@@ -63,6 +87,8 @@ namespace _nbind {
 				return(eval('(function(' + argList + '){return(dynCall(ptr,num,this.__nbindPtr,' + argList + '));})'));
 		}
 	}
+
+	// Dynamically create an invoker function for a C++ function.
 
 	export function makeCaller(dynCall: (ptr: number, ...args: any[]) => any, ptr: number, argCount: number) {
 		switch(argCount) {
@@ -86,6 +112,11 @@ namespace _nbind {
 
 	export var typeTbl: { [name: string]: BindType } = {};
 	export var typeList: BindType[] = [];
+
+	// Export the namespace to Emscripten compiled output.
+	// This must be at the end of the namespace!
+	// The dummy class _ and everything after it inside the namespace will be discarded,
+	// because unfortunately namespaces can't have decorators.
 
 	@exportNamespace('_nbind')
 	export class _ {}
@@ -113,9 +144,9 @@ class nbind {
 		var sizeListPtr = HEAP32[dataPtr / 4 + 2] / 4;
 		var flagListPtr = HEAP32[dataPtr / 4 + 3];
 
-		var idList = Array.prototype.slice.call(HEAPU32, idListPtr, idListPtr + count);
-		var sizeList = Array.prototype.slice.call(HEAPU32, sizeListPtr, sizeListPtr + count);
-		var flagList = Array.prototype.slice.call(HEAPU8, flagListPtr, flagListPtr + count);
+		var idList = HEAPU32.subarray(idListPtr, idListPtr + count);
+		var sizeList = HEAPU32.subarray(sizeListPtr, sizeListPtr + count);
+		var flagList = HEAPU8.subarray(flagListPtr, flagListPtr + count);
 
 		function formatType(flag: number, size: number) {
 			var isSignless = flag & 16;
@@ -151,22 +182,25 @@ class nbind {
 	static _nbind_register_class(id: number, namePtr: number) {
 		var name = _readAsciiString(namePtr);
 
-		function Bound(...args: any[]) {
-			var create = this.__nbindConstructor[args.length];
+		class Bound extends _nbind.Wrapper {
+			constructor() {
+				super();
 
-			if(create) _defineHidden(create.apply(this, arguments))(this, '__nbindPtr');
+				var create = this.__nbindConstructor[arguments.length];
 
-			// TODO: remove this debug statement, which gets an already constructed object's address as a parameter to the constructor.
-			else _defineHidden(args[0])(this, '__nbindPtr');
+				if(create) _defineHidden(create.apply(this, arguments))(this, '__nbindPtr');
+
+				// TODO: remove this debug statement, which gets an already constructed object's address as a parameter to the constructor.
+				else _defineHidden(arguments[0])(this, '__nbindPtr');
+			}
+
+			@_defineHidden([])
+			__nbindConstructor: FuncList;
 		}
 
-		// Make "Bound" a subclass of "Wrapper".
-		__extends(Bound, _nbind.Wrapper);
+		Bound.prototype.__nbindConstructor[1] = () => {};
 
-//		_defineHidden([])(Bound.prototype, '__nbindConstructor');
-Bound.prototype.__nbindConstructor=[];
-
-		new _nbind.BindClass(id, name, <_nbind.Wrapper><any>Bound);
+		new _nbind.BindClass(id, name, Bound);
 
 		Module[name] = Bound;
 	}
@@ -175,7 +209,7 @@ Bound.prototype.__nbindConstructor=[];
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 		var signature = _nbind.makeSignature(typeList);
 
-		var constructorList = (<any>(<_nbind.BindClass>_nbind.typeList[typeID]).proto).prototype.__nbindConstructor;
+		var constructorList = (<_nbind.BindClass>_nbind.typeList[typeID]).proto.prototype.__nbindConstructor;
 	}
 
 	@dep('_nbind', _readAsciiString)
@@ -200,7 +234,7 @@ Bound.prototype.__nbindConstructor=[];
 
 		var signature = _nbind.makeSignature(typeList);
 
-		(<any>(<_nbind.BindClass>_nbind.typeList[typeID]).proto).prototype[name] =
+		(<FuncTbl>(<_nbind.BindClass>_nbind.typeList[typeID]).proto.prototype)[name] =
 			_nbind.makeMethodCaller(Module['dynCall_' + signature], ptr, num, typeCount - 1);
 	}
 };
