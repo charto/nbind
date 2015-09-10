@@ -54,16 +54,15 @@ class BindDefiner : public BindDefinerBase {
 
 public:
 
-	BindDefiner(const char *name) : BindDefinerBase(name) {
-		bindClass = BindClass<Bound>::getInstance();
-		bindClass->setName(name);
+	BindDefiner(const char *name) : BindDefinerBase(name), bindClass(BindClass<Bound>::getInstance()) {
+		bindClass.setName(name);
 
 		Bindings::registerClass(bindClass);
 	}
 
 	template<class Signature, typename MethodType>
 	void addMethod(const char *name, funcPtr ptr, MethodType method) const {
-		bindClass->addMethod(
+		bindClass.addMethod(
 			name,
 			ptr,
 			Signature::addMethod(method),
@@ -97,7 +96,7 @@ public:
 	const BindDefiner &constructor(Policies...) const {
 		typedef ConstructorSignature<Bound, Args...> Signature;
 
-		bindClass->addConstructor(&Signature::getInstance());
+		bindClass.addConstructor(&Signature::getInstance());
 
 		return(*this);
 	}
@@ -113,7 +112,7 @@ public:
 	) const {
 		addMethod<GetterSignature<Bound, FieldType>>(name, nullptr, getter);
 
-		bindClass->addMethod(emptySetter);
+		bindClass.addMethod(emptySetter);
 
 		return(*this);
 	}
@@ -139,7 +138,7 @@ public:
 
 private:
 
-	BindClass<Bound> *bindClass;
+	BindClass<Bound> &bindClass;
 
 };
 

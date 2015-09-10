@@ -11,7 +11,7 @@ class Bindings {
 
 public:
 
-	static void registerClass(BindClassBase *bindClass);
+	static void registerClass(BindClassBase &bindClass);
 	static void initModule();
 //	static void setValueConstructorByName(const char *name, cbFunction &func);
 

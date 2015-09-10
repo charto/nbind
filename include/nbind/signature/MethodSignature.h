@@ -11,6 +11,9 @@
 namespace nbind {
 
 #ifdef BUILDING_NODE_EXTENSION
+
+// Handle value types as return values.
+
 template<typename ReturnType> struct MethodResultConverter {
 
 	template <typename Bound>

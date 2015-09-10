@@ -127,23 +127,12 @@ public:
 
 	BindClass() : BindClassBase() {
 		this->id = makeTypeID<Bound>();
-
-		setInstance(this);
 	}
-	static BindClass *getInstance() {return(instanceStore());}
 
-	static BindClass *&instanceStore() {
-		static BindClass *instance;
-
+	static BindClass &getInstance() {
+		static BindClass instance;
 		return(instance);
 	}
-
-private:
-
-	// Function called by the constructor, to permanently store a single
-	// object of this singleton class.
-
-	void setInstance(BindClass *instance) {instanceStore() = instance;}
 
 };
 

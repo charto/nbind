@@ -35,8 +35,8 @@ void Bindings :: setValueConstructorByName(const char *name, cbFunction &func) {
 // Linkage for module-wide error message.
 const char *Status :: message;
 
-void Bindings :: registerClass(BindClassBase *bindClass) {
-	getClassList().emplace_front(bindClass);
+void Bindings :: registerClass(BindClassBase &bindClass) {
+	getClassList().emplace_front(&bindClass);
 }
 
 // Convert getter names like "getFoo" into property names like "foo".
@@ -173,7 +173,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 		if(nameBuf != nullptr) free(nameBuf);
 
 		// Add NBind references to other classes to enforce visibility.
-		if(bindClass == BindClass<NBind>::getInstance()) {
+		if(bindClass == &BindClass<NBind>::getInstance()) {
 			nBindConstructor = constructorTemplate->GetFunction();
 		} else {
 			Nan::SetTemplate(constructorTemplate, "NBind", nBindConstructor);

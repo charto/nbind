@@ -7,6 +7,9 @@
 
 namespace nbind {
 
+// Constructor. Call() creates an instance of a bound C++ class, while
+// createValue() constructs it in place, directly in the stack for passing by value.
+
 template <class Bound, typename... Args>
 class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<Bound, Args...>, Bound, Args...> {
 

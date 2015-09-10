@@ -5,7 +5,7 @@
 
 namespace nbind {
 
-// Type ID system.
+// Type ID system, based on Embind.
 
 typedef const void *TYPEID;
 
@@ -39,6 +39,12 @@ struct isChar<char> {
 	static constexpr bool value = true;
 };
 
+// This function takes a list of primitive types as the template argument.
+// It defines 3 arrays with information about them: type IDs, sizes and properties of the types.
+// For example uint32_t, float64_t and const char * can be distinguished by their size and the property flags
+// char, const, pointer, float and unsigned.
+// Char is not treated as a simple int8_t because as a const pointer it can also identify a string literal.
+
 template <typename... Args>
 void **defineTypes() {
 	static TYPEID typeList[] = { makeTypeID<Args>()..., nullptr };
@@ -56,6 +62,8 @@ void **defineTypes() {
 	static void *data[] = { reinterpret_cast<void *>(sizeof...(Args)), typeList, sizeList, flagList };
 	return(data);
 }
+
+// Convert a list of types in the template argument into an array of type IDs.
 
 template<typename... Args>
 const TYPEID *listTypes() {

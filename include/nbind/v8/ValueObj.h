@@ -17,7 +17,7 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 	v8::Local<v8::Value> output = Nan::Undefined();
 
 	if(arg != nullptr) {
-		cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
+		cbFunction *jsConstructor = BindClass<ArgType>::getInstance().getValueConstructorJS();
 
 		if(jsConstructor != nullptr) {
 			cbOutput construct(*jsConstructor, &output);
@@ -34,7 +34,7 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 template <typename ArgType>
 inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
 	v8::Local<v8::Value> output = Nan::Undefined();
-	cbFunction *jsConstructor = BindClass<ArgType>::getInstance()->getValueConstructorJS();
+	cbFunction *jsConstructor = BindClass<ArgType>::getInstance().getValueConstructorJS();
 
 	if(jsConstructor != nullptr) {
 		cbOutput construct(*jsConstructor, &output);
@@ -57,7 +57,7 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 	if(!fromJS->IsFunction()) throw(std::runtime_error("Type mismatch"));
 
 	TemplatedArgStorage<ArgType> storage(
-		BindClass<ArgType>::getInstance()->valueConstructorNum
+		BindClass<ArgType>::getInstance().valueConstructorNum
 	);
 
 	// TODO: cache this for a speedup.

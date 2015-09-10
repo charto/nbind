@@ -5,12 +5,22 @@
 
 namespace nbind {
 
+// Constants for packing several method signatures into a single overloaded name,
+// and several methods with identical argument and return types into a single signature.
+
 static constexpr unsigned int overloadShift = 16;
 static constexpr unsigned int signatureMemberMask = 0xffff;
+
+// Base class for signatures of all constructors, functions and methods.
+// A signature represents a unique set of argument and return types,
+// and the invoker functions needed to deal with such types.
 
 class BaseSignature {
 
 public:
+
+	// Type of the signature.
+	// Determines the actual signature class of each instance.
 
 	enum class Type {function, method, getter, setter, constructor};
 
@@ -20,8 +30,14 @@ public:
 	Type getType() { return(type); }
 	funcPtr getCaller() { return(caller); }
 
+	// Type list is one item longer than arity,
+	// because it starts with the return type (not counted in arity).
+
 	const TYPEID *getTypeList() { return(typeList); }
 	unsigned int getArity() { return(arity); }
+
+	// A value constructor pointer is included in each signature,
+	// but only used for constructors.
 
 	funcPtr getValueConstructor() { return(valueConstructor); }
 	void setValueConstructor(funcPtr valueConstructor) {
@@ -54,6 +70,8 @@ public:
 		listTypes<ReturnType, Args...>(),
 		sizeof...(Args)
 	) {}
+
+	// Linkage for a singleton instance of each templated class.
 
 	static Signature &getInstance() {
 		static Signature instance;
@@ -95,6 +113,8 @@ public:
 	}
 
 #ifdef BUILDING_NODE_EXTENSION
+	// Specialize static caller functions defined in Caller.h.
+
 	typedef Caller<
 		ReturnType,
 		typename emscripten::internal::MapWithIndex<
@@ -116,7 +136,7 @@ public:
 
 		return(checker::typesAreValid(args));
 	}
-#endif // BUILDING_NODE_EXTENSION || EMSCRIPTEN
+#endif // BUILDING_NODE_EXTENSION
 
 	// The funcVect vector cannot be moved to BaseSignature because it can contain pointers to
 	// functions or class methods, and there isn't a single pointer type able to hold both.

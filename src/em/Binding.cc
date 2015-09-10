@@ -26,8 +26,8 @@ const char *nbind :: emptySetter = "";
 // Linkage for module-wide error message.
 const char *Status :: message;
 
-void Bindings :: registerClass(BindClassBase *bindClass) {
-	getClassList().emplace_front(bindClass);
+void Bindings :: registerClass(BindClassBase &bindClass) {
+	getClassList().emplace_front(&bindClass);
 }
 
 typedef BaseSignature::Type SigType;
