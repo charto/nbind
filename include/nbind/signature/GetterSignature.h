@@ -29,39 +29,29 @@ public:
 	static constexpr auto typeExpr = BaseSignature::Type::getter;
 
 #ifdef BUILDING_NODE_EXTENSION
-	static void call(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
-
-		v8::Local<v8::Object> targetWrapped = args.This();
+	template <typename V8Args, typename NanArgs>
+	static bool callInner(V8Args &args, NanArgs &nanArgs) {
+		v8::Local<v8::Object> targetWrapped = nanArgs.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
-		Status::clearError();
+		auto &&result = Caller<
+			ReturnType,
+			TypeList<>
+		>::call(
+			target,
+			Parent::getMethod(nanArgs.Data()->IntegerValue() & accessorGetterMask).func,
+			args
+		);
 
-		try {
-			auto &&result = Caller<
-				ReturnType,
-				TypeList<>
-			>::call(
-				target,
-				Parent::getMethod(args.Data()->IntegerValue() & accessorGetterMask).func,
-				args
-			);
+		nanArgs.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
+		if(Status::getError() != nullptr) return(false);
 
-			const char *message = Status::getError();
+		return(true);
+	}
 
-			if(message) {
-				Nan::ThrowError(message);
-				return;
-			}
-
-			args.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
-		} catch(const std::exception &ex) {
-			const char *message = Status::getError();
-
-			if(message == nullptr) message = ex.what();
-
-			Nan::ThrowError(message);
-			return;
-		}
+	static void call(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
+		// Note: this may do useless arity checks...
+		Parent::callInnerSafely(args, args);
 	}
 #else
 	static void call() {}

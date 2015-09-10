@@ -69,49 +69,25 @@ public:
 	static constexpr auto typeExpr = BaseSignature::Type::method;
 
 #ifdef BUILDING_NODE_EXTENSION
-	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		static constexpr decltype(args.Length()) arity = sizeof...(Args);
-
-		// TODO: For method overloading support, this test needs to be moved elsewhere.
-
-		if(args.Length() != arity) {
-			Nan::ThrowError("Wrong number of arguments");
-			return;
-		}
-
-		if(!MethodSignature::typesAreValid(args)) {
-			Nan::ThrowTypeError("Type mismatch");
-			return;
-		}
-
-		v8::Local<v8::Object> targetWrapped = args.This();
+	template <typename V8Args, typename NanArgs>
+	static bool callInner(V8Args &args, NanArgs &nanArgs) {
+		v8::Local<v8::Object> targetWrapped = nanArgs.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
-		Status::clearError();
+		auto result = Parent::CallWrapper::call(
+			target,
+			Parent::getMethod(nanArgs.Data()->IntegerValue() & signatureMemberMask).func,
+			args
+		);
 
-		try {
-			auto result = Parent::CallWrapper::call(
-				target,
-				Parent::getMethod(args.Data()->IntegerValue() & signatureMemberMask).func,
-				args
-			);
+		if(Status::getError() != nullptr) return(false);
 
-			const char *message = Status::getError();
+		nanArgs.GetReturnValue().Set(MethodResultConverter<ReturnType>::toWireType(std::move(result), &target));
+		return(true);
+	}
 
-			if(message) {
-				Nan::ThrowError(message);
-				return;
-			}
-
-			args.GetReturnValue().Set(MethodResultConverter<ReturnType>::toWireType(std::move(result), &target));
-		} catch(const std::exception &ex) {
-			const char *message = Status::getError();
-
-			if(message == nullptr) message = ex.what();
-
-			Nan::ThrowError(message);
-			return;
-		}
+	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+		Parent::callInnerSafely(args, args);
 	}
 #elif EMSCRIPTEN
 	// Args are wire types! They must be received by value.

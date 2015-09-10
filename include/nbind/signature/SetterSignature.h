@@ -29,36 +29,24 @@ public:
 	static constexpr auto typeExpr = BaseSignature::Type::setter;
 
 #ifdef BUILDING_NODE_EXTENSION
-	static void call(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {
-
-		v8::Local<v8::Object> targetWrapped = args.This();
+	template <typename V8Args, typename NanArgs>
+	static bool callInner(V8Args &args, NanArgs &nanArgs) {
+		v8::Local<v8::Object> targetWrapped = nanArgs.This();
 		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
 
-		Status::clearError();
+		Parent::CallWrapper::call(
+			target,
+			Parent::getMethod(nanArgs.Data()->IntegerValue() >> accessorSetterShift).func,
+			args
+		);
 
+		return(Status::getError() == nullptr);
+	}
+
+	static void call(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {
 		auto *valuePtr = &value;
 
-		if(!SetterSignature::typesAreValid(valuePtr)) {
-			Nan::ThrowTypeError("Type mismatch");
-		} else {
-			try {
-				Parent::CallWrapper::call(
-					target,
-					Parent::getMethod(args.Data()->IntegerValue() >> accessorSetterShift).func,
-					valuePtr
-				);
-
-				const char *message = Status::getError();
-
-				if(message) Nan::ThrowError(message);
-			} catch(const std::exception &ex) {
-				const char *message = Status::getError();
-
-				if(message == nullptr) message = ex.what();
-
-				Nan::ThrowError(message);
-			}
-		}
+		Parent::callInnerSafely(valuePtr, args);
 	}
 #else
 	static void call() {}

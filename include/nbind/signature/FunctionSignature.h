@@ -24,45 +24,21 @@ public:
 	static constexpr auto typeExpr = BaseSignature::Type::function;
 
 #ifdef BUILDING_NODE_EXTENSION
+	template <typename V8Args, typename NanArgs>
+	static bool callInner(V8Args &args, NanArgs &nanArgs) {
+		auto result = Parent::CallWrapper::call(
+			Parent::getMethod(nanArgs.Data()->IntegerValue() & signatureMemberMask).func,
+			args
+		);
+
+		if(Status::getError() != nullptr) return(false);
+
+		nanArgs.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
+		return(true);
+	}
+
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		static constexpr decltype(args.Length()) arity = sizeof...(Args);
-
-		// TODO: For function overloading support, this test needs to be moved elsewhere.
-
-		if(args.Length() != arity) {
-			Nan::ThrowError("Wrong number of arguments");
-			return;
-		}
-
-		if(!FunctionSignature::typesAreValid(args)) {
-			Nan::ThrowTypeError("Type mismatch");
-			return;
-		}
-
-		Status::clearError();
-
-		try {
-			auto result = Parent::CallWrapper::call(
-				Parent::getMethod(args.Data()->IntegerValue() & signatureMemberMask).func,
-				args
-			);
-
-			const char *message = Status::getError();
-
-			if(message != nullptr) {
-				Nan::ThrowError(message);
-				return;
-			}
-
-			args.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
-		} catch(const std::exception &ex) {
-			const char *message = Status::getError();
-
-			if(message == nullptr) message = ex.what();
-
-			Nan::ThrowError(message);
-			return;
-		}
+		Parent::callInnerSafely(args, args);
 	}
 #else
 	static void call() {}

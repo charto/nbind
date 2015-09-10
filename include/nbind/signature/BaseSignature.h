@@ -136,6 +136,45 @@ public:
 
 		return(checker::typesAreValid(args));
 	}
+
+	static bool arityIsValid(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+		static constexpr decltype(args.Length()) arity = sizeof...(Args);
+		return(args.Length() == arity);
+	}
+
+	template <typename Value>
+	static bool arityIsValid(const Nan::PropertyCallbackInfo<Value> &args) {
+		return(true);
+	}
+
+	template <typename V8Args, typename NanArgs>
+	static void callInnerSafely(V8Args &args, NanArgs &nanArgs) {
+		if(!arityIsValid(nanArgs)) {
+			// TODO: When function is overloaded, this test could be skipped...
+			Nan::ThrowError("Wrong number of arguments");
+			return;
+		}
+
+		if(!Signature::typesAreValid(args)) {
+			Nan::ThrowTypeError("Type mismatch");
+			return;
+		}
+
+		Status::clearError();
+
+		try {
+			if(!Signature::callInner(args, nanArgs)) {
+				Nan::ThrowError(Status::getError());
+			}
+		} catch(const std::exception &ex) {
+			const char *message = Status::getError();
+
+			if(message == nullptr) message = ex.what();
+
+			Nan::ThrowError(message);
+		}
+	}
+
 #endif // BUILDING_NODE_EXTENSION
 
 	// The funcVect vector cannot be moved to BaseSignature because it can contain pointers to
