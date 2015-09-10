@@ -170,7 +170,7 @@ class nbind {
 				]
 			), [
 				isPointer && ' *'
-			]).filter((x: any) => (<boolean>x)).join(''));
+			]).filter((x: any) => (x as boolean)).join(''));
 		}
 
 		for(var num = 0; num < count; ++num) {
@@ -209,7 +209,7 @@ class nbind {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 		var signature = _nbind.makeSignature(typeList);
 
-		var constructorList = (<_nbind.BindClass>_nbind.typeList[typeID]).proto.prototype.__nbindConstructor;
+		var constructorList = (_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype.__nbindConstructor;
 	}
 
 	@dep('_nbind', _readAsciiString)
@@ -218,7 +218,7 @@ class nbind {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 		var signature = _nbind.makeSignature(typeList);
 
-		(<any>(<_nbind.BindClass>_nbind.typeList[typeID]).proto)[name] =
+		((_nbind.typeList[typeID] as _nbind.BindClass).proto as any)[name] =
 			_nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
 	}
 
@@ -234,7 +234,7 @@ class nbind {
 
 		var signature = _nbind.makeSignature(typeList);
 
-		(<FuncTbl>(<_nbind.BindClass>_nbind.typeList[typeID]).proto.prototype)[name] =
+		((_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype as FuncTbl)[name] =
 			_nbind.makeMethodCaller(Module['dynCall_' + signature], ptr, num, typeCount - 1);
 	}
 };
