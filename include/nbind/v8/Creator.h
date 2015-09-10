@@ -12,15 +12,13 @@ struct Creator<Bound, TypeList<Args...>> {
 
 public:
 
-	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
 	static void create(const Nan::FunctionCallbackInfo<v8::Value> &args) noexcept(false) {
 		// Note that Args().get may throw.
 		(new BindWrapper<Bound>(Args(args).get(args)...))->wrap(args);
 	}
 
-	// Make sure prototype matches NanValueConstructorTypeBuilder!
-	static void createValue(ArgStorage<Bound> &storage, const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		storage.init(Args(args).get(args)...);
+	static void createValue(ArgStorage &storage, const Nan::FunctionCallbackInfo<v8::Value> &args) {
+		static_cast<TemplatedArgStorage<Bound> &>(storage).init(Args(args).get(args)...);
 	}
 
 };

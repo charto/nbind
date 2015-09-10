@@ -5,44 +5,6 @@
 
 namespace nbind {
 
-// Wrapper for C++ objects converted from corresponding JavaScript objects.
-// Needed for allocating an empty placeholder object before JavaScript calls
-// its constructor. See:
-// http://stackoverflow.com/questions/31091223/placement-new-return-by-value-and-safely-dispose-temporary-copies
-
-template <typename Bound>
-class ArgStorage {
-
-public:
-
-	ArgStorage() : dummy(0) {}
-
-	~ArgStorage() {
-		if(isValid) data.~Bound();
-		isValid = false;
-	}
-
-	template <typename... Args>
-	void init(Args&&... args) {
-		::new(&data) Bound(std::forward<Args>(args)...);
-		isValid = true;
-	}
-
-	Bound getBound() {
-		return(std::move(data));
-	}
-
-private:
-
-	union {
-		int dummy;
-		Bound data;
-	};
-
-	bool isValid = false;
-
-};
-
 // Call the toJS method of a returned C++ object, to convert it into a JavaScript object.
 // This is used when a C++ function is called from JavaScript.
 // A functor capable of calling the correct JavaScript constructor is passed to toJS,
@@ -94,15 +56,20 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 
 	if(!fromJS->IsFunction()) throw(std::runtime_error("Type mismatch"));
 
-	ArgStorage<ArgType> wrapper;
+	TemplatedArgStorage<ArgType> storage(
+		BindClass<ArgType>::getInstance()->valueConstructorNum
+	);
 
+	// TODO: cache this for a speedup.
 	cbFunction converter(v8::Local<v8::Function>::Cast(fromJS));
 
 	v8::Local<v8::FunctionTemplate> constructorTemplate = Nan::New<v8::FunctionTemplate>(
-		&ConstructorOverload<ArgType>::valueConstructorCaller,
-		Nan::New<v8::External>(&wrapper)
+		Overloader::createValue,
+		// Data specifically for createValue function.
+		Nan::New<v8::External>(&storage)
 	);
 
+	// TODO: cache this for a speedup.
 	auto constructor = constructorTemplate->GetFunction();
 
 	converter.callMethod<void>(target, constructor);
@@ -110,6 +77,7 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 	const char *message = Status::getError();
 	if(message) throw(std::runtime_error(message));
 
-	return(wrapper.getBound());
+	return(storage.getBound());
 }
+
 } // namespace

@@ -28,13 +28,6 @@ public:
 	typedef void (*jsSetter)();
 #endif // BUILDING_NODE_EXTENSION
 
-	BindClassBase() {
-#ifdef BUILDING_NODE_EXTENSION
-		wrapperConstructorNum = Overloader::addGroup();
-		valueConstructorNum = Overloader::addGroup();
-#endif // BUILDING_NODE_EXTENSION
-	}
-
 	TYPEID getTypeID() { return(id); }
 
 	const char *getName() { return(name); }
@@ -52,7 +45,13 @@ public:
 		Overloader::addMethod(
 			wrapperConstructorNum,
 			signature->getArity(),
-			reinterpret_cast<jsMethod *>(signature->getCaller())
+			signature->getCaller()
+		);
+
+		Overloader::addMethod(
+			valueConstructorNum,
+			signature->getArity(),
+			signature->getValueConstructor()
 		);
 #endif // BUILDING_NODE_EXTENSION
 	}
@@ -72,8 +71,8 @@ public:
 	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
 
 #ifdef BUILDING_NODE_EXTENSION
-	unsigned int wrapperConstructorNum;
-	unsigned int valueConstructorNum;
+	unsigned int wrapperConstructorNum = Overloader::addGroup();
+	unsigned int valueConstructorNum = Overloader::addGroup();
 
 	// A JavaScript "value constructor" creates a JavaScript object with
 	// the same data as the equivalent C++ object. This is used for small

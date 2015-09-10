@@ -19,8 +19,14 @@ public:
 
 	Type getType() { return(type); }
 	funcPtr getCaller() { return(caller); }
+
 	const TYPEID *getTypeList() { return(typeList); }
 	unsigned int getArity() { return(arity); }
+
+	funcPtr getValueConstructor() { return(valueConstructor); }
+	void setValueConstructor(funcPtr valueConstructor) {
+		this->valueConstructor = valueConstructor;
+	}
 
 private:
 
@@ -28,6 +34,7 @@ private:
 	funcPtr caller;
 	const TYPEID *typeList;
 	unsigned int arity;
+	funcPtr valueConstructor;
 
 };
 

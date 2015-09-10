@@ -8,14 +8,20 @@
 namespace nbind {
 
 template <class Bound, typename... Args>
-class ConstructorSignature2 : public TemplatedBaseSignature<ConstructorSignature2<Bound, Args...>, Bound, Args...> {
+class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<Bound, Args...>, Bound, Args...> {
 
 public:
+
+#ifdef BUILDING_NODE_EXTENSION
+	ConstructorSignature() {
+		this->setValueConstructor(reinterpret_cast<funcPtr>(createValue));
+	}
+#endif // BUILDING_NODE_EXTENSION
 
 	// Unused dummy type.
 	typedef void *MethodType;
 
-	typedef TemplatedBaseSignature<ConstructorSignature2, Bound, Args...> Parent;
+	typedef TemplatedBaseSignature<ConstructorSignature, Bound, Args...> Parent;
 
 	static constexpr auto typeExpr = BaseSignature::Type::constructor;
 
@@ -30,29 +36,11 @@ public:
 	> ConstructWrapper;
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		Status::clearError();
+		ConstructWrapper::create(args);
+	}
 
-		// Call C++ constructor and bind the resulting object
-		// to the new JavaScript object being created.
-
-		try {
-			ConstructWrapper::create(args);
-
-			const char *message = Status::getError();
-
-			if(message) {
-				Nan::ThrowError(message);
-				return;
-			}
-
-			args.GetReturnValue().Set(args.This());
-		} catch(const std::exception &ex) {
-			const char *message = Status::getError();
-
-			if(message == nullptr) message = ex.what();
-
-			Nan::ThrowError(message);
-		}
+	static void createValue(ArgStorage &storage, const Nan::FunctionCallbackInfo<v8::Value> &args) {
+		ConstructWrapper::createValue(storage, args);
 	}
 #else
 	static void call() {}

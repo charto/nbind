@@ -14,12 +14,11 @@
 #include "MethodDef.h"
 #include "signature/BaseSignature.h"
 #ifdef BUILDING_NODE_EXTENSION
-// TODO: remove following line.
-#include "v8/Overloader.h"
-#include "v8/ConstructorOverload.h"
-#include "BindClass.h"
-#include "v8/ValueObj.h"
-#include "v8/Creator.h"
+#include "v8/ArgStorage.h"
+#include "v8/Overloader.h" // Needs ArgStorage members
+#include "BindClass.h"     // Needs Overloader members
+#include "v8/ValueObj.h"   // Needs BindClass members
+#include "v8/Creator.h"    // Needs ArgStorage members
 #include "v8/Binding.h"
 #elif EMSCRIPTEN
 #include "BindClass.h"
@@ -96,23 +95,9 @@ public:
 
 	template<typename... Args, typename... Policies>
 	const BindDefiner &constructor(Policies...) const {
-		typedef ConstructorSignature2<Bound, Args...> Signature;
+		typedef ConstructorSignature<Bound, Args...> Signature;
 
 		bindClass->addConstructor(&Signature::getInstance());
-
-// TODO: remove following block.
-#ifdef BUILDING_NODE_EXTENSION
-		typedef Creator<
-			Bound,
-			typename emscripten::internal::MapWithIndex<
-				TypeList,
-				FromWire,
-				Args...
-			>::type
-		> Constructor;
-
-		ConstructorOverload<Bound>::addConstructor(sizeof...(Args), Constructor::createValue);
-#endif // BUILDING_NODE_EXTENSION
 
 		return(*this);
 	}
