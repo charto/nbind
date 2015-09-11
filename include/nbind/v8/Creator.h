@@ -13,8 +13,15 @@ struct Creator<Bound, TypeList<Args...>> {
 public:
 
 	static void create(const Nan::FunctionCallbackInfo<v8::Value> &args) noexcept(false) {
-		// Note that Args().get may throw.
-		(new BindWrapper<Bound>(Args(args).get(args)...))->wrap(args);
+                if(args[0]->IsExternal()) {
+			Bound *ptr = static_cast<Bound *>(v8::Handle<v8::External>::Cast(args[0])->Value());
+
+			BindWrapper<Bound>::createPtr(ptr)->wrapThis(args);
+		} else {
+			// Note that Args().get may throw.
+
+			BindWrapper<Bound>::createObj(Args(args).get(args)...)->wrapThis(args);
+		}
 	}
 
 	static void createValue(ArgStorage &storage, const Nan::FunctionCallbackInfo<v8::Value> &args) {
