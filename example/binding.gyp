@@ -1,9 +1,10 @@
 {
-	"targets": [
-		{
-			"target_name": "example",
-			"includes": ["auto.gypi"],
-			"sources": ["Point.cc"]
-		}
-	]
+    "targets": [
+        {
+            "includes": ["auto.gypi"],
+            "sources": [
+                "example.cc"
+            ]
+        }
+    ]
 }

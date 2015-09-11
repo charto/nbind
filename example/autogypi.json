@@ -1,7 +1,6 @@
 {
 	"dependencies": [
-		"../"
+		"nbind"
 	],
-	"resolver": "../gypiresolver.js",
 	"output": "auto.gypi"
 }

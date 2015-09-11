@@ -12,6 +12,8 @@ var nbind = {
 		Object.keys(pendingBindings).forEach(function(name) {
 			nbind.module.NBind.bind(name, pendingBindings[name]);
 		});
+
+		return(this);
 	},
 
 	bind: function(name, proto) {
