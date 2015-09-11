@@ -51,7 +51,12 @@ public:
 
 	void destroy() {
 		if(bound != nullptr) {
+
+#ifndef DUPLICATE_POINTERS
+
 			removeInstance();
+
+#endif // DUPLICATE_POINTERS
 
 			delete(bound);
 		}
@@ -72,9 +77,8 @@ public:
 	// If the GC wants to free the wrapper object, get rid of our reference to it.
 
 	static void weakCallback(const Nan::WeakCallbackInfo<Nan::Persistent<v8::Object>> &data) {
-		Nan::Persistent<v8::Object> *ref = data.GetParameter();
-
-		ref->Reset();
+		// This causes a crash. Maybe it's a reference counter that already got decremented?
+		// data.GetParameter()->Reset();
 	}
 
 	// Add a mapping from a pointer to a wrapper object,
@@ -101,7 +105,8 @@ public:
 
 		// Free the persistent handle and then forget about it.
 
-		(*iter).second.Reset();
+		// This causes a crash. Maybe it's a reference counter that already got decremented?
+		// (*iter).second.Reset();
 
 		instanceTbl.erase(iter);
 	}
