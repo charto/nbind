@@ -32,6 +32,7 @@ private:
 #ifdef BUILDING_NODE_EXTENSION
 #include "nbind/v8/BindWrapper.h"
 #include "nbind/v8/BindingType.h"
+#include "nbind/v8/BindingStd.h"
 #elif EMSCRIPTEN
 #include "nbind/em/BindingType.h"
 #endif
