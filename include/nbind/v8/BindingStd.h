@@ -27,7 +27,7 @@ struct BindingType<std::vector<ArgType>> {
 
 		std::vector<ArgType> val;
 
-		val.resize(count);
+		val.reserve(count);
 
 		for(uint32_t num = 0; num < count; ++num) {
 			v8::Local<v8::Value> item;
@@ -36,7 +36,7 @@ struct BindingType<std::vector<ArgType>> {
 				Nan::Get(arr, num).ToLocal(&item) &&
 				BindingType<ArgType>::checkType(item)
 			) {
-				val[num] = BindingType<ArgType>::fromWireType(item);
+				val.push_back(BindingType<ArgType>::fromWireType(item));
 			} else {
 				fprintf(stderr, "ERR %d %p %d\n", num, *item, BindingType<ArgType>::checkType(item));
 			}
