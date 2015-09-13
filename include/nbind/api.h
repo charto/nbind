@@ -30,6 +30,7 @@ private:
 #define NBIND_ERR(message) nbind::Status::setError(message)
 
 #ifdef BUILDING_NODE_EXTENSION
+#include "nbind/v8/BindWrapper.h"
 #include "nbind/v8/BindingType.h"
 #elif EMSCRIPTEN
 #include "nbind/em/BindingType.h"

@@ -167,6 +167,13 @@ void Bindings :: initModule(Handle<Object> exports) {
 					);
 
 					break;
+
+				case SigType::constructor:
+
+					// Impossible! Constructors are not added to the method list.
+					// They're handled by overloaders for wrappers and values.
+
+					break;
 			}
 		}
 
