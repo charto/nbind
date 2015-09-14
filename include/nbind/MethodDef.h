@@ -24,10 +24,17 @@ public:
 private:
 
 	const char *name;
+
+	// Pointer to call C++ function directly, sometimes used in Emscripten.
+
 	funcPtr ptr;
+
 	// Index to distinguish between functions with identical signatures.
+
 	unsigned int num;
+
 	// Signature represents return and argument types.
+
 	BaseSignature *signature;
 
 };

@@ -263,7 +263,6 @@ class nbind {
 		var caller =_nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
 		caller.arity = typeCount - 1;
 
-//		(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype.__nbindConstructor = caller;
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
 			'__nbindConstructor',
@@ -281,7 +280,6 @@ class nbind {
 		var caller = _nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
 		caller.arity = typeCount - 1;
 
-//		((_nbind.typeList[typeID] as _nbind.BindClass).proto as any)[name] = caller;
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _nbind.BindClass).proto as any,
 			name,
@@ -304,7 +302,6 @@ class nbind {
 
 		var caller = _nbind.makeMethodCaller(Module['dynCall_' + signature], ptr, num, typeCount - 1);
 
-//		((_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype as FuncTbl)[name] = caller;
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
 			name,

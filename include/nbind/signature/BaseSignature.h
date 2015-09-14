@@ -101,10 +101,12 @@ public:
 		auto &funcVect = getInstance().funcVect;
 
 #ifdef BUILDING_NODE_EXTENSION
+
 		if(funcVect.size() >= signatureMemberMask) {
 			// TODO:
 			// ABORT ABORT ABORT too many functions with the same signature!
 		}
+
 #endif // BUILDING_NODE_EXTENSION
 
 		funcVect.emplace_back(func);
@@ -113,6 +115,7 @@ public:
 	}
 
 #ifdef BUILDING_NODE_EXTENSION
+
 	// Specialize static caller functions defined in Caller.h.
 
 	typedef Caller<

@@ -1,9 +1,6 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-// TODO: This file is still ugly.
-// The constructor stuff from here and Binding.h should be moved to ConstructorOverload.h.
-
 #pragma once
 
 namespace nbind {
@@ -19,13 +16,17 @@ public:
 	// Get type of method definitions to use in function pointers.
 
 #ifdef BUILDING_NODE_EXTENSION
+
 	typedef std::remove_pointer<Nan::FunctionCallback>::type jsMethod;
 	typedef std::remove_pointer<Nan::GetterCallback>::type jsGetter;
 	typedef std::remove_pointer<Nan::SetterCallback>::type jsSetter;
+
 #else
+
 	typedef void (*jsMethod)();
 	typedef void (*jsGetter)();
 	typedef void (*jsSetter)();
+
 #endif // BUILDING_NODE_EXTENSION
 
 	TYPEID getTypeID() { return(id); }
@@ -41,7 +42,9 @@ public:
 	void init() { readyState |= 1; }
 
 	void addConstructor(BaseSignature *signature) {
+
 #ifdef BUILDING_NODE_EXTENSION
+
 		Overloader::addMethod(
 			wrapperConstructorNum,
 			signature->getArity(),
@@ -53,9 +56,13 @@ public:
 			signature->getArity(),
 			signature->getValueConstructor()
 		);
+
 #elif EMSCRIPTEN
+
 		methodList.emplace_front(nullptr, nullptr, 0, signature);
+
 #endif // BUILDING_NODE_EXTENSION
+
 	}
 
 	// Functions called when defining an nbind wrapper for a C++ class.
@@ -73,6 +80,7 @@ public:
 	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
 
 #ifdef BUILDING_NODE_EXTENSION
+
 	unsigned int wrapperConstructorNum = Overloader::addGroup();
 	unsigned int valueConstructorNum = Overloader::addGroup();
 
@@ -94,6 +102,7 @@ public:
 	cbFunction *getValueConstructorJS() {
 		return(valueConstructorJS);
 	}
+
 #endif // BUILDING_NODE_EXTENSION
 
 protected:
@@ -112,10 +121,13 @@ protected:
 	// object gets destroyed after the V8 engine.
 
 #ifdef BUILDING_NODE_EXTENSION
+
 	// Suitable JavaScript constructor called by a toJS C++ function
 	// when converting this object into a plain JavaScript object,
 	// if possible.
+
 	cbFunction *valueConstructorJS = nullptr;
+
 #endif // BUILDING_NODE_EXTENSION
 
 };
@@ -133,6 +145,7 @@ public:
 
 	static BindClass &getInstance() {
 		static BindClass instance;
+
 		return(instance);
 	}
 

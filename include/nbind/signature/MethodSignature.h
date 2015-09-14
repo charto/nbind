@@ -69,6 +69,7 @@ public:
 	static constexpr auto typeExpr = BaseSignature::Type::method;
 
 #ifdef BUILDING_NODE_EXTENSION
+
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs) {
 		v8::Local<v8::Object> targetWrapped = nanArgs.This();
@@ -89,12 +90,16 @@ public:
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		Parent::callInnerSafely(args, args);
 	}
+
 #elif EMSCRIPTEN
+
 	// Args are wire types! They must be received by value.
+
 	static ReturnType call(unsigned int num, Bound *target, Args... args) {
 		auto method = Parent::getMethod(num).func;
 		return((target->*method)(args...));
 	}
+
 #endif // BUILDING_NODE_EXTENSION
 
 };

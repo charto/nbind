@@ -1,15 +1,6 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-// Unite:
-// ConstructorOverload.h:     static void valueConstructorCaller(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-// ConstructorSignature.h: void ConstructorOverload<Bound>::call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-// FunctionSignature.h:                         static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-// MethodSignature.h:                           static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-// Note: We can't overload getters and setters in the same way! They always take the same number of arguments.
-
-
-
 /*
 This should contain a vector of overloaded methods.
 Each method is defined by a vector of method signatures.
@@ -27,9 +18,6 @@ based on the least significant bits (& signatureMemberMask) of the reference num
 
 namespace nbind {
 
-//static constexpr unsigned int overloadShift = 16;
-//static constexpr unsigned int signatureMemberMask = 0xffff;
-
 // It would be possible to add the bound C++ class as a template argument,
 // allowing unlimited classes and a per-class instead of a global limit of overloaded methods,
 // but that would compile to several completely identical duplicate copies of code.
@@ -40,7 +28,6 @@ public:
 
 	typedef Nan::FunctionCallback jsMethod;
 	typedef void (*createValueHandler)(ArgStorage &storage, const Nan::FunctionCallbackInfo<v8::Value> &args);
-
 
 	struct OverloadDef {
 		std::vector<funcPtr> methodVect;
