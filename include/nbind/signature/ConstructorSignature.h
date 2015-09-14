@@ -29,6 +29,7 @@ public:
 	static constexpr auto typeExpr = BaseSignature::Type::constructor;
 
 #ifdef BUILDING_NODE_EXTENSION
+
 	typedef Creator<
 		Bound,
 		typename emscripten::internal::MapWithIndex<
@@ -45,8 +46,15 @@ public:
 	static void createValue(ArgStorage &storage, const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		ConstructWrapper::createValue(storage, args);
 	}
-#else
-	static void call() {}
+
+#elif EMSCRIPTEN
+
+	// Args are wire types! They must be received by value.
+
+	static Bound *call(Args... args) {
+		return(new Bound(args...));
+	}
+
 #endif // BUILDING_NODE_EXTENSION
 
 };

@@ -53,6 +53,8 @@ public:
 			signature->getArity(),
 			signature->getValueConstructor()
 		);
+#elif EMSCRIPTEN
+		methodList.emplace_front(nullptr, nullptr, 0, signature);
 #endif // BUILDING_NODE_EXTENSION
 	}
 

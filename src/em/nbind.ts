@@ -2,8 +2,10 @@
 
 // Generic table and list of functions.
 
-type FuncTbl = { [name: string]: (...args: any[]) => any; };
+type Func = (...args: any[]) => any;
+type FuncTbl = { [name: string]: Func };
 type FuncList = { (...args: any[]): any }[];
+type Invoker = (ptr: number, ...args: any[]) => any;
 
 // Namespace that will be made available inside Emscripten compiled module.
 
@@ -30,7 +32,7 @@ namespace _nbind {
 	}
 
 	export class Wrapper {
-		__nbindConstructor: FuncList;
+		__nbindConstructor: Func;
 		__nbindPtr: number;
 	}
 
@@ -66,9 +68,17 @@ namespace _nbind {
 		return(typeList.map((id: number) => (mangleMap[_nbind.typeList[id].name] || 'i')).join(''));
 	}
 
+	function makeArgList(argCount: number) {
+		return(
+			Array.apply(null, Array(argCount)).map(
+				(x: any, i: number) => ('a' + (i + 1))
+			).join(',')
+		);
+	}
+
 	// Dynamically create an invoker function for a C++ class method.
 
-	export function makeMethodCaller(dynCall: (ptr: number, ...args: any[]) => any, ptr: number, num: number, argCount: number) {
+	export function makeMethodCaller(dynCall: Invoker, ptr: number, num: number, argCount: number) {
 		switch(argCount) {
 			case 0: return(function() {return(
 			        dynCall(ptr, num, this.__nbindPtr));});
@@ -82,7 +92,7 @@ namespace _nbind {
 				// Function takes over 3 arguments.
 				// Let's create the invoker dynamically then.
 
-				var argList = Array.apply(null, Array(argCount)).map((x: any, i: number) => ('a' + (i + 1)));
+				var argList = makeArgList(argCount);
 
 				return(eval('(function(' + argList + '){return(dynCall(ptr,num,this.__nbindPtr,' + argList + '));})'));
 		}
@@ -90,7 +100,7 @@ namespace _nbind {
 
 	// Dynamically create an invoker function for a C++ function.
 
-	export function makeCaller(dynCall: (ptr: number, ...args: any[]) => any, ptr: number, argCount: number) {
+	export function makeCaller(dynCall: Invoker, ptr: number, argCount: number) {
 		switch(argCount) {
 			case 0: return(() =>
 			        dynCall(ptr));
@@ -104,9 +114,51 @@ namespace _nbind {
 				// Function takes over 3 arguments.
 				// Let's create the invoker dynamically then.
 
-				var argList = Array.apply(null, Array(argCount)).map((x: any, i: number) => ('a' + (i + 1)));
+				var argList = makeArgList(argCount);
 
-				return(eval('(function(' + argList + ') {return(dynCall(ptr,' + argList + '));})'));
+				return(eval('(function(' + argList + '){return(dynCall(ptr,' + argList + '));})'));
+		}
+	}
+
+	export function makeOverloader(func: Func, arity: number) {
+		var callerList: FuncList = [];
+
+		var call = function call() {
+			return(callerList[arguments.length].apply(this, arguments));
+		} as any;
+
+		call.addMethod = (func: Func, arity: number) => {
+			callerList[arity] = func;
+		}
+
+		call.addMethod(func, arity);
+
+		return(call);
+	}
+
+	export function addMethod(obj: FuncTbl, name: string, func: Func, arity: number) {
+		var overload = obj[name] as any;
+
+		// Check if the function has been overloaded.
+
+		if(overload) {
+			if(overload.arity) {
+				// Found an existing function, but it's not an overloader.
+				// Make a new overloader and add the existing function to it.
+
+				overload = makeOverloader(overload, overload.arity);
+				obj[name] = overload;
+			}
+
+			// Add this function as an overload.
+
+			overload.addMethod(func, arity);
+		} else {
+			// Add a new function and store its arity in case it gets overloaded.
+
+			(func as any).arity = arity;
+
+			obj[name] = func;
 		}
 	}
 
@@ -184,21 +236,20 @@ class nbind {
 
 		class Bound extends _nbind.Wrapper {
 			constructor() {
+				if(!(this instanceof Bound)) {
+					// Apply arguments to the constructor.
+					// Few ways to do this work. This one should.
+					return(new (Function.prototype.bind.apply(Bound, Array.prototype.concat.apply([null], arguments))));
+				}
+
 				super();
 
-				var create = this.__nbindConstructor[arguments.length];
-
-				if(create) _defineHidden(create.apply(this, arguments))(this, '__nbindPtr');
-
-				// TODO: remove this debug statement, which gets an already constructed object's address as a parameter to the constructor.
-				else _defineHidden(arguments[0])(this, '__nbindPtr');
+				_defineHidden(this.__nbindConstructor.apply(this, arguments))(this, '__nbindPtr');
 			}
 
-			@_defineHidden([])
-			__nbindConstructor: FuncList;
+			@_defineHidden()
+			__nbindConstructor: Func;
 		}
-
-		Bound.prototype.__nbindConstructor[1] = () => {};
 
 		new _nbind.BindClass(id, name, Bound);
 
@@ -209,7 +260,16 @@ class nbind {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 		var signature = _nbind.makeSignature(typeList);
 
-		var constructorList = (_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype.__nbindConstructor;
+		var caller =_nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
+		caller.arity = typeCount - 1;
+
+//		(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype.__nbindConstructor = caller;
+		_nbind.addMethod(
+			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
+			'__nbindConstructor',
+			caller,
+			typeCount - 1
+		);
 	}
 
 	@dep('_nbind', _readAsciiString)
@@ -218,8 +278,16 @@ class nbind {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 		var signature = _nbind.makeSignature(typeList);
 
-		((_nbind.typeList[typeID] as _nbind.BindClass).proto as any)[name] =
-			_nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
+		var caller = _nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
+		caller.arity = typeCount - 1;
+
+//		((_nbind.typeList[typeID] as _nbind.BindClass).proto as any)[name] = caller;
+		_nbind.addMethod(
+			(_nbind.typeList[typeID] as _nbind.BindClass).proto as any,
+			name,
+			caller,
+			typeCount - 1
+		);
 	}
 
 	@dep('_nbind', _readAsciiString)
@@ -234,7 +302,14 @@ class nbind {
 
 		var signature = _nbind.makeSignature(typeList);
 
-		((_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype as FuncTbl)[name] =
-			_nbind.makeMethodCaller(Module['dynCall_' + signature], ptr, num, typeCount - 1);
+		var caller = _nbind.makeMethodCaller(Module['dynCall_' + signature], ptr, num, typeCount - 1);
+
+//		((_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype as FuncTbl)[name] = caller;
+		_nbind.addMethod(
+			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
+			name,
+			caller,
+			typeCount - 1
+		);
 	}
 };
