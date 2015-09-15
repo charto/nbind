@@ -3,6 +3,18 @@
 
 #pragma once
 
+// Check for C++11 support in the compiler.
+
+#if defined(_MSC_VER)
+	// Visual Studio 2015 has good enough support
+	// even though it sets __cplusplus to 199711
+#	if _MSC_VER < 1900
+#		error nbind requires at least Visual Studio 2015.
+#	endif
+#elif (__cplusplus < 201103L)
+#	error nbind requires a compiler with sufficient C++11 support. Maybe compile with -std=c++11 or similar?
+#endif
+
 // Macro to report an error when exceptions are not available.
 
 #define NBIND_ERR(message) nbind::Status::setError(message)
