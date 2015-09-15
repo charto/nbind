@@ -3,6 +3,19 @@
 
 #pragma once
 
+// Macro to report an error when exceptions are not available.
+
+#define NBIND_ERR(message) nbind::Status::setError(message)
+
+// Visual Studio 2015 doesn't accept some things as constexpr
+// while GCC and Clang do, so change them to const only if needed.
+
+#ifdef _MSC_VER
+#define NBIND_CONSTEXPR const
+#else
+#define NBIND_CONSTEXPR constexpr
+#endif
+
 namespace nbind {
 
 typedef void (*funcPtr)();
@@ -24,10 +37,6 @@ private:
 };
 
 } // namespace
-
-// Macro to report an error when exceptions are not available.
-
-#define NBIND_ERR(message) nbind::Status::setError(message)
 
 #ifdef BUILDING_NODE_EXTENSION
 #include "nbind/v8/BindWrapper.h"

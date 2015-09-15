@@ -1,0 +1,20 @@
+version: 0.0.{build}
+skip_tags: true
+os: Visual Studio 2015
+shallow_clone: true
+init:
+- ps: Install-Product node $env:nodejs_version
+environment:
+  matrix:
+  - nodejs_version: 0.10
+  - nodejs_version: 0.12
+  - nodejs_version: 4
+install:
+- npm install -g npm
+- set PATH=%APPDATA%\npm;%PATH%
+- npm install
+build: off
+test_script:
+- node --version
+- npm --version
+- npm test

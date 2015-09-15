@@ -25,7 +25,7 @@ template<typename ArgType>
 char TypeStore<ArgType>::placeholder;
 
 template <typename ArgType>
-static constexpr TYPEID makeTypeID() {
+static NBIND_CONSTEXPR TYPEID makeTypeID() {
 	return(TypeStore<ArgType>::get());
 }
 
@@ -67,7 +67,7 @@ void **defineTypes() {
 
 template<typename... Args>
 const TYPEID *listTypes() {
-	static constexpr TYPEID typeList[] = { makeTypeID<Args>()... };
+	static NBIND_CONSTEXPR TYPEID typeList[] = { makeTypeID<Args>()... };
 	return(typeList);
 }
 
