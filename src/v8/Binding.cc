@@ -99,6 +99,12 @@ void Bindings :: initModule(Handle<Object> exports) {
 		constructorTemplate->SetClassName(Nan::New<String>(bindClass->getName()).ToLocalChecked());
 		constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 
+		Nan::SetPrototypeTemplate(constructorTemplate, "free",
+			Nan::New<FunctionTemplate>(
+				bindClass->getDeleter()
+			)->GetFunction()
+		);
+
 		Local<ObjectTemplate> proto = constructorTemplate->PrototypeTemplate();
 		char *nameBuf = nullptr;
 

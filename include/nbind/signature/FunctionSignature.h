@@ -25,7 +25,7 @@ public:
 
 #ifdef BUILDING_NODE_EXTENSION
 	template <typename V8Args, typename NanArgs>
-	static bool callInner(V8Args &args, NanArgs &nanArgs) {
+	static bool callInner(V8Args &args, NanArgs &nanArgs, void *) {
 		auto result = Parent::CallWrapper::call(
 			Parent::getMethod(nanArgs.Data()->IntegerValue() & signatureMemberMask).func,
 			args
@@ -38,7 +38,7 @@ public:
 	}
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		Parent::callInnerSafely(args, args);
+		Parent::template callInnerSafely<void>(args, args);
 	}
 #else
 	static void call() {}

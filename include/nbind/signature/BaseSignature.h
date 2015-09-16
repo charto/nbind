@@ -150,8 +150,26 @@ public:
 		return(true);
 	}
 
-	template <typename V8Args, typename NanArgs>
+	template <typename NanArgs, typename Bound>
+	static bool getTargetSafely(NanArgs &nanArgs, Bound **targetOut) {
+		v8::Local<v8::Object> targetWrapped = nanArgs.This();
+		Bound *target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
+
+		if(target == nullptr) return(false);
+
+		*targetOut = target;
+		return(true);
+	}
+
+	template <typename NanArgs>
+	static bool getTargetSafely(NanArgs &nanArgs, void **targetOut) {
+		return(true);
+	}
+
+	template <typename Bound, typename V8Args, typename NanArgs>
 	static void callInnerSafely(V8Args &args, NanArgs &nanArgs) {
+		Bound *target = nullptr;
+
 		if(!arityIsValid(nanArgs)) {
 			// TODO: When function is overloaded, this test could be skipped...
 			Nan::ThrowError("Wrong number of arguments");
@@ -163,10 +181,15 @@ public:
 			return;
 		}
 
+		if(!getTargetSafely(nanArgs, &target)) {
+			Nan::ThrowError("Access to deleted object");
+			return;
+		}
+
 		Status::clearError();
 
 		try {
-			if(!Signature::callInner(args, nanArgs)) {
+			if(!Signature::callInner(args, nanArgs, target)) {
 				Nan::ThrowError(Status::getError());
 			}
 		} catch(const std::exception &ex) {

@@ -6,11 +6,29 @@ var testModule = nbind.module;
 
 nbind.init(__dirname);
 
+var prepareGC;
+var lost = null;
+
+if(typeof(gc) == 'function') {
+	prepareGC = function(obj) { gc(); }
+} else {
+	console.warn('Garbage collector is not accessible. Faking it...');
+	console.warn('Run Node.js with --enable-gc to disable this warning.');
+	console.warn('');
+
+	prepareGC = function(obj) { lost = obj; }
+
+	gc = function() {
+		if(lost) lost.free();
+		lost = null;
+	}
+}
+
 test('Methods and primitive types', function(t) {
 	var Type = testModule.PrimitiveMethods;
 
 	(function() {
-		var obj = new Type();
+		var obj = new Type(0);
 
 		t.strictEqual(Type.negateStatic(false), true);
 		t.strictEqual(obj.negate(false), true);
@@ -32,20 +50,44 @@ test('Methods and primitive types', function(t) {
 		t.throws(function() {
 			Type.strLengthStatic({});
 		}, {message: 'Type mismatch'});
+	})();
+
+	t.end();
+});
+
+test('Constructors and destructors', function(t) {
+	var Type = testModule.PrimitiveMethods;
+
+	(function() {
+		var obj = new Type();
+		t.strictEqual(Type.getStateStatic(), 42);
+
+		var obj = new Type(54);
+		t.strictEqual(Type.getStateStatic(), 54);
 
 		// Constructing with or without "new" operator should work identically.
 		obj = Type();
+		t.strictEqual(Type.getStateStatic(), 42);
+
+		prepareGC(obj);
+
+		obj = Type(54);
+		t.strictEqual(Type.getStateStatic(), 54);
 
 		gc();
+
 		// Destructor should have incremented state.
-		t.strictEqual(Type.getStateStatic(), 3);
+		t.strictEqual(Type.getStateStatic(), 55);
+
+		prepareGC(obj);
 
 		t.strictEqual(obj.negate(false), true);
 	})();
 
 	gc();
+
 	// Destructor should have incremented state again.
-	t.strictEqual(Type.getStateStatic(), 4);
+	t.strictEqual(Type.getStateStatic(), 56);
 
 	t.end();
 });

@@ -71,24 +71,21 @@ public:
 #ifdef BUILDING_NODE_EXTENSION
 
 	template <typename V8Args, typename NanArgs>
-	static bool callInner(V8Args &args, NanArgs &nanArgs) {
-		v8::Local<v8::Object> targetWrapped = nanArgs.This();
-		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
-
+	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
 		auto result = Parent::CallWrapper::call(
-			target,
+			*target,
 			Parent::getMethod(nanArgs.Data()->IntegerValue() & signatureMemberMask).func,
 			args
 		);
 
 		if(Status::getError() != nullptr) return(false);
 
-		nanArgs.GetReturnValue().Set(MethodResultConverter<ReturnType>::toWireType(std::move(result), &target));
+		nanArgs.GetReturnValue().Set(MethodResultConverter<ReturnType>::toWireType(std::move(result), target));
 		return(true);
 	}
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		Parent::callInnerSafely(args, args);
+		Parent::template callInnerSafely<Bound>(args, args);
 	}
 
 #elif EMSCRIPTEN

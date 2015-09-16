@@ -47,7 +47,7 @@ struct BindingType<ArgType *> {
 
 	static inline type fromWireType(WireType arg) {
 		v8::Local<v8::Object> argWrapped = arg->ToObject();
-		return(&node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
+		return(node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
 	}
 
 	static inline WireType toWireType(type arg);

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <memory>
+
 #ifndef DUPLICATE_POINTERS
 
 #include <unordered_map>
@@ -25,6 +27,8 @@ public:
 
 	BindWrapper(Bound *bound) : bound(bound) {}
 
+	// This destructor is called automatically by the JavaScript garbage collector.
+
 	~BindWrapper() {
 		destroy();
 	}
@@ -40,7 +44,8 @@ public:
 	}
 
 	void destroy() {
-		if(bound != nullptr) {
+		if(bound) {
+			// Note: for thread safety, this block should be a critical section.
 
 #ifndef DUPLICATE_POINTERS
 
@@ -48,10 +53,16 @@ public:
 
 #endif // DUPLICATE_POINTERS
 
-			delete(bound);
+			// This deletes the bound object if necessary.
+			bound.reset();
 		}
+	}
 
-		bound = nullptr;
+	static void deleter(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+		v8::Local<v8::Object> targetWrapped = args.This();
+		auto wrapper = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped);
+
+		wrapper->destroy();
 	}
 
 	void wrapThis(const Nan::FunctionCallbackInfo<v8::Value> &args) {
@@ -60,7 +71,7 @@ public:
 		this->Wrap(args.This());
 	}
 
-	Bound &getBound() { return(*bound); }
+	Bound *getBound() { return(bound.get()); }
 
 #ifndef DUPLICATE_POINTERS
 
@@ -75,7 +86,7 @@ public:
 	// to re-use the same wrapper for duplicates of the same pointer.
 
 	void addInstance(v8::Local<v8::Object> obj) {
-		Nan::Persistent<v8::Object> *ref = &getInstanceTbl()[bound];
+		Nan::Persistent<v8::Object> *ref = &getInstanceTbl()[bound.get()];
 
 		ref->Reset(obj);
 
@@ -89,15 +100,11 @@ public:
 	}
 
 	void removeInstance() {
-		auto &instanceTbl = getInstanceTbl();
-
 		// This causes a crash. Maybe it's a reference counter that already got decremented?
-		// auto iter = instanceTbl.find(bound);
+		// auto iter = getInstanceTbl().find(bound.get());
 		// (*iter).second.Reset();
 
-		// Free the persistent handle and then forget about it.
-
-		instanceTbl.erase(bound);
+		getInstanceTbl().erase(bound.get());
 	}
 
 	static Nan::Persistent<v8::Object> *findInstance(Bound *ptr) {
@@ -123,7 +130,7 @@ private:
 
 #endif // DUPLICATE_POINTERS
 
-	Bound *bound;
+	std::shared_ptr<Bound> bound;
 };
 
 } // namespace

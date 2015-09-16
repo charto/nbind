@@ -7,7 +7,9 @@ class PrimitiveMethods {
 
 public:
 
-	PrimitiveMethods() {}
+	PrimitiveMethods() { PrimitiveMethods::state = 42; }
+	PrimitiveMethods(int state) { PrimitiveMethods::state = state; }
+
 	~PrimitiveMethods() {
 		state++;
 	}
@@ -55,6 +57,7 @@ char PrimitiveMethods::buf[12];
 
 NBIND_CLASS(PrimitiveMethods) {
 	construct<>();
+	construct<int>();
 
 	method(negateStatic);
 	method(negate);

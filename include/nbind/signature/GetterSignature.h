@@ -30,15 +30,12 @@ public:
 
 #ifdef BUILDING_NODE_EXTENSION
 	template <typename V8Args, typename NanArgs>
-	static bool callInner(V8Args &args, NanArgs &nanArgs) {
-		v8::Local<v8::Object> targetWrapped = nanArgs.This();
-		Bound &target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
-
+	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
 		auto &&result = Caller<
 			ReturnType,
 			TypeList<>
 		>::call(
-			target,
+			*target,
 			Parent::getMethod(nanArgs.Data()->IntegerValue() & accessorGetterMask).func,
 			args
 		);
@@ -51,7 +48,7 @@ public:
 
 	static void call(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
 		// Note: this may do useless arity checks...
-		Parent::callInnerSafely(args, args);
+		Parent::template callInnerSafely<Bound>(args, args);
 	}
 #else
 	static void call() {}

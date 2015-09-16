@@ -103,6 +103,8 @@ public:
 		return(valueConstructorJS);
 	}
 
+	jsMethod *getDeleter() { return(deleter); }
+
 #endif // BUILDING_NODE_EXTENSION
 
 protected:
@@ -121,6 +123,8 @@ protected:
 	// object gets destroyed after the V8 engine.
 
 #ifdef BUILDING_NODE_EXTENSION
+
+	jsMethod *deleter;
 
 	// Suitable JavaScript constructor called by a toJS C++ function
 	// when converting this object into a plain JavaScript object,
@@ -141,6 +145,13 @@ public:
 
 	BindClass() : BindClassBase() {
 		this->id = makeTypeID<Bound>();
+
+#		ifdef BUILDING_NODE_EXTENSION
+
+		this->deleter = BindWrapper<Bound>::deleter;
+
+#		endif // BUILDING_NODE_EXTENSION
+
 	}
 
 	static BindClass &getInstance() {
