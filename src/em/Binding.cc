@@ -15,6 +15,7 @@ extern "C" {
 	extern void _nbind_register_types(void **data);
 	extern void _nbind_register_class(TYPEID type, const char *name);
 	extern void _nbind_register_constructor(TYPEID classType, funcPtr func, const TYPEID *types, unsigned int typeCount);
+	extern void _nbind_register_destructor(TYPEID classType, funcPtr func);
 	extern void _nbind_register_function(TYPEID classType, funcPtr func, const char *name, const TYPEID *types, unsigned int typeCount);
 	extern void _nbind_register_method(TYPEID classType, funcPtr func, unsigned int num, const char *name, const TYPEID *types, unsigned int typeCount);
 	void nbind_init();
@@ -70,6 +71,8 @@ void Bindings :: initModule() {
 
 	for(auto *bindClass : getClassList()) {
 		if(bindClass->isDuplicate()) continue;
+
+		_nbind_register_destructor(bindClass->getTypeID(), bindClass->getDeleter());
 
 		for(auto &func : bindClass->getMethodList()) {
 

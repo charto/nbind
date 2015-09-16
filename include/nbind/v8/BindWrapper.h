@@ -58,13 +58,6 @@ public:
 		}
 	}
 
-	static void deleter(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		v8::Local<v8::Object> targetWrapped = args.This();
-		auto wrapper = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped);
-
-		wrapper->destroy();
-	}
-
 	void wrapThis(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		addInstance(args.This());
 

@@ -32,6 +32,8 @@ namespace _nbind {
 	}
 
 	export class Wrapper {
+		free: Func;
+
 		__nbindConstructor: Func;
 		__nbindPtr: number;
 	}
@@ -142,7 +144,7 @@ namespace _nbind {
 		// Check if the function has been overloaded.
 
 		if(overload) {
-			if(overload.arity) {
+			if(overload.arity || overload.arity === 0) {
 				// Found an existing function, but it's not an overloader.
 				// Make a new overloader and add the existing function to it.
 
@@ -256,18 +258,33 @@ class nbind {
 		Module[name] = Bound;
 	}
 
+	@dep('_nbind')
 	static _nbind_register_constructor(typeID: number, ptr: number, typeListPtr: number, typeCount: number) {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 		var signature = _nbind.makeSignature(typeList);
 
 		var caller =_nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
-		caller.arity = typeCount - 1;
 
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
 			'__nbindConstructor',
 			caller,
 			typeCount - 1
+		);
+	}
+
+	@dep('_nbind')
+	static _nbind_register_destructor(typeID: number, ptr: number) {
+		var typeList = [_nbind.typeTbl['void'].id, _nbind.typeTbl['uint32_t'].id, typeID];
+		var signature = _nbind.makeSignature(typeList);
+
+		var caller =_nbind.makeMethodCaller(Module['dynCall_' + signature], ptr, 0, 0);
+
+		_nbind.addMethod(
+			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
+			'free',
+			caller,
+			0
 		);
 	}
 
@@ -278,7 +295,6 @@ class nbind {
 		var signature = _nbind.makeSignature(typeList);
 
 		var caller = _nbind.makeCaller(Module['dynCall_' + signature], ptr, typeCount - 1);
-		caller.arity = typeCount - 1;
 
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _nbind.BindClass).proto as any,

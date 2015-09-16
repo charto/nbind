@@ -23,9 +23,9 @@ public:
 
 #else
 
-	typedef void (*jsMethod)();
-	typedef void (*jsGetter)();
-	typedef void (*jsSetter)();
+	typedef void (jsMethod)();
+	typedef void (jsGetter)();
+	typedef void (jsSetter)();
 
 #endif // BUILDING_NODE_EXTENSION
 
@@ -79,6 +79,8 @@ public:
 
 	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
 
+	jsMethod *getDeleter() { return(deleter); }
+
 #ifdef BUILDING_NODE_EXTENSION
 
 	unsigned int wrapperConstructorNum = Overloader::addGroup();
@@ -103,8 +105,6 @@ public:
 		return(valueConstructorJS);
 	}
 
-	jsMethod *getDeleter() { return(deleter); }
-
 #endif // BUILDING_NODE_EXTENSION
 
 protected:
@@ -117,14 +117,14 @@ protected:
 
 	std::forward_list<MethodDef> methodList;
 
+	jsMethod *deleter;
+
 	// These have to be pointers instead of a member objects so the
 	// destructor won't get called. Otherwise NanCallback's destructor
 	// segfaults when freeing V8 resources because the surrounding
 	// object gets destroyed after the V8 engine.
 
 #ifdef BUILDING_NODE_EXTENSION
-
-	jsMethod *deleter;
 
 	// Suitable JavaScript constructor called by a toJS C++ function
 	// when converting this object into a plain JavaScript object,
@@ -145,13 +145,7 @@ public:
 
 	BindClass() : BindClassBase() {
 		this->id = makeTypeID<Bound>();
-
-#		ifdef BUILDING_NODE_EXTENSION
-
-		this->deleter = BindWrapper<Bound>::deleter;
-
-#		endif // BUILDING_NODE_EXTENSION
-
+		this->deleter = reinterpret_cast<jsMethod *>(&BindClass::destroy);
 	}
 
 	static BindClass &getInstance() {
@@ -159,6 +153,23 @@ public:
 
 		return(instance);
 	}
+
+#	if defined(BUILDING_NODE_EXTENSION)
+
+	static void destroy(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+		v8::Local<v8::Object> targetWrapped = args.This();
+		auto wrapper = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped);
+
+		wrapper->destroy();
+	}
+
+#	elif defined(EMSCRIPTEN)
+
+	static void destroy(uint32_t, Bound *obj) {
+		delete(obj);
+	}
+
+#	endif
 
 };
 
