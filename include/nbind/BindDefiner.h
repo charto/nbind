@@ -12,23 +12,23 @@
 #include "wire.h"
 #include "MethodDef.h"
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 
-#include "v8/Caller.h"
-#include "signature/BaseSignature.h"
-#include "v8/ArgStorage.h"
-#include "v8/Overloader.h" // Needs ArgStorage members
-#include "BindClass.h"     // Needs Overloader members
-#include "v8/ValueObj.h"   // Needs BindClass members
-#include "v8/Creator.h"    // Needs ArgStorage members
-#include "v8/Binding.h"
+#	include "v8/Caller.h"
+#	include "signature/BaseSignature.h"
+#	include "v8/ArgStorage.h"
+#	include "v8/Overloader.h" // Needs ArgStorage members
+#	include "BindClass.h"     // Needs Overloader members
+#	include "v8/ValueObj.h"   // Needs BindClass members
+#	include "v8/Creator.h"    // Needs ArgStorage members
+#	include "v8/Binding.h"
 
-#elif EMSCRIPTEN
+#elif defined(EMSCRIPTEN)
 
-#include "signature/BaseSignature.h"
-#include "BindClass.h"
-#include "em/Creator.h"
-#include "em/Binding.h"
+#	include "signature/BaseSignature.h"
+#	include "BindClass.h"
+#	include "em/Creator.h"
+#	include "em/Binding.h"
 
 #endif
 

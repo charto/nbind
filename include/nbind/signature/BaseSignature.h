@@ -22,7 +22,7 @@ public:
 	// Type of the signature.
 	// Determines the actual signature class of each instance.
 
-	enum class Type {function, method, getter, setter, constructor};
+	enum class Type { function, method, getter, setter, constructor };
 
 	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList, unsigned int arity) :
 		type(type), caller(caller), typeList(typeList), arity(arity) {}
@@ -100,21 +100,21 @@ public:
 	static unsigned int addMethod(MethodType func) {
 		auto &funcVect = getInstance().funcVect;
 
-#ifdef BUILDING_NODE_EXTENSION
+#		if defined(BUILDING_NODE_EXTENSION)
 
-		if(funcVect.size() >= signatureMemberMask) {
-			// TODO:
-			// ABORT ABORT ABORT too many functions with the same signature!
-		}
+			if(funcVect.size() >= signatureMemberMask) {
+				// TODO:
+				// ABORT ABORT ABORT too many functions with the same signature!
+			}
 
-#endif // BUILDING_NODE_EXTENSION
+#		endif // BUILDING_NODE_EXTENSION
 
 		funcVect.emplace_back(func);
 
 		return(funcVect.size() - 1);
 	}
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 
 	// Specialize static caller functions defined in Caller.h.
 
@@ -182,7 +182,7 @@ public:
 		}
 
 		if(!getTargetSafely(nanArgs, &target)) {
-			Nan::ThrowError("Access to deleted object");
+			Nan::ThrowError("Attempt to access deleted object");
 			return;
 		}
 

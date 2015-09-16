@@ -5,9 +5,9 @@
 
 #include <memory>
 
-#ifndef DUPLICATE_POINTERS
+#if !defined(DUPLICATE_POINTERS)
 
-#include <unordered_map>
+	#include <unordered_map>
 
 #endif // DUPLICATE_POINTERS
 
@@ -47,11 +47,11 @@ public:
 		if(bound) {
 			// Note: for thread safety, this block should be a critical section.
 
-#ifndef DUPLICATE_POINTERS
+#			if !defined(DUPLICATE_POINTERS)
 
-			removeInstance();
+				removeInstance();
 
-#endif // DUPLICATE_POINTERS
+#			endif // DUPLICATE_POINTERS
 
 			// This deletes the bound object if necessary.
 			bound.reset();
@@ -66,7 +66,7 @@ public:
 
 	Bound *getBound() { return(bound.get()); }
 
-#ifndef DUPLICATE_POINTERS
+#if !defined(DUPLICATE_POINTERS)
 
 	// If the GC wants to free the wrapper object, get rid of our reference to it.
 
@@ -111,7 +111,7 @@ public:
 
 private:
 
-#ifndef DUPLICATE_POINTERS
+#if !defined(DUPLICATE_POINTERS)
 
 	// This is effectively a map from C++ instance pointers
 	// to weak references to JavaScript objects wrapping them.

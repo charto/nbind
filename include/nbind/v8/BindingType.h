@@ -120,9 +120,9 @@ template <> struct BindingType<void> {
 
 	typedef std::nullptr_t type;
 
-	static inline type fromWireType(WireType arg) {return(nullptr);}
+	static inline type fromWireType(WireType arg) { return(nullptr); }
 
-	static inline WireType toWireType(type arg) {return(Nan::Undefined());}
+	static inline WireType toWireType(type arg) { return(Nan::Undefined()); }
 
 };
 
@@ -180,7 +180,7 @@ public:
 		return(BindingType<ReturnType>::fromWireType(func.Call(target, sizeof...(Args), argv)));
 	}
 
-	v8::Local<v8::Function> getJsFunction() const {return(func.GetFunction());}
+	v8::Local<v8::Function> getJsFunction() const { return(func.GetFunction()); }
 
 private:
 

@@ -28,7 +28,7 @@ public:
 
 	static constexpr auto typeExpr = BaseSignature::Type::setter;
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
 		Parent::CallWrapper::call(

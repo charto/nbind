@@ -10,7 +10,7 @@
 
 namespace nbind {
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 
 // Handle value types as return values.
 
@@ -68,7 +68,7 @@ public:
 
 	static constexpr auto typeExpr = BaseSignature::Type::method;
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
@@ -88,16 +88,16 @@ public:
 		Parent::template callInnerSafely<Bound>(args, args);
 	}
 
-#elif EMSCRIPTEN
+#elif defined(EMSCRIPTEN)
 
 	// Args are wire types! They must be received by value.
 
-	static ReturnType call(unsigned int num, Bound *target, Args... args) {
+	static ReturnType call(uint32_t num, Bound *target, Args... args) {
 		auto method = Parent::getMethod(num).func;
 		return((target->*method)(args...));
 	}
 
-#endif // BUILDING_NODE_EXTENSION
+#endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
 
 };
 

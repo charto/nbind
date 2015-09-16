@@ -22,10 +22,10 @@
 // Visual Studio 2015 doesn't accept some things as constexpr
 // while GCC and Clang do, so change them to const only if needed.
 
-#ifdef _MSC_VER
-#define NBIND_CONSTEXPR const
+#if defined(_MSC_VER)
+#	define NBIND_CONSTEXPR const
 #else
-#define NBIND_CONSTEXPR constexpr
+#	define NBIND_CONSTEXPR constexpr
 #endif
 
 namespace nbind {
@@ -36,8 +36,8 @@ class Status {
 
 public:
 
-	static inline const char *getError() {return(message);}
-	static inline void clearError() {Status::message = nullptr;}
+	static inline const char *getError() { return(message); }
+	static inline void clearError() { Status::message = nullptr; }
 	static inline void setError(const char *message) {
 		if(!Status::message) Status::message = message;
 	}
@@ -50,12 +50,12 @@ private:
 
 } // namespace
 
-#ifdef BUILDING_NODE_EXTENSION
-#include "nbind/v8/BindWrapper.h"
-#include "nbind/v8/BindingType.h"
-#include "nbind/v8/BindingStd.h"
-#elif EMSCRIPTEN
-#include "nbind/em/BindingType.h"
+#if defined(BUILDING_NODE_EXTENSION)
+#	include "nbind/v8/BindWrapper.h"
+#	include "nbind/v8/BindingType.h"
+#	include "nbind/v8/BindingStd.h"
+#elif defined(EMSCRIPTEN)
+#	include "nbind/em/BindingType.h"
 #endif
 
 #include "TypeID.h"

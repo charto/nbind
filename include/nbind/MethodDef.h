@@ -16,10 +16,10 @@ public:
 	MethodDef(const char *name, funcPtr ptr, unsigned int num, BaseSignature *signature) :
 		name(name), ptr(ptr), num(num), signature(signature) {}
 
-	const char *getName() {return(name);}
+	const char *getName() { return(name); }
 	funcPtr getPtr() { return(ptr); }
-	unsigned int getNum() {return(num);}
-	BaseSignature *getSignature() {return(signature);}
+	unsigned int getNum() { return(num); }
+	BaseSignature *getSignature() { return(signature); }
 
 private:
 

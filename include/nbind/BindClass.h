@@ -15,7 +15,7 @@ public:
 
 	// Get type of method definitions to use in function pointers.
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 
 	typedef std::remove_pointer<Nan::FunctionCallback>::type jsMethod;
 	typedef std::remove_pointer<Nan::GetterCallback>::type jsGetter;
@@ -43,25 +43,25 @@ public:
 
 	void addConstructor(BaseSignature *signature) {
 
-#ifdef BUILDING_NODE_EXTENSION
+#		if defined(BUILDING_NODE_EXTENSION)
 
-		Overloader::addMethod(
-			wrapperConstructorNum,
-			signature->getArity(),
-			signature->getCaller()
-		);
+			Overloader::addMethod(
+				wrapperConstructorNum,
+				signature->getArity(),
+				signature->getCaller()
+			);
 
-		Overloader::addMethod(
-			valueConstructorNum,
-			signature->getArity(),
-			signature->getValueConstructor()
-		);
+			Overloader::addMethod(
+				valueConstructorNum,
+				signature->getArity(),
+				signature->getValueConstructor()
+			);
 
-#elif EMSCRIPTEN
+#		elif defined(EMSCRIPTEN)
 
-		methodList.emplace_front(nullptr, nullptr, 0, signature);
+			methodList.emplace_front(nullptr, nullptr, 0, signature);
 
-#endif // BUILDING_NODE_EXTENSION
+#		endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
 
 	}
 
@@ -77,11 +77,11 @@ public:
 		methodList.emplace_front(name, ptr, num, signature);
 	}
 
-	std::forward_list<MethodDef> &getMethodList() {return(methodList);}
+	std::forward_list<MethodDef> &getMethodList() { return(methodList); }
 
 	jsMethod *getDeleter() { return(deleter); }
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 
 	unsigned int wrapperConstructorNum = Overloader::addGroup();
 	unsigned int valueConstructorNum = Overloader::addGroup();
@@ -101,9 +101,7 @@ public:
 		valueConstructorJS = new cbFunction(func);
 	}
 
-	cbFunction *getValueConstructorJS() {
-		return(valueConstructorJS);
-	}
+	cbFunction *getValueConstructorJS() { return(valueConstructorJS); }
 
 #endif // BUILDING_NODE_EXTENSION
 
@@ -124,7 +122,7 @@ protected:
 	// segfaults when freeing V8 resources because the surrounding
 	// object gets destroyed after the V8 engine.
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 
 	// Suitable JavaScript constructor called by a toJS C++ function
 	// when converting this object into a plain JavaScript object,
@@ -154,7 +152,7 @@ public:
 		return(instance);
 	}
 
-#	if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION)
 
 	static void destroy(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		v8::Local<v8::Object> targetWrapped = args.This();
@@ -163,13 +161,13 @@ public:
 		wrapper->destroy();
 	}
 
-#	elif defined(EMSCRIPTEN)
+#elif defined(EMSCRIPTEN)
 
 	static void destroy(uint32_t, Bound *obj) {
 		delete(obj);
 	}
 
-#	endif
+#endif
 
 };
 

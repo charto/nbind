@@ -15,7 +15,7 @@ class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<
 
 public:
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 	ConstructorSignature() {
 		this->setValueConstructor(reinterpret_cast<funcPtr>(createValue));
 	}
@@ -28,7 +28,7 @@ public:
 
 	static constexpr auto typeExpr = BaseSignature::Type::constructor;
 
-#ifdef BUILDING_NODE_EXTENSION
+#if defined(BUILDING_NODE_EXTENSION)
 
 	typedef Creator<
 		Bound,
@@ -47,7 +47,7 @@ public:
 		ConstructWrapper::createValue(storage, args);
 	}
 
-#elif EMSCRIPTEN
+#elif defined(EMSCRIPTEN)
 
 	// Args are wire types! They must be received by value.
 
@@ -55,7 +55,7 @@ public:
 		return(new Bound(args...));
 	}
 
-#endif // BUILDING_NODE_EXTENSION
+#endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
 
 };
 
