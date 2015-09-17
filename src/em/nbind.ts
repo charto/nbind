@@ -1,4 +1,5 @@
 /// <reference path="../../node_modules/emscripten-library-decorator/index.ts" />
+/// <reference path="emscripten.d.ts" />
 
 // Generic table and list of functions.
 
@@ -27,13 +28,13 @@ namespace _nbind {
 		// TODO: maybe this should be an abstract base class and these versions of wire type conversions
 		// should be in a subclass called PrimitiveType.
 
-		needWireRead: boolean = false;
+		needsWireRead: boolean = false;
 
 		makeWireRead(expr: string) {
 			return(expr);
 		}
 
-		needWireWrite: boolean = false;
+		needsWireWrite: boolean = false;
 
 		makeWireWrite(expr: string) {
 			return(expr);
@@ -61,23 +62,39 @@ namespace _nbind {
 		new(...args: any[]): Wrapper;
 	}
 
+	export function pushCString(str: string) {
+		if(str === null || str === undefined) return(0);
+		str = str.toString();
+
+		var len = Module.lengthBytesUTF8(str) + 1;
+		var result = Runtime.stackAlloc(len);
+
+		Module.stringToUTF8Array(str, HEAPU8, result, len);
+
+		return(result);
+	}
+
+	export function popCString(ptr: number) {
+		if(ptr === 0) return(null);
+
+		return(Module.Pointer_stringify(ptr));
+	}
+
 	export class CStringType extends BindType {
 		constructor(id: number, name: string) {
 			super(id, name);
 		}
 
-		needWireRead: boolean = true;
+		needsWireRead: boolean = true;
 
 		makeWireRead(expr: string) {
-			// TODO
-			return(expr);
+			return('_nbind.popCString(' + expr + ')');
 		}
 
-		needWireWrite: boolean = true;
+		needsWireWrite: boolean = true;
 
 		makeWireWrite(expr: string) {
-			// TODO
-			return(expr);
+			return('_nbind.pushCString(' + expr + ')');
 		}
 	}
 
@@ -86,7 +103,7 @@ namespace _nbind {
 			super(id, name);
 		}
 
-		needWireRead: boolean = true;
+		needsWireRead: boolean = true;
 
 		makeWireRead(expr: string) {
 			return('!!(' + expr + ')');
@@ -133,7 +150,15 @@ namespace _nbind {
 		);
 	}
 
-	function buildCallerFunction(dynCall: Func, ptr: number, num: number, prefix: string, returnType: BindType, argTypeList: BindType[]) {
+	function buildCallerFunction(
+		dynCall: Func,
+		ptr: number,
+		num: number,
+		needsWireWrite: boolean,
+		prefix: string,
+		returnType: BindType,
+		argTypeList: BindType[]
+	) {
 		var argList = makeArgList(argTypeList.length);
 
 		var callExpression = returnType.makeWireRead(
@@ -144,10 +169,34 @@ namespace _nbind {
 			')'
 		);
 
-		return(eval(
-			'(function(' + argList.join(',') + '){' +
-				'return(' + callExpression + ');' +
-			'})'
+		var stackSave = '';
+		var stackRestore = '';
+
+		if(needsWireWrite) {
+			stackSave = 'Runtime.stackSave();';
+			stackRestore = 'Runtime.stackRestore();';
+		}
+
+		var sourceCode = (
+			'function(' + argList.join(',') + '){' +
+				stackSave +
+				'var r=' + callExpression + ';' +
+				stackRestore +
+				'return r;' +
+			'}'
+		);
+
+		// console.log(returnType.name + ' func(' + argTypeList.map((type: BindType) => type.name).join(', ') + ')')
+		// console.log(sourceCode);
+
+		return(eval('(' + sourceCode + ')'));
+	}
+
+	function anyNeedsWireWrite(typeList: BindType[]) {
+		return(typeList.reduce(
+			(result: boolean, type: BindType) =>
+				(result || type.needsWireWrite),
+			false
 		));
 	}
 
@@ -162,10 +211,14 @@ namespace _nbind {
 		idList.splice(1, 0, 'uint32_t', boundID);
 
 		var typeList = getTypes(idList);
+		var returnType = typeList[0];
+		var argTypeList = typeList.slice(3);
+
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
+		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
-		if(!typeList[0].needWireRead && argCount < 3) switch(argCount) {
+		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
@@ -185,9 +238,10 @@ namespace _nbind {
 				dynCall,
 				ptr,
 				num,
+				needsWireWrite,
 				'ptr,num,this.__nbindPtr',
-				typeList[0],
-				typeList.slice(3)
+				returnType,
+				argTypeList
 			));
 		}
 	}
@@ -198,10 +252,14 @@ namespace _nbind {
 		var argCount = idList.length - 1;
 
 		var typeList = getTypes(idList);
+		var returnType = typeList[0];
+		var argTypeList = typeList.slice(1);
+
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
+		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
-		if(!typeList[0].needWireRead && argCount < 3) switch(argCount) {
+		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
@@ -221,9 +279,10 @@ namespace _nbind {
 				dynCall,
 				ptr,
 				0,
+				needsWireWrite,
 				'ptr',
-				typeList[0],
-				typeList.slice(1)
+				returnType,
+				argTypeList
 			));
 		}
 	}

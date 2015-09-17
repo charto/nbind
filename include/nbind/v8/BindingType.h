@@ -86,7 +86,7 @@ template <> struct BindingType<ArgType> {               \
 	typedef ArgType type;                               \
 	                                                    \
 	static inline bool checkType(WireType arg) {        \
-		return(arg->IsString());                        \
+		return(true);                        \
 	}                                                   \
 	                                                    \
 	static inline WireType toWireType(type arg) {       \

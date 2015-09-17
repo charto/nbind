@@ -47,9 +47,7 @@ test('Methods and primitive types', function(t) {
 		t.strictEqual(Type.catenateStatic('foo', 'bar'), 'foobar');
 		t.strictEqual(obj.catenate('Java', 'Script'), 'JavaScript');
 
-		t.throws(function() {
-			Type.strLengthStatic({});
-		}, {message: 'Type mismatch'});
+		t.strictEqual(Type.strLengthStatic(123), 3);
 	})();
 
 	t.end();
@@ -109,9 +107,10 @@ test('Getters and setters', function(t) {
 	t.strictEqual(obj.z, 5);
 	t.strictEqual(obj.t, 'foo');
 
-	t.throws(function() {
-		obj.t = 0;
-	}, {message: 'Type mismatch'});
+//	TODO: Add a property taking an object and check that a wrong type throws.
+//	t.throws(function() {
+//		obj.t = 0;
+//	}, {message: 'Type mismatch'});
 
 	t.end();
 });
