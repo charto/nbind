@@ -22,7 +22,7 @@ public:
 	// Type of the signature.
 	// Determines the actual signature class of each instance.
 
-	enum class Type { function, method, getter, setter, constructor };
+	enum class Type: unsigned int { function, method, getter, setter, constructor };
 
 	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList, unsigned int arity) :
 		type(type), caller(caller), typeList(typeList), arity(arity) {}

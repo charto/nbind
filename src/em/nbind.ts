@@ -332,6 +332,12 @@ namespace _nbind {
 	export var typeTbl: { [name: string]: BindType } = {};
 	export var typeList: BindType[] = [];
 
+	export var MethodType: {
+		method: number;
+		getter: number;
+		setter: number;
+	} = {} as any;
+
 	// Export the namespace to Emscripten compiled output.
 	// This must be at the end of the namespace!
 	// The dummy class _ and everything after it inside the namespace will be discarded,
@@ -351,6 +357,13 @@ function _readAsciiString(ptr: number) {
 
 @exportLibrary
 class nbind {
+	@dep('_nbind')
+	static _nbind_register_method_getter_setter_id(methodID: number, getterID: number, setterID: number) {
+		_nbind.MethodType.method = methodID;
+		_nbind.MethodType.getter = getterID;
+		_nbind.MethodType.setter = setterID;
+	}
+
 	@dep('_nbind')
 	static _nbind_register_type(id: number, namePtr: number) {
 		var name = _readAsciiString(namePtr);
@@ -436,7 +449,7 @@ class nbind {
 	}
 
 	@dep('_nbind')
-	static _nbind_register_constructor(typeID: number, ptr: number, typeListPtr: number, typeCount: number) {
+	static _nbind_register_constructor(typeID: number, typeListPtr: number, typeCount: number, ptr: number) {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 
 		_nbind.addMethod(
@@ -458,7 +471,7 @@ class nbind {
 	}
 
 	@dep('_nbind', _readAsciiString)
-	static _nbind_register_function(typeID: number, ptr: number, namePtr: number, typeListPtr: number, typeCount: number) {
+	static _nbind_register_function(typeID: number, typeListPtr: number, typeCount: number, ptr: number, namePtr: number) {
 		var name = _readAsciiString(namePtr);
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 
@@ -471,15 +484,49 @@ class nbind {
 	}
 
 	@dep('_nbind', _readAsciiString)
-	static _nbind_register_method(typeID: number, ptr: number, num: number, namePtr: number, typeListPtr: number, typeCount: number) {
+	static _nbind_register_method(
+		typeID: number,
+		typeListPtr: number,
+		typeCount: number,
+		ptr: number,
+		namePtr: number,
+		num: number,
+		methodType: number
+	) {
 		var name = _readAsciiString(namePtr);
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
+		var proto = (_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype;
 
-		_nbind.addMethod(
-			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
-			name,
-			_nbind.makeMethodCaller(ptr, num, typeID, typeList),
-			typeCount - 1
-		);
+		if(methodType == _nbind.MethodType.method) {
+			_nbind.addMethod(
+				proto,
+				name,
+				_nbind.makeMethodCaller(ptr, num, typeID, typeList),
+				typeCount - 1
+			);
+
+			return;
+		}
+
+		// The C++ side gives the same name to getters and setters.
+		var prefixMatcher = /^[Gg]et_?([A-Z]?)/;
+
+		name = name.replace(prefixMatcher, (match: string, initial: string) => initial.toLowerCase());
+
+		if(methodType == _nbind.MethodType.setter) {
+
+			// A setter is always followed by a getter, so we can just
+			// temporarily store an invoker in the property.
+			// The getter definition then binds it properly.
+
+			proto[name] = _nbind.makeMethodCaller(ptr, num, typeID, typeList);
+		} else {
+			Object.defineProperty(proto, name, {
+				get: _nbind.makeMethodCaller(ptr, num, typeID, typeList),
+				set: proto[name],
+				enumerable: true,
+				configurable: true
+			});
+		}
 	}
 };

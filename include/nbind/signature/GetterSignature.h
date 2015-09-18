@@ -29,6 +29,7 @@ public:
 	static constexpr auto typeExpr = BaseSignature::Type::getter;
 
 #if defined(BUILDING_NODE_EXTENSION)
+
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
 		auto &&result = Caller<
@@ -50,9 +51,17 @@ public:
 		// Note: this may do useless arity checks...
 		Parent::template callInnerSafely<Bound>(args, args);
 	}
-#else
-	static void call() {}
-#endif // BUILDING_NODE_EXTENSION
+
+#elif defined(EMSCRIPTEN)
+
+	// Args are wire types! They must be received by value.
+
+	static ReturnType call(uint32_t num, Bound *target, Args... args) {
+		auto method = Parent::getMethod(num).func;
+		return((target->*method)(args...));
+	}
+
+#endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
 
 };
 

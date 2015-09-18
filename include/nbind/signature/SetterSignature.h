@@ -29,6 +29,7 @@ public:
 	static constexpr auto typeExpr = BaseSignature::Type::setter;
 
 #if defined(BUILDING_NODE_EXTENSION)
+
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
 		Parent::CallWrapper::call(
@@ -45,9 +46,16 @@ public:
 
 		Parent::template callInnerSafely<Bound>(valuePtr, args);
 	}
-#else
-	static void call() {}
-#endif // BUILDING_NODE_EXTENSION
+
+#elif defined(EMSCRIPTEN)
+
+	static ReturnType call(uint32_t num, Bound *target, Args... args) {
+		auto method = Parent::getMethod(num).func;
+		return((target->*method)(args...));
+	}
+
+
+#endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
 
 };
 

@@ -11,13 +11,16 @@
 using namespace nbind;
 
 extern "C" {
-	extern void _nbind_register_type(TYPEID id, const char *name);
+	extern void _nbind_register_method_getter_setter_id(unsigned int methodID, unsigned int getterID, unsigned int setterID);
 	extern void _nbind_register_types(void **data);
-	extern void _nbind_register_class(TYPEID type, const char *name);
-	extern void _nbind_register_constructor(TYPEID classType, funcPtr func, const TYPEID *types, unsigned int typeCount);
-	extern void _nbind_register_destructor(TYPEID classType, funcPtr func);
-	extern void _nbind_register_function(TYPEID classType, funcPtr func, const char *name, const TYPEID *types, unsigned int typeCount);
-	extern void _nbind_register_method(TYPEID classType, funcPtr func, unsigned int num, const char *name, const TYPEID *types, unsigned int typeCount);
+	extern void _nbind_register_type(       TYPEID typeID, const char *name);
+	extern void _nbind_register_class(      TYPEID typeID, const char *name);
+	extern void _nbind_register_destructor( TYPEID classType, funcPtr func);
+	extern void _nbind_register_constructor(TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func);
+	extern void _nbind_register_function(   TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name);
+	extern void _nbind_register_method(     TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
+		unsigned int num, unsigned int methodType
+	);
 	void nbind_init();
 }
 
@@ -67,6 +70,12 @@ void Bindings :: initModule() {
 		_nbind_register_class(bindClass->getTypeID(), bindClass->getName());
 	}
 
+	_nbind_register_method_getter_setter_id(
+		static_cast<unsigned int>(SigType::method),
+		static_cast<unsigned int>(SigType::getter),
+		static_cast<unsigned int>(SigType::setter)
+	);
+
 	// Register all functions.
 
 	for(auto *bindClass : getClassList()) {
@@ -84,14 +93,17 @@ void Bindings :: initModule() {
 
 			switch(signature->getType()) {
 				case SigType::method:
+				case SigType::getter:
+				case SigType::setter:
 
 					_nbind_register_method(
 						bindClass->getTypeID(),
-						signature->getCaller(),
-						func.getNum(),
-						func.getName(),
 						signature->getTypeList(),
-						signature->getArity() + 1
+						signature->getArity() + 1,
+						signature->getCaller(),
+						func.getName(),
+						func.getNum(),
+						static_cast<unsigned int>(signature->getType())
 					);
 
 					break;
@@ -100,10 +112,10 @@ void Bindings :: initModule() {
 
 					_nbind_register_function(
 						bindClass->getTypeID(),
-						func.getPtr(),
-						func.getName(),
 						signature->getTypeList(),
-						signature->getArity() + 1
+						signature->getArity() + 1,
+						func.getPtr(),
+						func.getName()
 					);
 
 					break;
@@ -112,9 +124,9 @@ void Bindings :: initModule() {
 
 					_nbind_register_constructor(
 						bindClass->getTypeID(),
-						signature->getCaller(),
 						signature->getTypeList(),
-						signature->getArity() + 1
+						signature->getArity() + 1,
+						signature->getCaller()
 					);
 
 					break;
