@@ -28,6 +28,10 @@
 #	define NBIND_CONSTEXPR constexpr
 #endif
 
+#include <utility>
+#include <cstdint>
+#include <cstring>
+
 namespace nbind {
 
 typedef void (*funcPtr)();
@@ -54,6 +58,7 @@ private:
 #	include "nbind/v8/BindWrapper.h"
 #	include "nbind/v8/BindingType.h"
 #	include "nbind/v8/BindingStd.h"
+#	include "nbind/v8/Callback.h"
 #elif defined(EMSCRIPTEN)
 #	include "nbind/em/BindingType.h"
 #endif
