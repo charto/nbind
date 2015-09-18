@@ -44,9 +44,7 @@ namespace _nbind {
 		name: string;
 	}
 
-	export class BindMethod {
-		invokerSignature: string;
-	}
+	// Base class for wrapped instances of bound C++ classes.
 
 	export class Wrapper {
 		free: Func;
@@ -62,6 +60,8 @@ namespace _nbind {
 		new(...args: any[]): Wrapper;
 	}
 
+	// Push a string to the C++ stack, zero-terminated and UTF-8 encoded.
+
 	export function pushCString(str: string) {
 		if(str === null || str === undefined) return(0);
 		str = str.toString();
@@ -74,11 +74,15 @@ namespace _nbind {
 		return(result);
 	}
 
+	// Read a zero-terminated, UTF-8 encoded string from the C++ stack.
+
 	export function popCString(ptr: number) {
 		if(ptr === 0) return(null);
 
 		return(Module.Pointer_stringify(ptr));
 	}
+
+	// Zero-terminated 'const char *' style string, passed through the C++ stack.
 
 	export class CStringType extends BindType {
 		constructor(id: number, name: string) {
@@ -98,6 +102,9 @@ namespace _nbind {
 		}
 	}
 
+	// Booleans are returned as numbers from Asm.js.
+	// Prefixing with !! converts them to JavaScript booleans.
+
 	export class BooleanType extends BindType {
 		constructor(id: number, name: string) {
 			super(id, name);
@@ -110,7 +117,8 @@ namespace _nbind {
 		}
 	}
 
-	// Base class for all bound C++ classes, also inheriting from a generic type definition.
+	// Base class for all bound C++ classes (not their instances),
+	// also inheriting from a generic type definition.
 
 	export class BindClass extends BindType {
 		constructor(id: number, name: string, proto: WrapperClass) {
@@ -119,11 +127,13 @@ namespace _nbind {
 			this.proto = proto;
 		}
 
+		// Reference to JavaScript class for wrapped instances
+		// of this C++ class.
+
 		proto: WrapperClass;
 	}
 
-	// Generate mangled signature from argument types.
-	// Emscripten generates invoker functions with signatures appended to their names.
+	// Look up a list of type objects based on their numeric typeID or name.
 
 	export function getTypes(idList: TypeIDList) {
 		return(idList.map((id: number | string) => {
@@ -131,6 +141,10 @@ namespace _nbind {
 			else return(_nbind.typeTbl[id as string]);
 		}));
 	}
+
+	// Generate a mangled signature from argument types.
+	// Asm.js functions can only be called though Emscripten-generated invoker functions,
+	// with slightly mangled type signatures appended to their names.
 
 	export function makeSignature(typeList: BindType[]) {
 		var mangleMap: { [name: string]: string; } = {
@@ -142,6 +156,9 @@ namespace _nbind {
 		return(typeList.map((type: BindType) => (mangleMap[type.name] || 'i')).join(''));
 	}
 
+	// Make a list of argument names a1, a2, a3...
+	// for dynamically generating function source code.
+
 	function makeArgList(argCount: number) {
 		return(
 			Array.apply(null, Array(argCount)).map(
@@ -149,6 +166,10 @@ namespace _nbind {
 			)
 		);
 	}
+
+	// Dynamically build and evaluate source code for a function that calls
+	// an Asm.js invoker function with appropriate type conversion, pushing
+	// complicated types to the stack and restoring it afterwards if necessary.
 
 	function buildCallerFunction(
 		dynCall: Func,
@@ -192,6 +213,9 @@ namespace _nbind {
 		return(eval('(' + sourceCode + ')'));
 	}
 
+	// Check if any type on the list requires conversion.
+	// Mainly numbers can be passed as-is between Asm.js and JavaScript.
+
 	function anyNeedsWireWrite(typeList: BindType[]) {
 		return(typeList.reduce(
 			(result: boolean, type: BindType) =>
@@ -219,6 +243,7 @@ namespace _nbind {
 		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
 		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
+
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
@@ -231,6 +256,7 @@ namespace _nbind {
 			case 3: return(function(                   a1: any, a2: any, a3: any) {return(
 			        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3       ));});
 		} else {
+
 			// Function takes over 3 arguments or needs type conversion.
 			// Let's create the invoker dynamically then.
 
@@ -260,6 +286,7 @@ namespace _nbind {
 		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
 		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
+
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
@@ -272,6 +299,7 @@ namespace _nbind {
 			case 3: return((     a1: any, a2: any, a3: any) =>
 			        dynCall(ptr, a1,      a2,      a3       ));
 		} else {
+
 			// Function takes over 3 arguments or needs type conversion.
 			// Let's create the invoker dynamically then.
 
@@ -286,6 +314,9 @@ namespace _nbind {
 			));
 		}
 	}
+
+	// Create an overloader that can call several methods with the same name,
+	// depending on the number of arguments passed in the call.
 
 	export function makeOverloader(func: Func, arity: number) {
 		var callerList: FuncList = [];
@@ -302,6 +333,9 @@ namespace _nbind {
 
 		return(call);
 	}
+
+	// Add a method to a C++ class constructor (for static methods) or prototype,
+	// or overload an existing method.
 
 	export function addMethod(obj: FuncTbl, name: string, func: Func, arity: number) {
 		var overload = obj[name] as any;
@@ -329,8 +363,12 @@ namespace _nbind {
 		}
 	}
 
+	// Mapping from numeric typeIDs and type names to objects with type information.
+
 	export var typeTbl: { [name: string]: BindType } = {};
 	export var typeList: BindType[] = [];
+
+	// Enum specifying if a method is a getter or setter or not.
 
 	export var MethodType: {
 		method: number;
