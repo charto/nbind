@@ -194,8 +194,8 @@ namespace _nbind {
 		var stackRestore = '';
 
 		if(needsWireWrite) {
-			stackSave = 'Runtime.stackSave();';
-			stackRestore = 'Runtime.stackRestore();';
+			stackSave = 'var sp=Runtime.stackSave();';
+			stackRestore = 'Runtime.stackRestore(sp);';
 		}
 
 		var sourceCode = (
