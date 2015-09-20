@@ -126,18 +126,14 @@ template <> struct BindingType<void> {
 template<size_t Index,typename ArgType>
 struct CheckWire {
 
-	typedef struct {
-
-		template <typename NanArgs>
-		static inline bool check(const NanArgs &args) {
-			return(BindingType<ArgType>::checkType(args[Index]));
-		}
-
-	} type;
+	template <typename NanArgs>
+	static inline bool check(const NanArgs &args) {
+		return(BindingType<ArgType>::checkType(args[Index]));
+	}
 
 };
 
-// FromWire converts JavaScript types into C++ types, usually with BindingType<>::fromWireType
+// ArgFromWire converts JavaScript types into C++ types, usually with BindingType<>::fromWireType
 // but some types require additional temporary storage, such as a string converted to C style.
 // FromWire is a struct, so wrappers for all objects can be constructed as function arguments,
 // and their actual values passed to the called function are returned by the get() function.
@@ -146,65 +142,53 @@ struct CheckWire {
 // Handle most C++ types.
 
 template<size_t Index, typename ArgType>
-struct FromWire {
+struct ArgFromWire {
 
-	typedef struct inner {
+	template <typename NanArgs>
+	ArgFromWire(const NanArgs &args) {}
 
-		template <typename NanArgs>
-		inner(const NanArgs &args) {}
-
-		template <typename NanArgs>
-		inline ArgType get(const NanArgs &args) noexcept(false) {
-			return(BindingType<ArgType>::fromWireType(args[Index]));
-		}
-
-	} type;
+	template <typename NanArgs>
+	inline ArgType get(const NanArgs &args) noexcept(false) {
+		return(BindingType<ArgType>::fromWireType(args[Index]));
+	}
 
 };
 
 // Handle char pointers, which will receive a C string representation of any JavaScript value.
 
 template<size_t Index>
-struct FromWire<Index, const char *> {
+struct ArgFromWire<Index, const char *> {
 
-	typedef struct inner {
+	template <typename NanArgs>
+	ArgFromWire(const NanArgs &args) : val(args[Index]->ToString()) {}
 
-		template <typename NanArgs>
-		inner(const NanArgs &args) : val(args[Index]->ToString()) {}
+	template <typename NanArgs>
+	inline const char *get(const NanArgs &args) {
+		return(*val);
+	}
 
-		template <typename NanArgs>
-		inline const char *get(const NanArgs &args) {
-			return(*val);
-		}
+	// RAII style storage for the string data.
 
-		// RAII style storage for the string data.
-
-		Nan::Utf8String val;
-
-	} type;
+	Nan::Utf8String val;
 
 };
 
 // Automatically cast char to unsigned if the C++ function expects it.
 
 template<size_t Index>
-struct FromWire<Index, const unsigned char *> {
+struct ArgFromWire<Index, const unsigned char *> {
 
-	typedef struct inner {
+	template <typename NanArgs>
+	ArgFromWire(const NanArgs &args) : val(args[Index]->ToString()) {}
 
-		template <typename NanArgs>
-		inner(const NanArgs &args) : val(args[Index]->ToString()) {}
+	template <typename NanArgs>
+	inline const unsigned char *get(const NanArgs &args) {
+		return(reinterpret_cast<const unsigned char *>(*val));
+	}
 
-		template <typename NanArgs>
-		inline const unsigned char *get(const NanArgs &args) {
-			return(reinterpret_cast<const unsigned char *>(*val));
-		}
+	// RAII style storage for the string data.
 
-		// RAII style storage for the string data.
-
-		Nan::Utf8String val;
-
-	} type;
+	Nan::Utf8String val;
 
 };
 

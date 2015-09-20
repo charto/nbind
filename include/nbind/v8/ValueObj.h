@@ -27,6 +27,14 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 	return(constructor->NewInstance(1, &ptr));
 }
 
+template <> struct BindingType<v8::Local<v8::Function>> {
+
+	static inline WireType toWireType(v8::Local<v8::Function> arg) {
+		return(arg);
+	}
+
+};
+
 // Call the toJS method of a returned C++ object, to convert it into a JavaScript object.
 // This is used when a C++ function is called from JavaScript.
 // A functor capable of calling the correct JavaScript constructor is passed to toJS,

@@ -58,7 +58,7 @@ namespace emscripten {
         template<template<size_t, typename> class Mapper, size_t CurrentIndex, typename First, typename... Rest>
         struct MapWithIndex_<Mapper, CurrentIndex, First, Rest...> {
             typedef typename Cons<
-                typename Mapper<CurrentIndex, First>::type,
+                Mapper<CurrentIndex, First>,
                 typename MapWithIndex_<Mapper, CurrentIndex + 1, Rest...>::type
                 >::type type;
         };

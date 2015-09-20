@@ -122,7 +122,7 @@ public:
 		ReturnType,
 		typename emscripten::internal::MapWithIndex<
 			TypeList,
-			FromWire,
+			ArgFromWire,
 			Args...
 		>::type
 	> CallWrapper;

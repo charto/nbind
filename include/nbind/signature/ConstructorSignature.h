@@ -34,7 +34,7 @@ public:
 		Bound,
 		typename emscripten::internal::MapWithIndex<
 			TypeList,
-			FromWire,
+			ArgFromWire,
 			Args...
 		>::type
 	> ConstructWrapper;

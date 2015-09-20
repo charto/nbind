@@ -5,24 +5,6 @@
 
 namespace nbind {
 
-class cbFunction;
-
-template <> struct BindingType<cbFunction &> {
-
-	typedef const cbFunction &type;
-
-	static inline bool checkType(WireType arg) {
-		return(arg->IsFunction());
-	}
-
-};
-
-template <> struct BindingType<v8::Local<v8::Function>> {
-
-	static inline WireType toWireType(v8::Local<v8::Function> arg);
-
-};
-
 // cbFunction is a functor that can be called with any number of arguments of any type
 // compatible with JavaScript. Types are autodetected from a parameter pack.
 // Normally the function returns nothing when called, but it has a templated
@@ -32,7 +14,7 @@ template <> struct BindingType<v8::Local<v8::Function>> {
 class cbFunction {
 
 	template<size_t Index,typename ArgType>
-	friend struct FromWire;
+	friend struct ArgFromWire;
 
 public:
 
@@ -101,30 +83,46 @@ private:
 
 };
 
+template <> struct BindingType<cbFunction> {
+
+	typedef const cbFunction type;
+
+	static inline bool checkType(WireType arg) {
+		return(arg->IsFunction());
+	}
+
+	static inline type fromWireType(WireType arg) {
+		return(cbFunction(arg.As<v8::Function>()));
+	}
+
+};
+
+template <> struct BindingType<cbFunction &> {
+
+	typedef const cbFunction & type;
+
+	static inline bool checkType(WireType arg) {
+		return(arg->IsFunction());
+	}
+
+};
+
 // Handle callback functions. They are converted to a functor of type cbFunction,
 // which can be called directly from C++ with arguments of any type.
 
 template<size_t Index>
-struct FromWire<Index, cbFunction &> {
+struct ArgFromWire<Index, cbFunction &> {
 
-	typedef struct inner {
+	template <typename NanArgs>
+	ArgFromWire(const NanArgs &args) : val(args[Index].template As<v8::Function>()) {}
 
-		template <typename NanArgs>
-		inner(const NanArgs &args) : val(args[Index].template As<v8::Function>()) {}
+	template <typename NanArgs>
+	inline cbFunction &get(const NanArgs &args) {
+		return(val);
+	}
 
-		template <typename NanArgs>
-		inline cbFunction &get(const NanArgs &args) {
-			return(val);
-		}
-
-		cbFunction val;
-
-	} type;
+	cbFunction val;
 
 };
-
-WireType BindingType<v8::Local<v8::Function>> :: toWireType(v8::Local<v8::Function> arg) {
-	return(arg);
-}
 
 } // namespace
