@@ -17,7 +17,8 @@ extern "C" {
 	extern void _nbind_register_class(      TYPEID typeID, const char *name);
 	extern void _nbind_register_destructor( TYPEID classType, funcPtr func);
 	extern void _nbind_register_constructor(TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func);
-	extern void _nbind_register_function(   TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name);
+	extern void _nbind_register_function(   TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
+		unsigned int num, funcPtr direct);
 	extern void _nbind_register_method(     TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
 		unsigned int num, unsigned int methodType
 	);
@@ -54,7 +55,7 @@ void Bindings :: initModule() {
 	>());
 
 //	_nbind_register_type("cbOutput", listTypes<cbOutput>());
-//	_nbind_register_type("cbFunction", listTypes<cbFunction>());
+	_nbind_register_type(makeTypeID<cbFunction &>(), "cbFunction &");
 
 	// Register all classes before any functions, so they'll have type information ready.
 
@@ -114,8 +115,10 @@ void Bindings :: initModule() {
 						bindClass->getTypeID(),
 						signature->getTypeList(),
 						signature->getArity() + 1,
-						func.getPtr(),
-						func.getName()
+						signature->getCaller(),
+						func.getName(),
+						func.getNum(),
+						func.getPtr()
 					);
 
 					break;

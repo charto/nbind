@@ -49,9 +49,10 @@ public:
 
 #elif defined(EMSCRIPTEN)
 
-	static ReturnType call(uint32_t num, Bound *target, Args... args) {
+	static ReturnType call(uint32_t num, Bound *target, typename BindingType<Args>::WireType... args) {
 		auto method = Parent::getMethod(num).func;
-		return((target->*method)(args...));
+
+		return((target->*method)(ArgFromWire<Args>(args).get(args)...));
 	}
 
 

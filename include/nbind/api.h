@@ -61,6 +61,7 @@ private:
 #	include "nbind/v8/Callback.h"
 #elif defined(EMSCRIPTEN)
 #	include "nbind/em/BindingType.h"
+#	include "nbind/em/Callback.h"
 #endif
 
 #include "TypeID.h"

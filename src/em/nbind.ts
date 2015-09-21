@@ -117,6 +117,42 @@ namespace _nbind {
 		}
 	}
 
+	// Callbacks are stored in a list, so C++ code can find them by number.
+	// A reference count allows storing them in C++ without leaking memory.
+
+	export var callbackList: Func[] = [null];
+	export var callbackRefCountList: number[] = [0];
+
+	// Free list for recycling available slots in the callback list.
+
+	export var callbackFreeList: number[] = [];
+
+	export function registerCallback(func: Func) {
+		if(typeof(func) != 'function') throw({ message: 'Type mismatch' });
+
+		var num = callbackFreeList.pop() || callbackList.length;
+
+		callbackList[num] = func;
+
+		return(num);
+	}
+
+	export function callCallback(num: number) {
+		return(callbackList[num].apply(this, Array.prototype.slice.call(arguments, 1)));
+	}
+
+	export class CallbackType extends BindType {
+		constructor(id: number, name: string) {
+			super(id, name);
+		}
+
+		needsWireWrite: boolean = true;
+
+		makeWireWrite(expr: string) {
+			return('_nbind.registerCallback(' + expr + ')');
+		}
+	}
+
 	// Base class for all bound C++ classes (not their instances),
 	// also inheriting from a generic type definition.
 
@@ -237,10 +273,10 @@ namespace _nbind {
 		var typeList = getTypes(idList);
 		var returnType = typeList[0];
 		var argTypeList = typeList.slice(3);
+		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
-		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
 		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
 
@@ -274,16 +310,16 @@ namespace _nbind {
 
 	// Dynamically create an invoker function for a C++ function.
 
-	export function makeCaller(ptr: number, idList: TypeIDList) {
+	export function makeCaller(ptr: number, num: number, direct: number, idList: TypeIDList) {
 		var argCount = idList.length - 1;
 
 		var typeList = getTypes(idList);
 		var returnType = typeList[0];
 		var argTypeList = typeList.slice(1);
+		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
-		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
 		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
 
@@ -291,24 +327,28 @@ namespace _nbind {
 			// build a simple invoker function without using eval.
 
 			case 0: return(() =>
-			        dynCall(ptr));
-			case 1: return((     a1: any) =>
-			        dynCall(ptr, a1       ));
-			case 2: return((     a1: any, a2: any) =>
-			        dynCall(ptr, a1,      a2       ));
-			case 3: return((     a1: any, a2: any, a3: any) =>
-			        dynCall(ptr, a1,      a2,      a3       ));
+			        dynCall(direct));
+			case 1: return((        a1: any) =>
+			        dynCall(direct, a1       ));
+			case 2: return((        a1: any, a2: any) =>
+			        dynCall(direct, a1,      a2       ));
+			case 3: return((        a1: any, a2: any, a3: any) =>
+			        dynCall(direct, a1,      a2,      a3       ));
 		} else {
 
 			// Function takes over 3 arguments or needs type conversion.
 			// Let's create the invoker dynamically then.
 
+			idList.splice(1, 0, 'uint32_t');
+			signature = makeSignature(getTypes(idList));
+			dynCall = Module['dynCall_' + signature];
+
 			return(buildCallerFunction(
 				dynCall,
 				ptr,
-				0,
+				num,
 				needsWireWrite,
-				'ptr',
+				'ptr,num',
 				returnType,
 				argTypeList
 			));
@@ -408,6 +448,8 @@ class nbind {
 
 		if(name == 'bool') {
 			new _nbind.BooleanType(id, name);
+		} else if(name == 'cbFunction &') {
+			new _nbind.CallbackType(id, name);
 		} else {
 			new _nbind.BindType(id, name);
 		}
@@ -493,7 +535,7 @@ class nbind {
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
 			'__nbindConstructor',
-			_nbind.makeCaller(ptr, typeList),
+			_nbind.makeCaller(ptr, 0, ptr, typeList),
 			typeCount - 1
 		);
 	}
@@ -509,14 +551,22 @@ class nbind {
 	}
 
 	@dep('_nbind', _readAsciiString)
-	static _nbind_register_function(typeID: number, typeListPtr: number, typeCount: number, ptr: number, namePtr: number) {
+	static _nbind_register_function(
+		typeID: number,
+		typeListPtr: number,
+		typeCount: number,
+		ptr: number,
+		namePtr: number,
+		num: number,
+		direct: number
+	) {
 		var name = _readAsciiString(namePtr);
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _nbind.BindClass).proto as any,
 			name,
-			_nbind.makeCaller(ptr, typeList),
+			_nbind.makeCaller(ptr, num, direct, typeList),
 			typeCount - 1
 		);
 	}

@@ -24,6 +24,7 @@ public:
 	static constexpr auto typeExpr = BaseSignature::Type::function;
 
 #if defined(BUILDING_NODE_EXTENSION)
+
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs, void *) {
 		auto result = Parent::CallWrapper::call(
@@ -40,9 +41,16 @@ public:
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		Parent::template callInnerSafely<void>(args, args);
 	}
-#else
-	static void call() {}
-#endif // BUILDING_NODE_EXTENSION
+
+#elif defined(EMSCRIPTEN)
+
+	static ReturnType call(uint32_t num, typename BindingType<Args>::WireType... args) {
+		auto func = Parent::getMethod(num).func;
+
+		return((*func)(ArgFromWire<Args>(args).get(args)...));
+	}
+
+#endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
 
 };
 

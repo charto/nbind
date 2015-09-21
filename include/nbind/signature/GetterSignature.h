@@ -56,9 +56,10 @@ public:
 
 	// Args are wire types! They must be received by value.
 
-	static ReturnType call(uint32_t num, Bound *target, Args... args) {
+	static ReturnType call(uint32_t num, Bound *target, typename BindingType<Args>::WireType... args) {
 		auto method = Parent::getMethod(num).func;
-		return((target->*method)(args...));
+
+		return((target->*method)(ArgFromWire<Args>(args).get(args)...));
 	}
 
 #endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN

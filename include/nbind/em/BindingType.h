@@ -9,4 +9,25 @@
 
 namespace nbind {
 
+template <typename ArgType> struct BindingType {
+
+	typedef ArgType Type;
+
+	typedef ArgType WireType;
+
+//	static inline Type fromWireType(WireType arg);
+
+//	static inline WireType toWireType(Type arg);
+
+};
+
+template<typename ArgType>
+struct ArgFromWire {
+
+	explicit ArgFromWire(ArgType arg) {}
+
+	inline ArgType get(ArgType arg) { return(arg); }
+
+};
+
 } // namespace
