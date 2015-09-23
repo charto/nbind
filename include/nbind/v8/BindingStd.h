@@ -65,9 +65,7 @@ template <> struct BindingType<std::string> {
 	}
 
 	static inline WireType toWireType(type arg) {
-//		auto buf = (arg == nullptr) ? "" : reinterpret_cast<const char *>(arg);
-		const char *buf = "";
-		return(Nan::New<v8::String>(buf, arg.length()).ToLocalChecked());   \
+		return(Nan::New<v8::String>(arg.c_str(), arg.length()).ToLocalChecked());   \
 	}
 
 };
