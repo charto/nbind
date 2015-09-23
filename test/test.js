@@ -118,8 +118,11 @@ test('Getters and setters', function(t) {
 test('Callbacks', function(t) {
 	var Type = testModule.Callback;
 
+	t.type(Type.callVoidFunc(function() {}), 'undefined');
 	t.strictEqual(Type.callNegate(function(x) {return(!x);}, false), true);
 	t.strictEqual(Type.callIncrementInt(function(x) {return(x + 1);}, 1), 2);
+	t.strictEqual(Type.callIncrementDouble(function(x) {return(x + 0.25);}, 0.5), 0.75);
+	t.strictEqual(Type.callCatenate(function(x, y) {return(x + y);}, 'foo', 'bar'), 'foobar');
 
 	t.throws(function() {
 		Type.callNegate({}, true);

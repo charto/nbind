@@ -54,14 +54,19 @@ private:
 
 } // namespace
 
+#include "TypeID.h"
+
 #if defined(BUILDING_NODE_EXTENSION)
+
 #	include "nbind/v8/BindWrapper.h"
 #	include "nbind/v8/BindingType.h"
 #	include "nbind/v8/BindingStd.h"
 #	include "nbind/v8/Callback.h"
-#elif defined(EMSCRIPTEN)
-#	include "nbind/em/BindingType.h"
-#	include "nbind/em/Callback.h"
-#endif
 
-#include "TypeID.h"
+#elif defined(EMSCRIPTEN)
+
+#	include "nbind/em/BindingType.h"
+#	include "signature/CallbackSignature.h"
+#	include "nbind/em/Callback.h"
+
+#endif

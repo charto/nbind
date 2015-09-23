@@ -13,18 +13,87 @@ public:
 
 	explicit cbFunction(unsigned int num) : num(num) {}
 
+	// Wrapper class to specialize call function for different return types,
+	// since function template partial specialization is forbidden.
+	template <typename ReturnType>
+	struct Caller {
+		template <typename... Args>
+		static ReturnType call(unsigned int num, Args... args);
+	};
+
+	template<typename... Args>
+	static double callDouble(unsigned int num, Args... args);
+
 	template<typename... Args>
 	void operator()(Args&&... args) {
+		call<void>(std::forward<Args>(args)...);
 	}
 
 	template <typename ReturnType, typename... Args>
 	ReturnType call(Args... args) {
-		// TODO: convert return type!
-
-		return(EM_ASM_INT({return(_nbind.callCallback.apply(this,arguments));}, num, args...));
+		return(Caller<ReturnType>::call(num, args...));
 	}
 
 	unsigned int num;
+};
+
+template<typename... Args>
+double cbFunction::callDouble(unsigned int num, Args... args) {
+	static CallbackSignature<double, Args...> signature;
+
+	// NOTE: EM_ASM_DOUBLE may have a bug: https://github.com/kripken/emscripten/issues/3770
+
+	return(EM_ASM_DOUBLE({return(_nbind.callCallback.apply(this,arguments));},
+		num,
+		signature.getNum(),
+		BindingType<Args>::toWireType(args)...
+	));
+}
+
+template <typename ReturnType> template <typename... Args>
+ReturnType cbFunction::Caller<ReturnType>::call(unsigned int num, Args... args) {
+	static CallbackSignature<ReturnType, Args...> signature;
+
+	// TODO: convert return type!
+
+	return(EM_ASM_INT({return(_nbind.callCallback.apply(this,arguments));},
+		num,
+		signature.getNum(),
+		BindingType<Args>::toWireType(args)...
+	));
+}
+
+template<> struct cbFunction::Caller<void> {
+
+	template <typename... Args>
+	static void call(unsigned int num, Args... args) {
+		static CallbackSignature<void, Args...> signature;
+
+		EM_ASM_ARGS({return(_nbind.callCallback.apply(this,arguments));},
+			num,
+			signature.getNum(),
+			BindingType<Args>::toWireType(args)...
+		);
+	}
+
+};
+
+template<> struct cbFunction::Caller<double> {
+
+	template <typename... Args>
+	static double call(unsigned int num, Args... args) {
+		return(cbFunction::callDouble(num, args...));
+	}
+
+};
+
+template<> struct cbFunction::Caller<float> {
+
+	template <typename... Args>
+	static float call(unsigned int num, Args... args) {
+		return(cbFunction::callDouble(num, args...));
+	}
+
 };
 
 template <> struct BindingType<cbFunction &> {

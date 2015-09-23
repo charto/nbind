@@ -17,7 +17,7 @@ template <typename ArgType> struct BindingType {
 
 //	static inline Type fromWireType(WireType arg);
 
-//	static inline WireType toWireType(Type arg);
+	static inline WireType toWireType(Type arg) { return(arg); }
 
 };
 

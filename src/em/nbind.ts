@@ -137,8 +137,8 @@ namespace _nbind {
 		return(num);
 	}
 
-	export function callCallback(num: number) {
-		return(callbackList[num].apply(this, Array.prototype.slice.call(arguments, 1)));
+	export function callCallback(num: number, signatureNum: number) {
+		return(callbackList[num].apply(this, Array.prototype.slice.call(arguments, 2)));
 	}
 
 	export class CallbackType extends BindType {
@@ -616,5 +616,13 @@ class nbind {
 				configurable: true
 			});
 		}
+	}
+
+	@dep('_nbind')
+	static _nbind_register_callback_signature(
+		typeListPtr: number,
+		typeCount: number
+	) {
+		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 	}
 };

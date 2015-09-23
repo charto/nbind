@@ -2,6 +2,7 @@
 // Released under the MIT license, see LICENSE.
 
 #include <cstring>
+#include <string>
 
 #include "nbind/api.h"
 
@@ -11,13 +12,15 @@ public:
 
 	Callback() {}
 
+	static void callVoidFunc(nbind::cbFunction &voidFunc) {voidFunc.call<void>();}
+
 	static bool callNegate(nbind::cbFunction &negate, bool x) {return(negate.call<bool>(x));}
 
 	static int callIncrementInt(nbind::cbFunction &incrementInt, int x) {return(incrementInt.call<int>(x));}
 
-//	static void (*incrementState)(nbind::cbFunction);
+	static double callIncrementDouble(nbind::cbFunction &incrementDouble, double x) {return(incrementDouble.call<double>(x));}
 
-//	static int (*getState)(nbind::cbFunction);
+	static std::string callCatenate(nbind::cbFunction &catenate, const char *a, const char *b) {return(catenate.call<std::string>(a, b));}
 
 };
 
@@ -28,8 +31,11 @@ public:
 NBIND_CLASS(Callback) {
 	construct<>();
 
+	method(callVoidFunc);
 	method(callNegate);
 	method(callIncrementInt);
+	method(callIncrementDouble);
+	method(callCatenate);
 }
 
 #endif
