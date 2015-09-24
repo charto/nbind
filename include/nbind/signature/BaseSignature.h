@@ -44,6 +44,9 @@ public:
 		this->valueConstructor = valueConstructor;
 	}
 
+	template<typename MethodType>
+	static inline funcPtr getDirect(MethodType func) { return(nullptr); }
+
 private:
 
 	Type type;
@@ -161,6 +164,7 @@ public:
 		return(true);
 	}
 
+	// Overload second argument, effectively a partial specialization of the function template above.
 	template <typename NanArgs>
 	static bool getTargetSafely(NanArgs &nanArgs, void **targetOut) {
 		return(true);

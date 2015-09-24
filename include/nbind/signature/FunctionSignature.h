@@ -23,6 +23,10 @@ public:
 
 	static constexpr auto typeExpr = BaseSignature::Type::function;
 
+	static inline funcPtr getDirect(MethodType func) {
+		return(reinterpret_cast<funcPtr>(func));
+	}
+
 #if defined(BUILDING_NODE_EXTENSION)
 
 	template <typename V8Args, typename NanArgs>

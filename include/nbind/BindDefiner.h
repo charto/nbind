@@ -67,10 +67,10 @@ public:
 	}
 
 	template<class Signature, typename MethodType>
-	void addMethod(const char *name, funcPtr ptr, MethodType method) {
+	void addMethod(const char *name, MethodType method) {
 		bindClass.addMethod(
 			name,
-			ptr,
+			Signature::getDirect(method),
 			Signature::addMethod(method),
 			&Signature::getInstance()
 		);
@@ -81,7 +81,7 @@ public:
 		const char* name,
 		ReturnType(Bound::*method)(Args...)
 	) {
-		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, nullptr, method);
+		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, method);
 	}
 
 	template<template <typename, class, typename, typename...> class Signature, typename ReturnType, typename... Args>
@@ -89,7 +89,7 @@ public:
 		const char* name,
 		ReturnType(Bound::*method)(Args...) const
 	) {
-		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, nullptr, method);
+		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, method);
 	}
 
 	template<typename... Args, typename... Policies>
@@ -107,7 +107,7 @@ public:
 		ReturnType(*func)(Args...),
 		Policies...
 	) {
-		addMethod<FunctionSignature<decltype(func), Bound, ReturnType, Args...>>(name, reinterpret_cast<funcPtr>(func), func);
+		addMethod<FunctionSignature<decltype(func), Bound, ReturnType, Args...>>(name, func);
 
 		return(*this);
 	}
