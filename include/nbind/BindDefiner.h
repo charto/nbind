@@ -67,7 +67,7 @@ public:
 	}
 
 	template<class Signature, typename MethodType>
-	void addMethod(const char *name, funcPtr ptr, MethodType method) const {
+	void addMethod(const char *name, funcPtr ptr, MethodType method) {
 		bindClass.addMethod(
 			name,
 			ptr,
@@ -77,29 +77,29 @@ public:
 	}
 
 	template<typename ReturnType, typename... Args, typename... Policies>
-	const BindDefiner &function(
+	BindDefiner &function(
 		const char* name,
 		ReturnType(Bound::*method)(Args...),
 		Policies...
-	) const {
+	) {
 		addMethod<MethodSignature<Bound, ReturnType, Args...>>(name, nullptr, method);
 
 		return(*this);
 	}
 
 	template<typename ReturnType, typename... Args, typename... Policies>
-	const BindDefiner &function(
+	BindDefiner &function(
 		const char* name,
 		ReturnType(*func)(Args...),
 		Policies...
-	) const {
+	) {
 		addMethod<FunctionSignature<ReturnType, Args...>>(name, reinterpret_cast<funcPtr>(func), func);
 
 		return(*this);
 	}
 
 	template<typename... Args, typename... Policies>
-	const BindDefiner &constructor(Policies...) const {
+	BindDefiner &constructor(Policies...) {
 		typedef ConstructorSignature<Bound, Args...> Signature;
 
 		bindClass.addConstructor(&Signature::getInstance());
@@ -111,11 +111,11 @@ public:
 		typename FieldType,
 		typename... Policies
 	>
-	const BindDefiner &property(
+	BindDefiner &property(
 		const char* name,
 		FieldType(Bound::*getter)(),
 		Policies...
-	) const {
+	) {
 		addMethod<GetterSignature<Bound, FieldType>>(name, nullptr, getter);
 
 		bindClass.addMethod(emptySetter);
@@ -129,12 +129,12 @@ public:
 		typename SetReturnType,
 		typename... Policies
 	>
-	const BindDefiner &property(
+	BindDefiner &property(
 		const char* name,
 		GetFieldType(Bound::*getter)(),
 		SetReturnType(Bound::*setter)(SetFieldType),
 		Policies...
-	) const {
+	) {
 		addMethod<GetterSignature<Bound, GetFieldType>>(name, nullptr, getter);
 
 		addMethod<SetterSignature<Bound, SetReturnType, SetFieldType>>(name, nullptr, setter);
