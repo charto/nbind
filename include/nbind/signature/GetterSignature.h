@@ -17,12 +17,12 @@ static constexpr unsigned int accessorGetterMask = 0xffff;
 
 // Wrapper for all C++ getters and setters with matching class and data types.
 
-template <class Bound, typename ReturnType, typename... Args>
-class GetterSignature : public TemplatedBaseSignature<GetterSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
+template <typename PtrType, class Bound, typename ReturnType, typename... Args>
+class GetterSignature : public TemplatedBaseSignature<GetterSignature<PtrType, Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
-	typedef ReturnType(Bound::*MethodType)(Args...);
+	typedef PtrType MethodType;
 
 	typedef TemplatedBaseSignature<GetterSignature, ReturnType, Args...> Parent;
 

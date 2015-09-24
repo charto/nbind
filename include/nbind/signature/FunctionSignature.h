@@ -12,12 +12,12 @@ namespace nbind {
 
 // Wrapper for all C++ functions with matching argument and return types.
 
-template <typename ReturnType, typename... Args>
-class FunctionSignature : public TemplatedBaseSignature<FunctionSignature<ReturnType, Args...>, ReturnType, Args...> {
+template <typename PtrType, class Bound, typename ReturnType, typename... Args>
+class FunctionSignature : public TemplatedBaseSignature<FunctionSignature<PtrType, Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
-	typedef ReturnType(*MethodType)(Args...);
+	typedef PtrType MethodType;
 
 	typedef TemplatedBaseSignature<FunctionSignature, ReturnType, Args...> Parent;
 

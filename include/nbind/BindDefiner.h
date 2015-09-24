@@ -76,26 +76,20 @@ public:
 		);
 	}
 
-	template<typename ReturnType, typename... Args, typename... Policies>
-	BindDefiner &function(
+	template<template <typename, class, typename, typename...> class Signature, typename ReturnType, typename... Args>
+	void addMethodMaybeConst(
 		const char* name,
-		ReturnType(Bound::*method)(Args...),
-		Policies...
+		ReturnType(Bound::*method)(Args...)
 	) {
-		addMethod<MethodSignature<Bound, ReturnType, Args...>>(name, nullptr, method);
-
-		return(*this);
+		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, nullptr, method);
 	}
 
-	template<typename ReturnType, typename... Args, typename... Policies>
-	BindDefiner &function(
+	template<template <typename, class, typename, typename...> class Signature, typename ReturnType, typename... Args>
+	void addMethodMaybeConst(
 		const char* name,
-		ReturnType(*func)(Args...),
-		Policies...
+		ReturnType(Bound::*method)(Args...) const
 	) {
-		addMethod<FunctionSignature<ReturnType, Args...>>(name, reinterpret_cast<funcPtr>(func), func);
-
-		return(*this);
+		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, nullptr, method);
 	}
 
 	template<typename... Args, typename... Policies>
@@ -107,37 +101,49 @@ public:
 		return(*this);
 	}
 
-	template<
-		typename FieldType,
-		typename... Policies
-	>
-	BindDefiner &property(
+	template<typename ReturnType, typename... Args, typename... Policies>
+	BindDefiner &function(
 		const char* name,
-		FieldType(Bound::*getter)(),
+		ReturnType(*func)(Args...),
 		Policies...
 	) {
-		addMethod<GetterSignature<Bound, FieldType>>(name, nullptr, getter);
+		addMethod<FunctionSignature<decltype(func), Bound, ReturnType, Args...>>(name, reinterpret_cast<funcPtr>(func), func);
 
+		return(*this);
+	}
+
+	template<typename MethodType, typename... Policies>
+	BindDefiner &function(
+		const char* name,
+		MethodType method,
+		Policies...
+	) {
+		addMethodMaybeConst<MethodSignature>(name, method);
+
+		return(*this);
+	}
+
+	template<typename GetterType, typename... Policies>
+	BindDefiner &property(
+		const char* name,
+		GetterType getter,
+		Policies...
+	) {
+		addMethodMaybeConst<GetterSignature>(name, getter);
 		bindClass.addMethod(emptySetter);
 
 		return(*this);
 	}
 
-	template<
-		typename GetFieldType,
-		typename SetFieldType,
-		typename SetReturnType,
-		typename... Policies
-	>
+	template<typename GetterType, typename SetterType, typename... Policies>
 	BindDefiner &property(
 		const char* name,
-		GetFieldType(Bound::*getter)(),
-		SetReturnType(Bound::*setter)(SetFieldType),
+		GetterType getter,
+		SetterType setter,
 		Policies...
 	) {
-		addMethod<GetterSignature<Bound, GetFieldType>>(name, nullptr, getter);
-
-		addMethod<SetterSignature<Bound, SetReturnType, SetFieldType>>(name, nullptr, setter);
+		addMethodMaybeConst<GetterSignature>(name, getter);
+		addMethodMaybeConst<SetterSignature>(name, setter);
 
 		return(*this);
 	}

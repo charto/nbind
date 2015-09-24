@@ -15,10 +15,10 @@ public:
 	}
 
 	static bool negateStatic(bool x) {return(!x);}
-	bool negate(bool x) {return(!x);}
+	bool negate(bool x) const {return(!x);}
 
 	static int incrementIntStatic(int x) {return(x+1);}
-	int incrementInt(int x) {return(x+1);}
+	int incrementInt(int x) const {return(x+1);}
 
 	static void incrementStateStatic() {state++;}
 	void incrementState() {state++;}

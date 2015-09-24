@@ -57,12 +57,12 @@ template<> struct MethodResultConverter<void> {
 
 // Wrapper for all C++ methods with matching class, argument and return types.
 
-template <class Bound, typename ReturnType, typename... Args>
-class MethodSignature : public TemplatedBaseSignature<MethodSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
+template <typename PtrType, class Bound, typename ReturnType, typename... Args>
+class MethodSignature : public TemplatedBaseSignature<MethodSignature<PtrType, Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
-	typedef ReturnType(Bound::*MethodType)(Args...);
+	typedef PtrType MethodType;
 
 	typedef TemplatedBaseSignature<MethodSignature, ReturnType, Args...> Parent;
 

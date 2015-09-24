@@ -17,12 +17,12 @@ static constexpr unsigned int accessorSetterShift = 16;
 
 // Wrapper for all C++ getters and setters with matching class and data types.
 
-template <class Bound, typename ReturnType, typename... Args>
-class SetterSignature : public TemplatedBaseSignature<SetterSignature<Bound, ReturnType, Args...>, ReturnType, Args...> {
+template <typename PtrType, class Bound, typename ReturnType, typename... Args>
+class SetterSignature : public TemplatedBaseSignature<SetterSignature<PtrType, Bound, ReturnType, Args...>, ReturnType, Args...> {
 
 public:
 
-	typedef ReturnType(Bound::*MethodType)(Args...);
+	typedef PtrType MethodType;
 
 	typedef TemplatedBaseSignature<SetterSignature, ReturnType, Args...> Parent;
 

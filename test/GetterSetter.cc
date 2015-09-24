@@ -11,9 +11,9 @@ public:
 
 	int get_x() {return(x);}
 	int Gety() {return(y);}
-	int getZ() {return(z);}
+	int getZ() const {return(z);}
 
-	const char *gett() {return(t);}
+	const char *gett() const {return(t);}
 
 	void Sety(int y) {this->y = y;}
 	void setZ(int z) {this->z = z;}
