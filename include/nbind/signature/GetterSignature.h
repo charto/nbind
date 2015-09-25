@@ -32,18 +32,15 @@ public:
 
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
-		auto &&result = Caller<
-			ReturnType,
-			TypeList<>
-		>::call(
+		auto result = Parent::CallWrapper::callMethod(
 			*target,
 			Parent::getMethod(nanArgs.Data()->IntegerValue() & accessorGetterMask).func,
 			args
 		);
 
-		nanArgs.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
 		if(Status::getError() != nullptr) return(false);
 
+		nanArgs.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
 		return(true);
 	}
 

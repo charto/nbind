@@ -31,7 +31,7 @@ public:
 
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs, void *) {
-		auto result = Parent::CallWrapper::call(
+		auto result = Parent::CallWrapper::callFunction(
 			Parent::getMethod(nanArgs.Data()->IntegerValue() & signatureMemberMask).func,
 			args
 		);

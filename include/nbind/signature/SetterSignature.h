@@ -32,7 +32,7 @@ public:
 
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
-		Parent::CallWrapper::call(
+		Parent::CallWrapper::callMethod(
 			*target,
 			Parent::getMethod(nanArgs.Data()->IntegerValue() >> accessorSetterShift).func,
 			args

@@ -42,7 +42,7 @@ template<typename ReturnType, typename... Args>
 struct Caller<ReturnType, TypeList<Args...>> {
 
 	template <class Bound, typename Method, typename NanArgs>
-	static ReturnType call(Bound &target, Method method, NanArgs &args) noexcept(false) {
+	static ReturnType callMethod(Bound &target, Method method, NanArgs &args) noexcept(false) {
 		(void)args; // Silence possible compiler warning about unused parameter.
 
 		// Note that Args().get may throw.
@@ -50,7 +50,7 @@ struct Caller<ReturnType, TypeList<Args...>> {
 	}
 
 	template <typename Function, typename NanArgs>
-	static ReturnType call(Function func, NanArgs &args) noexcept(false) {
+	static ReturnType callFunction(Function func, NanArgs &args) noexcept(false) {
 		(void)args; // Silence possible compiler warning about unused parameter.
 
 		// Note that Args().get may throw.
@@ -66,7 +66,7 @@ template<typename... Args>
 struct Caller<void, TypeList<Args...>> {
 
 	template <class Bound, typename Method, typename NanArgs>
-	static std::nullptr_t call(Bound &target, Method method, NanArgs &args) noexcept(false) {
+	static std::nullptr_t callMethod(Bound &target, Method method, NanArgs &args) noexcept(false) {
 		(void)args; // Silence possible compiler warning about unused parameter.
 
 		// Note that Args().get may throw.
@@ -76,7 +76,7 @@ struct Caller<void, TypeList<Args...>> {
 	}
 
 	template <typename Function, typename NanArgs>
-	static std::nullptr_t call(Function func, NanArgs &args) noexcept(false) {
+	static std::nullptr_t callFunction(Function func, NanArgs &args) noexcept(false) {
 		(void)args; // Silence possible compiler warning about unused parameter.
 
 		// Note that Args().get may throw.

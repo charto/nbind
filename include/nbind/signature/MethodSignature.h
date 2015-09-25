@@ -13,6 +13,9 @@ namespace nbind {
 #if defined(BUILDING_NODE_EXTENSION)
 
 // Handle value types as return values.
+// This converter allows overriding the return type's toJS function
+// with the wrapped object's toJS function.
+// TODO: maybe GetterSignature should support the same feature?
 
 template<typename ReturnType> struct MethodResultConverter {
 
@@ -72,7 +75,7 @@ public:
 
 	template <typename V8Args, typename NanArgs>
 	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
-		auto result = Parent::CallWrapper::call(
+		auto result = Parent::CallWrapper::callMethod(
 			*target,
 			Parent::getMethod(nanArgs.Data()->IntegerValue() & signatureMemberMask).func,
 			args
