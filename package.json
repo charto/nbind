@@ -1,6 +1,6 @@
 {
   "name": "nbind",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Embind-style bindings generator for Node.js",
   "homepage": "https://github.com/charto/nbind",
   "bugs": {
@@ -10,7 +10,7 @@
   "author": "Juha Järvi",
   "main": "index.js",
   "scripts": {
-    "test-asm": "cd test && tsc && emcc -std=c++11 -stdlib=libc++ -I../include -O3 -o foo.js ../src/em/Binding.cc PrimitiveMethods.cc --js-library nbind.js -s NO_FILESYSTEM=1 -s EXPORTED_FUNCTIONS=\"['_nbind_init']\" && tap --gc test-asm.js",
+    "test-asm": "cd test && tsc && emcc -std=c++11 -stdlib=libc++ -I../include -g -o foo.js ../src/em/Binding.cc PrimitiveMethods.cc GetterSetter.cc Callback.cc --js-library nbind.js -s NO_FILESYSTEM=1 -s EXPORTED_FUNCTIONS=\"['_nbind_init']\" -s ASSERTIONS=2 && tap --gc test-asm.js",
     "test": "cd test && autogypi && node-gyp configure && node-gyp build && tap --gc test.js"
   },
   "repository": {
