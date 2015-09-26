@@ -80,7 +80,7 @@ template<> struct BindingType<std::string> {
 	typedef struct {
 		uint32_t length;
 		// The string continues past the struct.
-		// Known as the "Struct hack".
+		// Use "struct hack" because C++ doesn't have flexible array members like C.
 		char data[1];
 	} *WireType;
 

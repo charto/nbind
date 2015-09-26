@@ -66,10 +66,10 @@ namespace _nbind {
 		if(str === null || str === undefined) return(0);
 		str = str.toString();
 
-		var len = Module.lengthBytesUTF8(str) + 1;
-		var result = Runtime.stackAlloc(len);
+		var length = Module.lengthBytesUTF8(str) + 1;
+		var result = Runtime.stackAlloc(length);
 
-		Module.stringToUTF8Array(str, HEAPU8, result, len);
+		Module.stringToUTF8Array(str, HEAPU8, result, length);
 
 		return(result);
 	}
@@ -446,6 +446,8 @@ class nbind {
 	static _nbind_register_type(id: number, namePtr: number) {
 		var name = _readAsciiString(namePtr);
 
+		// TODO: convert this into a lookup table.
+
 		if(name == 'bool') {
 			new _nbind.BooleanType(id, name);
 		} else if(name == 'cbFunction &') {
@@ -457,20 +459,20 @@ class nbind {
 
 	@dep('_nbind')
 	static _nbind_register_types(dataPtr: number) {
-		var count = HEAP32[dataPtr/4];
-		var idListPtr = HEAP32[dataPtr / 4 + 1] / 4;
-		var sizeListPtr = HEAP32[dataPtr / 4 + 2] / 4;
-		var flagListPtr = HEAP32[dataPtr / 4 + 3];
+		var count       = HEAPU32[dataPtr / 4];
+		var idListPtr   = HEAPU32[dataPtr / 4 + 1] / 4;
+		var sizeListPtr = HEAPU32[dataPtr / 4 + 2] / 4;
+		var flagListPtr = HEAPU32[dataPtr / 4 + 3];
 
-		var idList = HEAPU32.subarray(idListPtr, idListPtr + count);
+		var idList   = HEAPU32.subarray(idListPtr,   idListPtr   + count);
 		var sizeList = HEAPU32.subarray(sizeListPtr, sizeListPtr + count);
-		var flagList = HEAPU8.subarray(flagListPtr, flagListPtr + count);
+		var flagList = HEAPU8. subarray(flagListPtr, flagListPtr + count);
 
 		function createType(id: number, flag: number, size: number) {
 			var isSignless = flag & 16;
-			var isConst =    flag & 8;
-			var isPointer =  flag & 4;
-			var isFloat =    flag & 2;
+			var isConst    = flag & 8;
+			var isPointer  = flag & 4;
+			var isFloat    = flag & 2;
 			var isUnsigned = flag & 1;
 
 			var name = [].concat([

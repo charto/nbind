@@ -22,9 +22,10 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 	unsigned int constructorNum = BindClass<ArgType>::getInstance().wrapperConstructorNum;
 	v8::Local<v8::Function> constructor = Overloader::getDef(constructorNum).constructorJS->GetFunction();
 
-	v8::Local<v8::Value> ptr = Nan::New<v8::External>(arg);
+	const unsigned int argc = 1;
+	v8::Local<v8::Value> argv = Nan::New<v8::External>(arg);
 
-	return(constructor->NewInstance(1, &ptr));
+	return(constructor->NewInstance(argc, &argv));
 }
 
 template <> struct BindingType<v8::Local<v8::Function>> {
