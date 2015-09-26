@@ -39,25 +39,21 @@ public:
 
 template<typename... Args>
 double cbFunction::callDouble(unsigned int num, Args... args) {
-	static CallbackSignature<double, Args...> signature;
-
 	// NOTE: EM_ASM_DOUBLE may have a bug: https://github.com/kripken/emscripten/issues/3770
 
-	return(EM_ASM_DOUBLE({return(_nbind.callCallback.apply(this,arguments));},
+	return(EM_ASM_DOUBLE({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
+		CallbackSignature<double, Args...>::getInstance().getNum(),
 		num,
-		signature.getNum(),
 		BindingType<Args>::toWireType(args)...
 	));
 }
 
 template <typename ReturnType> template <typename... Args>
 ReturnType cbFunction::Caller<ReturnType>::call(unsigned int num, Args... args) {
-	static CallbackSignature<ReturnType, Args...> signature;
-
 	return(BindingType<ReturnType>::fromWireType(reinterpret_cast<typename BindingType<ReturnType>::WireType>(
-		EM_ASM_INT({return(_nbind.callCallback.apply(this,arguments));},
+		EM_ASM_INT({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
+			CallbackSignature<ReturnType, Args...>::getInstance().getNum(),
 			num,
-			signature.getNum(),
 			BindingType<Args>::toWireType(args)...
 		)
 	)));
@@ -67,11 +63,9 @@ template<> struct cbFunction::Caller<void> {
 
 	template <typename... Args>
 	static void call(unsigned int num, Args... args) {
-		static CallbackSignature<void, Args...> signature;
-
-		EM_ASM_ARGS({return(_nbind.callCallback.apply(this,arguments));},
+		EM_ASM_ARGS({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
+			CallbackSignature<void, Args...>::getInstance().getNum(),
 			num,
-			signature.getNum(),
 			BindingType<Args>::toWireType(args)...
 		);
 	}

@@ -16,7 +16,7 @@ public:
 	BaseCallbackSignature(const TYPEID *typeList, unsigned int arity) : typeList(typeList), arity(arity) {
 		num = _nbind_register_callback_signature(
 			typeList,
-			arity
+			arity + 1
 		);
 	}
 
@@ -37,12 +37,17 @@ class CallbackSignature : public BaseCallbackSignature {
 
 public:
 
+	typedef ReturnType(*MethodType)(Args...);
+
 	CallbackSignature() : BaseCallbackSignature(
 		listTypes<ReturnType, Args...>(),
 		sizeof...(Args)
 	) {}
 
-	typedef ReturnType(*MethodType)(Args...);
+	static CallbackSignature &getInstance() {
+		static CallbackSignature instance;
+		return(instance);
+	}
 
 };
 

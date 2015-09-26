@@ -117,8 +117,12 @@ namespace _nbind {
 		}
 	}
 
+	export var callbackSignatureList: Func[] = [];
+
 	// Callbacks are stored in a list, so C++ code can find them by number.
 	// A reference count allows storing them in C++ without leaking memory.
+	// The first element is a dummy value just so that a valid index to
+	// the list always tests as true (useful for the free list implementation).
 
 	export var callbackList: Func[] = [null];
 	export var callbackRefCountList: number[] = [0];
@@ -137,10 +141,6 @@ namespace _nbind {
 		return(num);
 	}
 
-	export function callCallback(num: number, signatureNum: number) {
-		return(callbackList[num].apply(this, Array.prototype.slice.call(arguments, 2)));
-	}
-
 	export class CallbackType extends BindType {
 		constructor(id: number, name: string) {
 			super(id, name);
@@ -150,6 +150,49 @@ namespace _nbind {
 
 		makeWireWrite(expr: string) {
 			return('_nbind.registerCallback(' + expr + ')');
+		}
+	}
+
+	export function pushString(str: string) {
+		if(str === null || str === undefined) return(0);
+		str = str.toString();
+
+		var length = Module.lengthBytesUTF8(str);
+
+		// 32-bit length, string and a zero terminator
+		// (stringToUTF8Array insists on adding it)
+
+		var result = Runtime.stackAlloc(4 + length + 1);
+
+		HEAPU32[result / 4] = length;
+		Module.stringToUTF8Array(str, HEAPU8, result + 4, length + 1);
+
+		return(result);
+	}
+
+	export function popString(ptr: number) {
+		if(ptr === 0) return(null);
+
+		var length = HEAPU32[ptr / 4];
+
+		return(Module.Pointer_stringify(ptr + 4, length));
+	}
+
+	export class StringType extends BindType {
+		constructor(id: number, name: string) {
+			super(id, name);
+		}
+
+		needsWireRead: boolean = true;
+
+		makeWireRead(expr: string) {
+			return('_nbind.popString(' + expr + ')');
+		}
+
+		needsWireWrite: boolean = true;
+
+		makeWireWrite(expr: string) {
+			return('_nbind.pushString(' + expr + ')');
 		}
 	}
 
@@ -260,6 +303,70 @@ namespace _nbind {
 		));
 	}
 
+	function anyNeedsWireRead(typeList: BindType[]) {
+		return(typeList.reduce(
+			(result: boolean, type: BindType) =>
+				(result || type.needsWireRead),
+			false
+		));
+	}
+
+	export function buildJSCallerFunction(
+		returnType: BindType,
+		argTypeList: BindType[]
+	) {
+		var argList = makeArgList(argTypeList.length);
+
+		var callbackList = _nbind.callbackList;
+
+		var callExpression = returnType.makeWireWrite(
+			'callbackList[num](' +
+				argList.map(
+					(name: string, num: number) => argTypeList[num].makeWireRead(name)
+				).join(',') +
+			')'
+		);
+
+		var sourceCode = (
+			'function(' + ['dummy', 'num'].concat(argList).join(',') + '){' +
+				'var r=' + callExpression + ';' +
+				'return r;' +
+			'}'
+		);
+
+		// console.log(returnType.name + ' func(' + argTypeList.map((type: BindType) => type.name).join(', ') + ')')
+		// console.log(sourceCode);
+
+		return(eval('(' + sourceCode + ')'));
+	}
+
+	// Dynamically create an invoker function for a JavaScript function.
+
+	export function makeJSCaller(idList: TypeIDList) {
+		var argCount = idList.length - 1;
+
+		var typeList = getTypes(idList);
+		var returnType = typeList[0];
+		var argTypeList = typeList.slice(1);
+		var needsWireRead = anyNeedsWireRead(argTypeList);
+
+		if(!returnType.needsWireWrite && !needsWireRead && argCount < 3) switch(argCount) {
+			case 0: return(function(dummy: number, num: number) {
+			                    return(callbackList[num](    ));});
+			case 1: return(function(dummy: number, num: number, a1: any) {
+			                    return(callbackList[num](       a1    ));});
+			case 2: return(function(dummy: number, num: number, a1: any, a2: any) {
+			                    return(callbackList[num](       a1,      a2    ));});
+			case 3: return(function(dummy: number, num: number, a1: any, a2: any, a3: any) {
+			                    return(callbackList[num](       a1,      a2,      a3    ));});
+		} else {
+			return(buildJSCallerFunction(
+				returnType,
+				argTypeList
+			));
+		}
+	}
+
 	// Dynamically create an invoker function for a C++ class method.
 
 	export function makeMethodCaller(ptr: number, num: number, boundID: number, idList: TypeIDList) {
@@ -286,11 +393,11 @@ namespace _nbind {
 			case 0: return(function() {return(
 			        dynCall(ptr, num, this.__nbindPtr));});
 			case 1: return(function(                   a1: any) {return(
-			        dynCall(ptr, num, this.__nbindPtr, a1       ));});
+			        dynCall(ptr, num, this.__nbindPtr, a1    ));});
 			case 2: return(function(                   a1: any, a2: any) {return(
-			        dynCall(ptr, num, this.__nbindPtr, a1,      a2       ));});
+			        dynCall(ptr, num, this.__nbindPtr, a1,      a2    ));});
 			case 3: return(function(                   a1: any, a2: any, a3: any) {return(
-			        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3       ));});
+			        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3    ));});
 		} else {
 
 			// Function takes over 3 arguments or needs type conversion.
@@ -452,6 +559,8 @@ class nbind {
 			new _nbind.BooleanType(id, name);
 		} else if(name == 'cbFunction &') {
 			new _nbind.CallbackType(id, name);
+		} else if(name == 'std::string') {
+			new _nbind.StringType(id, name);
 		} else {
 			new _nbind.BindType(id, name);
 		}
@@ -626,5 +735,10 @@ class nbind {
 		typeCount: number
 	) {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
+		var num = _nbind.callbackSignatureList.length;
+
+		_nbind.callbackSignatureList[num] = _nbind.makeJSCaller(typeList);
+
+		return(num);
 	}
 };
