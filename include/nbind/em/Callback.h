@@ -54,13 +54,13 @@ template <typename ReturnType> template <typename... Args>
 ReturnType cbFunction::Caller<ReturnType>::call(unsigned int num, Args... args) {
 	static CallbackSignature<ReturnType, Args...> signature;
 
-	// TODO: convert return type!
-
-	return(EM_ASM_INT({return(_nbind.callCallback.apply(this,arguments));},
-		num,
-		signature.getNum(),
-		BindingType<Args>::toWireType(args)...
-	));
+	return(BindingType<ReturnType>::fromWireType(reinterpret_cast<typename BindingType<ReturnType>::WireType>(
+		EM_ASM_INT({return(_nbind.callCallback.apply(this,arguments));},
+			num,
+			signature.getNum(),
+			BindingType<Args>::toWireType(args)...
+		)
+	)));
 }
 
 template<> struct cbFunction::Caller<void> {

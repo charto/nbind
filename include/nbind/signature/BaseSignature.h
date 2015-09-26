@@ -193,9 +193,8 @@ public:
 		Status::clearError();
 
 		try {
-			if(!Signature::callInner(args, nanArgs, target)) {
-				Nan::ThrowError(Status::getError());
-			}
+			Signature::callInner(args, nanArgs, target);
+			if(Status::getError() != nullptr) Nan::ThrowError(Status::getError());
 		} catch(const std::exception &ex) {
 			const char *message = Status::getError();
 

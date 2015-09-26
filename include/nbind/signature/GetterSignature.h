@@ -31,17 +31,12 @@ public:
 #if defined(BUILDING_NODE_EXTENSION)
 
 	template <typename V8Args, typename NanArgs>
-	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
-		auto result = Parent::CallWrapper::callMethod(
+	static void callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
+		nanArgs.GetReturnValue().Set(Parent::CallWrapper::callMethod(
 			*target,
 			Parent::getMethod(nanArgs.Data()->IntegerValue() & accessorGetterMask).func,
 			args
-		);
-
-		if(Status::getError() != nullptr) return(false);
-
-		nanArgs.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
-		return(true);
+		));
 	}
 
 	static void call(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
@@ -51,12 +46,14 @@ public:
 
 #elif defined(EMSCRIPTEN)
 
-	// Args are wire types! They must be received by value.
-
-	static ReturnType call(uint32_t num, Bound *target, typename BindingType<Args>::WireType... args) {
+	static typename BindingType<ReturnType>::WireType call(
+		uint32_t num,
+		Bound *target,
+		typename BindingType<Args>::WireType... args
+	) {
 		auto method = Parent::getMethod(num).func;
 
-		return((target->*method)(ArgFromWire<Args>(args).get(args)...));
+		return(Caller<ReturnType, Args...>::callMethod(*target, method, args...));
 	}
 
 #endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN

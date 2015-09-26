@@ -31,14 +31,12 @@ public:
 #if defined(BUILDING_NODE_EXTENSION)
 
 	template <typename V8Args, typename NanArgs>
-	static bool callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
+	static void callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
 		Parent::CallWrapper::callMethod(
 			*target,
 			Parent::getMethod(nanArgs.Data()->IntegerValue() >> accessorSetterShift).func,
 			args
 		);
-
-		return(Status::getError() == nullptr);
 	}
 
 	static void call(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {
@@ -49,10 +47,14 @@ public:
 
 #elif defined(EMSCRIPTEN)
 
-	static ReturnType call(uint32_t num, Bound *target, typename BindingType<Args>::WireType... args) {
+	static typename BindingType<ReturnType>::WireType call(
+		uint32_t num,
+		Bound *target,
+		typename BindingType<Args>::WireType... args
+	) {
 		auto method = Parent::getMethod(num).func;
 
-		return((target->*method)(ArgFromWire<Args>(args).get(args)...));
+		return(Caller<ReturnType, Args...>::callMethod(*target, method, args...));
 	}
 
 

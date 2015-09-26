@@ -30,16 +30,11 @@ public:
 #if defined(BUILDING_NODE_EXTENSION)
 
 	template <typename V8Args, typename NanArgs>
-	static bool callInner(V8Args &args, NanArgs &nanArgs, void *) {
-		auto result = Parent::CallWrapper::callFunction(
+	static void callInner(V8Args &args, NanArgs &nanArgs, void *) {
+		nanArgs.GetReturnValue().Set(Parent::CallWrapper::callFunction(
 			Parent::getMethod(nanArgs.Data()->IntegerValue() & signatureMemberMask).func,
 			args
-		);
-
-		if(Status::getError() != nullptr) return(false);
-
-		nanArgs.GetReturnValue().Set(BindingType<ReturnType>::toWireType(std::move(result)));
-		return(true);
+		));
 	}
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
@@ -48,10 +43,13 @@ public:
 
 #elif defined(EMSCRIPTEN)
 
-	static ReturnType call(uint32_t num, typename BindingType<Args>::WireType... args) {
+	static typename BindingType<ReturnType>::WireType call(
+		uint32_t num,
+		typename BindingType<Args>::WireType... args
+	) {
 		auto func = Parent::getMethod(num).func;
 
-		return((*func)(ArgFromWire<Args>(args).get(args)...));
+		return(Caller<ReturnType, Args...>::callFunction(func, args...));
 	}
 
 #endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN

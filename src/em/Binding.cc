@@ -40,6 +40,7 @@ typedef BaseSignature::Type SigType;
 void Bindings :: initModule() {
 	_nbind_register_type(makeTypeID<void>(), "void");
 	_nbind_register_type(makeTypeID<bool>(), "bool");
+	_nbind_register_type(makeTypeID<std::string>(), "std::string");
 
 	_nbind_register_types(defineTypes<
 		unsigned char,  signed char,    char,
