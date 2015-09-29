@@ -23,8 +23,8 @@
     "win32"
   ],
   "dependencies": {
-    "emscripten-library-decorator": "~0.1.1",
-    "nan": "^2.0.8"
+    "emscripten-library-decorator": "~0.1.2",
+    "nan": "^2.0.9"
   },
   "devDependencies": {
     "autogypi": "~0.1.0",
