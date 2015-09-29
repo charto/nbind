@@ -1,10 +1,7 @@
+var nbind = require('..');
 var test = require('tap').test;
 
-var nbind = require('..');
-
 var testModule = nbind.module;
-
-nbind.init(__dirname);
 
 var prepareGC;
 var lost = null;

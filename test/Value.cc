@@ -1,6 +1,8 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+#ifndef EMSCRIPTEN
+
 #include <cstring>
 
 #include "nbind/api.h"
@@ -36,5 +38,7 @@ NBIND_CLASS(Value) {
 	method(getCoord);
 	method(callWithCoord);
 }
+
+#endif
 
 #endif

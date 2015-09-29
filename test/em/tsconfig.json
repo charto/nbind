@@ -7,6 +7,6 @@
 		"out": "nbind.js"
 	},
 	"files": [
-		"../src/em/nbind.ts"
+		"../../src/em/nbind.ts"
 	]
 }

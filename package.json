@@ -10,8 +10,8 @@
   "author": "Juha Järvi",
   "main": "index.js",
   "scripts": {
-    "test-asm": "cd test && tsc && emcc -std=c++11 -stdlib=libc++ -I../include -g -o foo.js ../src/em/Binding.cc PrimitiveMethods.cc GetterSetter.cc Callback.cc --js-library nbind.js -s NO_FILESYSTEM=1 -s EXPORTED_FUNCTIONS=\"['_nbind_init']\" -s ASSERTIONS=2 && tap --gc test-asm.js",
-    "test": "cd test && autogypi && node-gyp configure && node-gyp build && tap --gc test.js"
+    "test-asm": "cd test/em && tsc && autogypi && node-gyp configure --emcc=1 && node-gyp build --emcc=1 && tap test.js",
+    "test": "cd test/v8 && autogypi && node-gyp configure && node-gyp build && tap --gc test.js"
   },
   "repository": {
     "type": "git",
@@ -23,7 +23,6 @@
     "win32"
   ],
   "dependencies": {
-    "bindings": "^1.2.1",
     "emscripten-library-decorator": "~0.1.1",
     "nan": "^2.0.8"
   },
