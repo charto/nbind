@@ -1,4 +1,3 @@
-var nbind = require('../..');
-nbind.init(__dirname);
+var nbind = require('../..').init(__dirname);
 
 require('../test.js');

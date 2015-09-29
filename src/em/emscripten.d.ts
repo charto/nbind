@@ -1,3 +1,6 @@
+// Minimal definitions of the environment available to Emscripten libraries.
+// Only contains features required by nbind.
+
 declare var Module: {
 	Pointer_stringify(ptr: number, length?: number): string;
 	lengthBytesUTF8(str: string): number;
