@@ -6,7 +6,7 @@
 
 	"target_name": "nbind",
 	"include_dirs": [
-		"include"
+		"../include"
 	],
 
 	"conditions": [
@@ -14,7 +14,7 @@
 
 			"product_name": "nbind.js",
 			"type":         "executable",
-			"sources":    [ "src/em/Binding.cc" ],
+			"sources":    [ "em/Binding.cc" ],
 			"cflags_cc":  [ "<@(_cflags)" ],
 			"ldflags":    [ "<@(_cflags)" ],
 
@@ -28,7 +28,7 @@
 
 		},{
 
-			"sources": ["src/v8/Binding.cc"],
+			"sources": ["v8/Binding.cc"],
 			"cflags_cc": ["-std=c++11", "-fexceptions"],
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES",

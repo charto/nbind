@@ -3,6 +3,6 @@
 		"nan"
 	],
 	"includes": [
-		"nbind.gypi"
+		"src/nbind.gypi"
 	]
 }
