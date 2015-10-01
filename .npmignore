@@ -1,3 +1,9 @@
 example/
+build/
+test/*/build/
+*.log.*
 *.log
 *.tgz
+
+.travis.yml
+appveyor.yml
