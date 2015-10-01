@@ -18,10 +18,13 @@
 			"cflags_cc":  [ "<@(_cflags)" ],
 			"ldflags":    [ "<@(_cflags)" ],
 
+			"copies": [{"destination": "<(INTERMEDIATE_DIR)", "files": ["../dist/nbind-em.js"]}],
+			"jslib_path": "<(INTERMEDIATE_DIR)/nbind-em.js",
+
 			"cflags": [
 				"-g",
 				"-fno-exceptions",
-				"--js-library", "../nbind.js",
+				"--js-library", "<(_jslib_path)",
 				"-s", "NO_FILESYSTEM=1",
 				"-s", "EXPORTED_FUNCTIONS=[\"_nbind_init\"]"
 			]

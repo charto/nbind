@@ -3,10 +3,9 @@
 		"declaration": false,
 		"target": "es5",
 		"noImplicitAny": true,
-		"experimentalDecorators": true,
-		"out": "nbind.js"
+		"experimentalDecorators": true
 	},
 	"files": [
-		"../../src/em/nbind.ts"
+		"nbind-em.ts"
 	]
 }
