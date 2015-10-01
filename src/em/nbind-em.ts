@@ -144,6 +144,8 @@ namespace _nbind {
 		return(num);
 	}
 
+	// TODO: free the registered callback (and allow persisting it, as needed by value types for example)!
+
 	export class CallbackType extends BindType {
 		constructor(id: number, name: string) {
 			super(id, name);
@@ -199,6 +201,20 @@ namespace _nbind {
 		}
 	}
 
+	// Special type that constructs a new object.
+
+	export class CreateValueType extends BindType {
+		constructor(id: number, name: string) {
+			super(id, name);
+		}
+
+		needsWireWrite: boolean = true;
+
+		makeWireWrite(expr: string) {
+			return('((_nbind.value=new ' + expr + '),0)');
+		}
+	}
+
 	// Base class for all bound C++ classes (not their instances),
 	// also inheriting from a generic type definition.
 
@@ -213,6 +229,20 @@ namespace _nbind {
 		// of this C++ class.
 
 		proto: WrapperClass;
+
+		needsWireRead: boolean = true;
+
+		makeWireRead(expr: string) {
+			return('(' + expr + ',_nbind.value)');
+		}
+
+		// TODO
+
+		needsWireWrite: boolean = true;
+
+		makeWireWrite(expr: string) {
+			return(expr);
+		}
 	}
 
 	// Look up a list of type objects based on their numeric typeID or name.
@@ -526,6 +556,8 @@ namespace _nbind {
 		setter: number;
 	} = {} as any;
 
+	export var value: any;
+
 	// Export the namespace to Emscripten compiled output.
 	// This must be at the end of the namespace!
 	// The dummy class _ and everything after it inside the namespace will be discarded,
@@ -564,6 +596,8 @@ class nbind {
 			new _nbind.CallbackType(id, name);
 		} else if(name == 'std::string') {
 			new _nbind.StringType(id, name);
+		} else if(name == '_nbind_new') {
+			new _nbind.CreateValueType(id, name);
 		} else {
 			new _nbind.BindType(id, name);
 		}
@@ -617,8 +651,9 @@ class nbind {
 	}
 
 	@dep('_nbind', _readAsciiString, '__extends')
-	static _nbind_register_class(id: number, namePtr: number) {
+	static _nbind_register_class(idListPtr: number, namePtr: number) {
 		var name = _readAsciiString(namePtr);
+		var idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 3);
 
 		class Bound extends _nbind.Wrapper {
 			constructor() {
@@ -643,7 +678,9 @@ class nbind {
 			__nbindConstructor: Func;
 		}
 
-		new _nbind.BindClass(id, name, Bound);
+		new _nbind.BindClass(idList[0], name, Bound);
+		new _nbind.BindType(idList[1], name + ' *');
+		new _nbind.BindType(idList[2], 'const ' + name + ' *');
 
 		Module[name] = Bound;
 	}
@@ -749,5 +786,10 @@ class nbind {
 		_nbind.callbackSignatureList[num] = _nbind.makeJSCaller(typeList);
 
 		return(num);
+	}
+
+	@dep('_nbind')
+	static nbind_value(name: string, proto: any) {
+		Module['NBind'].bind_value(name, proto);
 	}
 };

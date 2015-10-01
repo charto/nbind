@@ -39,13 +39,38 @@ template <typename ArgType> struct BindingType {
 
 	typedef ArgType Type;
 
-	typedef ArgType WireType;
+	// Offset to a list of constructed objects on the JavaScript side
+	// (for fromWireType) or dummy value (for toWireType).
 
-	static inline Type fromWireType(WireType arg) { return(arg); }
+	typedef int WireType;
 
-	static inline WireType toWireType(Type arg) { return(arg); }
+	static inline Type fromWireType(WireType arg);
+
+	static inline WireType toWireType(Type arg);
 
 };
+
+#define DEFINE_NATIVE_BINDING_TYPE(ArgType, ArgWireType) \
+template <> struct BindingType<ArgType> { \
+	typedef ArgType Type; \
+	typedef ArgWireType WireType; \
+	static inline Type fromWireType(WireType arg) { return(arg); } \
+	static inline WireType toWireType(Type arg) { return(arg); } \
+};
+
+DEFINE_NATIVE_BINDING_TYPE(double, double);
+DEFINE_NATIVE_BINDING_TYPE(float, double);
+DEFINE_NATIVE_BINDING_TYPE(uint32_t, int);
+DEFINE_NATIVE_BINDING_TYPE(uint16_t, int);
+DEFINE_NATIVE_BINDING_TYPE(uint8_t, int);
+DEFINE_NATIVE_BINDING_TYPE(int32_t, int);
+DEFINE_NATIVE_BINDING_TYPE(int16_t, int);
+DEFINE_NATIVE_BINDING_TYPE(int8_t, int);
+
+DEFINE_NATIVE_BINDING_TYPE(unsigned char *, unsigned char *);
+DEFINE_NATIVE_BINDING_TYPE(char *, char *);
+DEFINE_NATIVE_BINDING_TYPE(const unsigned char *, const unsigned char *);
+DEFINE_NATIVE_BINDING_TYPE(const char *, const char *);
 
 template<> struct BindingType<bool> {
 
@@ -67,7 +92,6 @@ template<> struct BindingType<void> {
 
 	static inline Type fromWireType() { }
 
-//	static inline WireType toWireType( ) { }
 	template <typename... Args>
 	static inline WireType toWireType(Args...) { }
 

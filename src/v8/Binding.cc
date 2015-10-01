@@ -17,7 +17,7 @@ class NBind {
 
 public:
 
-	static void bind(const char *name, cbFunction &func) {
+	static void bind_value(const char *name, cbFunction &func) {
 		Bindings::setValueConstructorByName(name, func);
 	}
 
@@ -209,7 +209,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 NBIND_CLASS(NBind) {
 	construct<>();
 
-	method(bind);
+	method(bind_value);
 }
 
 NODE_MODULE(nbind, nbind::Bindings::initModule)

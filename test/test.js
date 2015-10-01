@@ -148,8 +148,8 @@ test('Value objects', function(t) {
 
 	var xy = Type.getCoord();
 
-	t.strictEqual(xy.x, 1);
-	t.strictEqual(xy.y, 2);
+	t.strictEqual(xy.x, 60);
+	t.strictEqual(xy.y, 25);
 
 	xy.fromJS(function() {});
 	Type.callWithCoord(function(coord) {

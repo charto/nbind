@@ -1,5 +1,3 @@
-var pendingBindings = {};
-
 // This function is adapted from the npm module "bindings"
 // licensed under the MIT license terms in BINDINGS-LICENSE.
 
@@ -83,8 +81,10 @@ function findCompiledModule(root, specList) {
 }
 
 var nbind = {
+	pendingBindings: {},
+
 	init: function(basePath) {
-		var moduleSpec = findCompiledModule(
+		nbind.moduleSpec = findCompiledModule(
 			basePath, [
 				{ type: 'node', name: 'nbind.node' },
 				{ type: 'emcc', name: 'nbind.js' }
@@ -93,23 +93,32 @@ var nbind = {
 
 		// Load the compiled addon.
 
-		var moduleObj = require(moduleSpec.path);
+		var moduleObj = require(nbind.moduleSpec.path);
 
-		if(moduleSpec.type == 'emcc') moduleObj.ccall('nbind_init');
+		if(nbind.moduleSpec.type == 'emcc') moduleObj.ccall('nbind_init');
 
 		extend(nbind.module, moduleObj);
 
-		Object.keys(pendingBindings).forEach(function(name) {
-			nbind.module.NBind.bind(name, pendingBindings[name]);
+		Object.keys(nbind.pendingBindings).forEach(function(name) {
+			if(nbind.moduleSpec.type == 'emcc') {
+				nbind.module._nbind_value(name, nbind.pendingBindings[name]);
+			} else {
+				nbind.module.NBind.bind_value(name, nbind.pendingBindings[name]);
+			}
 		});
 
 		return(this);
 	},
 
 	bind: function(name, proto) {
-		if(nbind.module.NBind) nbind.module.NBind.bind(name, proto);
-		else pendingBindings[name] = proto;
+		if(nbind.moduleSpec.type == 'emcc') {
+			nbind.module._nbind_value(name, proto);
+		} else if(nbind.module.NBind) {
+			nbind.module.NBind.bind_value(name, proto);
+		} else nbind.pendingBindings[name] = proto;
 	},
+
+	moduleSpec: null,
 
 	module: {}
 };

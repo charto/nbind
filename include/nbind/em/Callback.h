@@ -37,6 +37,35 @@ public:
 	unsigned int num;
 };
 
+class cbOutput {
+
+	template<typename ArgType>
+	friend struct BindingType;
+
+public:
+
+	struct CreateValue {};
+
+	cbOutput(cbFunction &jsConstructor) :
+		jsConstructor(jsConstructor) {}
+
+	// This overload is identical to cbFunction.
+	template<typename... Args>
+	void operator()(Args&&... args) {
+		call<void>(args...);
+	}
+
+	template <typename ReturnType, typename... Args>
+	void call(Args... args) {
+		jsConstructor.call<CreateValue>(args...);
+	}
+
+private:
+
+	cbFunction &jsConstructor;
+
+};
+
 template<typename... Args>
 double cbFunction::callDouble(unsigned int num, Args... args) {
 	// NOTE: EM_ASM_DOUBLE may have a bug: https://github.com/kripken/emscripten/issues/3770
@@ -86,6 +115,22 @@ template<> struct cbFunction::Caller<float> {
 	template <typename... Args>
 	static float call(unsigned int num, Args... args) {
 		return(cbFunction::callDouble(num, args...));
+	}
+
+};
+
+template<> struct cbFunction::Caller<cbOutput::CreateValue> {
+
+	template <typename... Args>
+	static cbOutput::CreateValue call(unsigned int num, Args... args) {
+		EM_ASM_ARGS({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
+			CallbackSignature<cbOutput::CreateValue, Args...>::getInstance().getNum(),
+			num,
+			BindingType<Args>::toWireType(args)...
+		);
+
+		// Return empty dummy value.
+		return(cbOutput::CreateValue());
 	}
 
 };

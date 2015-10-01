@@ -13,6 +13,9 @@ class BindClassBase {
 
 public:
 
+	template<typename... Args>
+	explicit BindClassBase(Args... args) : idList {args...} {}
+
 	// Get type of method definitions to use in function pointers.
 
 #if defined(BUILDING_NODE_EXTENSION)
@@ -29,7 +32,7 @@ public:
 
 #endif // BUILDING_NODE_EXTENSION
 
-	TYPEID getTypeID() { return(id); }
+	const TYPEID *getTypes() { return(idList); }
 
 	const char *getName() { return(name); }
 	void setName(const char *name) { this->name = name; }
@@ -86,6 +89,8 @@ public:
 	unsigned int wrapperConstructorNum = Overloader::addGroup();
 	unsigned int valueConstructorNum = Overloader::addGroup();
 
+#endif // BUILDING_NODE_EXTENSION
+
 	// A JavaScript "value constructor" creates a JavaScript object with
 	// the same data as the equivalent C++ object. This is used for small
 	// objects that should work like primitives, such as coordinate pairs.
@@ -103,11 +108,9 @@ public:
 
 	cbFunction *getValueConstructorJS() { return(valueConstructorJS); }
 
-#endif // BUILDING_NODE_EXTENSION
-
 protected:
 
-	TYPEID id;
+	const TYPEID idList[3];
 
 	int readyState = 0;
 
@@ -117,20 +120,16 @@ protected:
 
 	jsMethod *deleter;
 
-	// These have to be pointers instead of a member objects so the
+	// This has to be a pointer instead of a member object so the
 	// destructor won't get called. Otherwise NanCallback's destructor
 	// segfaults when freeing V8 resources because the surrounding
 	// object gets destroyed after the V8 engine.
-
-#if defined(BUILDING_NODE_EXTENSION)
 
 	// Suitable JavaScript constructor called by a toJS C++ function
 	// when converting this object into a plain JavaScript object,
 	// if possible.
 
 	cbFunction *valueConstructorJS = nullptr;
-
-#endif // BUILDING_NODE_EXTENSION
 
 };
 
@@ -141,8 +140,11 @@ template <class Bound> class BindClass : public BindClassBase {
 
 public:
 
-	BindClass() : BindClassBase() {
-		this->id = makeTypeID<Bound>();
+	BindClass() : BindClassBase(
+		makeTypeID<Bound>(),
+		makeTypeID<Bound *>(),
+		makeTypeID<const Bound *>()
+	) {
 		this->deleter = reinterpret_cast<jsMethod *>(&BindClass::destroy);
 	}
 

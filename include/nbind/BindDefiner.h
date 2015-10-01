@@ -28,6 +28,7 @@
 #	include "em/Caller.h"
 #	include "signature/BaseSignature.h"
 #	include "BindClass.h"
+#	include "em/ValueObj.h"
 #	include "em/Creator.h"
 #	include "em/Binding.h"
 

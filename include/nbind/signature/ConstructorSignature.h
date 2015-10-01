@@ -11,7 +11,7 @@ namespace nbind {
 // createValue() constructs it in place, directly in the stack for passing by value.
 
 template <class Bound, typename... Args>
-class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<Bound, Args...>, Bound, Args...> {
+class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<Bound, Args...>, Bound *, Args...> {
 
 public:
 
@@ -24,7 +24,7 @@ public:
 	// Unused dummy type.
 	typedef void *MethodType;
 
-	typedef TemplatedBaseSignature<ConstructorSignature, Bound, Args...> Parent;
+	typedef TemplatedBaseSignature<ConstructorSignature, Bound *, Args...> Parent;
 
 	static constexpr auto typeExpr = BaseSignature::Type::constructor;
 

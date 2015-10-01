@@ -13,8 +13,8 @@ using namespace nbind;
 extern "C" {
 	extern void _nbind_register_method_getter_setter_id(unsigned int methodID, unsigned int getterID, unsigned int setterID);
 	extern void _nbind_register_types(void **data);
-	extern void _nbind_register_type(       TYPEID typeID, const char *name);
-	extern void _nbind_register_class(      TYPEID typeID, const char *name);
+	extern void _nbind_register_type(       TYPEID typeID,    const char *name);
+	extern void _nbind_register_class(const TYPEID *typeList, const char *name);
 	extern void _nbind_register_destructor( TYPEID classType, funcPtr func);
 	extern void _nbind_register_constructor(TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func);
 	extern void _nbind_register_function(   TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
@@ -27,6 +27,27 @@ extern "C" {
 
 const char *nbind :: emptyGetter = "";
 const char *nbind :: emptySetter = "";
+
+// TODO: Remove duplication with v8/Binding.cc!
+class NBind {
+
+public:
+
+	static void bind_value(const char *name, cbFunction &func) {
+		Bindings::setValueConstructorByName(name, func);
+	}
+
+};
+
+// TODO: Remove duplication with v8/Binding.cc!
+void Bindings :: setValueConstructorByName(const char *name, cbFunction &func) {
+	for(auto *bindClass : getClassList()) {
+		if(strcmp(bindClass->getName(), name) == 0) {
+			bindClass->setValueConstructorJS(func);
+			break;
+		}
+	}
+}
 
 // Linkage for module-wide error message.
 const char *Status :: message;
@@ -41,6 +62,7 @@ void Bindings :: initModule() {
 	_nbind_register_type(makeTypeID<void>(), "void");
 	_nbind_register_type(makeTypeID<bool>(), "bool");
 	_nbind_register_type(makeTypeID<std::string>(), "std::string");
+	_nbind_register_type(makeTypeID<cbOutput::CreateValue>(), "_nbind_new");
 
 	_nbind_register_types(defineTypes<
 		unsigned char,  signed char,    char,
@@ -55,7 +77,6 @@ void Bindings :: initModule() {
 		         char *, const          char *
 	>());
 
-//	_nbind_register_type("cbOutput", listTypes<cbOutput>());
 	_nbind_register_type(makeTypeID<cbFunction &>(), "cbFunction &");
 
 	// Register all classes before any functions, so they'll have type information ready.
@@ -69,7 +90,7 @@ void Bindings :: initModule() {
 
 		bindClass->init();
 
-		_nbind_register_class(bindClass->getTypeID(), bindClass->getName());
+		_nbind_register_class(bindClass->getTypes(), bindClass->getName());
 	}
 
 	_nbind_register_method_getter_setter_id(
@@ -83,7 +104,9 @@ void Bindings :: initModule() {
 	for(auto *bindClass : getClassList()) {
 		if(bindClass->isDuplicate()) continue;
 
-		_nbind_register_destructor(bindClass->getTypeID(), bindClass->getDeleter());
+		TYPEID id = bindClass->getTypes()[0];
+
+		_nbind_register_destructor(id, bindClass->getDeleter());
 
 		for(auto &func : bindClass->getMethodList()) {
 
@@ -99,7 +122,7 @@ void Bindings :: initModule() {
 				case SigType::setter:
 
 					_nbind_register_method(
-						bindClass->getTypeID(),
+						id,
 						signature->getTypeList(),
 						signature->getArity() + 1,
 						signature->getCaller(),
@@ -113,7 +136,7 @@ void Bindings :: initModule() {
 				case SigType::function:
 
 					_nbind_register_function(
-						bindClass->getTypeID(),
+						id,
 						signature->getTypeList(),
 						signature->getArity() + 1,
 						signature->getCaller(),
@@ -127,7 +150,7 @@ void Bindings :: initModule() {
 				case SigType::constructor:
 
 					_nbind_register_constructor(
-						bindClass->getTypeID(),
+						id,
 						signature->getTypeList(),
 						signature->getArity() + 1,
 						signature->getCaller()
@@ -141,6 +164,14 @@ void Bindings :: initModule() {
 
 void nbind_init(void) {
 	Bindings::initModule();
+}
+
+#include "nbind/BindingShort.h"
+
+NBIND_CLASS(NBind) {
+	construct<>();
+
+	method(bind_value);
 }
 
 #endif
