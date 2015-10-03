@@ -135,7 +135,7 @@ namespace _nbind {
 	export var callbackFreeList: number[] = [];
 
 	export function registerCallback(func: Func) {
-		if(typeof(func) != 'function') throw({ message: 'Type mismatch' });
+		if(typeof(func) != 'function') _nbind.throwError('Type mismatch');
 
 		var num = callbackFreeList.pop() || callbackList.length;
 
@@ -233,7 +233,11 @@ namespace _nbind {
 		needsWireRead: boolean = true;
 
 		makeWireRead(expr: string) {
-			return('(' + expr + ',_nbind.value)');
+			return('(' +
+				expr + '||' +
+				'_nbind.throwError("Value type JavaScript class is missing or not registered"),' +
+				'_nbind.value' +
+			')');
 		}
 
 		// TODO
@@ -557,6 +561,10 @@ namespace _nbind {
 	} = {} as any;
 
 	export var value: any;
+
+	export function throwError(message: string) {
+		throw({ message: message });
+	}
 
 	// Export the namespace to Emscripten compiled output.
 	// This must be at the end of the namespace!

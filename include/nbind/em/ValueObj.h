@@ -22,12 +22,13 @@ inline int BindingType<ArgType>::toWireType(ArgType arg) {
 		cbOutput construct(*jsConstructor);
 
 		arg.toJS(construct);
-	} else {
-		// TODO: throw or something...
-	}
 
-	// Return dummy value.
-	return(0);
+		// Success.
+		return(1);
+	} else {
+		// Failure: value type JavaScript class is missing or not registered.
+		return(0);
+	}
 }
 
 // TODO
