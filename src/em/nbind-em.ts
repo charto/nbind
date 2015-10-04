@@ -568,12 +568,14 @@ namespace _nbind {
 
 	// Export the namespace to Emscripten compiled output.
 	// This must be at the end of the namespace!
-	// The dummy class _ and everything after it inside the namespace will be discarded,
-	// because unfortunately namespaces can't have decorators.
+	// The dummy class is needed because unfortunately namespaces can't have decorators.
+	// Everything after it inside the namespace will be discarded.
 
-	@exportNamespace('_nbind')
+	@prepareNamespace('_nbind')
 	export class _ {}
 }
+
+exportNamespace('_nbind');
 
 function _readAsciiString(ptr: number) {
 	var endPtr = ptr;
