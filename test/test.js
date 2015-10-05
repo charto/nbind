@@ -45,6 +45,10 @@ test('Methods and primitive types', function(t) {
 		t.strictEqual(obj.catenate('Java', 'Script'), 'JavaScript');
 
 		t.strictEqual(Type.strLengthStatic(123), 3);
+
+		obj = new Type(0, 'quux');
+		t.strictEqual(Type.getStringStatic(), 'quux');
+		t.strictEqual(obj.getString(), 'quux');
 	})();
 
 	t.end();

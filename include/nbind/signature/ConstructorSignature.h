@@ -54,11 +54,14 @@ public:
 
 	// Args are wire types! They must be received by value.
 
-	static Bound *call(Args... args) {
+	static Bound *call(typename BindingType<Args>::WireType... args) {
 		return(ConstructWrapper::create(args...));
 	}
 
-	static void createValue(ArgStorage &storage, Args... args) {
+	static void createValue(
+		ArgStorage &storage,
+		typename BindingType<Args>::WireType... args
+	) {
 		ConstructWrapper::createValue(storage, args...);
 	}
 

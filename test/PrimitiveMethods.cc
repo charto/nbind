@@ -2,6 +2,7 @@
 // Released under the MIT license, see LICENSE.
 
 #include <cstring>
+#include <string>
 
 class PrimitiveMethods {
 
@@ -9,6 +10,10 @@ public:
 
 	PrimitiveMethods() { PrimitiveMethods::state = 42; }
 	PrimitiveMethods(int state) { PrimitiveMethods::state = state; }
+	PrimitiveMethods(int state, std::string str) {
+		PrimitiveMethods::state = state;
+		strcpy(buf, str.c_str());
+	}
 
 	~PrimitiveMethods() {
 		state++;
@@ -25,6 +30,9 @@ public:
 
 	static int getStateStatic() {return(state);}
 	int getState() {return(state);}
+
+	static std::string getStringStatic() {return(buf);}
+	std::string getString() {return(buf);}
 
 	static int strLengthStatic(const char *x) {return(strlen(x));}
 	int strLength(const unsigned char *x) {return(strlen(reinterpret_cast<const char *>(x)));}
@@ -58,6 +66,7 @@ char PrimitiveMethods::buf[12];
 NBIND_CLASS(PrimitiveMethods) {
 	construct<>();
 	construct<int>();
+	construct<int, std::string>();
 
 	method(negateStatic);
 	method(negate);
@@ -70,6 +79,9 @@ NBIND_CLASS(PrimitiveMethods) {
 
 	method(getStateStatic);
 	method(getState);
+
+	method(getString);
+	method(getStringStatic);
 
 	method(strLengthStatic);
 	method(strLength);

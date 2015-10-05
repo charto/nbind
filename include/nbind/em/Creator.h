@@ -7,12 +7,12 @@ namespace nbind {
 
 template<class Bound, typename... Args>
 struct Creator {
-	static inline Bound *create(Args... args) {
-		return(new Bound(args...));
+	static inline Bound *create(typename BindingType<Args>::WireType... args) {
+		return(new Bound(ArgFromWire<Args>(args).get(args)...));
 	}
 
-	static void createValue(ArgStorage &storage, Args... args) {
-		static_cast<TemplatedArgStorage<Bound> &>(storage).init(args...);
+	static void createValue(ArgStorage &storage, typename BindingType<Args>::WireType... args) {
+		static_cast<TemplatedArgStorage<Bound> &>(storage).init(ArgFromWire<Args>(args).get(args)...);
 	}
 
 };
