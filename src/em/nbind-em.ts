@@ -421,8 +421,7 @@ namespace _nbind {
 		var argTypeList = typeList.slice(1);
 		var needsWireRead = anyNeedsWireRead(argTypeList);
 
-// TODO: should be argCount <= 3
-		if(!returnType.needsWireWrite && !needsWireRead && argCount < 3) switch(argCount) {
+		if(!returnType.needsWireWrite && !needsWireRead && argCount <= 3) switch(argCount) {
 			case 0: return(function(dummy: number, num: number) {
 			                    return(callbackList[num](    ));});
 			case 1: return(function(dummy: number, num: number, a1: any) {
@@ -457,8 +456,7 @@ namespace _nbind {
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
-// TODO: should be argCount <= 3
-		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
+		if(!returnType.needsWireRead && !needsWireWrite && argCount <= 3) switch(argCount) {
 
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
@@ -501,8 +499,7 @@ namespace _nbind {
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
-// TODO: should be argCount <= 3
-		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
+		if(!returnType.needsWireRead && !needsWireWrite && argCount <= 3) switch(argCount) {
 
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
