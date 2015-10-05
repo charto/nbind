@@ -43,6 +43,8 @@ namespace _nbind {
 			return(expr);
 		}
 
+		clobbersStack: boolean = false;
+
 		id: number;
 		name: string;
 	}
@@ -104,6 +106,8 @@ namespace _nbind {
 		makeWireWrite(expr: string) {
 			return('_nbind.pushCString(' + expr + ')');
 		}
+
+		clobbersStack: boolean = true;
 	}
 
 	// Booleans are returned as numbers from Asm.js.
@@ -200,6 +204,8 @@ namespace _nbind {
 		makeWireWrite(expr: string) {
 			return('_nbind.pushString(' + expr + ')');
 		}
+
+		clobbersStack: boolean = true;
 	}
 
 	// Special type that constructs a new object.
@@ -319,7 +325,7 @@ namespace _nbind {
 		var stackSave = '';
 		var stackRestore = '';
 
-		if(needsWireWrite) {
+		if(anyClobbersStack(argTypeList)) {
 			stackSave = 'var sp=Runtime.stackSave();';
 			stackRestore = 'Runtime.stackRestore(sp);';
 		}
@@ -358,6 +364,14 @@ namespace _nbind {
 		));
 	}
 
+	function anyClobbersStack(typeList: BindType[]) {
+		return(typeList.reduce(
+			(result: boolean, type: BindType) =>
+				(result || type.clobbersStack),
+			false
+		));
+	}
+
 	export function buildJSCallerFunction(
 		returnType: BindType,
 		argTypeList: BindType[]
@@ -374,9 +388,19 @@ namespace _nbind {
 			')'
 		);
 
+		var stackSave = '';
+		var stackRestore = '';
+
+		if(returnType.clobbersStack) {
+			stackSave = 'var sp=Runtime.stackSave();';
+			stackRestore = 'Runtime.stackRestore(sp);';
+		}
+
 		var sourceCode = (
 			'function(' + ['dummy', 'num'].concat(argList).join(',') + '){' +
+				stackSave +
 				'var r=' + callExpression + ';' +
+				stackRestore +
 				'return r;' +
 			'}'
 		);
