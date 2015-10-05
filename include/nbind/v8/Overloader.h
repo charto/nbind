@@ -116,7 +116,7 @@ public:
 	static void createValue(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		ArgStorage &storage = *static_cast<ArgStorage *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
 		static std::vector<OverloadDef> &overloadVect = overloadVectStore();
-		OverloadDef &def = overloadVect[storage.overloadNum];
+		OverloadDef &def = overloadVect[storage.getOverloadNum()];
 
 		std::vector<funcPtr> &methodVect = def.methodVect;
 		unsigned int argc = args.Length();

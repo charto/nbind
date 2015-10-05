@@ -17,6 +17,10 @@ public:
 	ArgStorage(unsigned int overloadNum) :
 		overloadNum(overloadNum) {}
 
+	unsigned int getOverloadNum() { return(overloadNum); }
+
+private:
+
 	unsigned int overloadNum;
 
 };
@@ -30,14 +34,14 @@ public:
 		ArgStorage(overloadNum), dummy(0) {}
 
 	~TemplatedArgStorage() {
-		if(isValid) data.~Bound();
-		isValid = false;
+		if(isDataValid) data.~Bound();
+		isDataValid = false;
 	}
 
 	template <typename... Args>
 	void init(Args&&... args) {
 		::new(&data) Bound(std::forward<Args>(args)...);
-		isValid = true;
+		isDataValid = true;
 	}
 
 	Bound getBound() {
@@ -46,12 +50,17 @@ public:
 
 private:
 
+	// Union with a dummy value allows initializing the class
+	// without constructing the data member object.
+
 	union {
 		int dummy;
 		Bound data;
 	};
 
-	bool isValid = false;
+	// Flag tells if the union no longer holds a dummy value.
+
+	bool isDataValid = false;
 
 };
 
