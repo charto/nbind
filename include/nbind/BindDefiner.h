@@ -11,12 +11,12 @@
 #include "api.h"
 #include "wire.h"
 #include "MethodDef.h"
+#include "ArgStorage.h"
 
 #if defined(BUILDING_NODE_EXTENSION)
 
 #	include "v8/Caller.h"
 #	include "signature/BaseSignature.h" // Needs Caller
-#	include "v8/ArgStorage.h"
 #	include "v8/Overloader.h" // Needs ArgStorage
 #	include "BindClass.h"     // Needs Overloader and BaseSignature
 #	include "v8/ValueObj.h"   // Needs BindClass
@@ -29,7 +29,7 @@
 #	include "signature/BaseSignature.h"
 #	include "BindClass.h"
 #	include "em/ValueObj.h"
-#	include "em/Creator.h"
+#	include "em/Creator.h"    // Needs ArgStorage
 #	include "em/Binding.h"
 
 #endif

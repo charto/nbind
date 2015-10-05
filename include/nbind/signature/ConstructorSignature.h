@@ -15,11 +15,9 @@ class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<
 
 public:
 
-#if defined(BUILDING_NODE_EXTENSION)
 	ConstructorSignature() {
 		this->setValueConstructor(reinterpret_cast<funcPtr>(createValue));
 	}
-#endif // BUILDING_NODE_EXTENSION
 
 	// Unused dummy type.
 	typedef void *MethodType;
@@ -49,10 +47,19 @@ public:
 
 #elif defined(EMSCRIPTEN)
 
+	typedef Creator<
+		Bound,
+		Args...
+	> ConstructWrapper;
+
 	// Args are wire types! They must be received by value.
 
 	static Bound *call(Args... args) {
-		return(new Bound(args...));
+		return(ConstructWrapper::create(args...));
+	}
+
+	static void createValue(ArgStorage &storage, Args... args) {
+		ConstructWrapper::createValue(storage, args...);
 	}
 
 #endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN

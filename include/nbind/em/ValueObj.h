@@ -5,6 +5,10 @@
 
 namespace nbind {
 
+extern "C" {
+	extern unsigned int _nbind_get_value_object(unsigned int index, ArgStorage &storage);
+}
+
 /*
 TODO:
 
@@ -31,13 +35,15 @@ inline int BindingType<ArgType>::toWireType(ArgType arg) {
 	}
 }
 
-// TODO
-
 template <typename ArgType>
-ArgType BindingType<ArgType>::fromWireType(WireType arg) {
-	ArgType data;
+ArgType BindingType<ArgType>::fromWireType(int index) {
+	// Argument is an unused dummy value.
 
-	return(data);
+	TemplatedArgStorage<ArgType> storage(0);
+
+	_nbind_get_value_object(index, storage);
+
+	return(storage.getBound());
 }
 
 } // namespace

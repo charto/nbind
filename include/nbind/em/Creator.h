@@ -7,32 +7,14 @@ namespace nbind {
 
 template<class Bound, typename... Args>
 struct Creator {
-	static void *call(Args... args) {
-		return(new Bound(std::forward<Args>(args)...));
-	}
-};
-
-/*
-template<class Bound, typename ArgList> struct Creator;
-
-template<class Bound, typename... Args>
-struct Creator<Bound, TypeList<Args...>> {
-
-public:
-
-	// Make sure prototype matches NanWrapperConstructorTypeBuilder!
-	template <typename... NanArgs>
-	static BindWrapper<Bound> *makeWrapper(NanArgs... args) noexcept(false) {
-		// Note that Args().get may throw.
-		return(new BindWrapper<Bound>(Args(std::forward<NanArgs>(args)...).get(args...)...));
+	static inline Bound *create(Args... args) {
+		return(new Bound(args...));
 	}
 
-	// Make sure prototype matches NanValueConstructorTypeBuilder!
-	template <typename... NanArgs>
-	static void makeValue(ArgStorage<Bound> &storage, NanArgs... args) {
-		storage.init(Args(std::forward<NanArgs>(args)...).get(args...)...);
+	static void createValue(ArgStorage &storage, Args... args) {
+		static_cast<TemplatedArgStorage<Bound> &>(storage).init(args...);
 	}
 
 };
-*/
+
 } // namespace

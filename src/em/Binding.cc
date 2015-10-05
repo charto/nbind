@@ -16,7 +16,7 @@ extern "C" {
 	extern void _nbind_register_type(       TYPEID typeID,    const char *name);
 	extern void _nbind_register_class(const TYPEID *typeList, const char *name);
 	extern void _nbind_register_destructor( TYPEID classType, funcPtr func);
-	extern void _nbind_register_constructor(TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func);
+	extern void _nbind_register_constructor(TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, funcPtr ptrValue);
 	extern void _nbind_register_function(   TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
 		unsigned int num, funcPtr direct);
 	extern void _nbind_register_method(     TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
@@ -153,7 +153,8 @@ void Bindings :: initModule() {
 						id,
 						signature->getTypeList(),
 						signature->getArity() + 1,
-						signature->getCaller()
+						signature->getCaller(),
+						signature->getValueConstructor()
 					);
 
 					break;

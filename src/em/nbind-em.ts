@@ -53,6 +53,7 @@ namespace _nbind {
 		free: Func;
 
 		__nbindConstructor: Func;
+		__nbindValueConstructor: Func;
 		__nbindPtr: number;
 	}
 
@@ -240,13 +241,22 @@ namespace _nbind {
 			')');
 		}
 
-		// TODO
-
 		needsWireWrite: boolean = true;
 
 		makeWireWrite(expr: string) {
-			return(expr);
+			// TODO: free the list item allocated here.
+
+			return('_nbind.storeValue(' + expr + ')');
 		}
+	}
+
+	export var valueList: any[] = [];
+
+	export function storeValue(value: any) {
+		var index = _nbind.valueList.length;
+
+		_nbind.valueList[index] = value;
+		return(index);
 	}
 
 	// Look up a list of type objects based on their numeric typeID or name.
@@ -387,6 +397,7 @@ namespace _nbind {
 		var argTypeList = typeList.slice(1);
 		var needsWireRead = anyNeedsWireRead(argTypeList);
 
+// TODO: should be argCount <= 3
 		if(!returnType.needsWireWrite && !needsWireRead && argCount < 3) switch(argCount) {
 			case 0: return(function(dummy: number, num: number) {
 			                    return(callbackList[num](    ));});
@@ -422,6 +433,7 @@ namespace _nbind {
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
+// TODO: should be argCount <= 3
 		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
 
 			// If there are only a few arguments not requiring type conversion,
@@ -465,6 +477,7 @@ namespace _nbind {
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
+// TODO: should be argCount <= 3
 		if(!returnType.needsWireRead && !needsWireWrite && argCount < 3) switch(argCount) {
 
 			// If there are only a few arguments not requiring type conversion,
@@ -483,7 +496,8 @@ namespace _nbind {
 			// Function takes over 3 arguments or needs type conversion.
 			// Let's create the invoker dynamically then.
 
-			idList.splice(1, 0, 'uint32_t');
+// TODO: does passing complicated types to constructors work with this here?
+if(ptr != direct) idList.splice(1, 0, 'uint32_t');
 			signature = makeSignature(getTypes(idList));
 			dynCall = Module['dynCall_' + signature];
 
@@ -492,6 +506,8 @@ namespace _nbind {
 				ptr,
 				num,
 				needsWireWrite,
+// TODO: does passing complicated types to constructors work with this here?
+(ptr == direct) ? 'ptr' :
 				'ptr,num',
 				returnType,
 				argTypeList
@@ -673,6 +689,8 @@ class nbind {
 					// Constructor called without new operator.
 					// Make correct call with given arguments.
 					// Few ways to do this work. This one should.
+					// See http://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+
 					return(new (Function.prototype.bind.apply(
 						Bound, // arguments.callee
 						Array.prototype.concat.apply([null], arguments)
@@ -686,6 +704,9 @@ class nbind {
 
 			@_defineHidden()
 			__nbindConstructor: Func;
+
+			@_defineHidden()
+			__nbindValueConstructor: Func;
 		}
 
 		new _nbind.BindClass(idList[0], name, Bound);
@@ -696,14 +717,34 @@ class nbind {
 	}
 
 	@dep('_nbind')
-	static _nbind_register_constructor(typeID: number, typeListPtr: number, typeCount: number, ptr: number) {
+	static _nbind_register_constructor(
+		typeID: number,
+		typeListPtr: number,
+		typeCount: number,
+		ptr: number,
+		ptrValue: number
+	) {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 
+		var proto = (_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype;
+
 		_nbind.addMethod(
-			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
+			proto,
 			'__nbindConstructor',
 			_nbind.makeCaller(ptr, 0, ptr, typeList),
 			typeCount - 1
+		);
+
+		// First argument is a pointer to the C++ object to construct in place.
+		// It fits in an unsigned int...
+
+		typeList.splice(0, 1, 'void', 'uint32_t');
+
+		_nbind.addMethod(
+			proto,
+			'__nbindValueConstructor',
+			_nbind.makeCaller(ptrValue, 0, ptrValue, typeList),
+			typeCount
 		);
 	}
 
@@ -799,7 +840,23 @@ class nbind {
 	}
 
 	@dep('_nbind')
+	static _nbind_get_value_object(index: number, ptr: number) {
+		var obj = _nbind.valueList[index];
+		obj.fromJS(function() {
+			obj.__nbindValueConstructor.apply(this, Array.prototype.concat.apply([ptr], arguments));
+		});
+	}
+
+	@dep('_nbind')
 	static nbind_value(name: string, proto: any) {
 		Module['NBind'].bind_value(name, proto);
+
+		// Copy value constructor reference from C++ wrapper prototype
+		// to equivalent JS prototype.
+
+		_defineHidden(
+			(_nbind.typeTbl[name] as _nbind.BindClass).proto.prototype.__nbindValueConstructor
+		)(proto.prototype, '__nbindValueConstructor');
 	}
+
 };
