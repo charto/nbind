@@ -258,11 +258,13 @@ namespace _nbind {
 
 	export var valueList: any[] = [];
 
-	export function storeValue(value: any) {
-		var index = _nbind.valueList.length;
+	export var valueFreeList: number[] = [];
 
-		_nbind.valueList[index] = value;
-		return(index);
+	export function storeValue(value: any) {
+		var num = valueFreeList.pop() || valueList.length;
+
+		valueList[num] = value;
+		return(num);
 	}
 
 	// Look up a list of type objects based on their numeric typeID or name.
@@ -847,8 +849,13 @@ class nbind {
 	}
 
 	@dep('_nbind')
-	static _nbind_get_value_object(index: number, ptr: number) {
-		var obj = _nbind.valueList[index];
+	static _nbind_get_value_object(num: number, ptr: number) {
+		var obj = _nbind.valueList[num];
+
+		_nbind.valueList[num] = null;
+
+		_nbind.valueFreeList.push(num);
+
 		obj.fromJS(function() {
 			obj.__nbindValueConstructor.apply(this, Array.prototype.concat.apply([ptr], arguments));
 		});
