@@ -887,4 +887,7 @@ class nbind {
 		)(proto.prototype, '__nbindValueConstructor');
 	}
 
+	@dep('_nbind')
+	static nbind_debug() {}
+
 };
