@@ -7,11 +7,24 @@
 
 namespace nbind {
 
+extern "C" {
+	extern unsigned int _nbind_reference_callback(unsigned int num);
+	extern unsigned int _nbind_free_callback(unsigned int num);
+}
+
 class cbFunction {
 
 public:
 
 	explicit cbFunction(unsigned int num) : num(num) {}
+
+	cbFunction(const cbFunction &func) : num(func.num) {
+		_nbind_reference_callback(num);
+	}
+
+	~cbFunction() {
+		_nbind_free_callback(num);
+	}
 
 	// Wrapper class to specialize call function for different return types,
 	// since function template partial specialization is forbidden.
@@ -34,7 +47,7 @@ public:
 		return(Caller<ReturnType>::call(num, args...));
 	}
 
-	unsigned int num;
+	const unsigned int num;
 };
 
 class cbOutput {

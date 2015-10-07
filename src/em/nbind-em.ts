@@ -1,5 +1,6 @@
 /// <reference path="../../node_modules/emscripten-library-decorator/index.ts" />
 /// <reference path="emscripten.d.ts" />
+/// <reference path="../ts/em/Resource.ts" />
 
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
@@ -43,7 +44,7 @@ namespace _nbind {
 			return(expr);
 		}
 
-		clobbersStack: boolean = false;
+		needsResources: Resource[] = null;
 
 		id: number;
 		name: string;
@@ -107,7 +108,7 @@ namespace _nbind {
 			return('_nbind.pushCString(' + expr + ')');
 		}
 
-		clobbersStack: boolean = true;
+		needsResources = [ resources.stack ];
 	}
 
 	// Booleans are returned as numbers from Asm.js.
@@ -145,11 +146,10 @@ namespace _nbind {
 		var num = callbackFreeList.pop() || callbackList.length;
 
 		callbackList[num] = func;
+		callbackRefCountList[num] = 1;
 
 		return(num);
 	}
-
-	// TODO: free the registered callback (and allow persisting it, as needed by value types for example)!
 
 	export class CallbackType extends BindType {
 		constructor(id: number, name: string) {
@@ -205,7 +205,7 @@ namespace _nbind {
 			return('_nbind.pushString(' + expr + ')');
 		}
 
-		clobbersStack: boolean = true;
+		needsResources = [ resources.stack ];
 	}
 
 	// Special type that constructs a new object.
@@ -322,19 +322,13 @@ namespace _nbind {
 			')'
 		);
 
-		var stackSave = '';
-		var stackRestore = '';
-
-		if(anyClobbersStack(argTypeList)) {
-			stackSave = 'var sp=Runtime.stackSave();';
-			stackRestore = 'Runtime.stackRestore(sp);';
-		}
+		var resourceSet = listResources([returnType].concat(argTypeList));
 
 		var sourceCode = (
 			'function(' + argList.join(',') + '){' +
-				stackSave +
+				resourceSet.open +
 				'var r=' + callExpression + ';' +
-				stackRestore +
+				resourceSet.close +
 				'return r;' +
 			'}'
 		);
@@ -364,14 +358,6 @@ namespace _nbind {
 		));
 	}
 
-	function anyClobbersStack(typeList: BindType[]) {
-		return(typeList.reduce(
-			(result: boolean, type: BindType) =>
-				(result || type.clobbersStack),
-			false
-		));
-	}
-
 	export function buildJSCallerFunction(
 		returnType: BindType,
 		argTypeList: BindType[]
@@ -388,19 +374,13 @@ namespace _nbind {
 			')'
 		);
 
-		var stackSave = '';
-		var stackRestore = '';
-
-		if(returnType.clobbersStack) {
-			stackSave = 'var sp=Runtime.stackSave();';
-			stackRestore = 'Runtime.stackRestore(sp);';
-		}
+		var resourceSet = listResources([returnType].concat(argTypeList));
 
 		var sourceCode = (
 			'function(' + ['dummy', 'num'].concat(argList).join(',') + '){' +
-				stackSave +
+				resourceSet.open +
 				'var r=' + callExpression + ';' +
-				stackRestore +
+				resourceSet.close +
 				'return r;' +
 			'}'
 		);
@@ -872,6 +852,20 @@ class nbind {
 		obj.fromJS(function() {
 			obj.__nbindValueConstructor.apply(this, Array.prototype.concat.apply([ptr], arguments));
 		});
+	}
+
+	@dep('_nbind')
+	static _nbind_reference_callback(num: number) {
+		++_nbind.callbackRefCountList[num];
+	}
+
+	@dep('_nbind')
+	static _nbind_free_callback(num: number) {
+		if(--_nbind.callbackRefCountList[num] == 0) {
+			_nbind.callbackList[num] = null;
+
+			_nbind.callbackFreeList.push(num);
+		}
 	}
 
 	@dep('_nbind')
