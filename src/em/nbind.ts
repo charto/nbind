@@ -619,10 +619,16 @@ class nbind {
 
 		class Bound extends _nbind.Wrapper {
 			constructor() {
-				if(!(this instanceof Bound)) {
-					// Apply arguments to the constructor.
+				// super() never gets called here but TypeScript 1.8 requires it.
+				if((false && super()) || !(this instanceof Bound)) {
+
+					// Constructor called without new operator.
+					// Make correct call with given arguments.
 					// Few ways to do this work. This one should.
-					return(new (Function.prototype.bind.apply(Bound, Array.prototype.concat.apply([null], arguments))));
+					return(new (Function.prototype.bind.apply(
+						Bound, // arguments.callee
+						Array.prototype.concat.apply([null], arguments)
+					)));
 				}
 
 				super();

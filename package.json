@@ -23,13 +23,13 @@
     "win32"
   ],
   "dependencies": {
-    "emscripten-library-decorator": "~0.1.2",
+    "emscripten-library-decorator": "~0.1.5",
     "nan": "^2.3.2"
   },
   "devDependencies": {
     "autogypi": "~0.1.0",
     "node-gyp": "~3.3.1",
     "tap": "~5.7.1",
-    "typescript": "^1.6.0-dev.20150910"
+    "typescript": "^1.8.10"
   }
 }
