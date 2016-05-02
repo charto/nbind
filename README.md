@@ -33,7 +33,7 @@ npm install
 npm test
 ```
 
-You'll need to install Git, Node.js (0.10 or 0.12 or io.js) and a C++ compiler first. You can omit the first command if you have a recent npm (at least 2.7.0 should work, 2.14.0 is safer).
+You'll need to install Git, Node.js (0.10 or above) and a C++ compiler first. You can omit the first command if you have a recent npm (at least 2.7.0 should work, 2.14.0 is safer).
 
 Working C++ compilers are at least:
 - GCC 4.8 or above

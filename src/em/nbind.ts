@@ -1,6 +1,9 @@
 /// <reference path="../../node_modules/emscripten-library-decorator/index.ts" />
 /// <reference path="emscripten.d.ts" />
 
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
+// Released under the MIT license, see LICENSE.
+
 // Generic table and list of functions.
 
 type Func = (...args: any[]) => any;
