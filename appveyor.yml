@@ -6,11 +6,11 @@ init:
 - ps: Install-Product node $env:nodejs_version
 environment:
   matrix:
-# Pending a fix for https://github.com/nodejs/nan/issues/462
-#  - nodejs_version: 0.10
+  - nodejs_version: 0.10
   - nodejs_version: 0.12
-# Pending a fix for https://github.com/nodejs/node-gyp/issues/724
-#  - nodejs_version: 4
+  - nodejs_version: 4.4
+  - nodejs_version: 5.11
+  - nodejs_version: 6.0
 install:
 - npm install -g npm
 - set PATH=%APPDATA%\npm;%PATH%
