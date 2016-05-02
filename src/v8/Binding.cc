@@ -82,7 +82,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 	// to other classes to enforce its visibility in npm exports.
 	registerClass(BindClass<NBind>::getInstance());
 
-	Local<Function> nBindConstructor;
+	Local<FunctionTemplate> nBindTemplate;
 
 	for(auto *bindClass : getClassList()) {
 		// Avoid registering the same class twice.
@@ -102,7 +102,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 		Nan::SetPrototypeTemplate(constructorTemplate, "free",
 			Nan::New<FunctionTemplate>(
 				bindClass->getDeleter()
-			)->GetFunction()
+			)
 		);
 
 		Local<ObjectTemplate> proto = constructorTemplate->PrototypeTemplate();
@@ -139,7 +139,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 						Nan::New<FunctionTemplate>(
 							reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
 							Nan::New<Number>(func.getNum())
-						)->GetFunction()
+						)
 					);
 
 					break;
@@ -149,7 +149,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 						Nan::New<FunctionTemplate>(
 							reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
 							Nan::New<Number>(func.getNum())
-						)->GetFunction()
+						)
 					);
 
 					break;
@@ -187,9 +187,9 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		// Add NBind references to other classes to enforce visibility.
 		if(bindClass == &BindClass<NBind>::getInstance()) {
-			nBindConstructor = constructorTemplate->GetFunction();
+			nBindTemplate = constructorTemplate;
 		} else {
-			Nan::SetTemplate(constructorTemplate, "NBind", nBindConstructor);
+			Nan::SetTemplate(constructorTemplate, "NBind", nBindTemplate);
 		}
 
 		Local<v8::Function> jsConstructor = constructorTemplate->GetFunction();
