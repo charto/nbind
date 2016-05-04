@@ -1,4 +1,9 @@
-namespace _nbind {
+import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
+import {_nbind as main} from './nbind-em';
+
+setEvil((code: string) => eval(code));
+
+export namespace _nbind {
 
 	export class Resource {
 		constructor(open: string, close: string) {
@@ -11,7 +16,7 @@ namespace _nbind {
 		close: string;
 	}
 
-	export function listResources(typeList: BindType[]) {
+	export function listResources(typeList: main.BindType[]) {
 		var openTbl: { [name: string]: boolean } = {};
 		var closeTbl: { [name: string]: boolean } = {};
 
@@ -38,5 +43,5 @@ namespace _nbind {
 	};
 
 	@prepareNamespace('_nbind')
-	export class _Resource {}
+	export class _ {}
 }

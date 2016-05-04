@@ -1,9 +1,8 @@
-/// <reference path="../../node_modules/emscripten-library-decorator/index.ts" />
-/// <reference path="emscripten.d.ts" />
-/// <reference path="../ts/em/Resource.ts" />
-
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
+
+import {setEvil, dep, exportLibrary, prepareNamespace, publishNamespace, defineHidden} from 'emscripten-library-decorator';
+import {_nbind as resource} from './Resource';
 
 // Generic table and list of functions.
 
@@ -13,9 +12,18 @@ type FuncList = { (...args: any[]): any }[];
 type Invoker = (ptr: number, ...args: any[]) => any;
 type TypeIDList = (number | string)[];
 
+setEvil((code: string) => eval(code));
+
+var _defineHidden = defineHidden;
+
+export {resource};
+
 // Namespace that will be made available inside Emscripten compiled module.
 
-namespace _nbind {
+export namespace _nbind {
+
+	export var resources: typeof resource.resources;
+	export var listResources: typeof resource.listResources;
 
 	// A type definition, which registers itself upon construction.
 
@@ -44,7 +52,7 @@ namespace _nbind {
 			return(expr);
 		}
 
-		needsResources: Resource[] = null;
+		needsResources: resource.Resource[] = null;
 
 		id: number;
 		name: string;
@@ -600,7 +608,7 @@ namespace _nbind {
 	export class _ {}
 }
 
-exportNamespace('_nbind');
+publishNamespace('_nbind');
 
 function _readAsciiString(ptr: number) {
 	var endPtr = ptr;

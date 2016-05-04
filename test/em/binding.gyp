@@ -1,9 +1,9 @@
 {
 	"conditions": [
-		['emcc==1', {
+		["emcc==1", {
 			"make_global_settings": [
-				["CXX",  "<!(which emcc)"],
-				["LINK", "<!(which emcc)"],
+				["CXX",  "<!(npm run -s emcc-path)"],
+				["LINK", "<!(npm run -s emcc-path)"],
 			]
 		}]
 	],

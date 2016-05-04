@@ -1,11 +1,16 @@
 {
 	"compilerOptions": {
 		"declaration": false,
-		"target": "es5",
+		"experimentalDecorators": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
 		"noImplicitAny": true,
-		"experimentalDecorators": true
+		"noImplicitUseStrict": true,
+		"outDir": "../../dist/bundle",
+		"target": "es5"
 	},
 	"files": [
+		"emscripten.d.ts",
 		"nbind-em.ts"
 	]
 }

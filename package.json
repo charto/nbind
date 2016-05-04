@@ -2,32 +2,41 @@
   "name": "nbind",
   "version": "0.1.3",
   "description": "Embind-style bindings generator for Node.js",
-  "homepage": "https://github.com/charto/nbind",
-  "bugs": {
-    "url": "https://github.com/charto/nbind/issues"
-  },
-  "license": "MIT",
-  "author": "Juha Järvi",
   "main": "src/index.js",
-  "scripts": {
-    "test-asm": "cd test/em && tsc && autogypi && node-gyp configure --emcc=1 && node-gyp build --emcc=1 && tap test.js",
-    "test": "cd test/v8 && autogypi && node-gyp configure && node-gyp build && tap --gc test.js"
+  "bin": {
+    "emcc-path": "bin/emcc-path.js"
   },
+  "scripts": {
+    "tsc": "tsc",
+    "cbuild": "cbuild",
+    "emcc-path": "emcc-path",
+    "emlib": "tsc -p src/em && cbuild -x -s dist/bundle/nbind-em.js -o dist/nbind-em.js",
+    "prepublish": "tsc -p src/em",
+    "test-asm": "cd test/em && autogypi && node-gyp configure --emcc=1 && node-gyp build --emcc=1 && tap      test.js",
+    "test":     "cd test/v8 && autogypi && node-gyp configure          && node-gyp build          && tap --gc test.js"
+  },
+  "author": "Juha Järvi",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/charto/nbind.git"
   },
+  "bugs": {
+    "url": "https://github.com/charto/nbind/issues"
+  },
+  "homepage": "https://github.com/charto/nbind",
   "os": [
     "darwin",
     "linux",
     "win32"
   ],
   "dependencies": {
-    "emscripten-library-decorator": "~0.1.5",
+    "emscripten-library-decorator": "~0.1.6",
     "nan": "^2.3.2"
   },
   "devDependencies": {
     "autogypi": "~0.1.0",
+    "cbuild": "~0.0.7",
     "node-gyp": "~3.3.1",
     "tap": "~5.7.1",
     "typescript": "^1.8.10"
