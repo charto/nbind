@@ -45,6 +45,7 @@ NBIND_CLASS(Greeter) {
 			Add scripts to <code>package.json</code>:<br>
 <pre>{
   "scripts": {
+    "emcc-path": "emcc-path",
     "autogypi": "autogypi",
     "node-gyp": "node-gyp"
   }
@@ -75,7 +76,7 @@ configure build --asmjs=1</pre>
 <pre>var nbind = require('nbind');
 var lib = nbind.lib;
 
-nbind.init(__dirname);
+nbind.init();
 
 lib.Greeter.sayHello('you');</pre>
 		</td>

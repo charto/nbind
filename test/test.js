@@ -1,7 +1,7 @@
 var nbind = require('..');
 var test = require('tap').test;
 
-var testModule = nbind.module;
+var testModule = nbind.lib;
 
 var prepareGC;
 var lost = null;

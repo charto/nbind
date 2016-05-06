@@ -1,7 +1,7 @@
 {
 
 	"variables": {
-		"emcc%": 0
+		"asmjs%": 0
 	},
 
 	"target_name": "nbind",
@@ -10,7 +10,7 @@
 	],
 
 	"conditions": [
-		['emcc==1', {
+		['asmjs==1', {
 
 			"product_name": "nbind.js",
 			"type":         "executable",

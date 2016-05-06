@@ -204,7 +204,7 @@ void Bindings :: initModule(Handle<Object> exports) {
 	}
 }
 
-#include "nbind/BindingShort.h"
+#include "nbind/nbind.h"
 
 NBIND_CLASS(NBind) {
 	construct<>();

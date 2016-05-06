@@ -22,7 +22,7 @@ public:
 
 };
 
-#include "nbind/BindingShort.h"
+#include "nbind/nbind.h"
 
 #ifdef NBIND_CLASS
 

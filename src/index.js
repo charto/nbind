@@ -85,7 +85,7 @@ var nbind = {
 
 	init: function(basePath) {
 		nbind.moduleSpec = findCompiledModule(
-			basePath, [
+			basePath || process.cwd(), [
 				{ type: 'node', name: 'nbind.node' },
 				{ type: 'emcc', name: 'nbind.js' }
 			]
@@ -97,13 +97,13 @@ var nbind = {
 
 		if(nbind.moduleSpec.type == 'emcc') moduleObj.ccall('nbind_init');
 
-		extend(nbind.module, moduleObj);
+		extend(nbind.lib, moduleObj);
 
 		Object.keys(nbind.pendingBindings).forEach(function(name) {
 			if(nbind.moduleSpec.type == 'emcc') {
-				nbind.module._nbind_value(name, nbind.pendingBindings[name]);
+				nbind.lib._nbind_value(name, nbind.pendingBindings[name]);
 			} else {
-				nbind.module.NBind.bind_value(name, nbind.pendingBindings[name]);
+				nbind.lib.NBind.bind_value(name, nbind.pendingBindings[name]);
 			}
 		});
 
@@ -112,15 +112,15 @@ var nbind = {
 
 	bind: function(name, proto) {
 		if(nbind.moduleSpec.type == 'emcc') {
-			nbind.module._nbind_value(name, proto);
-		} else if(nbind.module.NBind) {
-			nbind.module.NBind.bind_value(name, proto);
+			nbind.lib._nbind_value(name, proto);
+		} else if(nbind.lib.NBind) {
+			nbind.lib.NBind.bind_value(name, proto);
 		} else nbind.pendingBindings[name] = proto;
 	},
 
 	moduleSpec: null,
 
-	module: {}
+	lib: {}
 };
 
 function extend(dst, src) {

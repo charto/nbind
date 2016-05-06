@@ -1,6 +1,0 @@
-{
-	"dependencies": [
-		"../../"
-	],
-	"output": "auto.gypi"
-}

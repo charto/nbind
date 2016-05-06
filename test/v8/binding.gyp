@@ -1,8 +1,12 @@
 {
+	"includes": [
+		"../common.gypi"
+	],
+
 	"targets": [
 		{
 			"includes": [
-				"auto.gypi",
+				"../auto.gypi",
 				"../test.gypi"
 			]
 		}

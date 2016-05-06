@@ -59,7 +59,7 @@ private:
 int PrimitiveMethods::state = 0;
 char PrimitiveMethods::buf[12];
 
-#include "nbind/BindingShort.h"
+#include "nbind/nbind.h"
 
 #ifdef NBIND_CLASS
 

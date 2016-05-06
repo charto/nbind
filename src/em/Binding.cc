@@ -167,7 +167,7 @@ void nbind_init(void) {
 	Bindings::initModule();
 }
 
-#include "nbind/BindingShort.h"
+#include "nbind/nbind.h"
 
 NBIND_CLASS(NBind) {
 	construct<>();
