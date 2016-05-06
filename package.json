@@ -10,10 +10,9 @@
     "tsc": "tsc",
     "cbuild": "cbuild",
     "emcc-path": "emcc-path",
-    "emlib": "tsc -p src/em && cbuild -x -s dist/bundle/nbind-em.js -o dist/nbind-em.js",
-    "prepublish": "tsc -p src/em",
-    "test-asm": "cd test/em && autogypi && node-gyp configure --emcc=1 && node-gyp build --emcc=1 && tap      test.js",
-    "test":     "cd test/v8 && autogypi && node-gyp configure          && node-gyp build          && tap --gc test.js"
+    "prepublish": "tsc -p src/em && cbuild -x -v -s dist/bundle/nbind-em.js -o dist/nbind-em.js",
+    "test-asm": "npm link nbind && cd test/em && autogypi && node-gyp configure --emcc=1 && node-gyp build --emcc=1 && tap test.js",
+    "test":                       "cd test/v8 && autogypi && node-gyp configure && node-gyp build && tap --gc test.js"
   },
   "author": "Juha Järvi",
   "license": "MIT",
@@ -36,7 +35,7 @@
   },
   "devDependencies": {
     "autogypi": "~0.1.0",
-    "cbuild": "~0.0.7",
+    "cbuild": "~0.1.0",
     "node-gyp": "~3.3.1",
     "tap": "~5.7.1",
     "typescript": "^1.8.10"

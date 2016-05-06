@@ -1,0 +1,36 @@
+#!/bin/sh
+
+body='{ "request": {
+	"message": "Automatic rebuild",
+	"branch": "'$TRAVIS_BRANCH'",
+	"config": {
+		"node_js": [ "6.0" ],
+		"install": [
+			"git clone --depth 1 https://github.com/charto/emscripten-travis-binary.git emscripten",
+			"emscripten/emsdk activate --build=Release sdk-master-64bit",
+			"source emscripten/emsdk_env.sh",
+			"git clone --depth=1 --branch='$TRAVIS_BRANCH' https://github.com/'$TRAVIS_REPO_SLUG'.git tree",
+			"cd tree",
+			"npm link"
+		],
+		"script": "npm run test-asm",
+		"addons": {
+			"apt": {
+				"sources": [
+					"ubuntu-toolchain-r-test"
+				],
+				"packages": [
+					"libstdc++-4.8-dev"
+				]
+			}
+		}
+	}
+}}'
+
+curl -s -X POST \
+	-H "Content-Type: application/json" \
+	-H "Accept: application/json" \
+	-H "Travis-API-Version: 3" \
+	-H "Authorization: token $TRAVIS_TOKEN" \
+	-d "$body" \
+	https://api.travis-ci.org/repo/charto%2Fnbind-ci-emscripten/requests
