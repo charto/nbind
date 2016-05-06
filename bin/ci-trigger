@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Clone this repo inside a separate emscripten-travis-binary project
+# and run Emscripten tests there.
+
 body='{ "request": {
 	"message": "Automatic rebuild",
 	"branch": "'$TRAVIS_BRANCH'",

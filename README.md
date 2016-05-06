@@ -1,5 +1,115 @@
 nbind = JavaScript ♥ C++11
-=====
+==========================
+
+Compile C++ to Asm.js and native Node.js modules without changes. Call from JavaScript with zero effort.
+
+- The ultimate solution to `node-gyp` issues: ship an Asm.js fallback.
+- Take isomorphic apps to the next level: run C++ on the server and browser.
+
+Your code everywhere - at the fastest possible speed - in 5 easy steps:
+
+<table>
+	<tr>
+		<th>Starting point</th>
+		<th>Step 1 - bind</th>
+		<th>Step 2 - prepare</th>
+	</tr><tr>
+		<td valign="top">
+			Original C++ code <code>hello.cc</code>:<br>
+<pre>#include &lt;string&gt;
+#include &lt;iostream&gt;
+
+struct Greeter {
+  static void sayHello(
+    std::string name
+  ) {
+    std::cout
+      &lt;&lt; "Hello, "
+      &lt;&lt; name &lt;&lt; "!\n";
+  }
+};</pre>
+		</td>
+
+		<td valign="top">
+			List your classes and methods:<br>
+<pre>// Your original code here
+
+#include "nbind/nbind.h"
+
+NBIND_CLASS(Greeter) {
+    method(sayHello);
+}</pre>
+		</td>
+
+		<td valign="top">
+			Add scripts to <code>package.json</code>:<br>
+<pre>{
+  "scripts": {
+    "autogypi": "autogypi",
+    "node-gyp": "node-gyp"
+  }
+}</pre>
+		</td>
+	</tr><tr>
+		<th>Step 3 - install</th>
+		<th>Step 4 - build</th>
+		<th>Step 5 - use!</th>
+	</tr><tr>
+		<td valign="top">
+			Run on the command line:<br>
+<pre>npm install nbind
+
+npm run autogypi init \
+-l nbind -s hello.cc</pre>
+		</td>
+
+		<td valign="top">
+			Compile to native binary:<br>
+<pre>npm run node-gyp \
+configure build</pre>
+			Or to Asm.js:<br>
+<pre>npm run node-gyp \
+configure build --asmjs=1</pre>
+		</td><td valign="top">
+			Call from Node.js:<br>
+<pre>var nbind = require('nbind');
+var lib = nbind.lib;
+
+nbind.init(__dirname);
+
+lib.Greeter.sayHello('you');</pre>
+		</td>
+	</tr>
+</table>
+
+The above is **all** of the required code. Just copy and paste in the mentioned files and prompts or take a shortcut:
+
+```bash
+git clone https://github.com/charto/nbind-example-minimal.git
+cd nbind-example-minimal
+npm install && npm test
+```
+
+See it run! You need Node.js 0.10.x - 6.x.x (newer may also work)
+and one of the following C++ compilers:
+
+- GCC 4.8 or above
+- Clang 3.6 or above
+- Emscripten 1.35.0 or above
+- Visual Studio 2015 ([The Community version](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx) is fine)
+
+Features
+--------
+
+`nbind` supports:
+- Binding any number of C++ classes for use from Node.js, Asm.js or Electron.
+- Exporting methods by just listing their names. Arguments and return types are autodetected.
+- Types can be numbers, booleans, C strings or instances of other exported classes.
+- A special functor `cbFunction` allows taking a JavaScript callback as a parameter and passing any number of supported types as arguments, casting the result to another supported type.
+- Exported classes can be converted to "value types" by mapping them to a corresponding JavaScript constructor. The object is then automatically converted to C++ or JavaScript form as it's passed between the two languages.
+
+Works on your platform
+----------------------
 
 <table>
 	<tr>
@@ -28,12 +138,25 @@ nbind = JavaScript ♥ C++11
 				<img src="https://travis-ci.org/charto/nbind-ci-emscripten.svg?branch=master" alt="Build status">
 			</a>
 		</td>
-		<td>CI missing</td>
+		<td>Tested manually</td>
 	</tr>
 </table>
 
 [![dependency status](https://david-dm.org/charto/nbind.svg)](https://david-dm.org/charto/nbind)
 [![npm version](https://img.shields.io/npm/v/nbind.svg)](https://www.npmjs.com/package/nbind)
+
+Warning to git committers: rebase is used within feature branches (but not master).
+
+Roadmap
+-------
+
+More is coming! Work is ongoing to:
+
+- Automatically generate TypeScript `.d.ts` definition files from C++ code for IDE autocompletion and compile-time checks of JavaScript side code.
+- Support native Android and iPhone apps.
+
+What?
+-----
 
 `nbind` is a bindings generator for Node.js plugins inspired by [embind](http://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html) from [emscripten](http://emscripten.org). The bindings are built along with your C++ library without requiring any external generated code, using only C++11 templates and simple declarations.
 
@@ -46,46 +169,6 @@ NBIND_CLASS(X) {
     method(Y);
 }
 ```
-
-Warning to git committers: rebase is used within feature branches (but not master).
-
-Quick start
------------
-
-To compile and run some C++ code through JavaScript, just do:
-
-```bash
-npm install -g npm
-git clone https://github.com/charto/nbind.git
-cd nbind
-npm install
-npm test
-```
-
-You'll need to install Git, Node.js (0.10 or above) and a C++ compiler first. You can omit the first command if you have a recent npm (at least 2.7.0 should work, 2.14.0 is safer).
-
-Working C++ compilers are at least:
-- GCC 4.8 or above
-- Clang 3.6 or above
-- Visual Studio 2015 ([The Community version](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx) is fine)
-
-Features
---------
-
-`nbind` supports:
-- Binding any number of C++ classes for use from Node.js, io.js or Electron.
-- Exporting methods by just listing their names. Arguments and return types are autodetected.
-- Types can be numbers, booleans, C strings or instances of other exported classes.
-- A special functor `cbFunction` allows taking a JavaScript callback as a parameter and passing any number of supported types as arguments, casting the result to another supported type.
-- Exported classes can be converted to "value types" by mapping them to a corresponding JavaScript constructor. The object is then automatically converted to C++ or JavaScript form as it's passed between the two languages.
-
-Roadmap
--------
-
-More is coming! Work is ongoing to:
-
-- Compile the exact same C++ code and bindings with [Emscripten](http://emscripten.org/) to also run it in Chrome, Firefox or IE 10 and above.
-- Automatically generate TypeScript `.d.ts` definition files from C++ code for IDE autocompletion and compile-time checks of JavaScript side code.
 
 Example
 -------
