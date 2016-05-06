@@ -1,5 +1,9 @@
 language: node_js
 
+os:
+  - linux
+  - osx
+
 node_js:
   - "6.0"
   - "5.11"
@@ -8,8 +12,18 @@ node_js:
   - "0.10"
 
 env:
+  - CC=clang CXX=clang
   - CC=gcc-4.8 CXX=g++-4.8
   - CC=clang-3.6 CXX=clang++-3.6 npm_config_clang=1
+
+matrix:
+  exclude:
+    - os: linux
+      env: CC=clang CXX=clang
+    - os: osx
+      env: CC=gcc-4.8 CXX=g++-4.8
+    - os: osx
+      env: CC=clang-3.6 CXX=clang++-3.6 npm_config_clang=1
 
 before_install:
   VER=`npm --version` eval 'ARRAY=(${VER//./ }) && if [ ${ARRAY[0]} -lt 2 ] || ( [ ${ARRAY[0]} -eq 2 ] && [ ${ARRAY[1]} -lt 13 ] ) ; then npm install -g npm; fi'

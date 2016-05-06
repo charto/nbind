@@ -1,8 +1,37 @@
-nbind
+nbind = JavaScript ♥ C++11
 =====
 
-Linux: [![build status](https://travis-ci.org/charto/nbind.svg?branch=master)](http://travis-ci.org/charto/nbind)
-Windows: [![Build status](https://ci.appveyor.com/api/projects/status/xu5ooh1m3mircpde/branch/master?svg=true)](https://ci.appveyor.com/project/jjrv/nbind/branch/master)  
+<table>
+	<tr>
+		<th>Target</th>
+		<th colspan=2>Development platform</th>
+	</tr><tr>
+		<th></th>
+		<th>Linux / OS X</th>
+		<th>Windows</th>
+	</tr><tr>
+		<td>Native</td>
+		<td>
+			<a href="http://travis-ci.org/charto/nbind">
+				<img src="https://travis-ci.org/charto/nbind.svg?branch=master" alt="Build status">
+			</a>
+		</td>
+		<td>
+			<a href="https://ci.appveyor.com/project/jjrv/nbind/branch/master">
+				<img src="https://ci.appveyor.com/api/projects/status/xu5ooh1m3mircpde/branch/master?svg=true" alt="Build status">
+			</a>
+		</td>
+	</tr><tr>
+		<td>Asm.js</td>
+		<td>
+			<a href="http://travis-ci.org/charto/nbind-ci-emscripten">
+				<img src="https://travis-ci.org/charto/nbind-ci-emscripten.svg?branch=master" alt="Build status">
+			</a>
+		</td>
+		<td>CI missing</td>
+	</tr>
+</table>
+
 [![dependency status](https://david-dm.org/charto/nbind.svg)](https://david-dm.org/charto/nbind)
 [![npm version](https://img.shields.io/npm/v/nbind.svg)](https://www.npmjs.com/package/nbind)
 
