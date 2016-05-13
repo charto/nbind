@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Logo" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	x="0px" y="0px" width="266px" height="308px" viewBox="0 0 266 308">
+
+<defs>
+	<style>
+		.greenLight { fill: #8cc84b; }
+		.green      { fill: #70a03c; }
+		.greenDark  { fill: #5a8030; }
+
+		.blueLight { fill: #649cd4; }
+		.blue      { fill: #005a9c; }
+		.blueDark  { fill: #004080; }
+
+		.edgeGreen { stroke: #5a8030; }
+		.edgeBlue  { stroke: #005a9c; }
+
+		.edge {
+			fill: none;
+			stroke-width: 2;
+			stroke-dasharray: 6, 2;
+		}
+	</style>
+</defs>
+
+<g id="Beams">
+	<polygon id="N_beam" class="green"          points="133,44 152,33 152,77 133,66 114,77 114,33" opacity="0.25" />
+	<polygon id="Hex_beam" class="blueLight"    points="152,11 190,33 171,44 171,66 133,44 152,33" opacity="0.25" />
+</g>
+<!-- <g id="Edges">
+	<line id="N_beam_edge_2" class="edge edgeGreen"  x1="151" y1="33" x2="151" y2="77" />
+	<line id="N_beam_edge_1" class="edge edgeGreen"  x1="115" y1="33" x2="115" y2="77" />
+	<line id="Hex_beam_edge_2" class="edge edgeBlue" x1="130" y1="41" x2="173" y2="66" />
+	<line id="Hex_beam_edge_1" class="edge edgeBlue" x1="150" y1="11" x2="193" y2="36" />
+</g> -->
+<g id="Hex">
+	<polygon id="Hex_right" class="blueDark"    points="247,220 133,286 133,308 266,231 266,77 247,88" />
+	<polygon id="Hex_left_2" class="blue"       points="171,44 171,66 228,99 228,209 247,220 247,88" />
+	<polygon id="Hex_left_1" class="blue"       points="25,223 133,286 133,308 6,234" />
+	<polygon id="Hex_top_2" class="blueLight"   points="247,220 228,209 133,264 44,212 25,223 114,275 114,275 133,286" />
+	<polygon id="Hex_top_1" class="blueLight"   points="171,44 190,33 266,77 247,88" />
+</g>
+<g id="N">
+	<polygon id="N_right_2" class="greenDark"   points="133,88 152,77 152,187 133,198" />
+	<polygon id="N_right_1" class="greenDark"   points="38,143 38,202 19,213 19,132" />
+	<polygon id="N_left" class="green"          points="133,88 114,77 114,165 19,110 0,99 0,224 19,213 19,132 133,198" />
+	<polygon id="N_top_2" class="greenLight"    points="19,88 114,143 114,165 0,99" />
+	<polygon id="N_top_1" class="greenLight"    points="133,66 152,77 133,88 114,77" />
+</g>
+<g id="Cube">
+	<polygon id="Cube_right" class="greenDark"  points="152,11 152,33 133,44 133,22" />
+	<polygon id="Cube_left" class="green"       points="114,11 133,22 133,44 114,33" />
+	<polygon id="Cube_top" class="greenLight"   points="152,11 133,22 114,11 133,0 " />
+</g>
+</svg>

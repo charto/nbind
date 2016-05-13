@@ -1,12 +1,6 @@
-nbind = JavaScript ♥ C++11
-==========================
+[![nbind flowchart](doc/images/diagram.png)](doc/images/diagram.png)
 
-Compile C++ to Asm.js and native Node.js modules without changes. Call from JavaScript with zero effort.
-
-- The ultimate solution to `node-gyp` issues: ship an Asm.js fallback.
-- Take isomorphic apps to the next level: run C++ on the server and browser.
-
-Your code everywhere - at the fastest possible speed - in 5 easy steps:
+C++ everywhere in 5 easy steps using Node.js:
 
 <table>
 	<tr>
@@ -34,6 +28,8 @@ struct Greeter {
 			List your classes and methods:<br>
 <pre>// Your original code here
 
+// Add these below it:
+
 #include "nbind/nbind.h"
 
 NBIND_CLASS(Greeter) {
@@ -58,19 +54,22 @@ NBIND_CLASS(Greeter) {
 	</tr><tr>
 		<td valign="top">
 			Run on the command line:<br>
-<pre>npm install nbind
+<pre>npm install --save-dev \
+  nbind autogypi
 
-npm run autogypi init \
--l nbind -s hello.cc</pre>
+npm run autogypi -- \
+  --init-gyp \
+  -p nbind -s hello.cc</pre>
 		</td>
 
 		<td valign="top">
 			Compile to native binary:<br>
 <pre>npm run node-gyp \
-configure build</pre>
+  configure build</pre>
 			Or to Asm.js:<br>
 <pre>npm run node-gyp \
-configure build --asmjs=1</pre>
+  configure build \
+  --asmjs=1</pre>
 		</td><td valign="top">
 			Call from Node.js:<br>
 <pre>var nbind = require('nbind');
@@ -79,6 +78,7 @@ var lib = nbind.lib;
 nbind.init();
 
 lib.Greeter.sayHello('you');</pre>
+			Or from the browser (see below)
 		</td>
 	</tr>
 </table>
