@@ -9,10 +9,11 @@
   "scripts": {
     "tsc": "tsc",
     "cbuild": "cbuild",
+    "autogypi": "autogypi",
     "emcc-path": "emcc-path",
     "prepublish": "tsc -p src/em && cbuild -x -v -s dist/bundle/nbind-em.js -o dist/nbind-em.js",
-    "test-asm": "npm link nbind && autogypi test/autogypi.json && cd test/em && node-gyp configure build --asmjs=1 && tap test.js",
-    "test":                       "autogypi test/autogypi.json && cd test/v8 && node-gyp configure build           && tap --gc test.js"
+    "test-asm": "npm link nbind && autogypi -c test/autogypi.json && cd test/em && node-gyp configure build --asmjs=1 && tap test.js",
+    "test":                       "autogypi -c test/autogypi.json && cd test/v8 && node-gyp configure build           && tap --gc test.js"
   },
   "author": "Juha Järvi",
   "license": "MIT",
@@ -31,10 +32,10 @@
   ],
   "dependencies": {
     "emscripten-library-decorator": "~0.1.6",
-    "nan": "^2.3.2"
+    "nan": "^2.3.3"
   },
   "devDependencies": {
-    "autogypi": "~0.1.0",
+    "autogypi": "~0.2.1",
     "cbuild": "~0.1.0",
     "node-gyp": "~3.3.1",
     "tap": "~5.7.1",
