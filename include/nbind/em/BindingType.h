@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 /*
@@ -94,31 +94,6 @@ template<> struct BindingType<void> {
 
 	template <typename... Args>
 	static inline WireType toWireType(Args...) { }
-
-};
-
-template<> struct BindingType<std::string> {
-
-	typedef std::string Type;
-
-	typedef struct {
-		uint32_t length;
-		// The string continues past the struct.
-		// Use "struct hack" because C++ doesn't have flexible array members like C.
-		char data[1];
-	} *WireType;
-
-	static inline Type fromWireType(WireType arg) {
-		return(std::string(arg->data, arg->length));
-	}
-
-	static inline WireType toWireType(Type arg) {
-		// TODO: JavaScript side and testing for this.
-		WireType val = reinterpret_cast<WireType>(alloca(sizeof(*val) + arg.length() - 1));
-		val->length = arg.length();
-		std::copy(arg.begin(), arg.end(), val->data);
-		return(val);
-	}
 
 };
 
