@@ -3,6 +3,7 @@
 		"PrimitiveMethods.cc",
 		"GetterSetter.cc",
 		"Callback.cc",
-		"Value.cc"
+		"Value.cc",
+		"Array.cc"
 	]
 }

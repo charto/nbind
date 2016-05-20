@@ -164,3 +164,29 @@ test('Value objects', function(t) {
 
 	t.end();
 });
+
+test('Arrays', function(t) {
+	var ArrayType = testModule.Array;
+	var VectorType = testModule.Array;
+
+	var arr = [13, 21, 34];
+
+	t.strictDeepEqual(ArrayType.getInts(), arr);
+	t.strictDeepEqual(VectorType.getInts(), arr);
+
+	t.strictDeepEqual(ArrayType.callWithInts(function(a) {
+		t.strictDeepEqual(a, arr);
+		return(arr);
+	}, arr), arr);
+
+	t.strictDeepEqual(VectorType.callWithInts(function(a) {
+		t.strictDeepEqual(a, arr);
+		return(arr);
+	}, arr), arr);
+
+	t.throws(function() {
+		ArrayType.callWithInts(function(a) {}, [1, 2]);
+	}, {message: 'Type mismatch'});
+
+	t.end();
+});

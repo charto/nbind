@@ -5,8 +5,60 @@
 
 #include <string>
 #include <vector>
+#include <array>
 
 namespace nbind {
+
+// Array.
+
+template <typename ArgType, size_t size>
+struct BindingType<std::array<ArgType, size>> {
+
+	typedef std::array<ArgType, size> type;
+
+	static inline bool checkType(WireType arg) {
+		if(!arg->IsArray()) return(false);
+
+		v8::Local<v8::Array> arr = arg.template As<v8::Array>();
+
+		return(arr->Length() >= size);
+	}
+
+	static inline type fromWireType(WireType arg) {
+		// TODO: Don't convert sparse arrays.
+
+		v8::Local<v8::Array> arr = arg.template As<v8::Array>();
+
+		type val;
+
+		// Length of arr is checked in checkType().
+		for(uint32_t num = 0; num < size; ++num) {
+			v8::Local<v8::Value> item;
+
+			if(
+				Nan::Get(arr, num).ToLocal(&item) &&
+				BindingType<ArgType>::checkType(item)
+			) {
+				val[num] = BindingType<ArgType>::fromWireType(item);
+			} else {
+				throw(std::runtime_error("Error converting array element"));
+			}
+		}
+
+		return(val);
+	}
+
+	static inline WireType toWireType(type arg) {
+		v8::Local<v8::Array> arr = Nan::New<v8::Array>(size);
+
+		for(uint32_t num = 0; num < size; ++num) {
+			arr->Set(num, BindingType<ArgType>::toWireType(arg[num]));
+		}
+
+		return(arr);
+	}
+
+};
 
 // Vector.
 
@@ -20,16 +72,14 @@ struct BindingType<std::vector<ArgType>> {
 	}
 
 	static inline type fromWireType(WireType arg) {
-		v8::Local<v8::Array> arr = arg.template As<v8::Array>();
-
 		// TODO: Don't convert sparse arrays.
 
+		v8::Local<v8::Array> arr = arg.template As<v8::Array>();
 		uint32_t count = arr->Length();
 
 		// We know the length, so it's faster to preallocate the vector.
 
-		std::vector<ArgType> val;
-
+		type val;
 		val.reserve(count);
 
 		for(uint32_t num = 0; num < count; ++num) {
@@ -41,14 +91,23 @@ struct BindingType<std::vector<ArgType>> {
 			) {
 				val.push_back(BindingType<ArgType>::fromWireType(item));
 			} else {
-				fprintf(stderr, "ERR %d %p %d\n", num, *item, BindingType<ArgType>::checkType(item));
+				throw(std::runtime_error("Error converting array element"));
 			}
 		}
 
 		return(val);
 	}
 
-	static inline WireType toWireType(ArgType arg);
+	static inline WireType toWireType(type arg) {
+		uint32_t count = arg.size();
+		v8::Local<v8::Array> arr = Nan::New<v8::Array>(count);
+
+		for(uint32_t num = 0; num < count; ++num) {
+			arr->Set(num, BindingType<ArgType>::toWireType(arg[num]));
+		}
+
+		return(arr);
+	}
 
 };
 
@@ -68,7 +127,7 @@ template <> struct BindingType<std::string> {
 	}
 
 	static inline WireType toWireType(type arg) {
-		return(Nan::New<v8::String>(arg.c_str(), arg.length()).ToLocalChecked());   \
+		return(Nan::New<v8::String>(arg.c_str(), arg.length()).ToLocalChecked());
 	}
 
 };

@@ -90,8 +90,6 @@ template <> struct BindingType<ArgType> {               \
 	}                                                   \
 }
 
-// " <- Nano editor wants this quote here or it syntax highlights wrong.
-
 /*
 		TODO: functions accepting nbind::Buffer (class remains unimplemented)
 		as a parameter could be called like this:
