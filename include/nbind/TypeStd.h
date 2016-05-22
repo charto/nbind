@@ -9,26 +9,44 @@
 
 namespace nbind {
 
-	struct ArrayType {
-		const char placeholder;
-		const TYPEID member;
-		size_t size;
-	};
+	template<typename MemberType>
+	struct Typer<std::vector<MemberType>> {
+		static const struct SpecType {
+			const char placeholder;
+			const TYPEID member;
+		} spec;
 
-	template<typename ArgType, size_t size>
-	struct Typer<std::array<ArgType, size>> {
 		static NBIND_CONSTEXPR TYPEID makeID() {
-			return(DataTypeStore<1, struct ArrayType, TypeMembers<ArgType>, TypeLimits<size>>::get());
+			return(&spec.placeholder);
 		}
 	};
 
-// Specialize type ID generator for vector types.
+	template<typename MemberType>
+	const typename Typer<std::vector<MemberType>>::SpecType
+		Typer<std::vector<MemberType>>::spec = {
+			1,
+			Typer<MemberType>::makeID()
+		};
 
-template<typename ArgType>
-struct Typer<std::vector<ArgType>> {
-	static NBIND_CONSTEXPR TYPEID makeID() {
-		return(DataTypeStore<2, struct StructuredType, TypeMembers<ArgType>, TypeLimits<>>::get());
-	}
-};
+	template<typename MemberType, size_t size>
+	struct Typer<std::array<MemberType, size>> {
+		static const struct SpecType {
+			const char placeholder;
+			const TYPEID member;
+			const size_t length;
+		} spec;
+
+		static NBIND_CONSTEXPR TYPEID makeID() {
+			return(&spec.placeholder);
+		}
+	};
+
+	template<typename MemberType, size_t size>
+	const typename Typer<std::array<MemberType, size>>::SpecType
+		Typer<std::array<MemberType, size>>::spec = {
+			2,
+			Typer<MemberType>::makeID(),
+			size
+		};
 
 } // namespace

@@ -9,55 +9,26 @@ namespace nbind {
 
 typedef const void *TYPEID;
 
-template <typename ArgType>
-struct TypeStore {
+// Type ID generator.
+
+template<typename ArgType>
+struct Typer {
 	// Reserve a single byte of memory to uniquely represent a type.
 	// The address of this byte is a unique type-specific constant.
-	static constexpr char placeholder = 0;
+	static const struct SpecType {
+		const char placeholder;
+	} spec;
 
-	static constexpr TYPEID get() {
-		return(&placeholder);
+	static NBIND_CONSTEXPR TYPEID makeID() {
+		return(&spec.placeholder);
 	}
 };
 
 // Linkage for placeholder bytes representing types.
 template<typename ArgType>
-constexpr char TypeStore<ArgType>::placeholder;
+const typename Typer<ArgType>::SpecType Typer<ArgType>::spec = {0};
 
-// Type ID generator.
-
-template<typename ArgType>
-struct Typer {
-	static constexpr TYPEID makeID() {
-		return(TypeStore<ArgType>::get());
-	}
-};
-
-// Placeholders for data structure types also contain IDs of their member types
-// and possible numeric size limits.
-
-struct StructuredType {
-	const char placeholder;
-	const TYPEID member;
-};
-
-template<typename... MemberType> struct TypeMembers {};
-template<size_t... limit> struct TypeLimits {};
-
-template <char id, typename... T>
-struct DataTypeStore;
-
-template<char id, typename DataType, typename... MemberType, size_t... limit>
-struct DataTypeStore<id, DataType, TypeMembers<MemberType...>, TypeLimits<limit...>> {
-	static constexpr DataType spec { id, Typer<MemberType>::makeID()..., limit... };
-
-	static constexpr TYPEID get() {
-		return(&spec.placeholder);
-	}
-};
-
-template<char id, typename DataType, typename... MemberType, size_t... limit>
-constexpr DataType DataTypeStore<id, DataType, TypeMembers<MemberType...>, TypeLimits<limit...>>::spec;
+// Type description helpers.
 
 template <typename ArgType>
 struct isChar {
@@ -97,7 +68,7 @@ void **defineTypes() {
 
 template<typename... Args>
 const TYPEID *listTypes() {
-	static constexpr TYPEID typeList[] = { Typer<Args>::makeID()... };
+	static NBIND_CONSTEXPR TYPEID typeList[] = { Typer<Args>::makeID()... };
 	return(typeList);
 }
 
