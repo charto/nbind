@@ -49,6 +49,9 @@ struct BindingType<ArgType *> {
 
 };
 
+// Numeric and boolean types.
+// The static cast silences a compiler warning in Visual Studio.
+
 #define DEFINE_NATIVE_BINDING_TYPE(ArgType,decode,jsClass)  \
 template <> struct BindingType<ArgType> {                   \
 	typedef ArgType type;                                   \
