@@ -16,6 +16,9 @@ export namespace _nbind {
 		close: string;
 	}
 
+	/** Create a single resource with open and close code included
+	  * once from each type of resource needed by a list of types. */
+
 	export function listResources(typeList: main.BindType[]) {
 		var openTbl: { [name: string]: boolean } = {};
 		var closeTbl: { [name: string]: boolean } = {};

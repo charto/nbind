@@ -13,7 +13,7 @@ template <typename ArgType>
 struct TypeStore {
 	// Reserve a single byte of memory to uniquely represent a type.
 	// The address of this byte is a unique type-specific constant.
-	static char placeholder;
+	static constexpr char placeholder = 0;
 
 	static constexpr TYPEID get() {
 		return(&placeholder);
@@ -22,12 +22,42 @@ struct TypeStore {
 
 // Linkage for placeholder bytes representing types.
 template<typename ArgType>
-char TypeStore<ArgType>::placeholder;
+constexpr char TypeStore<ArgType>::placeholder;
 
-template <typename ArgType>
-static NBIND_CONSTEXPR TYPEID makeTypeID() {
-	return(TypeStore<ArgType>::get());
-}
+// Type ID generator.
+
+template<typename ArgType>
+struct Typer {
+	static constexpr TYPEID makeID() {
+		return(TypeStore<ArgType>::get());
+	}
+};
+
+// Placeholders for data structure types also contain IDs of their member types
+// and possible numeric size limits.
+
+struct StructuredType {
+	const char placeholder;
+	const TYPEID member;
+};
+
+template<typename... MemberType> struct TypeMembers {};
+template<size_t... limit> struct TypeLimits {};
+
+template <char id, typename... T>
+struct DataTypeStore;
+
+template<char id, typename DataType, typename... MemberType, size_t... limit>
+struct DataTypeStore<id, DataType, TypeMembers<MemberType...>, TypeLimits<limit...>> {
+	static constexpr DataType spec { id, Typer<MemberType>::makeID()..., limit... };
+
+	static constexpr TYPEID get() {
+		return(&spec.placeholder);
+	}
+};
+
+template<char id, typename DataType, typename... MemberType, size_t... limit>
+constexpr DataType DataTypeStore<id, DataType, TypeMembers<MemberType...>, TypeLimits<limit...>>::spec;
 
 template <typename ArgType>
 struct isChar {
@@ -47,7 +77,7 @@ struct isChar<char> {
 
 template <typename... Args>
 void **defineTypes() {
-	static TYPEID typeList[] = { makeTypeID<Args>()..., nullptr };
+	static TYPEID typeList[] = { Typer<Args>::makeID()..., nullptr };
 	static uint32_t sizeList[] = { sizeof(typename std::remove_pointer<Args>::type)... };
 	static uint8_t flagList[] = { (
 		isChar<typename std::remove_pointer<Args>::type>::value * 16 |
@@ -67,7 +97,7 @@ void **defineTypes() {
 
 template<typename... Args>
 const TYPEID *listTypes() {
-	static NBIND_CONSTEXPR TYPEID typeList[] = { makeTypeID<Args>()... };
+	static constexpr TYPEID typeList[] = { Typer<Args>::makeID()... };
 	return(typeList);
 }
 

@@ -59,10 +59,10 @@ void Bindings :: registerClass(BindClassBase &bindClass) {
 typedef BaseSignature::Type SigType;
 
 void Bindings :: initModule() {
-	_nbind_register_type(makeTypeID<void>(), "void");
-	_nbind_register_type(makeTypeID<bool>(), "bool");
-	_nbind_register_type(makeTypeID<std::string>(), "std::string");
-	_nbind_register_type(makeTypeID<cbOutput::CreateValue>(), "_nbind_new");
+	_nbind_register_type(Typer<void>::makeID(), "void");
+	_nbind_register_type(Typer<bool>::makeID(), "bool");
+	_nbind_register_type(Typer<std::string>::makeID(), "std::string");
+	_nbind_register_type(Typer<cbOutput::CreateValue>::makeID(), "_nbind_new");
 
 	_nbind_register_types(defineTypes<
 		unsigned char,  signed char,    char,
@@ -77,7 +77,7 @@ void Bindings :: initModule() {
 		         char *, const          char *
 	>());
 
-	_nbind_register_type(makeTypeID<cbFunction &>(), "cbFunction &");
+	_nbind_register_type(Typer<cbFunction &>::makeID(), "cbFunction &");
 
 	// Register all classes before any functions, so they'll have type information ready.
 

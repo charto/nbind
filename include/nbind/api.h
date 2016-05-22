@@ -55,6 +55,7 @@ private:
 } // namespace
 
 #include "TypeID.h"
+#include "TypeStd.h"
 
 #if defined(BUILDING_NODE_EXTENSION)
 

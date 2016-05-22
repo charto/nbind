@@ -141,9 +141,9 @@ template <class Bound> class BindClass : public BindClassBase {
 public:
 
 	BindClass() : BindClassBase(
-		makeTypeID<Bound>(),
-		makeTypeID<Bound *>(),
-		makeTypeID<const Bound *>()
+		Typer<Bound>::makeID(),
+		Typer<Bound *>::makeID(),
+		Typer<const Bound *>::makeID()
 	) {
 		this->deleter = reinterpret_cast<jsMethod *>(&BindClass::destroy);
 	}

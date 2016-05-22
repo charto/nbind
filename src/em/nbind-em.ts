@@ -279,8 +279,20 @@ export namespace _nbind {
 
 	export function getTypes(idList: TypeIDList) {
 		return(idList.map((id: number | string) => {
-			if(typeof(id) == 'number') return(_nbind.typeList[id as number]);
-			else return(_nbind.typeTbl[id as string]);
+			if(typeof(id) == 'number') {
+				var type = _nbind.typeList[id as number];
+				if(type) return(type);
+
+				var structureType = HEAPU8[id as number];
+				console.log('structureType = ' + structureType);
+				console.log('ID = ' + id);
+for(var i = id as number; i < (id as number) + 10; ++i) console.log(HEAPU8[i]);
+				id = HEAPU32[((id as number) >> 2) + 1];
+				console.log('ID = ' + id);
+				var type = _nbind.typeList[id as number];
+				console.log(type);
+				if(type) return(type);
+			} else return(_nbind.typeTbl[id as string]);
 		}));
 	}
 
