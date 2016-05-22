@@ -40,6 +40,15 @@
 
 			"sources": ["v8/Binding.cc"],
 			"cflags_cc": ["-std=c++11", "-fexceptions"],
+
+			"msbuild_settings": {
+				"ClCompile": {
+					"RuntimeTypeInfo": "false",
+					"ExceptionHandling": "Sync", # /EHsc
+					"MultiProcessorCompilation": "true"
+				}
+			},
+
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
 				"CLANG_CXX_LANGUAGE_STANDARD":"c++11",

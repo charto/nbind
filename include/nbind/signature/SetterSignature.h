@@ -34,7 +34,8 @@ public:
 	static void callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
 		Parent::CallWrapper::callMethod(
 			*target,
-			Parent::getMethod(nanArgs.Data()->IntegerValue() >> accessorSetterShift).func,
+			// The static cast silences a compiler warning in Visual Studio.
+			Parent::getMethod(static_cast<unsigned int>(nanArgs.Data()->IntegerValue()) >> accessorSetterShift).func,
 			args
 		);
 	}

@@ -44,7 +44,11 @@ public:
 		sizeof...(Args)
 	) {}
 
+	// Making the instance a direct class member fails on some platforms.
+	// Maybe it registers the signature too early.
+
 	static CallbackSignature &getInstance() {
+		// Linkage for a singleton instance of each templated class.
 		static CallbackSignature instance;
 		return(instance);
 	}

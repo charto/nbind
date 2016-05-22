@@ -37,8 +37,9 @@ public:
 	const char *getName() { return(name); }
 	void setName(const char *name) { this->name = name; }
 
-	bool isReady() { return(readyState & 1); }
-	bool isDuplicate() { return(readyState & 2); }
+	// The explicit nonzero test silences a compiler warning in Visual Studio.
+	bool isReady() { return((readyState & 1) != 0); }
+	bool isDuplicate() { return((readyState & 2) != 0); }
 
 	void setDuplicate() { readyState |= 2; }
 
@@ -148,7 +149,10 @@ public:
 		this->deleter = reinterpret_cast<jsMethod *>(&BindClass::destroy);
 	}
 
+	// Making the instance a direct class member might fail on some platforms.
+
 	static BindClass &getInstance() {
+		// Linkage for a singleton instance of each templated class.
 		static BindClass instance;
 
 		return(instance);

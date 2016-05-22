@@ -58,7 +58,7 @@ template <> struct BindingType<ArgType> {                   \
 	}                                                       \
 	                                                        \
 	static inline type fromWireType(WireType arg) {         \
-		return(arg->decode());                              \
+		return(static_cast<type>(arg->decode()));           \
 	}                                                       \
 	                                                        \
 	static inline WireType toWireType(type arg) {           \

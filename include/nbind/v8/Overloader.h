@@ -38,7 +38,8 @@ public:
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		static std::vector<OverloadDef> &overloadVect = overloadVectStore();
-		OverloadDef &def = overloadVect[args.Data()->IntegerValue() >> overloadShift];
+		// The static cast silences a compiler warning in Visual Studio.
+		OverloadDef &def = overloadVect[static_cast<unsigned int>(args.Data()->IntegerValue()) >> overloadShift];
 
 		std::vector<funcPtr> &methodVect = def.methodVect;
 		unsigned int argc = args.Length();
@@ -85,7 +86,8 @@ public:
 	}
 
 	static void callNew(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		OverloadDef &def = getDef(args.Data()->IntegerValue() >> overloadShift);
+		// The static cast silences a compiler warning in Visual Studio.
+		OverloadDef &def = getDef(static_cast<unsigned int>(args.Data()->IntegerValue()) >> overloadShift);
 
 		unsigned int argc = args.Length();
 		std::vector<v8::Local<v8::Value>> argv(argc);

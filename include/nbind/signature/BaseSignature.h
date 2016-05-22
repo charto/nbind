@@ -74,9 +74,11 @@ public:
 		sizeof...(Args)
 	) {}
 
-	// Linkage for a singleton instance of each templated class.
+	// Making the instance a direct class member fails on some platforms.
+	// Maybe it registers the signature too early.
 
 	static Signature &getInstance() {
+		// Linkage for a singleton instance of each templated class.
 		static Signature instance;
 		return(instance);
 	}
