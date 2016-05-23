@@ -168,34 +168,35 @@ export namespace _nbind {
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
-		if(!returnType.needsWireRead && !needsWireWrite && argCount <= 3) switch(argCount) {
-
+		if(!returnType.needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
-			case 0: return(function() {return(
-			        dynCall(ptr, num, this.__nbindPtr));});
-			case 1: return(function(                   a1: any) {return(
-			        dynCall(ptr, num, this.__nbindPtr, a1    ));});
-			case 2: return(function(                   a1: any, a2: any) {return(
-			        dynCall(ptr, num, this.__nbindPtr, a1,      a2    ));});
-			case 3: return(function(                   a1: any, a2: any, a3: any) {return(
-			        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3    ));});
-		} else {
-
-			// Function takes over 3 arguments or needs type conversion.
-			// Let's create the invoker dynamically then.
-
-			return(buildCallerFunction(
-				dynCall,
-				ptr,
-				num,
-				needsWireWrite,
-				'ptr,num,this.__nbindPtr',
-				returnType,
-				argTypeList
-			));
+			switch(argCount) {
+				case 0: return(function() {return(
+				        dynCall(ptr, num, this.__nbindPtr));});
+				case 1: return(function(                   a1: any) {return(
+				        dynCall(ptr, num, this.__nbindPtr, a1    ));});
+				case 2: return(function(                   a1: any, a2: any) {return(
+				        dynCall(ptr, num, this.__nbindPtr, a1,      a2    ));});
+				case 3: return(function(                   a1: any, a2: any, a3: any) {return(
+				        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3    ));});
+				default:
+					// Function takes over 3 arguments or needs type conversion.
+					// Let's create the invoker dynamically then.
+					break;
+			}
 		}
+
+		return(buildCallerFunction(
+			dynCall,
+			ptr,
+			num,
+			needsWireWrite,
+			'ptr,num,this.__nbindPtr',
+			returnType,
+			argTypeList
+		));
 	}
 
 	// Dynamically create an invoker function for a C++ function.
@@ -211,50 +212,54 @@ export namespace _nbind {
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
-		if(!returnType.needsWireRead && !needsWireWrite && argCount <= 3) switch(argCount) {
-
+		if(!returnType.needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
-			case 0: return(() =>
-			        dynCall(direct));
-			case 1: return((        a1: any) =>
-			        dynCall(direct, a1       ));
-			case 2: return((        a1: any, a2: any) =>
-			        dynCall(direct, a1,      a2       ));
-			case 3: return((        a1: any, a2: any, a3: any) =>
-			        dynCall(direct, a1,      a2,      a3       ));
-		} else {
-
-			// Function takes over 3 arguments or needs type conversion.
-			// Let's create the invoker dynamically then.
-
-			var prefix: string;
-
-			if(ptr) {
-				// If there's a dispatcher that doesn't call the function directly,
-				// pass the num argument to it.
-
-				idList.splice(1, 0, 'uint32_t');
-				prefix = 'ptr,num';
-			} else {
-				ptr = direct;
-				prefix = 'ptr';
+			switch(argCount) {
+				case 0: return(() =>
+				        dynCall(direct));
+				case 1: return((        a1: any) =>
+				        dynCall(direct, a1       ));
+				case 2: return((        a1: any, a2: any) =>
+				        dynCall(direct, a1,      a2       ));
+				case 3: return((        a1: any, a2: any, a3: any) =>
+				        dynCall(direct, a1,      a2,      a3       ));
+				default:
+					// Function takes over 3 arguments.
+					// Let's create the invoker dynamically then.
+					break;
 			}
 
-			signature = makeSignature(getTypes(idList));
-			dynCall = Module['dynCall_' + signature];
-
-			return(buildCallerFunction(
-				dynCall,
-				ptr,
-				num,
-				needsWireWrite,
-				prefix,
-				returnType,
-				argTypeList
-			));
+			// Input and output types don't need conversion so omit dispatcher.
+			ptr = null;
 		}
+
+		var prefix: string;
+
+		if(ptr) {
+			// If there's a dispatcher that doesn't call the function directly,
+			// pass the num argument to it.
+
+			idList.splice(1, 0, 'uint32_t');
+			prefix = 'ptr,num';
+		} else {
+			ptr = direct;
+			prefix = 'ptr';
+		}
+
+		signature = makeSignature(getTypes(idList));
+		dynCall = Module['dynCall_' + signature];
+
+		return(buildCallerFunction(
+			dynCall,
+			ptr,
+			num,
+			needsWireWrite,
+			prefix,
+			returnType,
+			argTypeList
+		));
 	}
 
 	// Create an overloader that can call several methods with the same name,
