@@ -182,7 +182,7 @@ class nbind {
 		_nbind.addMethod(
 			proto,
 			'__nbindConstructor',
-			_nbind.makeCaller(ptr, 0, ptr, typeList),
+			_nbind.makeCaller(null, 0, ptr, typeList),
 			typeCount - 1
 		);
 
@@ -194,7 +194,7 @@ class nbind {
 		_nbind.addMethod(
 			proto,
 			'__nbindValueConstructor',
-			_nbind.makeCaller(ptrValue, 0, ptrValue, typeList),
+			_nbind.makeCaller(null, 0, ptrValue, typeList),
 			typeCount
 		);
 	}

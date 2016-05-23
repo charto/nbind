@@ -229,14 +229,17 @@ export namespace _nbind {
 			// Function takes over 3 arguments or needs type conversion.
 			// Let's create the invoker dynamically then.
 
-			// If there's a dispatcher that doesn't call the function directly,
-			// pass the num argument to it.
+			var prefix: string;
 
-			var prefix = 'ptr';
+			if(ptr) {
+				// If there's a dispatcher that doesn't call the function directly,
+				// pass the num argument to it.
 
-			if(ptr != direct) {
 				idList.splice(1, 0, 'uint32_t');
 				prefix = 'ptr,num';
+			} else {
+				ptr = direct;
+				prefix = 'ptr';
 			}
 
 			signature = makeSignature(getTypes(idList));

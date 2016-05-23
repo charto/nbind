@@ -1,9 +1,9 @@
 // This function is adapted from the npm module "bindings"
 // licensed under the MIT license terms in BINDINGS-LICENSE.
 
-function findCompiledModule(root, specList) {
-	var Path = require('path');
+var path = require('path');
 
+function findCompiledModule(root, specList) {
 	// Make list of possible paths for a single compiled output file name.
 
 	function makePathList(name) {
@@ -50,7 +50,7 @@ function findCompiledModule(root, specList) {
 		// Check if any path contains a loadable module, and store unsuccessful attempts.
 
 		for(pathNum = 0; pathNum < pathCount; ++pathNum) {
-			var resolvedPath = Path.resolve.apply(this, pathList[pathNum]);
+			var resolvedPath = path.resolve.apply(this, pathList[pathNum]);
 
 			try {
 				spec.path = require.resolve(resolvedPath);
@@ -120,7 +120,9 @@ var nbind = {
 
 	moduleSpec: null,
 
-	lib: {}
+	lib: {
+		locateFile: function(name) {return(path.resolve(path.dirname(nbind.moduleSpec.path), name));}
+	}
 };
 
 function extend(dst, src) {
