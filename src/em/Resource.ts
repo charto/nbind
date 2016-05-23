@@ -2,7 +2,8 @@
 // Released under the MIT license, see LICENSE.
 
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as main} from './nbind-em';
+import {_nbind as _main} from './nbind-em';
+import {_nbind as _type} from './BindingType';
 
 setEvil((code: string) => eval(code));
 
@@ -22,7 +23,7 @@ export namespace _nbind {
 	/** Create a single resource with open and close code included
 	  * once from each type of resource needed by a list of types. */
 
-	export function listResources(typeList: main.BindType[]) {
+	export function listResources(typeList: _type.BindType[]) {
 		var openTbl: { [name: string]: boolean } = {};
 		var closeTbl: { [name: string]: boolean } = {};
 

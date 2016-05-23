@@ -12,12 +12,12 @@ namespace nbind {
 	template<typename MemberType>
 	struct Typer<std::vector<MemberType>> {
 		static const struct SpecType {
-			const char placeholder;
+			const char placeholderFlag;
 			const TYPEID member;
 		} spec;
 
 		static NBIND_CONSTEXPR TYPEID makeID() {
-			return(&spec.placeholder);
+			return(&spec.placeholderFlag);
 		}
 	};
 
@@ -31,13 +31,13 @@ namespace nbind {
 	template<typename MemberType, size_t size>
 	struct Typer<std::array<MemberType, size>> {
 		static const struct SpecType {
-			const char placeholder;
+			const char placeholderFlag;
 			const TYPEID member;
 			const size_t length;
 		} spec;
 
 		static NBIND_CONSTEXPR TYPEID makeID() {
-			return(&spec.placeholder);
+			return(&spec.placeholderFlag);
 		}
 	};
 

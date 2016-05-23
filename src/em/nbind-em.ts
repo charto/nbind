@@ -2,7 +2,10 @@
 // Released under the MIT license, see LICENSE.
 
 import {setEvil, dep, exportLibrary, prepareNamespace, publishNamespace, defineHidden} from 'emscripten-library-decorator';
-import {_nbind as resource} from './Resource';
+import {_nbind as _resource} from './Resource';
+import {_nbind as _type} from './BindingType';
+
+export {_resource, _type};
 
 // Generic table and list of functions.
 
@@ -16,47 +19,20 @@ setEvil((code: string) => eval(code));
 
 var _defineHidden = defineHidden;
 
-export {resource};
-
 // Namespace that will be made available inside Emscripten compiled module.
 
 export namespace _nbind {
 
-	export var resources: typeof resource.resources;
-	export var listResources: typeof resource.listResources;
+	export var resources: typeof _resource.resources;
+	export var listResources: typeof _resource.listResources;
 
-	// A type definition, which registers itself upon construction.
-
-	export class BindType {
-		constructor(id: number, name: string) {
-			this.id = id;
-			this.name = name;
-
-			// Namespace name is needed here, or TypeScript will mangle it.
-			_nbind.typeTbl[name] = this;
-			_nbind.typeList[id] = this;
-		}
-
-		// TODO: maybe this should be an abstract base class and these versions of wire type conversions
-		// should be in a subclass called PrimitiveType.
-
-		needsWireRead: boolean = false;
-
-		makeWireRead(expr: string) {
-			return(expr);
-		}
-
-		needsWireWrite: boolean = false;
-
-		makeWireWrite(expr: string) {
-			return(expr);
-		}
-
-		needsResources: resource.Resource[] = null;
-
-		id: number;
-		name: string;
-	}
+	export var BindType: typeof _type.BindType;
+	export var BindClass: typeof _type.BindClass;
+	export var BooleanType: typeof _type.BooleanType;
+	export var CStringType: typeof _type.CStringType;
+	export var StringType: typeof _type.StringType;
+	export var CallbackType: typeof _type.CallbackType;
+	export var CreateValueType: typeof _type.CreateValueType;
 
 	// Base class for wrapped instances of bound C++ classes.
 
@@ -73,65 +49,6 @@ export namespace _nbind {
 
 	export interface WrapperClass {
 		new(...args: any[]): Wrapper;
-	}
-
-	// Push a string to the C++ stack, zero-terminated and UTF-8 encoded.
-
-	export function pushCString(str: string) {
-		if(str === null || str === undefined) return(0);
-		str = str.toString();
-
-		var length = Module.lengthBytesUTF8(str) + 1;
-		var result = Runtime.stackAlloc(length);
-
-		Module.stringToUTF8Array(str, HEAPU8, result, length);
-
-		return(result);
-	}
-
-	// Read a zero-terminated, UTF-8 encoded string from the C++ stack.
-
-	export function popCString(ptr: number) {
-		if(ptr === 0) return(null);
-
-		return(Module.Pointer_stringify(ptr));
-	}
-
-	// Zero-terminated 'const char *' style string, passed through the C++ stack.
-
-	export class CStringType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
-		needsWireRead: boolean = true;
-
-		makeWireRead(expr: string) {
-			return('_nbind.popCString(' + expr + ')');
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('_nbind.pushCString(' + expr + ')');
-		}
-
-		needsResources = [ resources.stack ];
-	}
-
-	// Booleans are returned as numbers from Asm.js.
-	// Prefixing with !! converts them to JavaScript booleans.
-
-	export class BooleanType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
-		needsWireRead: boolean = true;
-
-		makeWireRead(expr: string) {
-			return('!!(' + expr + ')');
-		}
 	}
 
 	export var callbackSignatureList: Func[] = [];
@@ -159,111 +76,6 @@ export namespace _nbind {
 		return(num);
 	}
 
-	export class CallbackType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('_nbind.registerCallback(' + expr + ')');
-		}
-	}
-
-	export function pushString(str: string) {
-		if(str === null || str === undefined) return(0);
-		str = str.toString();
-
-		var length = Module.lengthBytesUTF8(str);
-
-		// 32-bit length, string and a zero terminator
-		// (stringToUTF8Array insists on adding it)
-
-		var result = Runtime.stackAlloc(4 + length + 1);
-
-		HEAPU32[result / 4] = length;
-		Module.stringToUTF8Array(str, HEAPU8, result + 4, length + 1);
-
-		return(result);
-	}
-
-	export function popString(ptr: number) {
-		if(ptr === 0) return(null);
-
-		var length = HEAPU32[ptr / 4];
-
-		return(Module.Pointer_stringify(ptr + 4, length));
-	}
-
-	export class StringType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
-		needsWireRead: boolean = true;
-
-		makeWireRead(expr: string) {
-			return('_nbind.popString(' + expr + ')');
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('_nbind.pushString(' + expr + ')');
-		}
-
-		needsResources = [ resources.stack ];
-	}
-
-	// Special type that constructs a new object.
-
-	export class CreateValueType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('((_nbind.value=new ' + expr + '),0)');
-		}
-	}
-
-	// Base class for all bound C++ classes (not their instances),
-	// also inheriting from a generic type definition.
-
-	export class BindClass extends BindType {
-		constructor(id: number, name: string, proto: WrapperClass) {
-			super(id, name);
-
-			this.proto = proto;
-		}
-
-		// Reference to JavaScript class for wrapped instances
-		// of this C++ class.
-
-		proto: WrapperClass;
-
-		needsWireRead: boolean = true;
-
-		makeWireRead(expr: string) {
-			return('(' +
-				expr + '||' +
-				'_nbind.throwError("Value type JavaScript class is missing or not registered"),' +
-				'_nbind.value' +
-			')');
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			// TODO: free the list item allocated here.
-
-			return('_nbind.storeValue(' + expr + ')');
-		}
-	}
-
 	export var valueList: any[] = [];
 
 	export var valueFreeList: number[] = [];
@@ -283,8 +95,9 @@ export namespace _nbind {
 				var type = _nbind.typeList[id as number];
 				if(type) return(type);
 
-				var structureType = HEAPU8[id as number];
-				console.log('structureType = ' + structureType);
+				var placeholderFlag = HEAPU8[id as number];
+
+				console.log('placeholderFlag = ' + placeholderFlag);
 				console.log('ID = ' + id);
 for(var i = id as number; i < (id as number) + 10; ++i) console.log(HEAPU8[i]);
 				id = HEAPU32[((id as number) >> 2) + 1];
@@ -300,14 +113,14 @@ for(var i = id as number; i < (id as number) + 10; ++i) console.log(HEAPU8[i]);
 	// Asm.js functions can only be called though Emscripten-generated invoker functions,
 	// with slightly mangled type signatures appended to their names.
 
-	export function makeSignature(typeList: BindType[]) {
+	export function makeSignature(typeList: _type.BindType[]) {
 		var mangleMap: { [name: string]: string; } = {
 			float64_t: 'd',
 			float32_t: 'f',
 			void: 'v'
 		}
 
-		return(typeList.map((type: BindType) => (mangleMap[type.name] || 'i')).join(''));
+		return(typeList.map((type: _type.BindType) => (mangleMap[type.name] || 'i')).join(''));
 	}
 
 	// Make a list of argument names a1, a2, a3...
@@ -331,8 +144,8 @@ for(var i = id as number; i < (id as number) + 10; ++i) console.log(HEAPU8[i]);
 		num: number,
 		needsWireWrite: boolean,
 		prefix: string,
-		returnType: BindType,
-		argTypeList: BindType[]
+		returnType: _type.BindType,
+		argTypeList: _type.BindType[]
 	) {
 		var argList = makeArgList(argTypeList.length);
 
@@ -364,25 +177,25 @@ for(var i = id as number; i < (id as number) + 10; ++i) console.log(HEAPU8[i]);
 	// Check if any type on the list requires conversion.
 	// Mainly numbers can be passed as-is between Asm.js and JavaScript.
 
-	function anyNeedsWireWrite(typeList: BindType[]) {
+	function anyNeedsWireWrite(typeList: _type.BindType[]) {
 		return(typeList.reduce(
-			(result: boolean, type: BindType) =>
+			(result: boolean, type: _type.BindType) =>
 				(result || type.needsWireWrite),
 			false
 		));
 	}
 
-	function anyNeedsWireRead(typeList: BindType[]) {
+	function anyNeedsWireRead(typeList: _type.BindType[]) {
 		return(typeList.reduce(
-			(result: boolean, type: BindType) =>
+			(result: boolean, type: _type.BindType) =>
 				(result || type.needsWireRead),
 			false
 		));
 	}
 
 	export function buildJSCallerFunction(
-		returnType: BindType,
-		argTypeList: BindType[]
+		returnType: _type.BindType,
+		argTypeList: _type.BindType[]
 	) {
 		var argList = makeArgList(argTypeList.length);
 
@@ -594,8 +407,8 @@ for(var i = id as number; i < (id as number) + 10; ++i) console.log(HEAPU8[i]);
 
 	// Mapping from numeric typeIDs and type names to objects with type information.
 
-	export var typeTbl: { [name: string]: BindType } = {};
-	export var typeList: BindType[] = [];
+	export var typeTbl: { [name: string]: _type.BindType } = {};
+	export var typeList: _type.BindType[] = [];
 
 	// Enum specifying if a method is a getter or setter or not.
 
@@ -755,7 +568,7 @@ class nbind {
 	) {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 
-		var proto = (_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype;
+		var proto = (_nbind.typeList[typeID] as _type.BindClass).proto.prototype;
 
 		_nbind.addMethod(
 			proto,
@@ -780,7 +593,7 @@ class nbind {
 	@dep('_nbind')
 	static _nbind_register_destructor(typeID: number, ptr: number) {
 		_nbind.addMethod(
-			(_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype,
+			(_nbind.typeList[typeID] as _type.BindClass).proto.prototype,
 			'free',
 			_nbind.makeMethodCaller(ptr, 0, typeID, ['void']),
 			0
@@ -801,7 +614,7 @@ class nbind {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 
 		_nbind.addMethod(
-			(_nbind.typeList[typeID] as _nbind.BindClass).proto as any,
+			(_nbind.typeList[typeID] as _type.BindClass).proto as any,
 			name,
 			_nbind.makeCaller(ptr, num, direct, typeList),
 			typeCount - 1
@@ -820,7 +633,7 @@ class nbind {
 	) {
 		var name = _readAsciiString(namePtr);
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
-		var proto = (_nbind.typeList[typeID] as _nbind.BindClass).proto.prototype;
+		var proto = (_nbind.typeList[typeID] as _type.BindClass).proto.prototype;
 
 		if(methodType == _nbind.MethodType.method) {
 			_nbind.addMethod(
@@ -903,7 +716,7 @@ class nbind {
 		// to equivalent JS prototype.
 
 		_defineHidden(
-			(_nbind.typeTbl[name] as _nbind.BindClass).proto.prototype.__nbindValueConstructor
+			(_nbind.typeTbl[name] as _type.BindClass).proto.prototype.__nbindValueConstructor
 		)(proto.prototype, '__nbindValueConstructor');
 	}
 
