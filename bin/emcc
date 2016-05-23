@@ -7,10 +7,13 @@
 skip=0
 
 for arg; do
-  shift
-  [ "$skip" = "1" ] && skip=0 && continue
-  [ "$arg" = "-arch" ] && skip=1 && continue
-  set -- "$@" "$arg"
+	shift
+	[ "$skip" = "1" ] && skip=0 && continue
+	case "$arg" in
+		-arch) skip=1 ;;
+		-mmacosx-version-min=*) ;;
+		*) set -- "$@" "$arg" ;;
+	esac
 done
 
 emcc $@
