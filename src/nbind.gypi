@@ -18,8 +18,8 @@
 			"cflags_cc":  [ "<@(_cflags)" ],
 			"ldflags":    [ "<@(_cflags)" ],
 
-			"copies": [{"destination": "<(INTERMEDIATE_DIR)", "files": ["../dist/nbind-em.js"]}],
-			"jslib_path": "<(INTERMEDIATE_DIR)/nbind-em.js",
+			"copies": [{"destination": "<(INTERMEDIATE_DIR)", "files": ["../dist/em-api.js"]}],
+			"jslib_path": "<(INTERMEDIATE_DIR)/em-api.js",
 
 			"cflags": [
 				"-g",

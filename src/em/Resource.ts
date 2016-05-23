@@ -2,7 +2,6 @@
 // Released under the MIT license, see LICENSE.
 
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as _main} from './nbind-em';
 import {_nbind as _type} from './BindingType';
 
 setEvil((code: string) => eval(code));

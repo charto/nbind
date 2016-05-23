@@ -2,15 +2,15 @@
 // Released under the MIT license, see LICENSE.
 
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as _main} from './nbind-em';
+import {_nbind as _globals} from './Globals';
 import {_nbind as _resource} from './Resource';
 
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
 
-	export var typeTbl: typeof _main.typeTbl;
-	export var typeList: typeof _main.typeList;
+	export var typeTbl: typeof _globals.typeTbl;
+	export var typeList: typeof _globals.typeList;
 
 	export var resources: typeof _resource.resources;
 
@@ -181,7 +181,7 @@ export namespace _nbind {
 	// also inheriting from a generic type definition.
 
 	export class BindClass extends BindType {
-		constructor(id: number, name: string, proto: _main.WrapperClass) {
+		constructor(id: number, name: string, proto: _globals.WrapperClass) {
 			super(id, name);
 
 			this.proto = proto;
@@ -190,7 +190,7 @@ export namespace _nbind {
 		// Reference to JavaScript class for wrapped instances
 		// of this C++ class.
 
-		proto: _main.WrapperClass;
+		proto: _globals.WrapperClass;
 
 		needsWireRead: boolean = true;
 

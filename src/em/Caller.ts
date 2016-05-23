@@ -2,7 +2,7 @@
 // Released under the MIT license, see LICENSE.
 
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as _main} from './nbind-em';
+import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _resource} from './Resource';
 
@@ -10,20 +10,15 @@ setEvil((code: string) => eval(code));
 
 export namespace _nbind {
 
-	type Func = _main.Func;
-	type FuncList = _main.FuncList;
-	type TypeIDList = _main.TypeIDList;
+	type Func = _globals.Func;
+	type FuncList = _globals.FuncList;
+	type TypeIDList = _globals.TypeIDList;
 
-	export var getTypes: typeof _main.getTypes;
-	export var makeSignature: typeof _main.makeSignature;
-	export var callbackList: typeof _main.callbackList;
+	export var getTypes: typeof _globals.getTypes;
+	export var makeSignature: typeof _globals.makeSignature;
+	export var callbackList: typeof _globals.callbackList;
 
 	export var listResources: typeof _resource.listResources;
-
-//	export var typeTbl: typeof _main.typeTbl;
-//	export var typeList: typeof _main.typeList;
-
-//	export var resources: typeof _resource.resources;
 
 	// Make a list of argument names a1, a2, a3...
 	// for dynamically generating function source code.

@@ -11,6 +11,6 @@
 	},
 	"files": [
 		"emscripten.d.ts",
-		"nbind-em.ts"
+		"em-api.ts"
 	]
 }
