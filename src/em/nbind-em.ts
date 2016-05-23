@@ -4,16 +4,9 @@
 import {setEvil, dep, exportLibrary, prepareNamespace, publishNamespace, defineHidden} from 'emscripten-library-decorator';
 import {_nbind as _resource} from './Resource';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _caller} from './Caller';
 
-export {_resource, _type};
-
-// Generic table and list of functions.
-
-type Func = (...args: any[]) => any;
-type FuncTbl = { [name: string]: Func };
-type FuncList = { (...args: any[]): any }[];
-type Invoker = (ptr: number, ...args: any[]) => any;
-type TypeIDList = (number | string)[];
+export {_resource, _type, _caller};
 
 setEvil((code: string) => eval(code));
 
@@ -22,6 +15,14 @@ var _defineHidden = defineHidden;
 // Namespace that will be made available inside Emscripten compiled module.
 
 export namespace _nbind {
+
+	// Generic table and list of functions.
+
+	export type Func = (...args: any[]) => any;
+	export type FuncTbl = { [name: string]: Func };
+	export type FuncList = { (...args: any[]): any }[];
+	export type Invoker = (ptr: number, ...args: any[]) => any;
+	export type TypeIDList = (number | string)[];
 
 	export var resources: typeof _resource.resources;
 	export var listResources: typeof _resource.listResources;
@@ -33,6 +34,11 @@ export namespace _nbind {
 	export var StringType: typeof _type.StringType;
 	export var CallbackType: typeof _type.CallbackType;
 	export var CreateValueType: typeof _type.CreateValueType;
+
+	export var makeCaller: typeof _caller.makeCaller;
+	export var makeMethodCaller: typeof _caller.makeMethodCaller;
+	export var makeJSCaller: typeof _caller.makeJSCaller;
+	export var makeOverloader: typeof _caller.makeOverloader;
 
 	// Base class for wrapped instances of bound C++ classes.
 
@@ -121,259 +127,6 @@ for(var i = id as number; i < (id as number) + 10; ++i) console.log(HEAPU8[i]);
 		}
 
 		return(typeList.map((type: _type.BindType) => (mangleMap[type.name] || 'i')).join(''));
-	}
-
-	// Make a list of argument names a1, a2, a3...
-	// for dynamically generating function source code.
-
-	function makeArgList(argCount: number) {
-		return(
-			Array.apply(null, Array(argCount)).map(
-				(dummy: any, num: number) => ('a' + (num + 1))
-			)
-		);
-	}
-
-	// Dynamically build and evaluate source code for a function that calls
-	// an Asm.js invoker function with appropriate type conversion, pushing
-	// complicated types to the stack and restoring it afterwards if necessary.
-
-	function buildCallerFunction(
-		dynCall: Func,
-		ptr: number,
-		num: number,
-		needsWireWrite: boolean,
-		prefix: string,
-		returnType: _type.BindType,
-		argTypeList: _type.BindType[]
-	) {
-		var argList = makeArgList(argTypeList.length);
-
-		var callExpression = returnType.makeWireRead(
-			'dynCall(' +
-				[prefix].concat(argList.map(
-					(name: string, num: number) => argTypeList[num].makeWireWrite(name)
-				)).join(',') +
-			')'
-		);
-
-		var resourceSet = listResources([returnType].concat(argTypeList));
-
-		var sourceCode = (
-			'function(' + argList.join(',') + '){' +
-				resourceSet.open +
-				'var r=' + callExpression + ';' +
-				resourceSet.close +
-				'return r;' +
-			'}'
-		);
-
-		// console.log(returnType.name + ' func(' + argTypeList.map((type: BindType) => type.name).join(', ') + ')')
-		// console.log(sourceCode);
-
-		return(eval('(' + sourceCode + ')'));
-	}
-
-	// Check if any type on the list requires conversion.
-	// Mainly numbers can be passed as-is between Asm.js and JavaScript.
-
-	function anyNeedsWireWrite(typeList: _type.BindType[]) {
-		return(typeList.reduce(
-			(result: boolean, type: _type.BindType) =>
-				(result || type.needsWireWrite),
-			false
-		));
-	}
-
-	function anyNeedsWireRead(typeList: _type.BindType[]) {
-		return(typeList.reduce(
-			(result: boolean, type: _type.BindType) =>
-				(result || type.needsWireRead),
-			false
-		));
-	}
-
-	export function buildJSCallerFunction(
-		returnType: _type.BindType,
-		argTypeList: _type.BindType[]
-	) {
-		var argList = makeArgList(argTypeList.length);
-
-		var callbackList = _nbind.callbackList;
-
-		var callExpression = returnType.makeWireWrite(
-			'callbackList[num](' +
-				argList.map(
-					(name: string, num: number) => argTypeList[num].makeWireRead(name)
-				).join(',') +
-			')'
-		);
-
-		var resourceSet = listResources([returnType].concat(argTypeList));
-
-		var sourceCode = (
-			'function(' + ['dummy', 'num'].concat(argList).join(',') + '){' +
-				resourceSet.open +
-				'var r=' + callExpression + ';' +
-				resourceSet.close +
-				'return r;' +
-			'}'
-		);
-
-		// console.log(returnType.name + ' func(' + argTypeList.map((type: BindType) => type.name).join(', ') + ')')
-		// console.log(sourceCode);
-
-		return(eval('(' + sourceCode + ')'));
-	}
-
-	// Dynamically create an invoker function for a JavaScript function.
-
-	export function makeJSCaller(idList: TypeIDList) {
-		var argCount = idList.length - 1;
-
-		var typeList = getTypes(idList);
-		var returnType = typeList[0];
-		var argTypeList = typeList.slice(1);
-		var needsWireRead = anyNeedsWireRead(argTypeList);
-
-		if(!returnType.needsWireWrite && !needsWireRead && argCount <= 3) switch(argCount) {
-			case 0: return(function(dummy: number, num: number) {
-			                    return(callbackList[num](    ));});
-			case 1: return(function(dummy: number, num: number, a1: any) {
-			                    return(callbackList[num](       a1    ));});
-			case 2: return(function(dummy: number, num: number, a1: any, a2: any) {
-			                    return(callbackList[num](       a1,      a2    ));});
-			case 3: return(function(dummy: number, num: number, a1: any, a2: any, a3: any) {
-			                    return(callbackList[num](       a1,      a2,      a3    ));});
-		} else {
-			return(buildJSCallerFunction(
-				returnType,
-				argTypeList
-			));
-		}
-	}
-
-	// Dynamically create an invoker function for a C++ class method.
-
-	export function makeMethodCaller(ptr: number, num: number, boundID: number, idList: TypeIDList) {
-		var argCount = idList.length - 1;
-
-		// The method invoker function has two additional arguments compared to the method itself:
-		// Target object and number of the method in a list of methods with identical signatures.
-
-		idList.splice(1, 0, 'uint32_t', boundID);
-
-		var typeList = getTypes(idList);
-		var returnType = typeList[0];
-		var argTypeList = typeList.slice(3);
-		var needsWireWrite = anyNeedsWireWrite(argTypeList);
-
-		var signature = makeSignature(typeList);
-		var dynCall = Module['dynCall_' + signature];
-
-		if(!returnType.needsWireRead && !needsWireWrite && argCount <= 3) switch(argCount) {
-
-			// If there are only a few arguments not requiring type conversion,
-			// build a simple invoker function without using eval.
-
-			case 0: return(function() {return(
-			        dynCall(ptr, num, this.__nbindPtr));});
-			case 1: return(function(                   a1: any) {return(
-			        dynCall(ptr, num, this.__nbindPtr, a1    ));});
-			case 2: return(function(                   a1: any, a2: any) {return(
-			        dynCall(ptr, num, this.__nbindPtr, a1,      a2    ));});
-			case 3: return(function(                   a1: any, a2: any, a3: any) {return(
-			        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3    ));});
-		} else {
-
-			// Function takes over 3 arguments or needs type conversion.
-			// Let's create the invoker dynamically then.
-
-			return(buildCallerFunction(
-				dynCall,
-				ptr,
-				num,
-				needsWireWrite,
-				'ptr,num,this.__nbindPtr',
-				returnType,
-				argTypeList
-			));
-		}
-	}
-
-	// Dynamically create an invoker function for a C++ function.
-
-	export function makeCaller(ptr: number, num: number, direct: number, idList: TypeIDList) {
-		var argCount = idList.length - 1;
-
-		var typeList = getTypes(idList);
-		var returnType = typeList[0];
-		var argTypeList = typeList.slice(1);
-		var needsWireWrite = anyNeedsWireWrite(argTypeList);
-
-		var signature = makeSignature(typeList);
-		var dynCall = Module['dynCall_' + signature];
-
-		if(!returnType.needsWireRead && !needsWireWrite && argCount <= 3) switch(argCount) {
-
-			// If there are only a few arguments not requiring type conversion,
-			// build a simple invoker function without using eval.
-
-			case 0: return(() =>
-			        dynCall(direct));
-			case 1: return((        a1: any) =>
-			        dynCall(direct, a1       ));
-			case 2: return((        a1: any, a2: any) =>
-			        dynCall(direct, a1,      a2       ));
-			case 3: return((        a1: any, a2: any, a3: any) =>
-			        dynCall(direct, a1,      a2,      a3       ));
-		} else {
-
-			// Function takes over 3 arguments or needs type conversion.
-			// Let's create the invoker dynamically then.
-
-			// If there's a dispatcher that doesn't call the function directly,
-			// pass the num argument to it.
-
-			var prefix = 'ptr';
-
-			if(ptr != direct) {
-				idList.splice(1, 0, 'uint32_t');
-				prefix = 'ptr,num';
-			}
-
-			signature = makeSignature(getTypes(idList));
-			dynCall = Module['dynCall_' + signature];
-
-			return(buildCallerFunction(
-				dynCall,
-				ptr,
-				num,
-				needsWireWrite,
-				prefix,
-				returnType,
-				argTypeList
-			));
-		}
-	}
-
-	// Create an overloader that can call several methods with the same name,
-	// depending on the number of arguments passed in the call.
-
-	export function makeOverloader(func: Func, arity: number) {
-		var callerList: FuncList = [];
-
-		var call = function call() {
-			return(callerList[arguments.length].apply(this, arguments));
-		} as any;
-
-		call.addMethod = (func: Func, arity: number) => {
-			callerList[arity] = func;
-		}
-
-		call.addMethod(func, arity);
-
-		return(call);
 	}
 
 	// Add a method to a C++ class constructor (for static methods) or prototype,
@@ -545,10 +298,10 @@ class nbind {
 			}
 
 			@_defineHidden()
-			__nbindConstructor: Func;
+			__nbindConstructor: _nbind.Func;
 
 			@_defineHidden()
-			__nbindValueConstructor: Func;
+			__nbindValueConstructor: _nbind.Func;
 		}
 
 		new _nbind.BindClass(idList[0], name, Bound);
