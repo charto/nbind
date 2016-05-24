@@ -20,9 +20,9 @@ inline uint32_t BindingType<ArgType *>::toWireType(ArgType *arg) {
 
 template <typename ArgType>
 inline int BindingType<ArgType>::toWireType(ArgType arg) {
-        cbFunction *jsConstructor = BindClass<ArgType>::getInstance().getValueConstructorJS();
+	cbFunction *jsConstructor = BindClass<ArgType>::getInstance().getValueConstructorJS();
 
-        if(jsConstructor != nullptr) {
+	if(jsConstructor != nullptr) {
 		cbOutput construct(*jsConstructor);
 
 		arg.toJS(construct);

@@ -17,9 +17,10 @@ export namespace _nbind {
 
 	export var MethodType: typeof _globals.MethodType;
 	export var Wrapper: typeof _globals.Wrapper;
+
 	export var addMethod: typeof _globals.addMethod;
-	export var valueList: typeof _globals.valueList;
-	export var valueFreeList: typeof _globals.valueFreeList;
+	export var popValue: typeof _globals.popValue;
+
 	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
 
@@ -293,11 +294,7 @@ class nbind {
 
 	@dep('_nbind')
 	static _nbind_get_value_object(num: number, ptr: number) {
-		var obj = _nbind.valueList[num];
-
-		_nbind.valueList[num] = null;
-
-		_nbind.valueFreeList.push(num);
+		var obj = _nbind.popValue(num);
 
 		obj.fromJS(function() {
 			obj.__nbindValueConstructor.apply(this, Array.prototype.concat.apply([ptr], arguments));

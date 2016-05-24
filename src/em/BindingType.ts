@@ -206,9 +206,7 @@ export namespace _nbind {
 		needsWireWrite: boolean = true;
 
 		makeWireWrite(expr: string) {
-			// TODO: free the list item allocated here.
-
-			return('_nbind.storeValue(' + expr + ')');
+			return('_nbind.pushValue(' + expr + ')');
 		}
 	}
 
