@@ -4,12 +4,13 @@
 import {setEvil, publishNamespace, defineHidden, exportLibrary, dep} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _class} from './BindClass';
 import {_nbind as _callback} from './Callback';
 import {_nbind as _value} from './ValueObj';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
 
-export {_globals, _type, _callback, _value, _caller, _resource};
+export {_globals, _type, _class, _callback, _value, _caller, _resource};
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -18,17 +19,18 @@ export namespace _nbind {
 	export type Func = _globals.Func;
 
 	export var MethodType: typeof _globals.MethodType;
-	export var Wrapper: typeof _globals.Wrapper;
 	export var addMethod: typeof _globals.addMethod;
 
 	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
 
 	export var BindType: typeof _type.BindType;
-	export var BindClass: typeof _type.BindClass;
 	export var BooleanType: typeof _type.BooleanType;
 	export var CStringType: typeof _type.CStringType;
 	export var StringType: typeof _type.StringType;
+
+	export var Wrapper: typeof _class.Wrapper;
+	export var BindClass: typeof _class.BindClass;
 
 	export var CallbackType: typeof _callback.CallbackType;
 	export var unregisterCallback: typeof _callback.unregisterCallback;
@@ -181,7 +183,7 @@ class nbind {
 	) {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 
-		var proto = (_nbind.typeList[typeID] as _type.BindClass).proto.prototype;
+		var proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
 		_nbind.addMethod(
 			proto,
@@ -206,7 +208,7 @@ class nbind {
 	@dep('_nbind')
 	static _nbind_register_destructor(typeID: number, ptr: number) {
 		_nbind.addMethod(
-			(_nbind.typeList[typeID] as _type.BindClass).proto.prototype,
+			(_nbind.typeList[typeID] as _class.BindClass).proto.prototype,
 			'free',
 			_nbind.makeMethodCaller(ptr, 0, typeID, ['void']),
 			0
@@ -227,7 +229,7 @@ class nbind {
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
 
 		_nbind.addMethod(
-			(_nbind.typeList[typeID] as _type.BindClass).proto as any,
+			(_nbind.typeList[typeID] as _class.BindClass).proto as any,
 			name,
 			_nbind.makeCaller(ptr, num, direct, typeList),
 			typeCount - 1
@@ -246,7 +248,7 @@ class nbind {
 	) {
 		var name = _readAsciiString(namePtr);
 		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
-		var proto = (_nbind.typeList[typeID] as _type.BindClass).proto.prototype;
+		var proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
 		if(methodType == _nbind.MethodType.method) {
 			_nbind.addMethod(
@@ -321,7 +323,7 @@ class nbind {
 		// to equivalent JS prototype.
 
 		_defineHidden(
-			(_nbind.typeTbl[name] as _type.BindClass).proto.prototype.__nbindValueConstructor
+			(_nbind.typeTbl[name] as _class.BindClass).proto.prototype.__nbindValueConstructor
 		)(proto.prototype, '__nbindValueConstructor');
 	}
 

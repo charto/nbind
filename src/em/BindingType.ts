@@ -153,38 +153,6 @@ export namespace _nbind {
 		needsResources = [ resources.stack ];
 	}
 
-	// Base class for all bound C++ classes (not their instances),
-	// also inheriting from a generic type definition.
-
-	export class BindClass extends BindType {
-		constructor(id: number, name: string, proto: _globals.WrapperClass) {
-			super(id, name);
-
-			this.proto = proto;
-		}
-
-		// Reference to JavaScript class for wrapped instances
-		// of this C++ class.
-
-		proto: _globals.WrapperClass;
-
-		needsWireRead: boolean = true;
-
-		makeWireRead(expr: string) {
-			return('(' +
-				expr + '||' +
-				'_nbind.throwError("Value type JavaScript class is missing or not registered"),' +
-				'_nbind.value' +
-			')');
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('_nbind.pushValue(' + expr + ')');
-		}
-	}
-
 	@prepareNamespace('_nbind')
 	export class _ {}
 }

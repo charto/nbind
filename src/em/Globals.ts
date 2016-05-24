@@ -26,26 +26,6 @@ export namespace _nbind {
 
 	export var makeOverloader: typeof _caller.makeOverloader;
 
-	// Base class for wrapped instances of bound C++ classes.
-
-	export class Wrapper {
-		free: () => void;
-
-		/** Dynamically set by _nbind_register_constructor.
-		  * Calls the C++ constructor and returns a numeric heap pointer. */
-		__nbindConstructor: (...args: any[]) => number;
-		__nbindValueConstructor: Func;
-		/** __nbindConstructor return value. */
-		__nbindPtr: number;
-	}
-
-	// Any subtype (not instance but type) of Wrapper.
-	// Declared as anything that constructs something compatible with Wrapper.
-
-	export interface WrapperClass {
-		new(...args: any[]): Wrapper;
-	}
-
 	// Look up a list of type objects based on their numeric typeID or name.
 
 	export function getTypes(idList: TypeIDList) {
