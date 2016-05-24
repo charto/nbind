@@ -56,6 +56,7 @@ export namespace _nbind {
 		var length = Module.lengthBytesUTF8(str) + 1;
 		var result = Runtime.stackAlloc(length);
 
+		// Convert the string and append a zero byte.
 		Module.stringToUTF8Array(str, HEAPU8, result, length);
 
 		return(result);

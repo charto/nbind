@@ -4,6 +4,7 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _type} from './BindingType';
 
+// Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {

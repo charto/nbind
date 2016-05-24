@@ -6,6 +6,7 @@ import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _resource} from './Resource';
 
+// Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
@@ -20,8 +21,8 @@ export namespace _nbind {
 
 	export var listResources: typeof _resource.listResources;
 
-	// Make a list of argument names a1, a2, a3...
-	// for dynamically generating function source code.
+	/** Make a list of argument names a1, a2, a3...
+	  * for dynamically generating function source code. */
 
 	function makeArgList(argCount: number) {
 		return(
@@ -31,8 +32,8 @@ export namespace _nbind {
 		);
 	}
 
-	// Check if any type on the list requires conversion.
-	// Mainly numbers can be passed as-is between Asm.js and JavaScript.
+	/** Check if any type on the list requires conversion writing to C++.
+	  * Mainly numbers can be passed as-is between Asm.js and JavaScript. */
 
 	function anyNeedsWireWrite(typeList: _type.BindType[]) {
 		return(typeList.reduce(
@@ -42,6 +43,9 @@ export namespace _nbind {
 		));
 	}
 
+	/** Check if any type on the list requires conversion reading from C++.
+	  * Mainly numbers can be passed as-is between Asm.js and JavaScript. */
+
 	function anyNeedsWireRead(typeList: _type.BindType[]) {
 		return(typeList.reduce(
 			(result: boolean, type: _type.BindType) =>
@@ -50,9 +54,11 @@ export namespace _nbind {
 		));
 	}
 
-	// Dynamically build and evaluate source code for a function that calls
-	// an Asm.js invoker function with appropriate type conversion, pushing
-	// complicated types to the stack and restoring it afterwards if necessary.
+	/** Dynamically build a function that calls an Asm.js invoker
+	  * with appropriate type conversion for complicated types:
+		* - Push arguments to stack.
+		* - Read return value.
+		* - Restore stack pointer if necessary. */
 
 	function buildCallerFunction(
 		dynCall: Func,
@@ -65,6 +71,8 @@ export namespace _nbind {
 	) {
 		var argList = makeArgList(argTypeList.length);
 
+		// Build code for function call and type conversion.
+
 		var callExpression = returnType.makeWireRead(
 			'dynCall(' +
 				[prefix].concat(argList.map(
@@ -72,6 +80,8 @@ export namespace _nbind {
 				)).join(',') +
 			')'
 		);
+
+		// Build code to allocate and free the stack etc. if necessary.
 
 		var resourceSet = listResources([returnType].concat(argTypeList));
 
@@ -84,11 +94,16 @@ export namespace _nbind {
 			'}'
 		);
 
-		// console.log(returnType.name + ' func(' + argTypeList.map((type: BindType) => type.name).join(', ') + ')')
-		// console.log(sourceCode);
+		// Use eval to allow JIT compiling the function.
 
 		return(eval('(' + sourceCode + ')'));
 	}
+
+	/** Dynamically build a function that calls a JavaScript callback invoker
+	  * with appropriate type conversion for complicated types:
+		* - Read arguments from stack.
+		* - Push return value.
+		* - Restore stack pointer if necessary. */
 
 	export function buildJSCallerFunction(
 		returnType: _type.BindType,
@@ -117,13 +132,12 @@ export namespace _nbind {
 			'}'
 		);
 
-		// console.log(returnType.name + ' func(' + argTypeList.map((type: BindType) => type.name).join(', ') + ')')
-		// console.log(sourceCode);
+		// Use eval to allow JIT compiling the function.
 
 		return(eval('(' + sourceCode + ')'));
 	}
 
-	// Dynamically create an invoker function for a JavaScript function.
+	/** Dynamically create an invoker for a JavaScript callback. */
 
 	export function makeJSCaller(idList: TypeIDList) {
 		var argCount = idList.length - 1;
@@ -150,13 +164,14 @@ export namespace _nbind {
 		}
 	}
 
-	// Dynamically create an invoker function for a C++ class method.
+	/** Dynamically create an invoker function for calling a C++ class method. */
 
 	export function makeMethodCaller(ptr: number, num: number, boundID: number, idList: TypeIDList) {
 		var argCount = idList.length - 1;
 
-		// The method invoker function has two additional arguments compared to the method itself:
-		// Target object and number of the method in a list of methods with identical signatures.
+		// The method invoker function adds two arguments to those of the method:
+		// - Number of the method in a list of methods with identical signatures.
+		// - Target object
 
 		idList.splice(1, 0, 'uint32_t', boundID);
 
@@ -199,7 +214,7 @@ export namespace _nbind {
 		));
 	}
 
-	// Dynamically create an invoker function for a C++ function.
+	/** Dynamically create an invoker function for calling a C++ function. */
 
 	export function makeCaller(ptr: number, num: number, direct: number, idList: TypeIDList) {
 		var argCount = idList.length - 1;
@@ -212,7 +227,7 @@ export namespace _nbind {
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
-		if(!returnType.needsWireRead && !needsWireWrite) {
+		if(direct && !returnType.needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
@@ -238,8 +253,8 @@ export namespace _nbind {
 		var prefix: string;
 
 		if(ptr) {
-			// If there's a dispatcher that doesn't call the function directly,
-			// pass the num argument to it.
+			// The function invoker adds an argument to those of the function:
+			// - Number of the function in a list of functions with identical signatures.
 
 			idList.splice(1, 0, 'uint32_t');
 			prefix = 'ptr,num';
@@ -262,8 +277,8 @@ export namespace _nbind {
 		));
 	}
 
-	// Create an overloader that can call several methods with the same name,
-	// depending on the number of arguments passed in the call.
+	/** Create an overloader that can call several methods with the same name,
+	  * depending on the number of arguments passed in the call. */
 
 	export function makeOverloader(func: Func, arity: number) {
 		var callerList: FuncList = [];

@@ -9,6 +9,7 @@ export {_nbind as _resource} from './Resource';
 
 export {_globals, _type, _caller};
 
+// Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {

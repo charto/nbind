@@ -6,6 +6,7 @@ import {_nbind as _type} from './BindingType';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
 
+// Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
 // Namespace that will be made available inside Emscripten compiled module.
