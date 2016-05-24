@@ -15,13 +15,14 @@ export {_globals, _type, _class, _callback, _value, _caller, _resource};
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
+var _defineHidden = defineHidden;
+
 export namespace _nbind {
 	export type Func = _globals.Func;
 
 	export var MethodType: typeof _globals.MethodType;
 	export var addMethod: typeof _globals.addMethod;
 
-	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
 
 	export var BindType: typeof _type.BindType;
@@ -43,12 +44,9 @@ export namespace _nbind {
 
 	export var makeCaller: typeof _caller.makeCaller;
 	export var makeMethodCaller: typeof _caller.makeMethodCaller;
-	export var makeJSCaller: typeof _caller.makeJSCaller;
 }
 
 publishNamespace('_nbind');
-
-var _defineHidden = defineHidden;
 
 function _readAsciiString(ptr: number) {
 	var endPtr = ptr;
@@ -60,6 +58,7 @@ function _readAsciiString(ptr: number) {
 
 @exportLibrary
 class nbind {
+
 	@dep('_nbind')
 	static _nbind_register_method_getter_setter_id(methodID: number, getterID: number, setterID: number) {
 		_nbind.MethodType.method = methodID;
@@ -284,50 +283,6 @@ class nbind {
 	}
 
 	@dep('_nbind')
-	static _nbind_register_callback_signature(
-		typeListPtr: number,
-		typeCount: number
-	) {
-		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
-		var num = _nbind.callbackSignatureList.length;
-
-		_nbind.callbackSignatureList[num] = _nbind.makeJSCaller(typeList);
-
-		return(num);
-	}
-
-	@dep('_nbind')
-	static _nbind_get_value_object(num: number, ptr: number) {
-		var obj = _nbind.popValue(num);
-
-		obj.fromJS(function() {
-			obj.__nbindValueConstructor.apply(this, Array.prototype.concat.apply([ptr], arguments));
-		});
-	}
-
-	@dep('_nbind')
-	static _nbind_reference_callback(num: number) {
-		++_nbind.callbackRefCountList[num];
-	}
-
-	@dep('_nbind')
-	static _nbind_free_callback(num: number) {
-		if(--_nbind.callbackRefCountList[num] == 0) _nbind.unregisterCallback(num);
-	}
-
-	@dep('_nbind')
-	static nbind_value(name: string, proto: any) {
-		Module['NBind'].bind_value(name, proto);
-
-		// Copy value constructor reference from C++ wrapper prototype
-		// to equivalent JS prototype.
-
-		_defineHidden(
-			(_nbind.typeTbl[name] as _class.BindClass).proto.prototype.__nbindValueConstructor
-		)(proto.prototype, '__nbindValueConstructor');
-	}
-
-	@dep('_nbind')
 	static nbind_debug() {}
 
-};
+}

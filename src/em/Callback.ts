@@ -1,9 +1,10 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
+import {setEvil, prepareNamespace, defineHidden, exportLibrary, dep} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _caller} from './Caller';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -15,6 +16,8 @@ export namespace _nbind {
 export namespace _nbind {
 
 	export var throwError: typeof _globals.throwError;
+
+	export var makeJSCaller: typeof _caller.makeJSCaller;
 
 	export class CallbackType extends BindType {
 		constructor(id: number, name: string) {
@@ -60,4 +63,32 @@ export namespace _nbind {
 
 	@prepareNamespace('_nbind')
 	export class _ {}
+}
+
+@exportLibrary
+class nbind {
+
+	@dep('_nbind')
+	static _nbind_register_callback_signature(
+		typeListPtr: number,
+		typeCount: number
+	) {
+		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
+		var num = _nbind.callbackSignatureList.length;
+
+		_nbind.callbackSignatureList[num] = _nbind.makeJSCaller(typeList);
+
+		return(num);
+	}
+
+	@dep('_nbind')
+	static _nbind_reference_callback(num: number) {
+		++_nbind.callbackRefCountList[num];
+	}
+
+	@dep('_nbind')
+	static _nbind_free_callback(num: number) {
+		if(--_nbind.callbackRefCountList[num] == 0) _nbind.unregisterCallback(num);
+	}
+
 }
