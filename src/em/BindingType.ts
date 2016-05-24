@@ -164,20 +164,6 @@ export namespace _nbind {
 		needsResources = [ resources.stack ];
 	}
 
-	// Special type that constructs a new object.
-
-	export class CreateValueType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('((_nbind.value=new ' + expr + '),0)');
-		}
-	}
-
 	// Base class for all bound C++ classes (not their instances),
 	// also inheriting from a generic type definition.
 

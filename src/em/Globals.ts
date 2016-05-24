@@ -26,13 +26,6 @@ export namespace _nbind {
 
 	export var makeOverloader: typeof _caller.makeOverloader;
 
-	export interface ValueObject {
-		fromJS(output: () => void): void;
-
-		/** This is mandatory, but dynamically created inside nbind. */
-		__nbindValueConstructor?: Func;
-	}
-
 	// Base class for wrapped instances of bound C++ classes.
 
 	export class Wrapper {
@@ -76,25 +69,6 @@ export namespace _nbind {
 		callbackRefCountList[num] = 1;
 
 		return(num);
-	}
-
-	export var valueList: ValueObject[] = [];
-
-	export var valueFreeList: number[] = [];
-
-	export function pushValue(value: ValueObject) {
-		var num = valueFreeList.pop() || valueList.length;
-
-		valueList[num] = value;
-		return(num);
-	}
-
-	export function popValue(num: number) {
-		var obj = valueList[num];
-
-		valueList[num] = null;
-		valueFreeList.push(num);
-		return(obj);
 	}
 
 	// Look up a list of type objects based on their numeric typeID or name.

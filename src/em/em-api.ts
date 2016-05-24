@@ -4,10 +4,11 @@
 import {setEvil, publishNamespace, defineHidden, exportLibrary, dep} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _value} from './ValueObj';
 import {_nbind as _caller} from './Caller';
-export {_nbind as _resource} from './Resource';
+import {_nbind as _resource} from './Resource';
 
-export {_globals, _type, _caller};
+export {_globals, _type, _value, _caller, _resource};
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -17,9 +18,7 @@ export namespace _nbind {
 
 	export var MethodType: typeof _globals.MethodType;
 	export var Wrapper: typeof _globals.Wrapper;
-
 	export var addMethod: typeof _globals.addMethod;
-	export var popValue: typeof _globals.popValue;
 
 	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
@@ -35,7 +34,9 @@ export namespace _nbind {
 	export var CStringType: typeof _type.CStringType;
 	export var StringType: typeof _type.StringType;
 	export var CallbackType: typeof _type.CallbackType;
-	export var CreateValueType: typeof _type.CreateValueType;
+
+	export var CreateValueType: typeof _value.CreateValueType;
+	export var popValue: typeof _value.popValue;
 
 	export var makeCaller: typeof _caller.makeCaller;
 	export var makeMethodCaller: typeof _caller.makeMethodCaller;
