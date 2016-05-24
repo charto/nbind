@@ -4,6 +4,7 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _callback} from './Callback';
 import {_nbind as _resource} from './Resource';
 
 // Let decorators run eval in current scope to read function source code.
@@ -17,7 +18,8 @@ export namespace _nbind {
 
 	export var getTypes: typeof _globals.getTypes;
 	export var makeSignature: typeof _globals.makeSignature;
-	export var callbackList: typeof _globals.callbackList;
+
+	export var callbackList: typeof _callback.callbackList;
 
 	export var listResources: typeof _resource.listResources;
 

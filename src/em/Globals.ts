@@ -46,31 +46,6 @@ export namespace _nbind {
 		new(...args: any[]): Wrapper;
 	}
 
-	export var callbackSignatureList: Func[] = [];
-
-	// Callbacks are stored in a list, so C++ code can find them by number.
-	// A reference count allows storing them in C++ without leaking memory.
-	// The first element is a dummy value just so that a valid index to
-	// the list always tests as true (useful for the free list implementation).
-
-	export var callbackList: Func[] = [null];
-	export var callbackRefCountList: number[] = [0];
-
-	// Free list for recycling available slots in the callback list.
-
-	export var callbackFreeList: number[] = [];
-
-	export function registerCallback(func: Func) {
-		if(typeof(func) != 'function') _nbind.throwError('Type mismatch');
-
-		var num = callbackFreeList.pop() || callbackList.length;
-
-		callbackList[num] = func;
-		callbackRefCountList[num] = 1;
-
-		return(num);
-	}
-
 	// Look up a list of type objects based on their numeric typeID or name.
 
 	export function getTypes(idList: TypeIDList) {

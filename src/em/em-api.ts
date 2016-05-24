@@ -4,11 +4,12 @@
 import {setEvil, publishNamespace, defineHidden, exportLibrary, dep} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _callback} from './Callback';
 import {_nbind as _value} from './ValueObj';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
 
-export {_globals, _type, _value, _caller, _resource};
+export {_globals, _type, _callback, _value, _caller, _resource};
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -23,17 +24,17 @@ export namespace _nbind {
 	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
 
-	export var callbackList: typeof _globals.callbackList;
-	export var callbackFreeList: typeof _globals.callbackFreeList;
-	export var callbackRefCountList: typeof _globals.callbackRefCountList;
-	export var callbackSignatureList: typeof _globals.callbackSignatureList;
-
 	export var BindType: typeof _type.BindType;
 	export var BindClass: typeof _type.BindClass;
 	export var BooleanType: typeof _type.BooleanType;
 	export var CStringType: typeof _type.CStringType;
 	export var StringType: typeof _type.StringType;
-	export var CallbackType: typeof _type.CallbackType;
+
+	export var CallbackType: typeof _callback.CallbackType;
+	export var unregisterCallback: typeof _callback.unregisterCallback;
+
+	export var callbackRefCountList: typeof _callback.callbackRefCountList;
+	export var callbackSignatureList: typeof _callback.callbackSignatureList;
 
 	export var CreateValueType: typeof _value.CreateValueType;
 	export var popValue: typeof _value.popValue;
@@ -309,11 +310,7 @@ class nbind {
 
 	@dep('_nbind')
 	static _nbind_free_callback(num: number) {
-		if(--_nbind.callbackRefCountList[num] == 0) {
-			_nbind.callbackList[num] = null;
-
-			_nbind.callbackFreeList.push(num);
-		}
+		if(--_nbind.callbackRefCountList[num] == 0) _nbind.unregisterCallback(num);
 	}
 
 	@dep('_nbind')

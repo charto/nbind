@@ -108,18 +108,6 @@ export namespace _nbind {
 		}
 	}
 
-	export class CallbackType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('_nbind.registerCallback(' + expr + ')');
-		}
-	}
-
 	export function pushString(str: string) {
 		if(str === null || str === undefined) return(0);
 		str = str.toString();
