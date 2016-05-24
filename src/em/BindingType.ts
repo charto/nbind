@@ -5,6 +5,7 @@ import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _resource} from './Resource';
 
+// Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {

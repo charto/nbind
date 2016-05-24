@@ -2,8 +2,10 @@
 // Released under the MIT license, see LICENSE.
 
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
+import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 
+// Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
@@ -12,13 +14,11 @@ export namespace _nbind {
 
 export namespace _nbind {
 
-	export type Func = (...args: any[]) => any;
-
 	export interface ValueObject {
 		fromJS(output: () => void): void;
 
 		/** This is mandatory, but dynamically created inside nbind. */
-		__nbindValueConstructor?: Func;
+		__nbindValueConstructor?: _globals.Func;
 	}
 
 	export var valueList: ValueObject[] = [];
