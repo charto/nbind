@@ -31,8 +31,6 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
-#include <alloca.h>
-
 namespace nbind {
 
 template <typename ArgType> struct BindingType {

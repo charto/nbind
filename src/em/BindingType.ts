@@ -22,27 +22,18 @@ export namespace _nbind {
 			this.id = id;
 			this.name = name;
 
-			// Namespace name is needed here, or TypeScript will mangle it.
-			_nbind.typeTbl[name] = this;
-			_nbind.typeList[id] = this;
+			typeTbl[name] = this;
+			typeList[id] = this;
 		}
 
 		// TODO: maybe this should be an abstract base class and these versions of wire type conversions
 		// should be in a subclass called PrimitiveType.
 
-		needsWireRead: boolean = false;
+		makeWireRead: (expr: string, convertParamList?: any[], num?: number) => string;
+		makeWireWrite: (expr: string, convertParamList?: any[], num?: number) => string;
 
-		makeWireRead(expr: string) {
-			return(expr);
-		}
-
-		needsWireWrite: boolean = false;
-
-		makeWireWrite(expr: string) {
-			return(expr);
-		}
-
-		needsResources: _resource.Resource[] = null;
+		readResources: _resource.Resource[];
+		writeResources: _resource.Resource[];
 
 		id: number;
 		name: string;
@@ -78,19 +69,11 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		needsWireRead: boolean = true;
+		makeWireRead = (expr: string) => '_nbind.popCString(' + expr + ')';
+		makeWireWrite = (expr: string) => '_nbind.pushCString(' + expr + ')';
 
-		makeWireRead(expr: string) {
-			return('_nbind.popCString(' + expr + ')');
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('_nbind.pushCString(' + expr + ')');
-		}
-
-		needsResources = [ resources.stack ];
+		readResources = [ resources.pool ];
+		writeResources = [ resources.stack ];
 	}
 
 	// Booleans are returned as numbers from Asm.js.
@@ -101,56 +84,7 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		needsWireRead: boolean = true;
-
-		makeWireRead(expr: string) {
-			return('!!(' + expr + ')');
-		}
-	}
-
-	export function pushString(str: string) {
-		if(str === null || str === undefined) return(0);
-		str = str.toString();
-
-		var length = Module.lengthBytesUTF8(str);
-
-		// 32-bit length, string and a zero terminator
-		// (stringToUTF8Array insists on adding it)
-
-		var result = Runtime.stackAlloc(4 + length + 1);
-
-		HEAPU32[result / 4] = length;
-		Module.stringToUTF8Array(str, HEAPU8, result + 4, length + 1);
-
-		return(result);
-	}
-
-	export function popString(ptr: number) {
-		if(ptr === 0) return(null);
-
-		var length = HEAPU32[ptr / 4];
-
-		return(Module.Pointer_stringify(ptr + 4, length));
-	}
-
-	export class StringType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
-		needsWireRead: boolean = true;
-
-		makeWireRead(expr: string) {
-			return('_nbind.popString(' + expr + ')');
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('_nbind.pushString(' + expr + ')');
-		}
-
-		needsResources = [ resources.stack ];
+		makeWireRead = (expr: string) => '!!(' + expr + ')';
 	}
 
 	@prepareNamespace('_nbind')

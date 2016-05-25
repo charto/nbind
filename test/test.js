@@ -167,7 +167,7 @@ test('Value objects', function(t) {
 
 test('Arrays', function(t) {
 	var ArrayType = testModule.Array;
-	var VectorType = testModule.Array;
+	var VectorType = testModule.Vector;
 
 	var arr = [13, 21, 34];
 

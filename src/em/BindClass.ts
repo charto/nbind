@@ -49,21 +49,12 @@ export namespace _nbind {
 
 		proto: WrapperClass;
 
-		needsWireRead: boolean = true;
-
-		makeWireRead(expr: string) {
-			return('(' +
-				expr + '||' +
-				'_nbind.throwError("Value type JavaScript class is missing or not registered"),' +
-				'_nbind.value' +
-			')');
-		}
-
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('_nbind.pushValue(' + expr + ')');
-		}
+		makeWireRead = (expr: string) => ('(' +
+			expr + '||' +
+			'_nbind.throwError("Value type JavaScript class is missing or not registered"),' +
+			'_nbind.value' +
+		')');
+		makeWireWrite = (expr: string) => '_nbind.pushValue(' + expr + ')';
 	}
 
 	@prepareNamespace('_nbind')

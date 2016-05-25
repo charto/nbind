@@ -24,11 +24,7 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('_nbind.registerCallback(' + expr + ')');
-		}
+		makeWireWrite = (expr: string) => '_nbind.registerCallback(' + expr + ')';
 	}
 
 	export var callbackSignatureList: _globals.Func[] = [];

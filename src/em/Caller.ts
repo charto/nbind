@@ -40,7 +40,7 @@ export namespace _nbind {
 	function anyNeedsWireWrite(typeList: _type.BindType[]) {
 		return(typeList.reduce(
 			(result: boolean, type: _type.BindType) =>
-				(result || type.needsWireWrite),
+				(result || !!type.makeWireWrite),
 			false
 		));
 	}
@@ -51,7 +51,7 @@ export namespace _nbind {
 	function anyNeedsWireRead(typeList: _type.BindType[]) {
 		return(typeList.reduce(
 			(result: boolean, type: _type.BindType) =>
-				(result || type.needsWireRead),
+				(result || !!type.makeWireRead),
 			false
 		));
 	}
@@ -72,20 +72,33 @@ export namespace _nbind {
 		argTypeList: _type.BindType[]
 	) {
 		var argList = makeArgList(argTypeList.length);
+		var convertParamList: any[] = [];
+		var paramNum = 0;
+
+		function makeWireRead(type: _type.BindType, expr: string) {
+			if(!type.makeWireRead) return(expr);
+			return(type.makeWireRead(expr, convertParamList, ++paramNum));
+		}
+
+		function makeWireWrite(type: _type.BindType, expr: string) {
+			if(!type.makeWireWrite) return(expr);
+			return(type.makeWireWrite(expr, convertParamList, ++paramNum));
+		}
 
 		// Build code for function call and type conversion.
 
-		var callExpression = returnType.makeWireRead(
+		var callExpression = makeWireRead(
+			returnType,
 			'dynCall(' +
 				[prefix].concat(argList.map(
-					(name: string, num: number) => argTypeList[num].makeWireWrite(name)
+					(name: string, num: number) => makeWireWrite(argTypeList[num], name)
 				)).join(',') +
 			')'
 		);
 
 		// Build code to allocate and free the stack etc. if necessary.
 
-		var resourceSet = listResources([returnType].concat(argTypeList));
+		var resourceSet = listResources([returnType], argTypeList);
 
 		var sourceCode = (
 			'function(' + argList.join(',') + '){' +
@@ -112,18 +125,30 @@ export namespace _nbind {
 		argTypeList: _type.BindType[]
 	) {
 		var argList = makeArgList(argTypeList.length);
-
 		var callbackList = _nbind.callbackList;
+		var convertParamList: any[] = [];
+		var paramNum = 0;
 
-		var callExpression = returnType.makeWireWrite(
+		function makeWireRead(type: _type.BindType, expr: string) {
+			if(!type.makeWireRead) return(expr);
+			return(type.makeWireRead(expr, convertParamList, ++paramNum));
+		}
+
+		function makeWireWrite(type: _type.BindType, expr: string) {
+			if(!type.makeWireWrite) return(expr);
+			return(type.makeWireWrite(expr, convertParamList, ++paramNum));
+		}
+
+		var callExpression = makeWireWrite(
+			returnType,
 			'callbackList[num](' +
 				argList.map(
-					(name: string, num: number) => argTypeList[num].makeWireRead(name)
+					(name: string, num: number) => makeWireRead(argTypeList[num], name)
 				).join(',') +
 			')'
 		);
 
-		var resourceSet = listResources([returnType].concat(argTypeList));
+		var resourceSet = listResources(argTypeList, [returnType]);
 
 		var sourceCode = (
 			'function(' + ['dummy', 'num'].concat(argList).join(',') + '){' +
@@ -149,7 +174,7 @@ export namespace _nbind {
 		var argTypeList = typeList.slice(1);
 		var needsWireRead = anyNeedsWireRead(argTypeList);
 
-		if(!returnType.needsWireWrite && !needsWireRead && argCount <= 3) switch(argCount) {
+		if(!returnType.makeWireWrite && !needsWireRead && argCount <= 3) switch(argCount) {
 			case 0: return(function(dummy: number, num: number) {
 			                    return(callbackList[num](    ));});
 			case 1: return(function(dummy: number, num: number, a1: any) {
@@ -185,7 +210,7 @@ export namespace _nbind {
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
-		if(!returnType.needsWireRead && !needsWireWrite) {
+		if(!returnType.makeWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
@@ -229,7 +254,7 @@ export namespace _nbind {
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
-		if(direct && !returnType.needsWireRead && !needsWireWrite) {
+		if(direct && !returnType.makeWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 

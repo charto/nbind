@@ -3,6 +3,7 @@
 
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _std} from './BindingStd';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
 
@@ -21,10 +22,42 @@ export namespace _nbind {
 	export type Invoker = (ptr: number, ...args: any[]) => any;
 	export type TypeIDList = (number | string)[];
 
+	export var ArrayType: typeof _std.ArrayType;
+
 	export var resources: typeof _resource.resources;
 	export var listResources: typeof _resource.listResources;
 
 	export var makeOverloader: typeof _caller.makeOverloader;
+
+	function getComplexType(id: number) {
+		var placeholderFlag = HEAPU8[id as number];
+
+		if(placeholderFlag == 0) throw(new Error('Unbound type ' + id));
+
+		var memberId = HEAPU32[((id as number) >> 2) + 1];
+		var memberType = _nbind.typeList[memberId as number];
+		var type: _type.BindType;
+
+		if(!memberType) throw(new Error('Unbound member type ' + memberId));
+
+		// These numbers must match TypeStd.h
+		switch(placeholderFlag) {
+			case 1: // Vector
+				type = new _nbind.ArrayType(id, memberType);
+				break;
+			case 2: // Array
+				var size = HEAPU32[((id as number) >> 2) + 2];
+				type = new _nbind.ArrayType(id, memberType, size);
+				break;
+			default:
+				throw(new Error('Corrupt type ' + id + ' with flag ' + placeholderFlag));
+		}
+
+		console.log(type.name);
+
+		_nbind.typeList[id] = type;
+		return(type);
+	}
 
 	// Look up a list of type objects based on their numeric typeID or name.
 
@@ -32,18 +65,7 @@ export namespace _nbind {
 		return(idList.map((id: number | string) => {
 			if(typeof(id) == 'number') {
 				var type = _nbind.typeList[id as number];
-				if(type) return(type);
-
-				var placeholderFlag = HEAPU8[id as number];
-
-				console.log('placeholderFlag = ' + placeholderFlag);
-				console.log('ID = ' + id);
-for(var i = id as number; i < (id as number) + 10; ++i) console.log(HEAPU8[i]);
-				id = HEAPU32[((id as number) >> 2) + 1];
-				console.log('ID = ' + id);
-				var type = _nbind.typeList[id as number];
-				console.log(type);
-				if(type) return(type);
+				return(type || getComplexType(id as number));
 			} else return(_nbind.typeTbl[id as string]);
 		}));
 	}
@@ -107,7 +129,7 @@ for(var i = id as number; i < (id as number) + 10; ++i) console.log(HEAPU8[i]);
 	export var value: any;
 
 	export function throwError(message: string) {
-		throw({ message: message });
+		throw(new Error(message));
 	}
 
 	// Export the namespace to Emscripten compiled output.

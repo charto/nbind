@@ -11,6 +11,7 @@
 using namespace nbind;
 
 extern "C" {
+	extern void _nbind_register_pool(unsigned int pageSize, unsigned int *usedPtr, unsigned char **pagePtr);
 	extern void _nbind_register_method_getter_setter_id(unsigned int methodID, unsigned int getterID, unsigned int setterID);
 	extern void _nbind_register_types(void **data);
 	extern void _nbind_register_type(       TYPEID typeID,    const char *name);
@@ -58,7 +59,56 @@ void Bindings :: registerClass(BindClassBase &bindClass) {
 
 typedef BaseSignature::Type SigType;
 
+class Pool {
+public:
+	static const unsigned int pageSize = 65536;
+	static unsigned int used;
+	static unsigned char *rootPage;
+	static unsigned char *currentPage;
+};
+
+unsigned int Pool::used = 0;
+unsigned char *Pool::rootPage = new unsigned char[Pool::pageSize];
+unsigned char *Pool::currentPage = nullptr;
+
+namespace nbind {
+
+// Simple linear allocator. Return consecutive blocks on a root page.
+// Allocate blocks in a linked list on the heap if they're too large.
+
+void *lalloc(size_t size) {
+	// Round size up to a multiple of 4 to align pointers allocated later.
+	size = (size + 3) & ~3;
+
+	if(size > Pool::pageSize / 2 || size > Pool::pageSize - Pool::used) {
+		unsigned char *page = new unsigned char[size + sizeof(unsigned char *)];
+		if(!page) return(nullptr); // Out of memory, should throw?
+		*(unsigned char **)page = Pool::currentPage;
+		Pool::currentPage = page;
+		return(page + sizeof(unsigned char *));
+	} else {
+		Pool::used += size;
+		return(Pool::rootPage + Pool::used);
+	}
+}
+
+// Reset linear allocator. Mark root page empty and free any additional blocks.
+
+void lreset() {
+	while(Pool::currentPage) {
+		unsigned char *page = Pool::currentPage;
+		Pool::currentPage = *(unsigned char **)page;
+		delete page;
+	}
+
+	Pool::used = 0;
+}
+
+}
+
 void Bindings :: initModule() {
+	_nbind_register_pool(Pool::pageSize, &Pool::used, &Pool::currentPage);
+
 	_nbind_register_type(Typer<void>::makeID(), "void");
 	_nbind_register_type(Typer<bool>::makeID(), "bool");
 	_nbind_register_type(Typer<std::string>::makeID(), "std::string");

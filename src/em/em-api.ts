@@ -7,10 +7,11 @@ import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
 import {_nbind as _callback} from './Callback';
 import {_nbind as _value} from './ValueObj';
+import {_nbind as _std} from './BindingStd';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
 
-export {_globals, _type, _class, _callback, _value, _caller, _resource};
+export {_globals, _type, _class, _callback, _value, _std, _caller, _resource};
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -28,7 +29,6 @@ export namespace _nbind {
 	export var BindType: typeof _type.BindType;
 	export var BooleanType: typeof _type.BooleanType;
 	export var CStringType: typeof _type.CStringType;
-	export var StringType: typeof _type.StringType;
 
 	export var Wrapper: typeof _class.Wrapper;
 	export var BindClass: typeof _class.BindClass;
@@ -41,6 +41,8 @@ export namespace _nbind {
 
 	export var CreateValueType: typeof _value.CreateValueType;
 	export var popValue: typeof _value.popValue;
+
+	export var StringType: typeof _std.StringType;
 
 	export var makeCaller: typeof _caller.makeCaller;
 	export var makeMethodCaller: typeof _caller.makeMethodCaller;
@@ -58,6 +60,13 @@ function _readAsciiString(ptr: number) {
 
 @exportLibrary
 class nbind {
+
+	@dep('_nbind')
+	static _nbind_register_pool(pageSize: number, usedPtr: number, pagePtr: number) {
+		console.log(pageSize);
+		console.log(usedPtr);
+		console.log(pagePtr);
+	}
 
 	@dep('_nbind')
 	static _nbind_register_method_getter_setter_id(methodID: number, getterID: number, setterID: number) {

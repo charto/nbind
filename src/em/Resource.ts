@@ -23,14 +23,19 @@ export namespace _nbind {
 	/** Create a single resource with open and close code included
 	  * once from each type of resource needed by a list of types. */
 
-	export function listResources(typeList: _type.BindType[]) {
+	export function listResources(readList: _type.BindType[], writeList: _type.BindType[]) {
 		var openTbl: { [name: string]: boolean } = {};
 		var closeTbl: { [name: string]: boolean } = {};
 
-		for(var bindType of typeList) {
-			if(!bindType.needsResources) continue;
+		for(var bindType of readList) {
+			for(var resource of bindType.readResources || []) {
+				openTbl[resource.open] = true;
+				closeTbl[resource.close] = true;
+			}
+		}
 
-			for(var resource of bindType.needsResources) {
+		for(var bindType of writeList) {
+			for(var resource of bindType.writeResources || []) {
 				openTbl[resource.open] = true;
 				closeTbl[resource.close] = true;
 			}
@@ -46,6 +51,11 @@ export namespace _nbind {
 		stack: new Resource(
 			'var sp=Runtime.stackSave();',
 			'Runtime.stackRestore(sp);'
+		),
+
+		pool: new Resource(
+			'',
+			'' // TODO: call lreset()
 		)
 	};
 

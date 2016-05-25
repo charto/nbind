@@ -52,11 +52,7 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		needsWireWrite: boolean = true;
-
-		makeWireWrite(expr: string) {
-			return('((_nbind.value=new ' + expr + '),0)');
-		}
+		makeWireWrite = (expr: string) => '((_nbind.value=new ' + expr + '),0)';
 	}
 
 	@prepareNamespace('_nbind')
