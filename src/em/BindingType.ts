@@ -37,6 +37,33 @@ export namespace _nbind {
 
 		id: number;
 		name: string;
+
+		heap: any = HEAPU32;
+		ptrSize = 4;
+	}
+
+	export class PrimitiveType extends BindType {
+		constructor(id: number, name: string, size: number, isUnsigned: boolean, isFloat: boolean) {
+			super(id, name);
+
+			var heapTbl: { [bits: number]: any } = (
+				isFloat ? {
+					32: HEAPF32,
+					64: HEAPF64
+				} : isUnsigned ? {
+					8: HEAPU8,
+					16: HEAPU16,
+					32: HEAPU32,
+				} : {
+					8: HEAP8,
+					16: HEAP16,
+					32: HEAP32,
+				}
+			);
+
+			this.heap = heapTbl[size * 8];
+			this.ptrSize = size;
+		}
 	}
 
 	// Push a string to the C++ stack, zero-terminated and UTF-8 encoded.

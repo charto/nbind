@@ -27,6 +27,7 @@ export namespace _nbind {
 	export var typeList: typeof _globals.typeList;
 
 	export var BindType: typeof _type.BindType;
+	export var PrimitiveType: typeof _type.PrimitiveType;
 	export var BooleanType: typeof _type.BooleanType;
 	export var CStringType: typeof _type.CStringType;
 
@@ -132,7 +133,7 @@ class nbind {
 			if(isPointer) {
 				new _nbind.CStringType(id, name);
 			} else {
-				new _nbind.BindType(id, name);
+				new _nbind.PrimitiveType(id, name, size, !!isUnsigned, !!isFloat);
 			}
 		}
 

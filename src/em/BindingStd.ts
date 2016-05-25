@@ -18,17 +18,26 @@ export namespace _nbind {
 
 	export var resources: typeof _resource.resources;
 
-	export function popArray(ptr: number, type: _type.BindType) {
+	export function pushArray(arr: any[], type: ArrayType) {
+		if((type.size || type.size === 0) && arr.length < type.size) {
+			throw(new Error('Type mismatch'));
+		}
+
+		return(0);
+	}
+
+	export function popArray(ptr: number, type: ArrayType) {
 		if(ptr === 0) return(null);
 
 		var length = HEAPU32[ptr / 4];
 		var arr = new Array(length);
 
 		ptr += 4;
-		console.log(type.name);
+		ptr /= type.memberType.ptrSize;
+		var heap = type.memberType.heap;
 
 		for(var num = 0; num < length; ++num) {
-			arr[num] = 0;
+			arr[num] = heap[ptr++];
 		}
 
 		return(arr);
@@ -54,7 +63,7 @@ export namespace _nbind {
 		};
 		makeWireWrite = (expr: string, convertParamList: any[], num: number) => {
 			convertParamList[num] = this;
-			return(expr);
+			return('_nbind.pushArray(' + expr + ',convertParamList[' + num + '])');
 		};
 
 		readResources = [ resources.pool ];

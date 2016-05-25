@@ -77,8 +77,9 @@ namespace nbind {
 // Allocate blocks in a linked list on the heap if they're too large.
 
 void *lalloc(size_t size) {
-	// Round size up to a multiple of 4 to align pointers allocated later.
-	size = (size + 3) & ~3;
+	// Round size up to a multiple of 8 bytes (size of a double)
+	// to align pointers allocated later.
+	size = (size + 7) & ~7;
 
 	if(size > Pool::pageSize / 2 || size > Pool::pageSize - Pool::used) {
 		unsigned char *page = new unsigned char[size + sizeof(unsigned char *)];

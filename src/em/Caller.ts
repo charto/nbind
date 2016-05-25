@@ -72,7 +72,10 @@ export namespace _nbind {
 		argTypeList: _type.BindType[]
 	) {
 		var argList = makeArgList(argTypeList.length);
+		/** List of arbitrary data for type converters.
+		  * Each one may read and write its own slot. */
 		var convertParamList: any[] = [];
+		/** Next free slot number in type converter data list. */
 		var paramNum = 0;
 
 		function makeWireRead(type: _type.BindType, expr: string) {
@@ -126,7 +129,10 @@ export namespace _nbind {
 	) {
 		var argList = makeArgList(argTypeList.length);
 		var callbackList = _nbind.callbackList;
+		/** List of arbitrary data for type converters.
+		  * Each one may read and write its own slot. */
 		var convertParamList: any[] = [];
+		/** Next free slot number in type converter data list. */
 		var paramNum = 0;
 
 		function makeWireRead(type: _type.BindType, expr: string) {
