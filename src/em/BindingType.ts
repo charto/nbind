@@ -26,9 +26,6 @@ export namespace _nbind {
 			typeList[id] = this;
 		}
 
-		// TODO: maybe this should be an abstract base class and these versions of wire type conversions
-		// should be in a subclass called PrimitiveType.
-
 		makeWireRead: (expr: string, convertParamList?: any[], num?: number) => string;
 		makeWireWrite: (expr: string, convertParamList?: any[], num?: number) => string;
 

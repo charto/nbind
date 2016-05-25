@@ -79,20 +79,16 @@ class nbind {
 	@dep('_nbind')
 	static _nbind_register_type(id: number, namePtr: number) {
 		var name = _readAsciiString(namePtr);
+		var constructorTbl: { [name: string]: { new(id: number, name: string): _type.BindType } } = {
+			'bool': _nbind.BooleanType,
+			'cbFunction &': _nbind.CallbackType,
+			'std::string': _nbind.StringType,
+			'_nbind_new': _nbind.CreateValueType
+		};
 
-		// TODO: convert this into a lookup table.
+		var constructor = constructorTbl[name] || _nbind.BindType;
 
-		if(name == 'bool') {
-			new _nbind.BooleanType(id, name);
-		} else if(name == 'cbFunction &') {
-			new _nbind.CallbackType(id, name);
-		} else if(name == 'std::string') {
-			new _nbind.StringType(id, name);
-		} else if(name == '_nbind_new') {
-			new _nbind.CreateValueType(id, name);
-		} else {
-			new _nbind.BindType(id, name);
-		}
+		new constructor(id, name);
 	}
 
 	@dep('_nbind')
@@ -113,25 +109,22 @@ class nbind {
 			var isFloat    = flag & 2;
 			var isUnsigned = flag & 1;
 
-			var name = [].concat([
-				isConst && 'const '
-			], ( flag & 20 ?
-				[
-					!isSignless && (isUnsigned ? 'un' : '') + 'signed ',
-					'char'
-				]
-			:
-				[
-					isUnsigned && 'u',
-					isFloat ? 'float' : 'int',
-					size * 8 + '_t'
-				]
-			), [
-				isPointer && ' *'
-			]).filter((x: any) => (x as boolean)).join('');
+			var name = isConst ? 'const ' : '';
+
+			if(isSignless) name += 'char';
+			else if(isPointer) {
+				if(isUnsigned) name += 'un';
+				name += 'signed char';
+			} else {
+				name += (
+					(isUnsigned ? 'u' : '') +
+					(isFloat ? 'float' : 'int') +
+					(size * 8 + '_t')
+				);
+			}
 
 			if(isPointer) {
-				new _nbind.CStringType(id, name);
+				new _nbind.CStringType(id, name + ' *');
 			} else {
 				new _nbind.PrimitiveType(id, name, size, !!isUnsigned, !!isFloat);
 			}
