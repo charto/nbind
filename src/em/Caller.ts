@@ -1,6 +1,9 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file handles creating invoker functions for Emscripten dyncalls
+// wrapped in type conversions for arguments and return values.
+
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';

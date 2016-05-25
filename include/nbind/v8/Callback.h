@@ -1,6 +1,8 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file handles JavaScript callback functions accessible from C++.
+
 #pragma once
 
 namespace nbind {

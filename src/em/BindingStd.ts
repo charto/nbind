@@ -1,6 +1,9 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file handles type conversion of C++ standard library types
+// to / from JavaScript.
+
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';

@@ -1,6 +1,11 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file contains the type conversion base class and handles conversion of
+// C++ primitive types to / from JavaScript. Following emscripten conventions,
+// the type passed between the two is called WireType.
+// Anything from the standard library is instead in BindingStd.ts
+
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _resource} from './Resource';

@@ -1,6 +1,10 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file handles resource allocation and freeing for invoker functions.
+// For example if any type conversion requires space in the C++ stack,
+// at the end of the invoker it must be reset as it was before.
+
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _type} from './BindingType';
 

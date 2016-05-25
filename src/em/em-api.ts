@@ -1,6 +1,9 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file contains JavaScript functions directly exposed to C++ through
+// Emscripten library exports.
+
 import {setEvil, publishNamespace, defineHidden, exportLibrary, dep} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';

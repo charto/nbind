@@ -1,6 +1,11 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file handles conversion of C++ primitive types to / from JavaScript.
+// Following emscripten conventions, the type passed between the two is called
+// WireType.
+// Anything from the standard library is instead in BindingStd.h
+
 /*
 This file is very similar to wire.h in Embind, and serves the same purpose.
 The following conditions apply to any identical parts:

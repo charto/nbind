@@ -1,6 +1,9 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file handles type conversion of JavaScript callback functions
+// accessible from C++. See also Caller.ts
+
 import {setEvil, prepareNamespace, defineHidden, exportLibrary, dep} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';

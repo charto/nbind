@@ -1,6 +1,9 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file handles type conversion of C++ standard library types
+// to / from JavaScript.
+
 #pragma once
 
 #include <string>

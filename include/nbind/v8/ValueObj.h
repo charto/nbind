@@ -1,6 +1,11 @@
 // This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file handles value objects, which are represented by equivalent C++ and
+// JavaScript classes, with toJS and fromJS methods calling each others'
+// constructors to marshal the class between languages and providing a similar
+// API in both.
+
 #pragma once
 
 namespace nbind {

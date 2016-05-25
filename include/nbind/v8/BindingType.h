@@ -1,9 +1,10 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-// Convert between JavaScript types used in the V8 engine and native C++ types.
-// Following emscripten conventions, the type passed between the two is called
-// WireType.
+// This file handles conversion of C++ primitive types to / from JavaScript
+// types in V8 internal representation. Following emscripten conventions,
+// the type passed between the two is called WireType.
+// Anything from the standard library is instead in BindingStd.h
 
 #pragma once
 

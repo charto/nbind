@@ -1,6 +1,8 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
+// This file contains some random functions.
+
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _std} from './BindingStd';
