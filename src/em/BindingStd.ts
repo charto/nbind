@@ -19,11 +19,28 @@ export namespace _nbind {
 	export var resources: typeof _resource.resources;
 
 	export function pushArray(arr: any[], type: ArrayType) {
-		if((type.size || type.size === 0) && arr.length < type.size) {
+		if(!arr) return(0);
+
+		var length = arr.length;
+
+		if((type.size || type.size === 0) && length < type.size) {
 			throw(new Error('Type mismatch'));
 		}
 
-		return(0);
+		var ptrSize = type.memberType.ptrSize;
+		var result = Runtime.stackAlloc(4 + length * ptrSize);
+
+		HEAPU32[result / 4] = length;
+
+		var heap = type.memberType.heap;
+		var ptr = (result + 4) / ptrSize;
+
+		for(var num = 0; num < length; ++num) {
+			// TODO: type conversion
+			heap[ptr++] = arr[num];
+		}
+
+		return(result);
 	}
 
 	export function popArray(ptr: number, type: ArrayType) {
@@ -32,11 +49,11 @@ export namespace _nbind {
 		var length = HEAPU32[ptr / 4];
 		var arr = new Array(length);
 
-		ptr += 4;
-		ptr /= type.memberType.ptrSize;
 		var heap = type.memberType.heap;
+		ptr = (ptr + 4) / type.memberType.ptrSize;
 
 		for(var num = 0; num < length; ++num) {
+			// TODO: type conversion
 			arr[num] = heap[ptr++];
 		}
 

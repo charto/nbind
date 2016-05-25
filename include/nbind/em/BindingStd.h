@@ -29,6 +29,10 @@ struct BindingType<std::array<MemberType, size>> {
 	static inline type fromWireType(WireType arg) {
 		type val;
 
+		for(uint32_t num = 0; num < size; ++num) {
+			val[num] = BindingType<MemberType>::fromWireType(arg->data[num]);
+		}
+
 		return(val);
 	}
 
@@ -61,7 +65,14 @@ struct BindingType<std::vector<MemberType>> {
 	} *WireType;
 
 	static inline type fromWireType(WireType arg) {
+		uint32_t size = arg->length;
 		type val;
+
+		val.reserve(size);
+
+		for(uint32_t num = 0; num < size; ++num) {
+			val.push_back(BindingType<MemberType>::fromWireType(arg->data[num]));
+		}
 
 		return(val);
 	}
