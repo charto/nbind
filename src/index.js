@@ -83,31 +83,53 @@ function findCompiledModule(root, specList) {
 var nbind = {
 	pendingBindings: {},
 
-	init: function(basePath) {
-		nbind.moduleSpec = findCompiledModule(
+	init: function(basePath, lib) {
+		var spec = findCompiledModule(
 			basePath || process.cwd(), [
 				{ type: 'node', name: 'nbind.node' },
 				{ type: 'emcc', name: 'nbind.js' }
 			]
 		);
 
-		// Load the compiled addon.
+		nbind.moduleSpec = spec;
+		nbind.lib = lib || {};
 
-		var moduleObj = require(nbind.moduleSpec.path);
+		if(spec.type == 'emcc') nbind.initAsm(spec);
+		else nbind.initNode(spec);
 
-		if(nbind.moduleSpec.type == 'emcc') moduleObj.ccall('nbind_init');
+		return(nbind.lib);
+	},
 
-		extend(nbind.lib, moduleObj);
+	initAsm: function(spec) {
+		nbind.lib.locateFile = function(name) {
+			return(path.resolve(path.dirname(spec.path), name));
+		}
+
+		// Load the Asm.js module.
+		var moduleObj = require(spec.path);
+
+		moduleObj.ccall('nbind_init');
 
 		Object.keys(nbind.pendingBindings).forEach(function(name) {
-			if(nbind.moduleSpec.type == 'emcc') {
-				nbind.lib._nbind_value(name, nbind.pendingBindings[name]);
-			} else {
-				nbind.lib.NBind.bind_value(name, nbind.pendingBindings[name]);
-			}
+			nbind.lib._nbind_value(name, nbind.pendingBindings[name]);
+		});
+	},
+
+	initNode: function(spec) {
+		// Load the compiled addon.
+		var moduleObj = require(spec.path);
+
+		if(!moduleObj || typeof(moduleObj) != 'object') {
+			throw(new Error('Error loading addon'));
+		}
+
+		Object.keys(moduleObj).forEach(function(key) {
+			nbind.lib[key] = moduleObj[key];
 		});
 
-		return(this);
+		Object.keys(nbind.pendingBindings).forEach(function(name) {
+			nbind.lib.NBind.bind_value(name, nbind.pendingBindings[name]);
+		});
 	},
 
 	bind: function(name, proto) {
@@ -116,23 +138,7 @@ var nbind = {
 		} else if(nbind.lib.NBind) {
 			nbind.lib.NBind.bind_value(name, proto);
 		} else nbind.pendingBindings[name] = proto;
-	},
-
-	moduleSpec: null,
-
-	lib: {
-		locateFile: function(name) {return(path.resolve(path.dirname(nbind.moduleSpec.path), name));}
 	}
 };
-
-function extend(dst, src) {
-	if(src !== null && typeof(src) === 'object') {
-		Object.keys(src).forEach(function(key) {
-			dst[key] = src[key];
-		});
-	}
-
-	return(dst);
-}
 
 module.exports = nbind;

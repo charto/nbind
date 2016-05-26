@@ -54,10 +54,10 @@ NBIND_CLASS(Greeter) {
 	</tr><tr>
 		<td valign="top">
 			Run on the command line:<br>
-<pre>npm install --save-dev \
-  nbind autogypi
+<pre>npm install --save \
+  nbind autogypi node-gyp
 
-npm run autogypi -- \
+npm run -- autogypi \
   --init-gyp \
   -p nbind -s hello.cc</pre>
 		</td>
@@ -73,9 +73,7 @@ npm run autogypi -- \
 		</td><td valign="top">
 			Call from Node.js:<br>
 <pre>var nbind = require('nbind');
-var lib = nbind.lib;
-
-nbind.init();
+var lib = nbind.init();
 
 lib.Greeter.sayHello('you');</pre>
 			Or from the browser (see below)

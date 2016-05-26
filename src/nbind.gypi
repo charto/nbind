@@ -41,7 +41,11 @@
 		},{
 
 			"sources": ["v8/Binding.cc"],
-			"cflags_cc": ["-std=c++11", "-fexceptions"],
+			"cflags_cc": [
+				"-O3",
+				"-std=c++11",
+				"-fexceptions"
+			],
 
 			"msbuild_settings": {
 				"ClCompile": {
@@ -55,7 +59,8 @@
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
 				"CLANG_CXX_LANGUAGE_STANDARD":"c++11",
 				"MACOSX_DEPLOYMENT_TARGET": "10.7",
-				"OTHER_CPLUSPLUSFLAGS":[
+				"OTHER_CPLUSPLUSFLAGS": [
+				"-O3",
 					"-std=c++11",
 					"-stdlib=libc++"
 				],
