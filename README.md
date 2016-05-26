@@ -101,11 +101,19 @@ Features
 --------
 
 `nbind` supports:
-- Binding any number of C++ classes for use from Node.js, Asm.js or Electron.
-- Exporting methods by just listing their names. Arguments and return types are autodetected.
-- Types can be numbers, booleans, C strings or instances of other exported classes.
-- A special functor `cbFunction` allows taking a JavaScript callback as a parameter and passing any number of supported types as arguments, casting the result to another supported type.
-- Exported classes can be converted to "value types" by mapping them to a corresponding JavaScript constructor. The object is then automatically converted to C++ or JavaScript form as it's passed between the two languages.
+
+- Linux, OS X, Windows.
+- Node.js, asm.js, Electron.
+
+It allows you to:
+
+- Bind unlimited C++ classes.
+- Bind C++ methods simply by mentioning their names.
+- Auto-detect argument and return types from C++ declarations.
+- [Automatically convert types](#type-conversion) between languages.
+- Call bound C++ methods from JavaScript with type checking.
+- Pass JavaScript callbacks to C++ and call them with any types.
+- Pass instances of compatible classes by value between languages (through the C++ stack).
 
 Works on your platform
 ----------------------
@@ -153,6 +161,24 @@ More is coming! Work is ongoing to:
 
 - Automatically generate TypeScript `.d.ts` definition files from C++ code for IDE autocompletion and compile-time checks of JavaScript side code.
 - Support native Android and iPhone apps.
+
+Type conversion
+---------------
+
+Parameters and return values of function calls between languages
+are automatically converted between equivalent types:
+
+| JavaScript | C++                               |
+| ---------- | --------------------------------- |
+| number     | (un)signed char, short, int, long |
+| number     | float, double                     |
+| boolean    | bool                              |
+| string     | (const) (unsigned) char *         |
+| string     | std::string                       |
+| Array      | std::vector&lt;type&gt;           |
+| Array      | std::array&lt;type, size&gt;      |
+| Function   | nbind::cbFunction<br>(only as a parameter) |
+| Instance of any prototype<br>(with a fromJS method) | Instance of any class<br>(with a toJS method) |
 
 What?
 -----
