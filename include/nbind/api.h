@@ -61,16 +61,17 @@ private:
 
 #	include "v8/BindWrapper.h"
 #	include "v8/BindingType.h"
-#	include "v8/Callback.h"
 #	include "v8/NBind.h"
+#	include "v8/Callback.h"
 #	include "v8/BindingStd.h"
 
 #elif defined(EMSCRIPTEN)
 
 #	include "em/BindingType.h"
 #	include "signature/CallbackSignature.h"
-#	include "em/Callback.h"
 #	include "em/NBind.h"
+#	include "em/Pool.h"
+#	include "em/Callback.h"
 #	include "em/BindingStd.h"
 
 #endif

@@ -5,6 +5,8 @@
 
 namespace nbind {
 
+class cbFunction;
+
 class NBind {
 
 public:

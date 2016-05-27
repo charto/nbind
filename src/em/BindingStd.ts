@@ -14,6 +14,7 @@ import {_nbind as _resource} from './Resource';
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
+	export var Pool = _globals.Pool;
 	export var BindType = _type.BindType;
 }
 
@@ -31,7 +32,7 @@ export namespace _nbind {
 		}
 
 		var ptrSize = type.memberType.ptrSize;
-		var result = Runtime.stackAlloc(4 + length * ptrSize);
+		var result = Pool.lalloc(4 + length * ptrSize);
 
 		HEAPU32[result / 4] = length;
 
@@ -105,7 +106,7 @@ export namespace _nbind {
 		*/
 
 		readResources = [ resources.pool ];
-		writeResources = [ resources.stack ];
+		writeResources = [ resources.pool ];
 
 		memberType: _type.BindType;
 		size: number;
@@ -120,7 +121,7 @@ export namespace _nbind {
 		// 32-bit length, string and a zero terminator
 		// (stringToUTF8Array insists on adding it)
 
-		var result = Runtime.stackAlloc(4 + length + 1);
+		var result = Pool.lalloc(4 + length + 1);
 
 		HEAPU32[result / 4] = length;
 		Module.stringToUTF8Array(str, HEAPU8, result + 4, length + 1);
@@ -149,7 +150,7 @@ export namespace _nbind {
 		// makeWireWrite = (expr: string) => '_nbind.pushString(' + expr + ')';
 
 		readResources = [ resources.pool ];
-		writeResources = [ resources.stack ];
+		writeResources = [ resources.pool ];
 	}
 
 	@prepareNamespace('_nbind')

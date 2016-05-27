@@ -46,6 +46,9 @@ public:
 
 	template <typename ReturnType, typename... Args>
 	ReturnType call(Args... args) {
+		// Restore linear allocator state in RAII style when done.
+		PoolRestore restore;
+
 		return(Caller<ReturnType>::call(num, args...));
 	}
 

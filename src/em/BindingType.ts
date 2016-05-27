@@ -14,6 +14,10 @@ import {_nbind as _resource} from './Resource';
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
+	export var Pool = _globals.Pool;
+}
+
+export namespace _nbind {
 
 	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
@@ -78,7 +82,7 @@ export namespace _nbind {
 		str = str.toString();
 
 		var length = Module.lengthBytesUTF8(str) + 1;
-		var result = Runtime.stackAlloc(length);
+		var result = Pool.lalloc(length);
 
 		// Convert the string and append a zero byte.
 		Module.stringToUTF8Array(str, HEAPU8, result, length);
@@ -109,7 +113,7 @@ export namespace _nbind {
 		// makeWireWrite = (expr: string) => '_nbind.pushCString(' + expr + ')';
 
 		readResources = [ resources.pool ];
-		writeResources = [ resources.stack ];
+		writeResources = [ resources.pool ];
 	}
 
 	// Booleans are returned as numbers from Asm.js.

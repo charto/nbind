@@ -5,13 +5,15 @@
 
 namespace nbind {
 
+class cbFunction;
+
 class NBind {
 
 public:
 
 	static void bind_value(const char *name, cbFunction &func);
-	static void *lalloc(size_t size);
-	static void lreset(unsigned int used, unsigned char *page);
+	static unsigned int lalloc(size_t size);
+	static void lreset(unsigned int used, unsigned int page);
 
 };
 

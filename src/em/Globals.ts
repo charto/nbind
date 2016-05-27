@@ -5,6 +5,7 @@
 
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _class} from './BindClass';
 import {_nbind as _std} from './BindingStd';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
@@ -30,6 +31,41 @@ export namespace _nbind {
 	export var listResources: typeof _resource.listResources;
 
 	export var makeOverloader: typeof _caller.makeOverloader;
+
+	export class Pool {
+		static lalloc(size: number) {
+			// Round size up to a multiple of 8 bytes (size of a double)
+			// to align pointers allocated later.
+			size = (size + 7) & ~7;
+
+			var used = HEAPU32[Pool.usedPtr];
+
+			if(size > Pool.pageSize / 2 || size > Pool.pageSize - used) {
+				var NBind = (typeTbl['NBind'] as _class.BindClass).proto as any;
+				return(NBind.lalloc(size));
+			} else {
+				HEAPU32[Pool.usedPtr] = used + size;
+
+				return(Pool.rootPtr + used);
+			}
+		}
+
+		static lreset(used: number, page: number) {
+			var topPage = HEAPU32[Pool.pagePtr];
+
+			if(topPage) {
+				var NBind = (typeTbl['NBind'] as _class.BindClass).proto as any;
+				NBind.lreset(used, page);
+			} else {
+				HEAPU32[Pool.usedPtr] = used;
+			}
+		}
+
+		static pageSize: number;
+		static usedPtr: number;
+		static rootPtr: number;
+		static pagePtr: number;
+	}
 
 	function getComplexType(id: number) {
 		var placeholderFlag = HEAPU8[id as number];

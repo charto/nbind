@@ -25,6 +25,7 @@ export namespace _nbind {
 	export var callbackList: typeof _callback.callbackList;
 
 	export var listResources: typeof _resource.listResources;
+	export var resources: typeof _resource.resources;
 
 	/** Make a list of argument names a1, a2, a3...
 	  * for dynamically generating function source code. */
@@ -116,9 +117,9 @@ export namespace _nbind {
 
 		var sourceCode = (
 			'function(' + argList.join(',') + '){' +
-				resourceSet.open +
+				resourceSet.makeOpen() +
 				'var r=' + callExpression + ';' +
-				resourceSet.close +
+				resourceSet.makeClose() +
 				'return r;' +
 			'}'
 		);
@@ -175,11 +176,16 @@ export namespace _nbind {
 
 		var resourceSet = listResources(argTypeList, [returnType]);
 
+		// Let the calling C++ side handle resetting the pool
+		// after parsing the callback return value passed through it.
+
+		resourceSet.remove(_nbind.resources.pool);
+
 		var sourceCode = (
 			'function(' + ['dummy', 'num'].concat(argList).join(',') + '){' +
-				resourceSet.open +
+				resourceSet.makeOpen() +
 				'var r=' + callExpression + ';' +
-				resourceSet.close +
+				resourceSet.makeClose() +
 				'return r;' +
 			'}'
 		);

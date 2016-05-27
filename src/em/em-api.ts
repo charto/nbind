@@ -22,6 +22,10 @@ setEvil((code: string) => eval(code));
 var _defineHidden = defineHidden;
 
 export namespace _nbind {
+	export var Pool = _globals.Pool;
+}
+
+export namespace _nbind {
 	export type Func = _globals.Func;
 
 	export var MethodType: typeof _globals.MethodType;
@@ -66,10 +70,11 @@ function _readAsciiString(ptr: number) {
 class nbind {
 
 	@dep('_nbind')
-	static _nbind_register_pool(pageSize: number, usedPtr: number, pagePtr: number) {
-		console.log(pageSize);
-		console.log(usedPtr);
-		console.log(pagePtr);
+	static _nbind_register_pool(pageSize: number, usedPtr: number, rootPtr: number, pagePtr: number) {
+		_nbind.Pool.pageSize = pageSize;
+		_nbind.Pool.usedPtr = usedPtr / 4;
+		_nbind.Pool.rootPtr = rootPtr;
+		_nbind.Pool.pagePtr = pagePtr / 4;
 	}
 
 	@dep('_nbind')
@@ -175,6 +180,7 @@ class nbind {
 		new _nbind.BindType(idList[1], name + ' *');
 		new _nbind.BindType(idList[2], 'const ' + name + ' *');
 
+		// Export the class.
 		Module[name] = Bound;
 	}
 

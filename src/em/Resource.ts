@@ -14,41 +14,47 @@ setEvil((code: string) => eval(code));
 export namespace _nbind {
 
 	export class Resource {
-		constructor(open: string, close: string) {
-			this.open = open;
-			this.close = close;
+		constructor(open?: string, close?: string) {
+			if(open) this.openTbl[open] = true;
+			if(close) this.closeTbl[close] = true;
 		}
 
-		open: string;
+		add(other: Resource) {
+			for(var key of Object.keys(other.openTbl)) this.openTbl[key] = true;
+			for(var key of Object.keys(other.closeTbl)) this.closeTbl[key] = true;
+		}
 
-		close: string;
+		remove(other: Resource) {
+			for(var key of Object.keys(other.openTbl)) delete(this.openTbl[key]);
+			for(var key of Object.keys(other.closeTbl)) delete(this.closeTbl[key]);
+		}
+
+		makeOpen = () => Object.keys(this.openTbl).join('');
+		makeClose = () => Object.keys(this.closeTbl).join('');
+
+		openTbl: { [name: string]: boolean } = {};
+		closeTbl: { [name: string]: boolean } = {};
 	}
 
 	/** Create a single resource with open and close code included
 	  * once from each type of resource needed by a list of types. */
 
 	export function listResources(readList: _type.BindType[], writeList: _type.BindType[]) {
-		var openTbl: { [name: string]: boolean } = {};
-		var closeTbl: { [name: string]: boolean } = {};
+		var result = new Resource();
 
 		for(var bindType of readList) {
 			for(var resource of bindType.readResources || []) {
-				openTbl[resource.open] = true;
-				closeTbl[resource.close] = true;
+				result.add(resource);
 			}
 		}
 
 		for(var bindType of writeList) {
 			for(var resource of bindType.writeResources || []) {
-				openTbl[resource.open] = true;
-				closeTbl[resource.close] = true;
+				result.add(resource);
 			}
 		}
 
-		return(new Resource(
-			Object.keys(openTbl).join(''),
-			Object.keys(closeTbl).join('')
-		));
+		return(result);
 	}
 
 	export var resources = {
@@ -58,8 +64,8 @@ export namespace _nbind {
 		),
 
 		pool: new Resource(
-			'',
-			'' // TODO: call lreset()
+			'var used=HEAPU32[_nbind.Pool.usedPtr],page=HEAPU32[_nbind.Pool.pagePtr];',
+			'_nbind.Pool.lreset(used,page);'
 		)
 	};
 

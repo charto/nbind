@@ -11,7 +11,7 @@
 using namespace nbind;
 
 extern "C" {
-	extern void _nbind_register_pool(unsigned int pageSize, unsigned int *usedPtr, unsigned char **pagePtr);
+	extern void _nbind_register_pool(unsigned int pageSize, unsigned int *usedPtr, unsigned char *rootPtr, unsigned char **pagePtr);
 	extern void _nbind_register_method_getter_setter_id(unsigned int methodID, unsigned int getterID, unsigned int setterID);
 	extern void _nbind_register_types(void **data);
 	extern void _nbind_register_type(       TYPEID typeID,    const char *name);
@@ -28,14 +28,6 @@ extern "C" {
 
 typedef BaseSignature::Type SigType;
 
-class Pool {
-public:
-	static const unsigned int pageSize = 65536;
-	static unsigned int used;
-	static unsigned char *rootPage;
-	static unsigned char *page;
-};
-
 unsigned int Pool::used = 0;
 unsigned char *Pool::rootPage = new unsigned char[Pool::pageSize];
 unsigned char *Pool::page = nullptr;
@@ -43,38 +35,45 @@ unsigned char *Pool::page = nullptr;
 /** Simple linear allocator. Return consecutive blocks on a root page.
   * Allocate blocks in a linked list on the heap if they're too large. */
 
-void *NBind :: lalloc(size_t size) {
+unsigned int NBind :: lalloc(size_t size) {
 	// Round size up to a multiple of 8 bytes (size of a double)
 	// to align pointers allocated later.
 	size = (size + 7) & ~7;
 
 	if(size > Pool::pageSize / 2 || size > Pool::pageSize - Pool::used) {
-		unsigned char *page = new unsigned char[size + sizeof(unsigned char *)];
-		if(!page) return(nullptr); // Out of memory, should throw?
+		// TODO: make sure the memory is properly aligned!
+		unsigned char *page = new unsigned char[size + 8];
+		if(!page) return(0); // Out of memory, should throw?
 		*(unsigned char **)page = Pool::page;
 		Pool::page = page;
-		return(page + sizeof(unsigned char *));
+		return(reinterpret_cast<unsigned int>(page) + 8);
 	} else {
 		Pool::used += size;
-		return(Pool::rootPage + Pool::used);
+		return(reinterpret_cast<unsigned int>(Pool::rootPage) + Pool::used);
 	}
 }
 
 /** Reset linear allocator to a previous state.
   * Set root page used size and free blocks allocated since the old state. */
 
-void NBind :: lreset(unsigned int used, unsigned char *page) {
-	while(Pool::page != page) {
+void NBind :: lreset(unsigned int used, unsigned int page) {
+	while(Pool::page != reinterpret_cast<unsigned char *>(page)) {
 		unsigned char *topPage = Pool::page;
 		Pool::page = *(unsigned char **)topPage;
 		delete topPage;
 	}
 
-	Pool::used = 0;
+	Pool::used = used;
+}
+
+PoolRestore :: PoolRestore() : used(Pool::used), page(Pool::page) {}
+
+PoolRestore :: ~PoolRestore() {
+	NBind::lreset(used, reinterpret_cast<unsigned int>(page));
 }
 
 static void initModule() {
-	_nbind_register_pool(Pool::pageSize, &Pool::used, &Pool::page);
+	_nbind_register_pool(Pool::pageSize, &Pool::used, Pool::rootPage, &Pool::page);
 
 	_nbind_register_type(Typer<void>::makeID(), "void");
 	_nbind_register_type(Typer<bool>::makeID(), "bool");
@@ -190,6 +189,8 @@ NBIND_CLASS(NBind) {
 	construct<>();
 
 	method(bind_value);
+	method(lalloc);
+	method(lreset);
 }
 
 #endif
