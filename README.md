@@ -152,8 +152,6 @@ Works on your platform
 [![dependency status](https://david-dm.org/charto/nbind.svg)](https://david-dm.org/charto/nbind)
 [![npm version](https://img.shields.io/npm/v/nbind.svg)](https://www.npmjs.com/package/nbind)
 
-Warning to git committers: rebase is used within feature branches (but not master).
-
 Roadmap
 -------
 
@@ -161,6 +159,8 @@ More is coming! Work is ongoing to:
 
 - Automatically generate TypeScript `.d.ts` definition files from C++ code for IDE autocompletion and compile-time checks of JavaScript side code.
 - Support native Android and iPhone apps.
+
+Warning to git committers: rebase is used within feature branches (but not master).
 
 Type conversion
 ---------------
