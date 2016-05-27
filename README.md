@@ -76,7 +76,7 @@ npm run -- autogypi \
 var lib = nbind.init();
 
 lib.Greeter.sayHello('you');</pre>
-			Or from the browser (see below)
+			<!-- Or from the browser (see below) -->
 		</td>
 	</tr>
 </table>
