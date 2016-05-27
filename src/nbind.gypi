@@ -5,6 +5,7 @@
 	},
 
 	"target_name": "nbind",
+	"sources": ["common.cc"],
 	"include_dirs": [
 		"../include"
 	],
@@ -38,7 +39,7 @@
                 "OTHER_LDFLAGS": [ "<@(_cflags)" ]
             }
 
-		},{
+		}, {
 
 			"sources": ["v8/Binding.cc"],
 			"cflags_cc": [

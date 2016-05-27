@@ -26,37 +26,6 @@ extern "C" {
 	void nbind_init();
 }
 
-const char *nbind :: emptyGetter = "";
-const char *nbind :: emptySetter = "";
-
-// TODO: Remove duplication with v8/Binding.cc!
-class NBind {
-
-public:
-
-	static void bind_value(const char *name, cbFunction &func) {
-		Bindings::setValueConstructorByName(name, func);
-	}
-
-};
-
-// TODO: Remove duplication with v8/Binding.cc!
-void Bindings :: setValueConstructorByName(const char *name, cbFunction &func) {
-	for(auto *bindClass : getClassList()) {
-		if(strcmp(bindClass->getName(), name) == 0) {
-			bindClass->setValueConstructorJS(func);
-			break;
-		}
-	}
-}
-
-// Linkage for module-wide error message.
-const char *Status :: message;
-
-void Bindings :: registerClass(BindClassBase &bindClass) {
-	getClassList().emplace_front(&bindClass);
-}
-
 typedef BaseSignature::Type SigType;
 
 class Pool {
@@ -107,7 +76,7 @@ void lreset() {
 
 }
 
-void Bindings :: initModule() {
+static void initModule() {
 	_nbind_register_pool(Pool::pageSize, &Pool::used, &Pool::currentPage);
 
 	_nbind_register_type(Typer<void>::makeID(), "void");
@@ -215,7 +184,7 @@ void Bindings :: initModule() {
 }
 
 void nbind_init(void) {
-	Bindings::initModule();
+	initModule();
 }
 
 #include "nbind/nbind.h"

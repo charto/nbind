@@ -21,7 +21,6 @@
 #	include "BindClass.h"     // Needs Overloader and BaseSignature
 #	include "v8/ValueObj.h"   // Needs BindClass
 #	include "v8/Creator.h"    // Needs ArgStorage
-#	include "v8/Binding.h"
 
 #elif defined(EMSCRIPTEN)
 
@@ -30,9 +29,10 @@
 #	include "BindClass.h"
 #	include "em/ValueObj.h"
 #	include "em/Creator.h"    // Needs ArgStorage
-#	include "em/Binding.h"
 
 #endif
+
+#include "common.h"
 
 #include "signature/FunctionSignature.h"
 #include "signature/MethodSignature.h"
@@ -65,7 +65,7 @@ public:
 	BindDefiner(const char *name) : BindDefinerBase(name), bindClass(BindClass<Bound>::getInstance()) {
 		bindClass.setName(name);
 
-		Bindings::registerClass(bindClass);
+		registerClass(bindClass);
 	}
 
 	template<class Signature, typename MethodType>

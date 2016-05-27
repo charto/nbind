@@ -10,35 +10,6 @@
 using namespace v8;
 using namespace nbind;
 
-const char *nbind :: emptyGetter = "";
-const char *nbind :: emptySetter = "";
-
-class NBind {
-
-public:
-
-	static void bind_value(const char *name, cbFunction &func) {
-		Bindings::setValueConstructorByName(name, func);
-	}
-
-};
-
-void Bindings :: setValueConstructorByName(const char *name, cbFunction &func) {
-	for(auto *bindClass : getClassList()) {
-		if(strcmp(bindClass->getName(), name) == 0) {
-			bindClass->setValueConstructorJS(func);
-			break;
-		}
-	}
-}
-
-// Linkage for module-wide error message.
-const char *Status :: message;
-
-void Bindings :: registerClass(BindClassBase &bindClass) {
-	getClassList().emplace_front(&bindClass);
-}
-
 // Convert getter names like "getFoo" into property names like "foo".
 // This could be so much more concisely written with regexps...
 const char *stripGetterPrefix(const char *name, char *&nameBuf) {
@@ -76,7 +47,7 @@ const char *stripGetterPrefix(const char *name, char *&nameBuf) {
 
 typedef BaseSignature::Type SigType;
 
-void Bindings :: initModule(Handle<Object> exports) {
+static void initModule(Handle<Object> exports) {
 	// Register NBind a second time to make sure it's first on the list
 	// of classes and gets defined first, so pointers to it can be added
 	// to other classes to enforce its visibility in npm exports.
@@ -90,7 +61,6 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		bindClass->init();
 
-//		Local<FunctionTemplate> constructorTemplate = Nan::New<FunctionTemplate>(bindClass->createPtr);
 		Local<FunctionTemplate> constructorTemplate = Nan::New<FunctionTemplate>(
 			Overloader::create,
 			Nan::New<Number>(bindClass->wrapperConstructorNum << overloadShift)
@@ -194,7 +164,6 @@ void Bindings :: initModule(Handle<Object> exports) {
 
 		Local<v8::Function> jsConstructor = constructorTemplate->GetFunction();
 
-//		bindClass->setConstructorHandle(jsConstructor);
 		Overloader::setConstructorJS(bindClass->wrapperConstructorNum, jsConstructor);
 
 		exports->Set(
@@ -212,6 +181,6 @@ NBIND_CLASS(NBind) {
 	method(bind_value);
 }
 
-NODE_MODULE(nbind, nbind::Bindings::initModule)
+NODE_MODULE(nbind, initModule)
 
 #endif
