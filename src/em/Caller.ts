@@ -43,7 +43,7 @@ export namespace _nbind {
 	function anyNeedsWireWrite(typeList: _type.BindType[]) {
 		return(typeList.reduce(
 			(result: boolean, type: _type.BindType) =>
-				(result || !!type.makeWireWrite),
+				(result || !!type.wireWrite || !!type.makeWireWrite),
 			false
 		));
 	}
@@ -54,7 +54,7 @@ export namespace _nbind {
 	function anyNeedsWireRead(typeList: _type.BindType[]) {
 		return(typeList.reduce(
 			(result: boolean, type: _type.BindType) =>
-				(result || !!type.makeWireRead),
+				(result || !!type.wireRead || !!type.makeWireRead),
 			false
 		));
 	}
@@ -82,13 +82,21 @@ export namespace _nbind {
 		var paramNum = 0;
 
 		function makeWireRead(type: _type.BindType, expr: string) {
-			if(!type.makeWireRead) return(expr);
-			return(type.makeWireRead(expr, convertParamList, ++paramNum));
+			if(type.makeWireRead) {
+				return(type.makeWireRead(expr, convertParamList, paramNum++));
+			} else if(type.wireRead) {
+				convertParamList[paramNum] = type.wireRead;
+				return('(convertParamList[' + (paramNum++) + '](' + expr + '))');
+			} else return(expr);
 		}
 
 		function makeWireWrite(type: _type.BindType, expr: string) {
-			if(!type.makeWireWrite) return(expr);
-			return(type.makeWireWrite(expr, convertParamList, ++paramNum));
+			if(type.makeWireWrite) {
+				return(type.makeWireWrite(expr, convertParamList, paramNum++));
+			} else if(type.wireWrite) {
+				convertParamList[paramNum] = type.wireWrite;
+				return('(convertParamList[' + (paramNum++) + '](' + expr + '))');
+			} else return(expr);
 		}
 
 		// Build code for function call and type conversion.
@@ -139,13 +147,21 @@ export namespace _nbind {
 		var paramNum = 0;
 
 		function makeWireRead(type: _type.BindType, expr: string) {
-			if(!type.makeWireRead) return(expr);
-			return(type.makeWireRead(expr, convertParamList, ++paramNum));
+			if(type.makeWireRead) {
+				return(type.makeWireRead(expr, convertParamList, paramNum++));
+			} else if(type.wireRead) {
+				convertParamList[paramNum] = type.wireRead;
+				return('convertParamList[' + (paramNum++) + '](' + expr + ')');
+			} else return(expr);
 		}
 
 		function makeWireWrite(type: _type.BindType, expr: string) {
-			if(!type.makeWireWrite) return(expr);
-			return(type.makeWireWrite(expr, convertParamList, ++paramNum));
+			if(type.makeWireWrite) {
+				return(type.makeWireWrite(expr, convertParamList, paramNum));
+			} else if(type.wireWrite) {
+				convertParamList[paramNum] = type.wireWrite;
+				return('convertParamList[' + (paramNum++) + '](' + expr + ')');
+			} else return(expr);
 		}
 
 		var callExpression = makeWireWrite(
@@ -182,8 +198,9 @@ export namespace _nbind {
 		var returnType = typeList[0];
 		var argTypeList = typeList.slice(1);
 		var needsWireRead = anyNeedsWireRead(argTypeList);
+		var needsWireWrite = returnType.wireWrite || returnType.makeWireWrite;
 
-		if(!returnType.makeWireWrite && !needsWireRead && argCount <= 3) switch(argCount) {
+		if(!needsWireWrite && !needsWireRead && argCount <= 3) switch(argCount) {
 			case 0: return(function(dummy: number, num: number) {
 			                    return(callbackList[num](    ));});
 			case 1: return(function(dummy: number, num: number, a1: any) {
@@ -214,12 +231,13 @@ export namespace _nbind {
 		var typeList = getTypes(idList);
 		var returnType = typeList[0];
 		var argTypeList = typeList.slice(3);
+		var needsWireRead = returnType.wireRead || returnType.makeWireRead;
 		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
-		if(!returnType.makeWireRead && !needsWireWrite) {
+		if(!needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
@@ -258,12 +276,13 @@ export namespace _nbind {
 		var typeList = getTypes(idList);
 		var returnType = typeList[0];
 		var argTypeList = typeList.slice(1);
+		var needsWireRead = returnType.wireRead || returnType.makeWireRead;
 		var needsWireWrite = anyNeedsWireWrite(argTypeList);
 
 		var signature = makeSignature(typeList);
 		var dynCall = Module['dynCall_' + signature];
 
-		if(direct && !returnType.makeWireRead && !needsWireWrite) {
+		if(direct && !needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 

@@ -38,9 +38,15 @@ export namespace _nbind {
 		var heap = type.memberType.heap;
 		var ptr = (result + 4) / ptrSize;
 
-		for(var num = 0; num < length; ++num) {
-			// TODO: type conversion
-			heap[ptr++] = arr[num];
+		var wireWrite = type.memberType.wireWrite;
+		if(wireWrite) {
+			for(var num = 0; num < length; ++num) {
+				heap[ptr++] = wireWrite(arr[num]);
+			}
+		} else {
+			for(var num = 0; num < length; ++num) {
+				heap[ptr++] = arr[num];
+			}
 		}
 
 		return(result);
@@ -55,9 +61,15 @@ export namespace _nbind {
 		var heap = type.memberType.heap;
 		ptr = (ptr + 4) / type.memberType.ptrSize;
 
-		for(var num = 0; num < length; ++num) {
-			// TODO: type conversion
-			arr[num] = heap[ptr++];
+		var wireRead = type.memberType.wireRead;
+		if(wireRead) {
+			for(var num = 0; num < length; ++num) {
+				arr[num] = wireRead(heap[ptr++]);
+			}
+		} else {
+			for(var num = 0; num < length; ++num) {
+				arr[num] = heap[ptr++];
+			}
 		}
 
 		return(arr);
@@ -77,6 +89,11 @@ export namespace _nbind {
 			if(size) this.size = size;
 		}
 
+		wireRead = (arg: number) => popArray(arg, this);
+		wireWrite = (arg: any) => pushArray(arg, this);
+
+		// Optional type conversion code
+		/*
 		makeWireRead = (expr: string, convertParamList: any[], num: number) => {
 			convertParamList[num] = this;
 			return('_nbind.popArray(' + expr + ',convertParamList[' + num + '])');
@@ -85,6 +102,7 @@ export namespace _nbind {
 			convertParamList[num] = this;
 			return('_nbind.pushArray(' + expr + ',convertParamList[' + num + '])');
 		};
+		*/
 
 		readResources = [ resources.pool ];
 		writeResources = [ resources.stack ];
@@ -123,8 +141,12 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		makeWireRead = (expr: string) => '_nbind.popString(' + expr + ')';
-		makeWireWrite = (expr: string) => '_nbind.pushString(' + expr + ')';
+		wireRead = popString;
+		wireWrite = pushString;
+
+		// Optional type conversion code
+		// makeWireRead = (expr: string) => '_nbind.popString(' + expr + ')';
+		// makeWireWrite = (expr: string) => '_nbind.pushString(' + expr + ')';
 
 		readResources = [ resources.pool ];
 		writeResources = [ resources.stack ];

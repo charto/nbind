@@ -40,6 +40,10 @@ public:
 		return(callback.call<std::vector<int>>(a));
 	}
 
+	static std::vector<std::string> callWithStrings(nbind::cbFunction &callback, std::vector<std::string> a) {
+		return(callback.call<std::vector<std::string>>(a));
+	}
+
 };
 
 #include "nbind/nbind.h"
@@ -58,6 +62,7 @@ NBIND_CLASS(Vector) {
 
 	method(getInts);
 	method(callWithInts);
+	method(callWithStrings);
 }
 
 #endif

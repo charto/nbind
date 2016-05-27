@@ -22,13 +22,8 @@ export namespace _nbind {
 
 	export var makeJSCaller: typeof _caller.makeJSCaller;
 
-	export class CallbackType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
-		makeWireWrite = (expr: string) => '_nbind.registerCallback(' + expr + ')';
-	}
+	// List of invoker functions for all argument and return value combinations
+	// seen so far.
 
 	export var callbackSignatureList: _globals.Func[] = [];
 
@@ -58,6 +53,17 @@ export namespace _nbind {
 	export function unregisterCallback(num: number) {
 		callbackList[num] = null;
 		callbackFreeList.push(num);
+	}
+
+	export class CallbackType extends BindType {
+		constructor(id: number, name: string) {
+			super(id, name);
+		}
+
+		wireWrite = registerCallback;
+
+		// Optional type conversion code
+		// makeWireWrite = (expr: string) => '_nbind.registerCallback(' + expr + ')';
 	}
 
 	@prepareNamespace('_nbind')

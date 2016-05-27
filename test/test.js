@@ -129,6 +129,10 @@ test('Callbacks', function(t) {
 		Type.callNegate({}, true);
 	}, {message: 'Type mismatch'});
 
+	Type.callCStrings(function(foo, bar, baz) {
+		t.strictDeepEqual([foo, bar, baz], ['foo', 'bar', 'baz']);
+	});
+
 	t.end();
 });
 
@@ -187,6 +191,13 @@ test('Arrays', function(t) {
 	t.throws(function() {
 		ArrayType.callWithInts(function(a) {}, [1, 2]);
 	}, {message: 'Type mismatch'});
+
+	var arr = ['foo', 'bar', 'baz'];
+
+	t.strictDeepEqual(VectorType.callWithStrings(function(a) {
+		t.strictDeepEqual(a, arr);
+		return(arr);
+	}, arr), arr);
 
 	t.end();
 });

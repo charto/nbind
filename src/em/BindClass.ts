@@ -4,6 +4,7 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _value} from './ValueObj';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -13,6 +14,8 @@ export namespace _nbind {
 }
 
 export namespace _nbind {
+
+	export var pushValue: typeof _value.pushValue;
 
 	// Base class for wrapped instances of bound C++ classes.
 
@@ -49,12 +52,16 @@ export namespace _nbind {
 
 		proto: WrapperClass;
 
+		wireWrite = _nbind.pushValue;
+
 		makeWireRead = (expr: string) => ('(' +
 			expr + '||' +
 			'_nbind.throwError("Value type JavaScript class is missing or not registered"),' +
 			'_nbind.value' +
 		')');
-		makeWireWrite = (expr: string) => '_nbind.pushValue(' + expr + ')';
+
+		// Optional type conversion code
+		// makeWireWrite = (expr: string) => '_nbind.pushValue(' + expr + ')';
 	}
 
 	@prepareNamespace('_nbind')

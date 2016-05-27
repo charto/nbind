@@ -31,6 +31,9 @@ export namespace _nbind {
 			typeList[id] = this;
 		}
 
+		wireRead: (arg: number) => any;
+		wireWrite: (arg: any) => number;
+
 		makeWireRead: (expr: string, convertParamList?: any[], num?: number) => string;
 		makeWireWrite: (expr: string, convertParamList?: any[], num?: number) => string;
 
@@ -98,8 +101,12 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		makeWireRead = (expr: string) => '_nbind.popCString(' + expr + ')';
-		makeWireWrite = (expr: string) => '_nbind.pushCString(' + expr + ')';
+		wireRead = popCString;
+		wireWrite = pushCString;
+
+		// Optional type conversion code
+		// makeWireRead = (expr: string) => '_nbind.popCString(' + expr + ')';
+		// makeWireWrite = (expr: string) => '_nbind.pushCString(' + expr + ')';
 
 		readResources = [ resources.pool ];
 		writeResources = [ resources.stack ];
@@ -112,6 +119,8 @@ export namespace _nbind {
 		constructor(id: number, name: string) {
 			super(id, name);
 		}
+
+		wireRead = (arg: number) => !!arg;
 
 		makeWireRead = (expr: string) => '!!(' + expr + ')';
 	}
