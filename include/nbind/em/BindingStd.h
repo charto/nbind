@@ -12,9 +12,6 @@
 
 namespace nbind {
 
-// Defined in Binding.cc
-void *lalloc(size_t size);
-
 // Array.
 
 template <typename MemberType, size_t size>
@@ -40,7 +37,7 @@ struct BindingType<std::array<MemberType, size>> {
 	}
 
 	static inline WireType toWireType(type arg) {
-		WireType val = reinterpret_cast<WireType>(lalloc(sizeof(*val) + (size - 1) * sizeof(*val->data)));
+		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val) + (size - 1) * sizeof(*val->data)));
 
 		val->length = size;
 
@@ -82,7 +79,7 @@ struct BindingType<std::vector<MemberType>> {
 
 	static inline WireType toWireType(type arg) {
 		size_t size = arg.size();
-		WireType val = reinterpret_cast<WireType>(lalloc(sizeof(*val) + (size - 1) * sizeof(*val->data)));
+		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val) + (size - 1) * sizeof(*val->data)));
 
 		val->length = size;
 
@@ -114,7 +111,7 @@ template<> struct BindingType<std::string> {
 
 	static inline WireType toWireType(Type arg) {
 		size_t length = arg.length();
-		WireType val = reinterpret_cast<WireType>(lalloc(sizeof(*val) + length - 1));
+		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val) + length - 1));
 
 		val->length = length;
 		std::copy(arg.begin(), arg.end(), val->data);

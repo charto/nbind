@@ -5,14 +5,6 @@
 
 namespace nbind {
 
-class NBind {
-
-public:
-
-	static void bind_value(const char *name, cbFunction &func);
-
-};
-
 std::forward_list<BindClassBase *> &getClassList(void);
 
 void registerClass(BindClassBase &bindClass);

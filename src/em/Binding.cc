@@ -33,19 +33,17 @@ public:
 	static const unsigned int pageSize = 65536;
 	static unsigned int used;
 	static unsigned char *rootPage;
-	static unsigned char *currentPage;
+	static unsigned char *page;
 };
 
 unsigned int Pool::used = 0;
 unsigned char *Pool::rootPage = new unsigned char[Pool::pageSize];
-unsigned char *Pool::currentPage = nullptr;
+unsigned char *Pool::page = nullptr;
 
-namespace nbind {
+/** Simple linear allocator. Return consecutive blocks on a root page.
+  * Allocate blocks in a linked list on the heap if they're too large. */
 
-// Simple linear allocator. Return consecutive blocks on a root page.
-// Allocate blocks in a linked list on the heap if they're too large.
-
-void *lalloc(size_t size) {
+void *NBind :: lalloc(size_t size) {
 	// Round size up to a multiple of 8 bytes (size of a double)
 	// to align pointers allocated later.
 	size = (size + 7) & ~7;
@@ -53,8 +51,8 @@ void *lalloc(size_t size) {
 	if(size > Pool::pageSize / 2 || size > Pool::pageSize - Pool::used) {
 		unsigned char *page = new unsigned char[size + sizeof(unsigned char *)];
 		if(!page) return(nullptr); // Out of memory, should throw?
-		*(unsigned char **)page = Pool::currentPage;
-		Pool::currentPage = page;
+		*(unsigned char **)page = Pool::page;
+		Pool::page = page;
 		return(page + sizeof(unsigned char *));
 	} else {
 		Pool::used += size;
@@ -62,22 +60,21 @@ void *lalloc(size_t size) {
 	}
 }
 
-// Reset linear allocator. Mark root page empty and free any additional blocks.
+/** Reset linear allocator to a previous state.
+  * Set root page used size and free blocks allocated since the old state. */
 
-void lreset() {
-	while(Pool::currentPage) {
-		unsigned char *page = Pool::currentPage;
-		Pool::currentPage = *(unsigned char **)page;
-		delete page;
+void NBind :: lreset(unsigned int used, unsigned char *page) {
+	while(Pool::page != page) {
+		unsigned char *topPage = Pool::page;
+		Pool::page = *(unsigned char **)topPage;
+		delete topPage;
 	}
 
 	Pool::used = 0;
 }
 
-}
-
 static void initModule() {
-	_nbind_register_pool(Pool::pageSize, &Pool::used, &Pool::currentPage);
+	_nbind_register_pool(Pool::pageSize, &Pool::used, &Pool::page);
 
 	_nbind_register_type(Typer<void>::makeID(), "void");
 	_nbind_register_type(Typer<bool>::makeID(), "bool");
