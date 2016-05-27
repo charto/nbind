@@ -91,8 +91,6 @@ export namespace _nbind {
 				throw(new Error('Corrupt type ' + id + ' with flag ' + placeholderFlag));
 		}
 
-		console.log(type.name);
-
 		_nbind.typeList[id] = type;
 		return(type);
 	}
