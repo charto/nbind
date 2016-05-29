@@ -176,8 +176,9 @@ export namespace _nbind {
 
 		var resourceSet = listResources(argTypeList, [returnType]);
 
-		// Let the calling C++ side handle resetting the pool
-		// after parsing the callback return value passed through it.
+		// Let the calling C++ side handle resetting the pool (using the
+		// PoolRestore class) after parsing the callback return value passed
+		// through the pool.
 
 		resourceSet.remove(_nbind.resources.pool);
 

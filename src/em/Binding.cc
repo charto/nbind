@@ -32,31 +32,60 @@ unsigned int Pool::used = 0;
 unsigned char *Pool::rootPage = new unsigned char[Pool::pageSize];
 unsigned char *Pool::page = nullptr;
 
-/** Simple linear allocator. Return consecutive blocks on a root page.
-  * Allocate blocks in a linked list on the heap if they're too large. */
+/** Simple linear allocator. Return consecutive blocks on a constant-sized
+  * root page. Blocks that don't fit are allocated in a linked list on the heap.
+  * The memory is used like a stack to pass function parameters and return
+  * values.
+  *
+  * Alloca could be used instead for parameters of calls to JavaScript,
+  * but not for return values of calls from JavaScript because they may get
+  * corrupted when the invoker function's stack frame is freed.
+  * It's easier to use a single allocator for both cases.
+  *
+  * Returned bytes must be aligned to 8 bytes to support storing doubles.
+  * Asm.js can't handle unaligned access. */
 
 unsigned int NBind :: lalloc(size_t size) {
 	// Round size up to a multiple of 8 bytes (size of a double)
 	// to align pointers allocated later.
 	size = (size + 7) & ~7;
 
+	// Check if block won't fit on the root page or is bigger than half its size.
+	// The latter condition avoids filling the root page with large blocks,
+	// unnecessarily slowing down allocation of any later small blocks.
+
 	if(size > Pool::pageSize / 2 || size > Pool::pageSize - Pool::used) {
-		// TODO: make sure the memory is properly aligned!
+		// Allocate a block on the heap.
+
+		// TODO: make sure the memory allocated here is properly aligned!
+		// Allocate a new block in the heap and reserve 8 bytes
+		// (to maintain alignment) for a header pointing to the previous block.
+
 		unsigned char *page = new unsigned char[size + 8];
 		if(!page) return(0); // Out of memory, should throw?
+
+		// Store address of previous block at the start of the new block.
 		*(unsigned char **)page = Pool::page;
+
+		// Make the new block the current one.
 		Pool::page = page;
+
 		return(reinterpret_cast<unsigned int>(page) + 8);
 	} else {
+		// Allocate a block on the root page by simply growing the used byte count.
 		Pool::used += size;
+
 		return(reinterpret_cast<unsigned int>(Pool::rootPage) + Pool::used);
 	}
 }
 
-/** Reset linear allocator to a previous state.
-  * Set root page used size and free blocks allocated since the old state. */
+/** Reset linear allocator to a previous state, effectively to free
+  * a stack frame. Set root page used byte count to match the earlier state
+  * and free all blocks allocated since then. */
 
 void NBind :: lreset(unsigned int used, unsigned int page) {
+	// Free all blocks allocated since the earlier state.
+
 	while(Pool::page != reinterpret_cast<unsigned char *>(page)) {
 		unsigned char *topPage = Pool::page;
 		Pool::page = *(unsigned char **)topPage;
@@ -66,7 +95,11 @@ void NBind :: lreset(unsigned int used, unsigned int page) {
 	Pool::used = used;
 }
 
+/** RAII constructor to store the lalloc pool state. */
+
 PoolRestore :: PoolRestore() : used(Pool::used), page(Pool::page) {}
+
+/** RAII destructor to restore the lalloc pool state. */
 
 PoolRestore :: ~PoolRestore() {
 	NBind::lreset(used, reinterpret_cast<unsigned int>(page));

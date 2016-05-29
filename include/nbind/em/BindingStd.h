@@ -19,10 +19,16 @@ struct BindingType<std::array<MemberType, size>> {
 
 	typedef std::array<MemberType, size> type;
 
+	/** Temporary in-memory serialization format for the array,
+	  * easily read and written by both C++ and JavaScript. */
+
 	typedef struct {
+		/** JavaScript and C++ already know the length based on the type,
+		  * but we duplicate it here to use the same wire type as vectors
+		  * and share code between them. */
 		uint32_t length;
-		// The contents continue past the struct.
-		// Use "struct hack" because C++ doesn't have flexible array members like C.
+		/** The contents continue past the struct. Use "struct hack"
+		  * because C++ doesn't have flexible array members like C. */
 		typename BindingType<MemberType>::WireType data[1];
 	} *WireType;
 
@@ -37,6 +43,8 @@ struct BindingType<std::array<MemberType, size>> {
 	}
 
 	static inline WireType toWireType(type arg) {
+		/** Allocate space for wire type (which includes 1 array member) and
+		  * the other size-1 members, in temporary lalloc "stack frame". */
 		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val) + (size - 1) * sizeof(*val->data)));
 
 		val->length = size;
@@ -57,10 +65,13 @@ struct BindingType<std::vector<MemberType>> {
 
 	typedef std::vector<MemberType> type;
 
+	/** Temporary in-memory serialization format for the vector,
+	  * easily read and written by both C++ and JavaScript. */
+
 	typedef struct {
 		uint32_t length;
-		// The contents continue past the struct.
-		// Use "struct hack" because C++ doesn't have flexible array members like C.
+		/** The contents continue past the struct. Use "struct hack"
+		  * because C++ doesn't have flexible array members like C. */
 		typename BindingType<MemberType>::WireType data[1];
 	} *WireType;
 
@@ -79,6 +90,8 @@ struct BindingType<std::vector<MemberType>> {
 
 	static inline WireType toWireType(type arg) {
 		size_t size = arg.size();
+		/** Allocate space for wire type (which includes 1 vector member) and
+		  * the other size-1 members, in temporary lalloc "stack frame". */
 		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val) + (size - 1) * sizeof(*val->data)));
 
 		val->length = size;
@@ -98,10 +111,13 @@ template<> struct BindingType<std::string> {
 
 	typedef std::string Type;
 
+	/** Temporary in-memory serialization format for the string,
+	  * easily read and written by both C++ and JavaScript. */
+
 	typedef struct {
 		uint32_t length;
-		// The string continues past the struct.
-		// Use "struct hack" because C++ doesn't have flexible array members like C.
+		/** The contents continue past the struct. Use "struct hack"
+		  * because C++ doesn't have flexible array members like C. */
 		char data[1];
 	} *WireType;
 
@@ -111,6 +127,8 @@ template<> struct BindingType<std::string> {
 
 	static inline WireType toWireType(Type arg) {
 		size_t length = arg.length();
+		/** Allocate space for wire type (which includes 1 character) and
+		  * the other size-1 characters, in temporary lalloc "stack frame". */
 		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val) + length - 1));
 
 		val->length = length;

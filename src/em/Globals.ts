@@ -50,6 +50,9 @@ export namespace _nbind {
 			}
 		}
 
+		/** Reset linear allocator to a previous state, effectively to free
+		  * a stack frame. */
+
 		static lreset(used: number, page: number) {
 			var topPage = HEAPU32[Pool.pagePtr];
 
