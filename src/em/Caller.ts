@@ -17,7 +17,7 @@ export namespace _nbind {
 
 	type Func = _globals.Func;
 	type FuncList = _globals.FuncList;
-	type TypeIDList = _globals.TypeIDList;
+	type TypeIdList = _globals.TypeIdList;
 
 	export var getTypes: typeof _globals.getTypes;
 	export var makeSignature: typeof _globals.makeSignature;
@@ -106,7 +106,7 @@ export namespace _nbind {
 			returnType,
 			'dynCall(' +
 				[prefix].concat(argList.map(
-					(name: string, num: number) => makeWireWrite(argTypeList[num], name)
+					(name: string, index: number) => makeWireWrite(argTypeList[index], name)
 				)).join(',') +
 			')'
 		);
@@ -140,7 +140,6 @@ export namespace _nbind {
 		argTypeList: _type.BindType[]
 	) {
 		var argList = makeArgList(argTypeList.length);
-		var callbackList = _nbind.callbackList;
 		/** List of arbitrary data for type converters.
 		  * Each one may read and write its own slot. */
 		var convertParamList: any[] = [];
@@ -167,7 +166,7 @@ export namespace _nbind {
 
 		var callExpression = makeWireWrite(
 			returnType,
-			'callbackList[num](' +
+			'_nbind.callbackList[num](' +
 				argList.map(
 					(name: string, num: number) => makeWireRead(argTypeList[num], name)
 				).join(',') +
@@ -198,7 +197,7 @@ export namespace _nbind {
 
 	/** Dynamically create an invoker for a JavaScript callback. */
 
-	export function makeJSCaller(idList: TypeIDList) {
+	export function makeJSCaller(idList: TypeIdList) {
 		var argCount = idList.length - 1;
 
 		var typeList = getTypes(idList);
@@ -207,26 +206,37 @@ export namespace _nbind {
 		var needsWireRead = anyNeedsWireRead(argTypeList);
 		var needsWireWrite = returnType.wireWrite || returnType.makeWireWrite;
 
-		if(!needsWireWrite && !needsWireRead && argCount <= 3) switch(argCount) {
-			case 0: return(function(dummy: number, num: number) {
-			                    return(callbackList[num](    ));});
-			case 1: return(function(dummy: number, num: number, a1: any) {
-			                    return(callbackList[num](       a1    ));});
-			case 2: return(function(dummy: number, num: number, a1: any, a2: any) {
-			                    return(callbackList[num](       a1,      a2    ));});
-			case 3: return(function(dummy: number, num: number, a1: any, a2: any, a3: any) {
-			                    return(callbackList[num](       a1,      a2,      a3    ));});
-		} else {
-			return(buildJSCallerFunction(
-				returnType,
-				argTypeList
-			));
+		if(!needsWireWrite && !needsWireRead) {
+			switch(argCount) {
+				case 0: return(function(dummy: number, num: number) {
+				                    return(callbackList[num](    )); });
+				case 1: return(function(dummy: number, num: number, a1: any) {
+				                    return(callbackList[num](       a1    )); });
+				case 2: return(function(dummy: number, num: number, a1: any, a2: any) {
+				                    return(callbackList[num](       a1,      a2    )); });
+				case 3: return(function(dummy: number, num: number, a1: any, a2: any, a3: any) {
+				                    return(callbackList[num](       a1,      a2,      a3    )); });
+				default:
+					// Function takes over 3 arguments.
+					// Let's create the invoker dynamically then.
+					break;
+			}
 		}
+
+		return(buildJSCallerFunction(
+			returnType,
+			argTypeList
+		));
 	}
 
 	/** Dynamically create an invoker function for calling a C++ class method. */
 
-	export function makeMethodCaller(ptr: number, num: number, boundID: number, idList: TypeIDList) {
+	export function makeMethodCaller(
+		ptr: number,
+		num: number,
+		boundID: number,
+		idList: TypeIdList
+	) {
 		var argCount = idList.length - 1;
 
 		// The method invoker function adds two arguments to those of the method:
@@ -250,13 +260,13 @@ export namespace _nbind {
 
 			switch(argCount) {
 				case 0: return(function() {return(
-				        dynCall(ptr, num, this.__nbindPtr));});
+				        dynCall(ptr, num, this.__nbindPtr)); });
 				case 1: return(function(                   a1: any) {return(
-				        dynCall(ptr, num, this.__nbindPtr, a1    ));});
+				        dynCall(ptr, num, this.__nbindPtr, a1    )); });
 				case 2: return(function(                   a1: any, a2: any) {return(
-				        dynCall(ptr, num, this.__nbindPtr, a1,      a2    ));});
+				        dynCall(ptr, num, this.__nbindPtr, a1,      a2    )); });
 				case 3: return(function(                   a1: any, a2: any, a3: any) {return(
-				        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3    ));});
+				        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3    )); });
 				default:
 					// Function takes over 3 arguments or needs type conversion.
 					// Let's create the invoker dynamically then.
@@ -277,7 +287,12 @@ export namespace _nbind {
 
 	/** Dynamically create an invoker function for calling a C++ function. */
 
-	export function makeCaller(ptr: number, num: number, direct: number, idList: TypeIDList) {
+	export function makeCaller(
+		ptr: number,
+		num: number,
+		direct: number,
+		idList: TypeIdList
+	) {
 		var argCount = idList.length - 1;
 
 		var typeList = getTypes(idList);
@@ -345,15 +360,15 @@ export namespace _nbind {
 	export function makeOverloader(func: Func, arity: number) {
 		var callerList: FuncList = [];
 
-		var call = function call() {
+		function call() {
 			return(callerList[arguments.length].apply(this, arguments));
-		} as any;
-
-		call.addMethod = (func: Func, arity: number) => {
-			callerList[arity] = func;
 		}
 
-		call.addMethod(func, arity);
+		(call as any).addMethod = (_func: Func, _arity: number) => {
+			callerList[_arity] = _func;
+		}
+
+		(call as any).addMethod(func, arity);
 
 		return(call);
 	}

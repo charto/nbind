@@ -23,7 +23,7 @@ export namespace _nbind {
 	export type FuncTbl = { [name: string]: Func };
 	export type FuncList = { (...args: any[]): any }[];
 	export type Invoker = (ptr: number, ...args: any[]) => any;
-	export type TypeIDList = (number | string)[];
+	export type TypeIdList = (number | string)[];
 
 	export var ArrayType: typeof _std.ArrayType;
 
@@ -31,6 +31,21 @@ export namespace _nbind {
 	export var listResources: typeof _resource.listResources;
 
 	export var makeOverloader: typeof _caller.makeOverloader;
+
+	// Mapping from numeric typeIDs and type names to objects with type information.
+
+	export var typeTbl: { [name: string]: _type.BindType } = {};
+	export var typeList: _type.BindType[] = [];
+
+	// Enum specifying if a method is a getter or setter or not.
+
+	export var MethodType: {
+		method: number;
+		getter: number;
+		setter: number;
+	} = {} as any;
+
+	export var value: any;
 
 	export class Pool {
 		static lalloc(size: number) {
@@ -100,7 +115,7 @@ export namespace _nbind {
 
 	// Look up a list of type objects based on their numeric typeID or name.
 
-	export function getTypes(idList: TypeIDList) {
+	export function getTypes(idList: TypeIdList) {
 		return(idList.map((id: number | string) => {
 			if(typeof(id) == 'number') {
 				var type = _nbind.typeList[id as number];
@@ -109,18 +124,26 @@ export namespace _nbind {
 		}));
 	}
 
+	export function readTypeIdList(typeListPtr: number, typeCount: number) {
+		return(Array.prototype.slice.call(
+			HEAPU32,
+			typeListPtr / 4,
+			typeListPtr / 4 + typeCount
+		));
+	}
+
 	// Generate a mangled signature from argument types.
 	// Asm.js functions can only be called though Emscripten-generated invoker functions,
 	// with slightly mangled type signatures appended to their names.
 
 	export function makeSignature(typeList: _type.BindType[]) {
 		var mangleMap: { [name: string]: string; } = {
-			float64_t: 'd',
 			float32_t: 'f',
+			float64_t: 'd',
 			void: 'v'
 		}
 
-		return(typeList.map((type: _type.BindType) => (mangleMap[type.name] || 'i')).join(''));
+		return(typeList.map((type: _type.BindType) => (mangleMap[type.name] || 'i')).join(''));
 	}
 
 	// Add a method to a C++ class constructor (for static methods) or prototype,
@@ -151,21 +174,6 @@ export namespace _nbind {
 			obj[name] = func;
 		}
 	}
-
-	// Mapping from numeric typeIDs and type names to objects with type information.
-
-	export var typeTbl: { [name: string]: _type.BindType } = {};
-	export var typeList: _type.BindType[] = [];
-
-	// Enum specifying if a method is a getter or setter or not.
-
-	export var MethodType: {
-		method: number;
-		getter: number;
-		setter: number;
-	} = {} as any;
-
-	export var value: any;
 
 	export function throwError(message: string) {
 		throw(new Error(message));

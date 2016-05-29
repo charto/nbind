@@ -4,7 +4,12 @@
 declare var Module: {
 	Pointer_stringify(ptr: number, length?: number): string;
 	lengthBytesUTF8(str: string): number;
-	stringToUTF8Array(str: string, outU8Array: Uint8Array, outIdx: number, maxBytesToWrite: number): number;
+	stringToUTF8Array(
+		str: string,
+		outU8Array: Uint8Array,
+		outIdx: number,
+		maxBytesToWrite: number
+	): number;
 	stringToUTF8(str: string, outPtr: number, maxBytesToWrite: number): number;
 
 	[name: string]: any;

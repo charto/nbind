@@ -7,7 +7,6 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
-import {_nbind as _class} from './BindClass';
 import {_nbind as _resource} from './Resource';
 
 // Let decorators run eval in current scope to read function source code.
@@ -40,13 +39,15 @@ export namespace _nbind {
 		var ptr = (result + 4) / ptrSize;
 
 		var wireWrite = type.memberType.wireWrite;
+		var num = 0;
+
 		if(wireWrite) {
-			for(var num = 0; num < length; ++num) {
-				heap[ptr++] = wireWrite(arr[num]);
+			while(num < length) {
+				heap[ptr++] = wireWrite(arr[num++]);
 			}
 		} else {
-			for(var num = 0; num < length; ++num) {
-				heap[ptr++] = arr[num];
+			while(num < length) {
+				heap[ptr++] = arr[num++];
 			}
 		}
 
@@ -63,13 +64,15 @@ export namespace _nbind {
 		ptr = (ptr + 4) / type.memberType.ptrSize;
 
 		var wireRead = type.memberType.wireRead;
+		var num = 0;
+
 		if(wireRead) {
-			for(var num = 0; num < length; ++num) {
-				arr[num] = wireRead(heap[ptr++]);
+			while(num < length) {
+				arr[num++] = wireRead(heap[ptr++]);
 			}
 		} else {
-			for(var num = 0; num < length; ++num) {
-				arr[num] = heap[ptr++];
+			while(num < length) {
+				arr[num++] = heap[ptr++];
 			}
 		}
 

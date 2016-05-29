@@ -4,7 +4,13 @@
 // This file contains JavaScript functions directly exposed to C++ through
 // Emscripten library exports.
 
-import {setEvil, publishNamespace, defineHidden, exportLibrary, dep} from 'emscripten-library-decorator';
+import {
+	setEvil,
+	publishNamespace,
+	defineHidden,
+	exportLibrary,
+	dep
+} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
@@ -28,10 +34,11 @@ export namespace _nbind {
 export namespace _nbind {
 	export type Func = _globals.Func;
 
+	export var typeList: typeof _globals.typeList;
+
 	export var MethodType: typeof _globals.MethodType;
 	export var addMethod: typeof _globals.addMethod;
-
-	export var typeList: typeof _globals.typeList;
+	export var readTypeIdList: typeof _globals.readTypeIdList;
 
 	export var BindType: typeof _type.BindType;
 	export var PrimitiveType: typeof _type.PrimitiveType;
@@ -63,14 +70,19 @@ function _readAsciiString(ptr: number) {
 
 	while(HEAPU8[endPtr++]);
 
-	return(String.fromCharCode.apply('', HEAPU8.subarray(ptr, endPtr-1)));
+	return(String.fromCharCode.apply('', HEAPU8.subarray(ptr, endPtr - 1)));
 }
 
 @exportLibrary
 class nbind {
 
 	@dep('_nbind')
-	static _nbind_register_pool(pageSize: number, usedPtr: number, rootPtr: number, pagePtr: number) {
+	static _nbind_register_pool(
+		pageSize: number,
+		usedPtr: number,
+		rootPtr: number,
+		pagePtr: number
+	) {
 		_nbind.Pool.pageSize = pageSize;
 		_nbind.Pool.usedPtr = usedPtr / 4;
 		_nbind.Pool.rootPtr = rootPtr;
@@ -78,7 +90,11 @@ class nbind {
 	}
 
 	@dep('_nbind')
-	static _nbind_register_method_getter_setter_id(methodID: number, getterID: number, setterID: number) {
+	static _nbind_register_method_getter_setter_id(
+		methodID: number,
+		getterID: number,
+		setterID: number
+	) {
 		_nbind.MethodType.method = methodID;
 		_nbind.MethodType.getter = getterID;
 		_nbind.MethodType.setter = setterID;
@@ -87,7 +103,8 @@ class nbind {
 	@dep('_nbind')
 	static _nbind_register_type(id: number, namePtr: number) {
 		var name = _readAsciiString(namePtr);
-		var constructorTbl: { [name: string]: { new(id: number, name: string): _type.BindType } } = {
+		type TypeConstructor = { new(id: number, name: string): _type.BindType };
+		var constructorTbl: { [name: string]: TypeConstructor } = {
 			'bool': _nbind.BooleanType,
 			'cbFunction &': _nbind.CallbackType,
 			'std::string': _nbind.StringType,
@@ -119,8 +136,9 @@ class nbind {
 
 			var name = isConst ? 'const ' : '';
 
-			if(isSignless) name += 'char';
-			else if(isPointer) {
+			if(isSignless) {
+				name += 'char';
+			} else if(isPointer) {
 				if(isUnsigned) name += 'un';
 				name += 'signed char';
 			} else {
@@ -155,13 +173,14 @@ class nbind {
 
 					// Constructor called without new operator.
 					// Make correct call with given arguments.
-					// Few ways to do this work. This one should.
-					// See http://stackoverflow.com/questions/1606797/use-of-apply-with-new-operator-is-this-possible
+					// Few ways to do this work. This one should. See:
+					// http://stackoverflow.com/questions/1606797
+					// /use-of-apply-with-new-operator-is-this-possible
 
 					return(new (Function.prototype.bind.apply(
 						Bound, // arguments.callee
 						Array.prototype.concat.apply([null], arguments)
-					)));
+					))());
 				}
 
 				super();
@@ -192,8 +211,7 @@ class nbind {
 		ptr: number,
 		ptrValue: number
 	) {
-		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
-
+		var typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 		var proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
 		_nbind.addMethod(
@@ -237,7 +255,7 @@ class nbind {
 		direct: number
 	) {
 		var name = _readAsciiString(namePtr);
-		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
+		var typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _class.BindClass).proto as any,
@@ -258,7 +276,7 @@ class nbind {
 		methodType: number
 	) {
 		var name = _readAsciiString(namePtr);
-		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
+		var typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 		var proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
 		if(methodType == _nbind.MethodType.method) {
@@ -275,7 +293,10 @@ class nbind {
 		// The C++ side gives the same name to getters and setters.
 		var prefixMatcher = /^[Gg]et_?([A-Z]?)/;
 
-		name = name.replace(prefixMatcher, (match: string, initial: string) => initial.toLowerCase());
+		name = name.replace(
+			prefixMatcher,
+			(match: string, initial: string) => initial.toLowerCase()
+		);
 
 		if(methodType == _nbind.MethodType.setter) {
 
@@ -286,15 +307,15 @@ class nbind {
 			proto[name] = _nbind.makeMethodCaller(ptr, num, typeID, typeList);
 		} else {
 			Object.defineProperty(proto, name, {
-				get: _nbind.makeMethodCaller(ptr, num, typeID, typeList),
-				set: proto[name],
+				configurable: true,
 				enumerable: true,
-				configurable: true
+				get: _nbind.makeMethodCaller(ptr, num, typeID, typeList),
+				set: proto[name]
 			});
 		}
 	}
 
 	@dep('_nbind')
-	static nbind_debug() {}
+	static nbind_debug() { debugger; }
 
 }

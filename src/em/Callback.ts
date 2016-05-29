@@ -4,7 +4,12 @@
 // This file handles type conversion of JavaScript callback functions
 // accessible from C++. See also Caller.ts
 
-import {setEvil, prepareNamespace, defineHidden, exportLibrary, dep} from 'emscripten-library-decorator';
+import {
+	setEvil,
+	prepareNamespace,
+	exportLibrary,
+	dep
+} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _caller} from './Caller';
@@ -18,6 +23,7 @@ export namespace _nbind {
 
 export namespace _nbind {
 
+	export var readTypeIdList: typeof _globals.readTypeIdList;
 	export var throwError: typeof _globals.throwError;
 
 	export var makeJSCaller: typeof _caller.makeJSCaller;
@@ -78,7 +84,7 @@ class nbind {
 		typeListPtr: number,
 		typeCount: number
 	) {
-		var typeList = Array.prototype.slice.call(HEAPU32, typeListPtr / 4, typeListPtr / 4 + typeCount);
+		var typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 		var num = _nbind.callbackSignatureList.length;
 
 		_nbind.callbackSignatureList[num] = _nbind.makeJSCaller(typeList);

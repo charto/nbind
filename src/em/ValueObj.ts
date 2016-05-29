@@ -6,7 +6,13 @@
 // constructors to marshal the class between languages and providing a similar
 // API in both.
 
-import {setEvil, prepareNamespace, defineHidden, exportLibrary, dep} from 'emscripten-library-decorator';
+import {
+	setEvil,
+	prepareNamespace,
+	defineHidden,
+	exportLibrary,
+	dep
+} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
@@ -72,7 +78,10 @@ class nbind {
 		var obj = _nbind.popValue(num);
 
 		obj.fromJS(function() {
-			obj.__nbindValueConstructor.apply(this, Array.prototype.concat.apply([ptr], arguments));
+			obj.__nbindValueConstructor.apply(
+				this,
+				Array.prototype.concat.apply([ptr], arguments)
+			);
 		});
 	}
 

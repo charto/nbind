@@ -20,13 +20,13 @@ export namespace _nbind {
 		}
 
 		add(other: Resource) {
-			for(var key of Object.keys(other.openTbl)) this.openTbl[key] = true;
-			for(var key of Object.keys(other.closeTbl)) this.closeTbl[key] = true;
+			for(let key of Object.keys(other.openTbl)) this.openTbl[key] = true;
+			for(let key of Object.keys(other.closeTbl)) this.closeTbl[key] = true;
 		}
 
 		remove(other: Resource) {
-			for(var key of Object.keys(other.openTbl)) delete(this.openTbl[key]);
-			for(var key of Object.keys(other.closeTbl)) delete(this.closeTbl[key]);
+			for(let key of Object.keys(other.openTbl)) delete(this.openTbl[key]);
+			for(let key of Object.keys(other.closeTbl)) delete(this.closeTbl[key]);
 		}
 
 		makeOpen = () => Object.keys(this.openTbl).join('');
@@ -42,14 +42,14 @@ export namespace _nbind {
 	export function listResources(readList: _type.BindType[], writeList: _type.BindType[]) {
 		var result = new Resource();
 
-		for(var bindType of readList) {
-			for(var resource of bindType.readResources || []) {
+		for(let bindType of readList) {
+			for(let resource of bindType.readResources || []) {
 				result.add(resource);
 			}
 		}
 
-		for(var bindType of writeList) {
-			for(var resource of bindType.writeResources || []) {
+		for(let bindType of writeList) {
+			for(let resource of bindType.writeResources || []) {
 				result.add(resource);
 			}
 		}
@@ -58,15 +58,16 @@ export namespace _nbind {
 	}
 
 	export var resources = {
-		stack: new Resource(
-			'var sp=Runtime.stackSave();',
-			'Runtime.stackRestore(sp);'
-		),
-
 		pool: new Resource(
 			'var used=HEAPU32[_nbind.Pool.usedPtr],page=HEAPU32[_nbind.Pool.pagePtr];',
 			'_nbind.Pool.lreset(used,page);'
 		)
+/*
+		stack: new Resource(
+			'var sp=Runtime.stackSave();',
+			'Runtime.stackRestore(sp);'
+		)
+*/
 	};
 
 	@prepareNamespace('_nbind')

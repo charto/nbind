@@ -52,7 +52,13 @@ export namespace _nbind {
 	}
 
 	export class PrimitiveType extends BindType {
-		constructor(id: number, name: string, size: number, isUnsigned: boolean, isFloat: boolean) {
+		constructor(
+			id: number,
+			name: string,
+			size: number,
+			isUnsigned: boolean,
+			isFloat: boolean
+		) {
 			super(id, name);
 
 			var heapTbl: { [bits: number]: any } = (
@@ -62,11 +68,11 @@ export namespace _nbind {
 				} : isUnsigned ? {
 					8: HEAPU8,
 					16: HEAPU16,
-					32: HEAPU32,
+					32: HEAPU32
 				} : {
 					8: HEAP8,
 					16: HEAP16,
-					32: HEAP32,
+					32: HEAP32
 				}
 			);
 
