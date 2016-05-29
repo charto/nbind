@@ -1,7 +1,7 @@
 {
   "name": "nbind",
   "version": "0.2.0",
-  "description": "Embind-style bindings generator for Node.js",
+  "description": "Magical headers that make your C++ library accessible from JavaScript",
   "main": "src/index.js",
   "typings": "src/nbind.d.ts",
   "bin": {
