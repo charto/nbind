@@ -30,7 +30,7 @@
 				"--js-library", "<(_jslib_path)",
 				"-s", "NO_FILESYSTEM=1",
 				"-s", "EXPORTED_FUNCTIONS=[\"_nbind_init\",\"_nbind_value\",\"_nbind_debug\"]",
-				"-s", "DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\"nbind_value\",\"nbind_debug\"]"
+				"-s", "DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\"nbind_value\",\"nbind_debug\",\"\\$$Browser\"]"
 			],
 
             "xcode_settings": {

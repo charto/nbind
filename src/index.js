@@ -1,7 +1,10 @@
-// This function is adapted from the npm module "bindings"
-// licensed under the MIT license terms in BINDINGS-LICENSE.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
+// Released under the MIT license, see LICENSE.
 
 var path = require('path');
+
+// This function is adapted from the npm module "bindings"
+// licensed under the MIT license terms in BINDINGS-LICENSE.
 
 function findCompiledModule(root, specList) {
 	// Make list of possible paths for a single compiled output file name.
@@ -83,13 +86,17 @@ function findCompiledModule(root, specList) {
 var nbind = {
 	pendingBindings: {},
 
-	init: function(basePath, lib) {
-		var spec = findCompiledModule(
+	find: function(basePath) {
+		return(findCompiledModule(
 			basePath || process.cwd(), [
 				{ type: 'node', name: 'nbind.node' },
 				{ type: 'emcc', name: 'nbind.js' }
 			]
-		);
+		));
+	},
+
+	init: function(basePath, lib) {
+		var spec = nbind.find(basePath);
 
 		nbind.moduleSpec = spec;
 		nbind.lib = lib || {};
