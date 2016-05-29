@@ -1,18 +1,30 @@
 [![nbind flowchart](doc/images/diagram.png)](doc/images/diagram.png)
 
-C++ everywhere in 5 easy steps using Node.js:
+`nbind` is a set of headers that make your C++11 library accessible from JavaScript.
+With a single `#include` statement, your C++ compiler generates the necessary bindings
+without any additional tools. Your library is then usable as a Node.js addon or,
+if compiled to asm.js with [Emscripten](http://emscripten.org),
+directly in web pages without any plugins.
+
+`nbind` works with the [autogypi](https://github.com/charto/autogypi) build tool,
+which sets up `node-gyp` to compile your library without needing any configuration
+(other than listing your source code file names).
+
+`nbind` is based on templates and macros inspired by
+[embind](http://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html).
+
+C++ everywhere in 5 easy steps using Node.js, `nbind` and [autogypi](https://github.com/charto/autogypi):
 
 <table>
-	<tr>
-		<th>Starting point</th>
-		<th>Step 1 - bind</th>
-		<th>Step 2 - prepare</th>
-	</tr><tr>
-		<td valign="top">
-			Original C++ code <code>hello.cc</code>:<br>
+<tr>
+	<th>Starting point</th>
+	<th>Step 1 - bind</th>
+	<th>Step 2 - prepare</th>
+</tr><tr>
+<td valign="top">Original C++ code <code>hello.cc</code>:<br>
 <pre>#include &lt;string&gt;
 #include &lt;iostream&gt;
-
+&nbsp;
 struct Greeter {
   static void sayHello(
     std::string name
@@ -21,64 +33,50 @@ struct Greeter {
       &lt;&lt; "Hello, "
       &lt;&lt; name &lt;&lt; "!\n";
   }
-};</pre>
-		</td>
-
-		<td valign="top">
-			List your classes and methods:<br>
+};</pre></td>
+<td valign="top">List your classes and methods:<br>
 <pre>// Your original code here
-
+&nbsp;
 // Add these below it:
-
+&nbsp;
 #include "nbind/nbind.h"
-
+&nbsp;
 NBIND_CLASS(Greeter) {
     method(sayHello);
-}</pre>
-		</td>
-
-		<td valign="top">
-			Add scripts to <code>package.json</code>:<br>
+}</pre></td>
+<td valign="top">Add scripts to <code>package.json</code>:<br>
 <pre>{
   "scripts": {
     "emcc-path": "emcc-path",
     "autogypi": "autogypi",
     "node-gyp": "node-gyp"
   }
-}</pre>
-		</td>
-	</tr><tr>
-		<th>Step 3 - install</th>
-		<th>Step 4 - build</th>
-		<th>Step 5 - use!</th>
-	</tr><tr>
-		<td valign="top">
-			Run on the command line:<br>
+}</pre></td>
+</tr><tr>
+	<th>Step 3 - install</th>
+	<th>Step 4 - build</th>
+	<th>Step 5 - use!</th>
+</tr><tr>
+<td valign="top">Run on the command line:<br>
 <pre>npm install --save \
   nbind autogypi node-gyp
-
+&nbsp;
 npm run -- autogypi \
   --init-gyp \
-  -p nbind -s hello.cc</pre>
-		</td>
-
-		<td valign="top">
-			Compile to native binary:<br>
+  -p nbind -s hello.cc</pre></td>
+<td valign="top">Compile to native binary:<br>
 <pre>npm run node-gyp \
   configure build</pre>
-			Or to Asm.js:<br>
+Or to Asm.js:<br>
 <pre>npm run node-gyp \
   configure build \
-  --asmjs=1</pre>
-		</td><td valign="top">
-			Call from Node.js:<br>
+  --asmjs=1</pre></td>
+<td valign="top">Call from Node.js:<br>
 <pre>var nbind = require('nbind');
 var lib = nbind.init();
-
+&nbsp;
 lib.Greeter.sayHello('you');</pre>
-			<!-- Or from the browser (see below) -->
-		</td>
-	</tr>
+</td></tr>
 </table>
 
 The above is **all** of the required code. Just copy and paste in the mentioned files and prompts or take a shortcut:
@@ -89,7 +87,7 @@ cd nbind-example-minimal
 npm install && npm test
 ```
 
-See it run! You need Node.js 0.10.x - 6.x.x (newer may also work)
+See it run! You need Node.js 0.10.x - 6.x.x (newer may also work), Python 2.7 (required by `node-gyp`)
 and one of the following C++ compilers:
 
 - GCC 4.8 or above
@@ -182,8 +180,6 @@ are automatically converted between equivalent types:
 
 What?
 -----
-
-`nbind` is a bindings generator for Node.js plugins inspired by [embind](http://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html) from [emscripten](http://emscripten.org). The bindings are built along with your C++ library without requiring any external generated code, using only C++11 templates and simple declarations.
 
 To create bindings from a class X with a constructor taking 2 ints and a method Y with pretty much any kind of arguments and optional return value, you just need:
 
