@@ -86,7 +86,7 @@ Or to Asm.js:<br>
 var lib = nbind.init();
 &nbsp;
 lib.Greeter.sayHello('you');</pre>
-Or from a web browser (<a href="#c-in-web-browsers">see below</a>)
+Or from a web browser (<a href="#publishing-for-web-browsers">see below</a>)
 </td></tr>
 </table>
 
@@ -123,12 +123,13 @@ Features
 - Use your C++ API from JavaScript without any extra effort.
   - From **Node.js**, **Electron** and web browsers (using asm.js on **Chrome**, **Firefox** and **Edge**).
   - On Linux, OS X and Windows.
+  - Without changes to your C++ code. Simply add a separate short description at the end.
 - Distribute both **native** code and an **asm.js** fallback binary.
 
 In more detail:
 
-- Bind multiple C++ classes, even ones not visible from other files.
-- Bind C++ methods simply by mentioning their names.
+- Export multiple C++ classes, even ones not visible from other files.
+- Export C++ methods simply by mentioning their names.
 - Auto-detect argument and return types from C++ declarations.
 - [Automatically convert types](#type-conversion) and data structures between languages.
 - Call C++ methods from JavaScript with type checking.
@@ -210,7 +211,8 @@ User guide
 - [Value types](#value-types)
 - [Type conversion](#type-conversion)
 - [Error handling](#error-handling)
-- [C++ in web browsers](#c-in-web-browsers)
+- [Publishing on npm](#publishing-on-npm)
+- [Publishing for web browsers](#publishing-for-web-browsers)
 
 Creating your project
 ---------------------
@@ -245,7 +247,7 @@ so when those are undefined, the include file does nothing.
 
 Use `#include "nbind/api.h"` in your header files to use types in the nbind namespace
 if you need to [report errors](#error-handling) without throwing exceptions,
-or want to pass around callbacks or value objects.
+or want to pass around [callbacks](#callbacks) or [value types](#value-types).
 
 You can use an `#ifdef NBIND_CLASS` guard to skip your `nbind` export definitions when the headers weren't loaded.
 
@@ -353,6 +355,13 @@ If the return value is needed, the callback must be called like `arg.call<type>(
 where type is the desired C++ type that the return value should be converted to.
 This is because the C++ compiler cannot otherwise know what the callback might return.
 
+Warning: currently callbacks have a very short lifetime!
+They can be called only until the first function that received them returns.
+That means it's possible to create a function like `Array.map`
+which calls a callback zero or more times and then returns, never using the callback again.
+It's currently not possible to create a function like `setTimeout`
+which calls the callback after it has returned.
+
 TODO
 
 Value types
@@ -390,8 +399,8 @@ are automatically converted between equivalent types:
 | string     | std::string                       |
 | Array      | std::vector&lt;type&gt;           |
 | Array      | std::array&lt;type, size&gt;      |
-| Function   | nbind::cbFunction<br>(only as a parameter) |
-| Instance of any prototype<br>(with a fromJS method) | Instance of any class<br>(with a toJS method) |
+| Function   | nbind::cbFunction<br>(only as a parameter)<br>See [callbacks](#callbacks) |
+| Instance of any prototype<br>(with a fromJS method) | Instance of any class<br>(with a toJS method)<br>See [value types](#value-types) |
 
 Error handling
 --------------
@@ -400,8 +409,13 @@ You can use the `NBIND_ERR("message here");` macro to report an error before ret
 (`#include "nbind/api.h"` first). It will be thrown as an error on the JavaScript side
 (C++ environments like Emscripten may not support throwing exceptions, but the JavaScript side will).
 
-C++ in web browsers
--------------------
+Publishing on npm
+-----------------
+
+TODO
+
+Publishing for web browsers
+---------------------------
 
 TODO
 
