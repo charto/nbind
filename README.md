@@ -405,6 +405,11 @@ C++ in web browsers
 
 TODO
 
+Authors
+=======
+
+- Juha Järvi, befunge<img src="doc/images/gmail.png" alt="domain" width="87" height="16" align="absmiddle">
+
 License
 =======
 
