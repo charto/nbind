@@ -22,12 +22,16 @@ export namespace _nbind {
 	export class Wrapper {
 		free: () => void;
 
+		/* tslint:disable:variable-name */
+
 		/** Dynamically set by _nbind_register_constructor.
 		  * Calls the C++ constructor and returns a numeric heap pointer. */
 		__nbindConstructor: (...args: any[]) => number;
 		__nbindValueConstructor: _globals.Func;
 		/** __nbindConstructor return value. */
 		__nbindPtr: number;
+
+		/* tslint:enable:variable-name */
 	}
 
 	// Any subtype (not instance but type) of Wrapper.
@@ -65,5 +69,5 @@ export namespace _nbind {
 	}
 
 	@prepareNamespace('_nbind')
-	export class _ {}
+	export class _ {} // tslint:disable-line:class-name
 }

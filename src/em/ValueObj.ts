@@ -67,11 +67,11 @@ export namespace _nbind {
 	}
 
 	@prepareNamespace('_nbind')
-	export class _ {}
+	export class _ {} // tslint:disable-line:class-name
 }
 
 @exportLibrary
-class nbind {
+class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_get_value_object(num: number, ptr: number) {

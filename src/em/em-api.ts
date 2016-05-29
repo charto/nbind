@@ -74,7 +74,7 @@ function _readAsciiString(ptr: number) {
 }
 
 @exportLibrary
-class nbind {
+class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_register_pool(
@@ -113,6 +113,7 @@ class nbind {
 
 		var constructor = constructorTbl[name] || _nbind.BindType;
 
+		// tslint:disable-next-line:no-unused-expression
 		new constructor(id, name);
 	}
 
@@ -150,8 +151,10 @@ class nbind {
 			}
 
 			if(isPointer) {
+				// tslint:disable-next-line:no-unused-expression
 				new _nbind.CStringType(id, name + ' *');
 			} else {
+				// tslint:disable-next-line:no-unused-expression
 				new _nbind.PrimitiveType(id, name, size, !!isUnsigned, !!isFloat);
 			}
 		}
@@ -189,15 +192,19 @@ class nbind {
 			}
 
 			@_defineHidden()
-			__nbindConstructor: _nbind.Func;
+			__nbindConstructor: _nbind.Func; // tslint:disable-line:variable-name
 
 			@_defineHidden()
-			__nbindValueConstructor: _nbind.Func;
+			__nbindValueConstructor: _nbind.Func; // tslint:disable-line:variable-name
 		}
+
+		/* tslint:disable:no-unused-expression */
 
 		new _nbind.BindClass(idList[0], name, Bound);
 		new _nbind.BindType(idList[1], name + ' *');
 		new _nbind.BindType(idList[2], 'const ' + name + ' *');
+
+		/* tslint:enable:no-unused-expression */
 
 		// Export the class.
 		Module[name] = Bound;

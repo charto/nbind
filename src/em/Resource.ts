@@ -71,5 +71,5 @@ export namespace _nbind {
 	};
 
 	@prepareNamespace('_nbind')
-	export class _ {}
+	export class _ {} // tslint:disable-line:class-name
 }

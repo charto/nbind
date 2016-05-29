@@ -13,7 +13,7 @@
     "autogypi": "autogypi",
     "emcc-path": "emcc-path",
     "node-gyp": "node-gyp",
-    "prepublish": "tsc -p src/em && cbuild -x -v -s dist/bundle/em-api.js -o dist/em-api.js",
+    "prepublish": "tslint src/em/*.ts && tsc -p src/em && cbuild -x -v -s dist/bundle/em-api.js -o dist/em-api.js",
     "clean-asm": "cd test/em && node-gyp clean",
     "test-asm": "npm link nbind && autogypi -c test/autogypi.json && cd test/em && node-gyp configure build --asmjs=1 && tap test.js",
     "test":                       "autogypi -c test/autogypi.json && cd test/v8 && node-gyp configure build           && tap --gc test.js"

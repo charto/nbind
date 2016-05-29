@@ -136,6 +136,7 @@ export namespace _nbind {
 	// Asm.js functions can only be called though Emscripten-generated invoker functions,
 	// with slightly mangled type signatures appended to their names.
 
+	// tslint:disable-next-line:no-shadowed-variable
 	export function makeSignature(typeList: _type.BindType[]) {
 		var mangleMap: { [name: string]: string; } = {
 			float32_t: 'f',
@@ -185,5 +186,5 @@ export namespace _nbind {
 	// Everything after it inside the namespace will be discarded.
 
 	@prepareNamespace('_nbind')
-	export class _ {}
+	export class _ {} // tslint:disable-line:class-name
 }
