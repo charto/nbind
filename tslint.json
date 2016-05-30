@@ -3,18 +3,32 @@
 		"align": true,
 		"ban": false,
 		"class-name": true,
-		"comment-format": [ "check-space" ],
+		"comment-format": [ true, "check-space" ],
 		"curly": false,
 		"eofline": true,
 		"forin": true,
-		"indent": "tabs",
-		"interface-name": "never-prefix",
+		"indent": [ true, "tabs" ],
+		"interface-name": [ true, "never-prefix" ],
 		"jsdoc-format": false,
 		"label-position": true,
 		"label-undefined": true,
 		"max-line-length": [ true, 96 ],
 		"member-access": false,
-		"member-ordering": [ { "order": "fields-first" } ],
+		"member-ordering": [ true, { "order": [
+			"constructor",
+
+			"public-static-method",
+			"private-static-method",
+
+			"public-instance-method",
+			"private-instance-method",
+
+			"public-instance-field",
+			"private-instance-field",
+
+			"public-static-field",
+			"private-static-field"
+		] } ],
 		"new-parens": true,
 		"no-angle-bracket-type-assertion": true,
 		"no-any": false,
@@ -53,7 +67,7 @@
 		"one-variable-per-declaration": true,
 		"quotemark": [ true, "single" ],
 		"radix": "true",
-		"semicolon": "always",
+		"semicolon": [ true, "always" ],
 		"switch-default": true,
 		"trailing-comma": [ true, {
 			"multiline": "never",

@@ -51,21 +51,21 @@ export namespace _nbind {
 			this.proto = proto;
 		}
 
-		// Reference to JavaScript class for wrapped instances
-		// of this C++ class.
-
-		proto: WrapperClass;
-
-		wireWrite = _nbind.pushValue;
-
 		makeWireRead = (expr: string) => ('(' +
 			expr + '||' +
 			'_nbind.throwError("Value type JavaScript class is missing or not registered"),' +
 			'_nbind.value' +
 		')');
 
+		wireWrite = _nbind.pushValue;
+
 		// Optional type conversion code
 		// makeWireWrite = (expr: string) => '_nbind.pushValue(' + expr + ')';
+
+		// Reference to JavaScript class for wrapped instances
+		// of this C++ class.
+
+		proto: WrapperClass;
 	}
 
 	@prepareNamespace('_nbind')

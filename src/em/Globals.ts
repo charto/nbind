@@ -142,7 +142,7 @@ export namespace _nbind {
 			float32_t: 'f',
 			float64_t: 'd',
 			void: 'v'
-		}
+		};
 
 		return(typeList.map((type: _type.BindType) => (mangleMap[type.name] || 'i')).join(''));
 	}

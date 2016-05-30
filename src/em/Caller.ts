@@ -195,6 +195,8 @@ export namespace _nbind {
 		return(eval('(' + sourceCode + ')'));
 	}
 
+	/* tslint:disable:indent */
+
 	/** Dynamically create an invoker for a JavaScript callback. */
 
 	export function makeJSCaller(idList: TypeIdList) {
@@ -354,6 +356,8 @@ export namespace _nbind {
 		));
 	}
 
+	/* tslint:enable:indent */
+
 	/** Create an overloader that can call several methods with the same name,
 	  * depending on the number of arguments passed in the call. */
 
@@ -366,7 +370,7 @@ export namespace _nbind {
 
 		(call as any).addMethod = (_func: Func, _arity: number) => {
 			callerList[_arity] = _func;
-		}
+		};
 
 		(call as any).addMethod(func, arity);
 

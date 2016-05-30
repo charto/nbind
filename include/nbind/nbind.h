@@ -54,4 +54,4 @@
 // TODO: varargs macro also supporting this:
 // #define getset(name, get, set) definer.property(#name, &Bound::get, &Bound::set)
 
-#endif
+#endif // BUILDING_NODE_EXTENSION || EMSCRIPTEN
