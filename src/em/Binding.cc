@@ -13,7 +13,7 @@ using namespace nbind;
 extern "C" {
 	extern void _nbind_register_pool(unsigned int pageSize, unsigned int *usedPtr, unsigned char *rootPtr, unsigned char **pagePtr);
 	extern void _nbind_register_method_getter_setter_id(unsigned int methodID, unsigned int getterID, unsigned int setterID);
-	extern void _nbind_register_types(void **data);
+	extern void _nbind_register_types(const void **data);
 	extern void _nbind_register_type(       TYPEID typeID,    const char *name);
 	extern void _nbind_register_class(const TYPEID *typeList, const char *name);
 	extern void _nbind_register_destructor( TYPEID classType, funcPtr func);
@@ -23,7 +23,6 @@ extern "C" {
 	extern void _nbind_register_method(     TYPEID classType, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
 		unsigned int num, unsigned int methodType
 	);
-	void nbind_init();
 }
 
 typedef BaseSignature::Type SigType;
@@ -159,7 +158,7 @@ static void initModule() {
 
 		for(auto &func : bindClass->getMethodList()) {
 
-			BaseSignature *signature = func.getSignature();
+			const BaseSignature *signature = func.getSignature();
 
 			if(signature == nullptr) {
 				continue;
@@ -212,8 +211,10 @@ static void initModule() {
 	}
 }
 
-void nbind_init(void) {
-	initModule();
+extern "C" {
+	void nbind_init(void) {
+		initModule();
+	}
 }
 
 #include "nbind/nbind.h"

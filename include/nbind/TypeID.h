@@ -47,10 +47,10 @@ struct isChar<char> {
 // Char is not treated as a simple int8_t because as a const pointer it can also identify a string literal.
 
 template <typename... Args>
-void **defineTypes() {
+const void **defineTypes() {
 	static TYPEID typeList[] = { Typer<Args>::makeID()..., nullptr };
-	static uint32_t sizeList[] = { sizeof(typename std::remove_pointer<Args>::type)... };
-	static uint8_t flagList[] = { (
+	static const uint32_t sizeList[] = { sizeof(typename std::remove_pointer<Args>::type)... };
+	static const uint8_t flagList[] = { (
 		isChar<typename std::remove_pointer<Args>::type>::value * 16 |
 		std::is_const<typename std::remove_pointer<Args>::type>::value * 8 |
 		std::is_pointer<Args>::value * 4 |
@@ -60,7 +60,7 @@ void **defineTypes() {
 		((typename std::remove_pointer<Args>::type)-1 >= 0)
 	)... };
 
-	static void *data[] = { reinterpret_cast<void *>(sizeof...(Args)), typeList, sizeList, flagList };
+	static const void *data[] = { reinterpret_cast<void *>(sizeof...(Args)), typeList, sizeList, flagList };
 	return(data);
 }
 

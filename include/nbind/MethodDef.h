@@ -16,10 +16,10 @@ public:
 	MethodDef(const char *name, funcPtr ptr, unsigned int num, BaseSignature *signature) :
 		name(name), ptr(ptr), num(num), signature(signature) {}
 
-	const char *getName() { return(name); }
-	funcPtr getPtr() { return(ptr); }
-	unsigned int getNum() { return(num); }
-	BaseSignature *getSignature() { return(signature); }
+	const char *getName() const { return(name); }
+	funcPtr getPtr() const { return(ptr); }
+	unsigned int getNum() const { return(num); }
+	const BaseSignature *getSignature() const { return(signature); }
 
 private:
 
@@ -27,15 +27,15 @@ private:
 
 	// Pointer to call C++ function directly, sometimes used in Emscripten.
 
-	funcPtr ptr;
+	const funcPtr ptr;
 
 	// Index to distinguish between functions with identical signatures.
 
-	unsigned int num;
+	const unsigned int num;
 
 	// Signature represents return and argument types.
 
-	BaseSignature *signature;
+	const BaseSignature *signature;
 
 };
 

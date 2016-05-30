@@ -81,7 +81,7 @@ template<> struct BindingType<bool> {
 
 	typedef int WireType;
 
-	static inline Type fromWireType(WireType arg) { return(arg); }
+	static inline Type fromWireType(WireType arg) { return(arg != 0); }
 
 	static inline WireType toWireType(Type arg) { return(arg); }
 
@@ -105,7 +105,7 @@ struct ArgFromWire {
 
 	explicit ArgFromWire(typename BindingType<ArgType>::WireType arg) {}
 
-	inline ArgType get(typename BindingType<ArgType>::WireType arg) { return(BindingType<ArgType>::fromWireType(arg)); }
+	inline ArgType get(typename BindingType<ArgType>::WireType arg) const { return(BindingType<ArgType>::fromWireType(arg)); }
 
 };
 
@@ -114,7 +114,7 @@ struct ArgFromWire<void> {
 
 	explicit ArgFromWire() {}
 
-	inline void get() {}
+	inline void get() const {}
 
 };
 

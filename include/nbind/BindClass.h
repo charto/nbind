@@ -32,14 +32,14 @@ public:
 
 #endif // BUILDING_NODE_EXTENSION
 
-	const TYPEID *getTypes() { return(idList); }
+	const TYPEID *getTypes() const { return(idList); }
 
-	const char *getName() { return(name); }
+	const char *getName() const { return(name); }
 	void setName(const char *name) { this->name = name; }
 
 	// The explicit nonzero test silences a compiler warning in Visual Studio.
-	bool isReady() { return((readyState & 1) != 0); }
-	bool isDuplicate() { return((readyState & 2) != 0); }
+	bool isReady() const { return((readyState & 1) != 0); }
+	bool isDuplicate() const { return((readyState & 2) != 0); }
 
 	void setDuplicate() { readyState |= 2; }
 
@@ -83,7 +83,7 @@ public:
 
 	std::forward_list<MethodDef> &getMethodList() { return(methodList); }
 
-	jsMethod *getDeleter() { return(deleter); }
+	jsMethod *getDeleter() const { return(deleter); }
 
 #if defined(BUILDING_NODE_EXTENSION)
 
@@ -107,7 +107,7 @@ public:
 		valueConstructorJS = new cbFunction(func);
 	}
 
-	cbFunction *getValueConstructorJS() { return(valueConstructorJS); }
+	cbFunction *getValueConstructorJS() const { return(valueConstructorJS); }
 
 protected:
 

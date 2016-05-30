@@ -86,7 +86,7 @@ static void initModule(Handle<Object> exports) {
 		for(auto &func : bindClass->getMethodList()) {
 			// TODO: Support for function overloading goes here.
 
-			BaseSignature *signature = func.getSignature();
+			const BaseSignature *signature = func.getSignature();
 
 			if(signature == nullptr) {
 

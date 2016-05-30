@@ -13,22 +13,23 @@ class BaseCallbackSignature {
 
 public:
 
-	BaseCallbackSignature(const TYPEID *typeList, unsigned int arity) : typeList(typeList), arity(arity) {
-		num = _nbind_register_callback_signature(
+	BaseCallbackSignature(const TYPEID *typeList, unsigned int arity) :
+		typeList(typeList),
+		arity(arity),
+		num(_nbind_register_callback_signature(
 			typeList,
 			arity + 1
-		);
-	}
+		)) {}
 
-	const TYPEID *getTypeList() { return(typeList); }
-	unsigned int getArity() { return(arity); }
-	unsigned int getNum() { return(num); }
+	const TYPEID *getTypeList() const { return(typeList); }
+	unsigned int getArity() const { return(arity); }
+	unsigned int getNum() const { return(num); }
 
 private:
 
 	const TYPEID *typeList;
-	unsigned int arity;
-	unsigned int num;
+	const unsigned int arity;
+	const unsigned int num;
 
 };
 

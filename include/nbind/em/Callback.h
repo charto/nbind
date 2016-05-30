@@ -10,8 +10,8 @@
 namespace nbind {
 
 extern "C" {
-	extern unsigned int _nbind_reference_callback(unsigned int num);
-	extern unsigned int _nbind_free_callback(unsigned int num);
+	extern void _nbind_reference_callback(unsigned int num);
+	extern void _nbind_free_callback(unsigned int num);
 }
 
 class cbFunction {

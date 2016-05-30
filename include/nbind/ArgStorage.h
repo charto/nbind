@@ -17,11 +17,11 @@ public:
 	ArgStorage(unsigned int overloadNum) :
 		overloadNum(overloadNum) {}
 
-	unsigned int getOverloadNum() { return(overloadNum); }
+	unsigned int getOverloadNum() const { return(overloadNum); }
 
 private:
 
-	unsigned int overloadNum;
+	const unsigned int overloadNum;
 
 };
 

@@ -27,19 +27,19 @@ public:
 	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList, unsigned int arity) :
 		type(type), caller(caller), typeList(typeList), arity(arity) {}
 
-	Type getType() { return(type); }
-	funcPtr getCaller() { return(caller); }
+	Type getType() const { return(type); }
+	funcPtr getCaller() const { return(caller); }
 
 	// Type list is one item longer than arity,
 	// because it starts with the return type (not counted in arity).
 
-	const TYPEID *getTypeList() { return(typeList); }
-	unsigned int getArity() { return(arity); }
+	const TYPEID *getTypeList() const { return(typeList); }
+	unsigned int getArity() const { return(arity); }
 
 	// A value constructor pointer is included in each signature,
 	// but only used for constructors.
 
-	funcPtr getValueConstructor() { return(valueConstructor); }
+	funcPtr getValueConstructor() const { return(valueConstructor); }
 	void setValueConstructor(funcPtr valueConstructor) {
 		this->valueConstructor = valueConstructor;
 	}
@@ -49,10 +49,10 @@ public:
 
 private:
 
-	Type type;
-	funcPtr caller;
+	const Type type;
+	const funcPtr caller;
 	const TYPEID *typeList;
-	unsigned int arity;
+	const unsigned int arity;
 	funcPtr valueConstructor;
 
 };
@@ -93,7 +93,7 @@ public:
 
 		MethodInfo(MethodType func) : func(func) {}
 
-		MethodType func;
+		const MethodType func;
 
 	};
 
