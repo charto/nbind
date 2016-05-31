@@ -24,22 +24,22 @@ export namespace _nbind {
 	export function pushArray(arr: any[], type: ArrayType) {
 		if(!arr) return(0);
 
-		var length = arr.length;
+		const length = arr.length;
 
 		if((type.size || type.size === 0) && length < type.size) {
 			throw(new Error('Type mismatch'));
 		}
 
-		var ptrSize = type.memberType.ptrSize;
-		var result = Pool.lalloc(4 + length * ptrSize);
+		const ptrSize = type.memberType.ptrSize;
+		const result = Pool.lalloc(4 + length * ptrSize);
 
 		HEAPU32[result / 4] = length;
 
-		var heap = type.memberType.heap;
-		var ptr = (result + 4) / ptrSize;
+		const heap = type.memberType.heap;
+		let ptr = (result + 4) / ptrSize;
 
-		var wireWrite = type.memberType.wireWrite;
-		var num = 0;
+		const wireWrite = type.memberType.wireWrite;
+		let num = 0;
 
 		if(wireWrite) {
 			while(num < length) {
@@ -57,14 +57,14 @@ export namespace _nbind {
 	export function popArray(ptr: number, type: ArrayType) {
 		if(ptr === 0) return(null);
 
-		var length = HEAPU32[ptr / 4];
-		var arr = new Array(length);
+		const length = HEAPU32[ptr / 4];
+		const arr = new Array(length);
 
-		var heap = type.memberType.heap;
+		const heap = type.memberType.heap;
 		ptr = (ptr + 4) / type.memberType.ptrSize;
 
-		var wireRead = type.memberType.wireRead;
-		var num = 0;
+		const wireRead = type.memberType.wireRead;
+		let num = 0;
 
 		if(wireRead) {
 			while(num < length) {
@@ -119,12 +119,12 @@ export namespace _nbind {
 		if(str === null || str === undefined) return(0);
 		str = str.toString();
 
-		var length = Module.lengthBytesUTF8(str);
+		const length = Module.lengthBytesUTF8(str);
 
 		// 32-bit length, string and a zero terminator
 		// (stringToUTF8Array insists on adding it)
 
-		var result = Pool.lalloc(4 + length + 1);
+		const result = Pool.lalloc(4 + length + 1);
 
 		HEAPU32[result / 4] = length;
 		Module.stringToUTF8Array(str, HEAPU8, result + 4, length + 1);
@@ -135,7 +135,7 @@ export namespace _nbind {
 	export function popString(ptr: number) {
 		if(ptr === 0) return(null);
 
-		var length = HEAPU32[ptr / 4];
+		const length = HEAPU32[ptr / 4];
 
 		return(Module.Pointer_stringify(ptr + 4, length));
 	}

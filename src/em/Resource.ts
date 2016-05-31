@@ -40,7 +40,7 @@ export namespace _nbind {
 	  * once from each type of resource needed by a list of types. */
 
 	export function listResources(readList: _type.BindType[], writeList: _type.BindType[]) {
-		var result = new Resource();
+		const result = new Resource();
 
 		for(let bindType of readList) {
 			for(let resource of bindType.readResources || []) {

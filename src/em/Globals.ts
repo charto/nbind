@@ -53,10 +53,10 @@ export namespace _nbind {
 			// to align pointers allocated later.
 			size = (size + 7) & ~7;
 
-			var used = HEAPU32[Pool.usedPtr];
+			const used = HEAPU32[Pool.usedPtr];
 
 			if(size > Pool.pageSize / 2 || size > Pool.pageSize - used) {
-				var NBind = (typeTbl['NBind'] as _class.BindClass).proto as any;
+				const NBind = (typeTbl['NBind'] as _class.BindClass).proto as any;
 				return(NBind.lalloc(size));
 			} else {
 				HEAPU32[Pool.usedPtr] = used + size;
@@ -69,10 +69,10 @@ export namespace _nbind {
 		  * a stack frame. */
 
 		static lreset(used: number, page: number) {
-			var topPage = HEAPU32[Pool.pagePtr];
+			const topPage = HEAPU32[Pool.pagePtr];
 
 			if(topPage) {
-				var NBind = (typeTbl['NBind'] as _class.BindClass).proto as any;
+				const NBind = (typeTbl['NBind'] as _class.BindClass).proto as any;
 				NBind.lreset(used, page);
 			} else {
 				HEAPU32[Pool.usedPtr] = used;
@@ -86,13 +86,13 @@ export namespace _nbind {
 	}
 
 	function getComplexType(id: number) {
-		var placeholderFlag = HEAPU8[id as number];
+		const placeholderFlag = HEAPU8[id as number];
 
 		if(placeholderFlag == 0) throw(new Error('Unbound type ' + id));
 
-		var memberId = HEAPU32[((id as number) >> 2) + 1];
-		var memberType = _nbind.typeList[memberId as number];
-		var type: _type.BindType;
+		const memberId = HEAPU32[((id as number) >> 2) + 1];
+		const memberType = _nbind.typeList[memberId as number];
+		let type: _type.BindType;
 
 		if(!memberType) throw(new Error('Unbound member type ' + memberId));
 
@@ -102,7 +102,7 @@ export namespace _nbind {
 				type = new _nbind.ArrayType(id, memberType);
 				break;
 			case 2: // Array
-				var size = HEAPU32[((id as number) >> 2) + 2];
+				const size = HEAPU32[((id as number) >> 2) + 2];
 				type = new _nbind.ArrayType(id, memberType, size);
 				break;
 			default:
@@ -118,7 +118,7 @@ export namespace _nbind {
 	export function getTypes(idList: TypeIdList) {
 		return(idList.map((id: number | string) => {
 			if(typeof(id) == 'number') {
-				var type = _nbind.typeList[id as number];
+				const type = _nbind.typeList[id as number];
 				return(type || getComplexType(id as number));
 			} else return(_nbind.typeTbl[id as string]);
 		}));
@@ -138,7 +138,7 @@ export namespace _nbind {
 
 	// tslint:disable-next-line:no-shadowed-variable
 	export function makeSignature(typeList: _type.BindType[]) {
-		var mangleMap: { [name: string]: string; } = {
+		const mangleMap: { [name: string]: string; } = {
 			float32_t: 'f',
 			float64_t: 'd',
 			void: 'v'
@@ -151,7 +151,7 @@ export namespace _nbind {
 	// or overload an existing method.
 
 	export function addMethod(obj: FuncTbl, name: string, func: Func, arity: number) {
-		var overload = obj[name] as any;
+		let overload = obj[name] as any;
 
 		// Check if the function has been overloaded.
 

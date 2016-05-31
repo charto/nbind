@@ -75,12 +75,12 @@ export namespace _nbind {
 		returnType: _type.BindType,
 		argTypeList: _type.BindType[]
 	) {
-		var argList = makeArgList(argTypeList.length);
+		const argList = makeArgList(argTypeList.length);
 		/** List of arbitrary data for type converters.
 		  * Each one may read and write its own slot. */
-		var convertParamList: any[] = [];
+		const convertParamList: any[] = [];
 		/** Next free slot number in type converter data list. */
-		var paramNum = 0;
+		let paramNum = 0;
 
 		function makeWireRead(type: _type.BindType, expr: string) {
 			if(type.makeWireRead) {
@@ -102,7 +102,7 @@ export namespace _nbind {
 
 		// Build code for function call and type conversion.
 
-		var callExpression = makeWireRead(
+		const callExpression = makeWireRead(
 			returnType,
 			'dynCall(' +
 				[prefix].concat(argList.map(
@@ -113,9 +113,9 @@ export namespace _nbind {
 
 		// Build code to allocate and free the stack etc. if necessary.
 
-		var resourceSet = listResources([returnType], argTypeList);
+		const resourceSet = listResources([returnType], argTypeList);
 
-		var sourceCode = (
+		const sourceCode = (
 			'function(' + argList.join(',') + '){' +
 				resourceSet.makeOpen() +
 				'var r=' + callExpression + ';' +
@@ -139,12 +139,12 @@ export namespace _nbind {
 		returnType: _type.BindType,
 		argTypeList: _type.BindType[]
 	) {
-		var argList = makeArgList(argTypeList.length);
+		const argList = makeArgList(argTypeList.length);
 		/** List of arbitrary data for type converters.
 		  * Each one may read and write its own slot. */
-		var convertParamList: any[] = [];
+		const convertParamList: any[] = [];
 		/** Next free slot number in type converter data list. */
-		var paramNum = 0;
+		let paramNum = 0;
 
 		function makeWireRead(type: _type.BindType, expr: string) {
 			if(type.makeWireRead) {
@@ -164,16 +164,16 @@ export namespace _nbind {
 			} else return(expr);
 		}
 
-		var callExpression = makeWireWrite(
+		const callExpression = makeWireWrite(
 			returnType,
 			'_nbind.callbackList[num](' +
 				argList.map(
-					(name: string, num: number) => makeWireRead(argTypeList[num], name)
+					(name: string, index: number) => makeWireRead(argTypeList[index], name)
 				).join(',') +
 			')'
 		);
 
-		var resourceSet = listResources(argTypeList, [returnType]);
+		const resourceSet = listResources(argTypeList, [returnType]);
 
 		// Let the calling C++ side handle resetting the pool (using the
 		// PoolRestore class) after parsing the callback return value passed
@@ -181,7 +181,7 @@ export namespace _nbind {
 
 		resourceSet.remove(_nbind.resources.pool);
 
-		var sourceCode = (
+		const sourceCode = (
 			'function(' + ['dummy', 'num'].concat(argList).join(',') + '){' +
 				resourceSet.makeOpen() +
 				'var r=' + callExpression + ';' +
@@ -200,13 +200,13 @@ export namespace _nbind {
 	/** Dynamically create an invoker for a JavaScript callback. */
 
 	export function makeJSCaller(idList: TypeIdList) {
-		var argCount = idList.length - 1;
+		const argCount = idList.length - 1;
 
-		var typeList = getTypes(idList);
-		var returnType = typeList[0];
-		var argTypeList = typeList.slice(1);
-		var needsWireRead = anyNeedsWireRead(argTypeList);
-		var needsWireWrite = returnType.wireWrite || returnType.makeWireWrite;
+		const typeList = getTypes(idList);
+		const returnType = typeList[0];
+		const argTypeList = typeList.slice(1);
+		const needsWireRead = anyNeedsWireRead(argTypeList);
+		const needsWireWrite = returnType.wireWrite || returnType.makeWireWrite;
 
 		if(!needsWireWrite && !needsWireRead) {
 			switch(argCount) {
@@ -239,7 +239,7 @@ export namespace _nbind {
 		boundID: number,
 		idList: TypeIdList
 	) {
-		var argCount = idList.length - 1;
+		const argCount = idList.length - 1;
 
 		// The method invoker function adds two arguments to those of the method:
 		// - Number of the method in a list of methods with identical signatures.
@@ -247,14 +247,13 @@ export namespace _nbind {
 
 		idList.splice(1, 0, 'uint32_t', boundID);
 
-		var typeList = getTypes(idList);
-		var returnType = typeList[0];
-		var argTypeList = typeList.slice(3);
-		var needsWireRead = returnType.wireRead || returnType.makeWireRead;
-		var needsWireWrite = anyNeedsWireWrite(argTypeList);
+		const typeList = getTypes(idList);
+		const returnType = typeList[0];
+		const argTypeList = typeList.slice(3);
+		const needsWireRead = returnType.wireRead || returnType.makeWireRead;
+		const needsWireWrite = anyNeedsWireWrite(argTypeList);
 
-		var signature = makeSignature(typeList);
-		var dynCall = Module['dynCall_' + signature];
+		const dynCall = Module['dynCall_' + makeSignature(typeList)];
 
 		if(!needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
@@ -295,20 +294,19 @@ export namespace _nbind {
 		direct: number,
 		idList: TypeIdList
 	) {
-		var argCount = idList.length - 1;
+		const argCount = idList.length - 1;
 
-		var typeList = getTypes(idList);
-		var returnType = typeList[0];
-		var argTypeList = typeList.slice(1);
-		var needsWireRead = returnType.wireRead || returnType.makeWireRead;
-		var needsWireWrite = anyNeedsWireWrite(argTypeList);
-
-		var signature = makeSignature(typeList);
-		var dynCall = Module['dynCall_' + signature];
+		const typeList = getTypes(idList);
+		const returnType = typeList[0];
+		const argTypeList = typeList.slice(1);
+		const needsWireRead = returnType.wireRead || returnType.makeWireRead;
+		const needsWireWrite = anyNeedsWireWrite(argTypeList);
 
 		if(direct && !needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
+
+			const dynCall = Module['dynCall_' + makeSignature(typeList)];
 
 			switch(argCount) {
 				case 0: return(() =>
@@ -329,7 +327,7 @@ export namespace _nbind {
 			ptr = null;
 		}
 
-		var prefix: string;
+		let prefix: string;
 
 		if(ptr) {
 			// The function invoker adds an argument to those of the function:
@@ -342,8 +340,7 @@ export namespace _nbind {
 			prefix = 'ptr';
 		}
 
-		signature = makeSignature(getTypes(idList));
-		dynCall = Module['dynCall_' + signature];
+		const dynCall = Module['dynCall_' + makeSignature(getTypes(idList))];
 
 		return(buildCallerFunction(
 			dynCall,
@@ -362,7 +359,7 @@ export namespace _nbind {
 	  * depending on the number of arguments passed in the call. */
 
 	export function makeOverloader(func: Func, arity: number) {
-		var callerList: FuncList = [];
+		const callerList: FuncList = [];
 
 		function call() {
 			return(callerList[arguments.length].apply(this, arguments));

@@ -61,7 +61,7 @@ export namespace _nbind {
 		) {
 			super(id, name);
 
-			var heapTbl: { [bits: number]: any } = (
+			const heapTbl: { [bits: number]: any } = (
 				isFloat ? {
 					32: HEAPF32,
 					64: HEAPF64
@@ -87,8 +87,8 @@ export namespace _nbind {
 		if(str === null || str === undefined) return(0);
 		str = str.toString();
 
-		var length = Module.lengthBytesUTF8(str) + 1;
-		var result = Pool.lalloc(length);
+		const length = Module.lengthBytesUTF8(str) + 1;
+		const result = Pool.lalloc(length);
 
 		// Convert the string and append a zero byte.
 		Module.stringToUTF8Array(str, HEAPU8, result, length);

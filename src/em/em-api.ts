@@ -25,7 +25,7 @@ export {_globals, _type, _class, _callback, _value, _std, _caller, _resource};
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
-var _defineHidden = defineHidden;
+const _defineHidden = defineHidden;
 
 export namespace _nbind {
 	export var Pool = _globals.Pool;
@@ -66,7 +66,7 @@ export namespace _nbind {
 publishNamespace('_nbind');
 
 function _readAsciiString(ptr: number) {
-	var endPtr = ptr;
+	let endPtr = ptr;
 
 	while(HEAPU8[endPtr++]);
 
@@ -102,16 +102,16 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_register_type(id: number, namePtr: number) {
-		var name = _readAsciiString(namePtr);
+		const name = _readAsciiString(namePtr);
 		type TypeConstructor = { new(id: number, name: string): _type.BindType };
-		var constructorTbl: { [name: string]: TypeConstructor } = {
+		const constructorTbl: { [name: string]: TypeConstructor } = {
 			'bool': _nbind.BooleanType,
 			'cbFunction &': _nbind.CallbackType,
 			'std::string': _nbind.StringType,
 			'_nbind_new': _nbind.CreateValueType
 		};
 
-		var constructor = constructorTbl[name] || _nbind.BindType;
+		const constructor = constructorTbl[name] || _nbind.BindType;
 
 		// tslint:disable-next-line:no-unused-expression
 		new constructor(id, name);
@@ -119,23 +119,23 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_register_types(dataPtr: number) {
-		var count       = HEAPU32[dataPtr / 4];
-		var idListPtr   = HEAPU32[dataPtr / 4 + 1] / 4;
-		var sizeListPtr = HEAPU32[dataPtr / 4 + 2] / 4;
-		var flagListPtr = HEAPU32[dataPtr / 4 + 3];
+		const count       = HEAPU32[dataPtr / 4];
+		const idListPtr   = HEAPU32[dataPtr / 4 + 1] / 4;
+		const sizeListPtr = HEAPU32[dataPtr / 4 + 2] / 4;
+		const flagListPtr = HEAPU32[dataPtr / 4 + 3];
 
-		var idList   = HEAPU32.subarray(idListPtr,   idListPtr   + count);
-		var sizeList = HEAPU32.subarray(sizeListPtr, sizeListPtr + count);
-		var flagList = HEAPU8. subarray(flagListPtr, flagListPtr + count);
+		const idList   = HEAPU32.subarray(idListPtr,   idListPtr   + count);
+		const sizeList = HEAPU32.subarray(sizeListPtr, sizeListPtr + count);
+		const flagList = HEAPU8. subarray(flagListPtr, flagListPtr + count);
 
 		function createType(id: number, flag: number, size: number) {
-			var isSignless = flag & 16;
-			var isConst    = flag & 8;
-			var isPointer  = flag & 4;
-			var isFloat    = flag & 2;
-			var isUnsigned = flag & 1;
+			const isSignless = flag & 16;
+			const isConst    = flag & 8;
+			const isPointer  = flag & 4;
+			const isFloat    = flag & 2;
+			const isUnsigned = flag & 1;
 
-			var name = isConst ? 'const ' : '';
+			let name = isConst ? 'const ' : '';
 
 			if(isSignless) {
 				name += 'char';
@@ -159,15 +159,15 @@ class nbind { // tslint:disable-line:class-name
 			}
 		}
 
-		for(var num = 0; num < count; ++num) {
+		for(let num = 0; num < count; ++num) {
 			createType(idList[num], flagList[num], sizeList[num]);
 		}
 	}
 
 	@dep('_nbind', _readAsciiString, '__extends')
 	static _nbind_register_class(idListPtr: number, namePtr: number) {
-		var name = _readAsciiString(namePtr);
-		var idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 3);
+		const name = _readAsciiString(namePtr);
+		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 3);
 
 		class Bound extends _nbind.Wrapper {
 			constructor() {
@@ -218,8 +218,8 @@ class nbind { // tslint:disable-line:class-name
 		ptr: number,
 		ptrValue: number
 	) {
-		var typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		var proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
+		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
+		const proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
 		_nbind.addMethod(
 			proto,
@@ -261,8 +261,8 @@ class nbind { // tslint:disable-line:class-name
 		num: number,
 		direct: number
 	) {
-		var name = _readAsciiString(namePtr);
-		var typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
+		const name = _readAsciiString(namePtr);
+		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _class.BindClass).proto as any,
@@ -282,9 +282,9 @@ class nbind { // tslint:disable-line:class-name
 		num: number,
 		methodType: number
 	) {
-		var name = _readAsciiString(namePtr);
-		var typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		var proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
+		let name = _readAsciiString(namePtr);
+		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
+		const proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
 		if(methodType == _nbind.MethodType.method) {
 			_nbind.addMethod(
@@ -298,7 +298,7 @@ class nbind { // tslint:disable-line:class-name
 		}
 
 		// The C++ side gives the same name to getters and setters.
-		var prefixMatcher = /^[Gg]et_?([A-Z]?)/;
+		const prefixMatcher = /^[Gg]et_?([A-Z]?)/;
 
 		name = name.replace(
 			prefixMatcher,

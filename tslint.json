@@ -60,7 +60,7 @@
 		"no-unused-expression": true,
 		"no-unused-variable": true,
 		"no-use-before-declare": true,
-		"no-var-keyword": false,
+		"no-var-keyword": true,
 		"no-var-requires": true,
 		"object-literal-sort-keys": true,
 		"one-line": [ true, "check-catch", "check-else", "check-finally", "check-open-brace" ],

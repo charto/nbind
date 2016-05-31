@@ -48,7 +48,7 @@ export namespace _nbind {
 	export function registerCallback(func: _globals.Func) {
 		if(typeof(func) != 'function') _nbind.throwError('Type mismatch');
 
-		var num = callbackFreeList.pop() || callbackList.length;
+		const num = callbackFreeList.pop() || callbackList.length;
 
 		callbackList[num] = func;
 		callbackRefCountList[num] = 1;
@@ -84,8 +84,8 @@ class nbind { // tslint:disable-line:class-name
 		typeListPtr: number,
 		typeCount: number
 	) {
-		var typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		var num = _nbind.callbackSignatureList.length;
+		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
+		const num = _nbind.callbackSignatureList.length;
 
 		_nbind.callbackSignatureList[num] = _nbind.makeJSCaller(typeList);
 
