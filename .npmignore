@@ -1,4 +1,6 @@
 node_modules/
+dist/bundle/
+src/**/*.ts
 example/
 build/
 test/

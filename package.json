@@ -9,6 +9,7 @@
   },
   "scripts": {
     "tsc": "tsc",
+    "tslint": "tslint",
     "cbuild": "cbuild",
     "autogypi": "autogypi",
     "emcc-path": "emcc-path",
