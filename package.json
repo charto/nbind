@@ -5,6 +5,7 @@
   "main": "dist/nbind.js",
   "typings": "dist/nbind.d.ts",
   "bin": {
+    "copyasm": "bin/copyasm.js",
     "emcc-path": "bin/emcc-path.js"
   },
   "scripts": {
