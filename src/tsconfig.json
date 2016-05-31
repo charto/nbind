@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"declaration": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"noImplicitAny": true,
+		"outDir": "../dist",
+		"removeComments": false,
+		"target": "es5"
+	},
+	"files": [
+		"nbind.ts"
+	]
+}

@@ -51,7 +51,7 @@
 		"no-namespace": false,
 		"no-null-keyword": false,
 		"no-reference": true,
-		"no-require-imports": true,
+		"no-require-imports": false,
 		"no-shadowed-variable": true,
 		"no-string-literal": false,
 		"no-switch-case-fall-through": true,

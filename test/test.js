@@ -1,7 +1,8 @@
 var nbind = require('..');
 var test = require('tap').test;
 
-var testModule = nbind.lib;
+var binding = nbind.init();
+var testModule = binding.lib;
 
 var prepareGC;
 var lost = null;
@@ -152,7 +153,7 @@ test('Value objects', function(t) {
 		output(this.x, this.y);
 	}
 
-	nbind.bind('Coord', Coord);
+	binding.bind('Coord', Coord);
 
 	var xy = Type.getCoord();
 
