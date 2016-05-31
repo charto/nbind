@@ -4,6 +4,8 @@
 // makeModulePathList and findCompiledModule are adapted from the npm module
 // "bindings" licensed under the MIT license terms in BINDINGS-LICENSE.
 
+/** Typings for Node.js require(). */
+
 interface NodeRequire {
 	(name: string): any;
 	(name: 'path'): {
@@ -13,9 +15,13 @@ interface NodeRequire {
 	resolve(name: string): string;
 }
 
+/** Node.js require() imports a file or package. */
+
 declare var require: NodeRequire;
 
 const path = require('path'); // tslint:disable-line:no-var-requires
+
+/** Node.js global process information. */
 
 declare var process: {
 	cwd: () => string,
@@ -27,11 +33,15 @@ declare var process: {
 	arch: string
 };
 
+/** Compiled C++ binary type and path. */
+
 export interface ModuleSpec {
-	type: string;
+	type: 'node' | 'emcc';
 	name: string;
 	path?: string;
 }
+
+/** Any class constructor. */
 
 export type ClassType = { new(...args: any[]): any };
 
@@ -50,6 +60,8 @@ export interface DefaultExportType {
 }
 
 export class Binding<ExportType extends DefaultExportType> {
+	/** Bind a value type (class with a fromJS method) to an equivalent C++ type. */
+
 	bind(name: string, proto: ClassType ) {
 		if(this.lib._nbind_value) { // emcc
 			this.lib._nbind_value(name, proto);
@@ -59,9 +71,11 @@ export class Binding<ExportType extends DefaultExportType> {
 	}
 
 	binary: ModuleSpec;
+	/** Exported API of a C++ library compiled for nbind. */
 	lib: ExportType;
 }
 
+/** Binding currently being initialized. */
 let currentBinding: Binding<any>;
 
 /** Called from asm.js during init to get current module. @ignore internal use. */
@@ -69,6 +83,8 @@ let currentBinding: Binding<any>;
 export function getLib() {
 	return(currentBinding.lib);
 }
+
+/** Default callback that throws any error given to it. */
 
 function rethrow(err: any) {
 	if(err) throw(err);
@@ -146,8 +162,13 @@ function findCompiledModule(
 	return(null);
 }
 
+/** Find compiled C++ binary under current working directory. */
+
 export function find(cb?: FindCallback): ModuleSpec;
-export function find(basePath?: string, cb?: FindCallback): ModuleSpec;
+
+/** Find compiled C++ binary under given path. */
+
+export function find(basePath: string, cb?: FindCallback): ModuleSpec;
 
 export function find(basePath?: any, cb?: FindCallback) {
 	let callback = arguments[arguments.length - 1];
@@ -166,18 +187,25 @@ export type InitCallback<ExportType extends DefaultExportType> = (
 	result: Binding<ExportType>
 ) => void;
 
+/** Initialize compiled C++ binary under current working directory. */
+
 export function init<ExportType extends DefaultExportType>(
 	cb?: InitCallback<ExportType>
 ): Binding<ExportType>;
 
+/** Initialize compiled C++ binary under given path. */
+
 export function init<ExportType extends DefaultExportType>(
-	basePath?: string,
+	basePath: string,
 	cb?: InitCallback<ExportType>
 ): Binding<ExportType>;
 
+/** Initialize compiled C++ binary under given path and merge its API to given
+  * object, which may contain options for Emscripten modules. */
+
 export function init<ExportType extends DefaultExportType>(
-	basePath?: string,
-	lib?: ExportType,
+	basePath: string,
+	lib: ExportType,
 	cb?: InitCallback<ExportType>
 ): Binding<ExportType>;
 
@@ -206,6 +234,8 @@ export function init<ExportType extends DefaultExportType>(
 	return(binding);
 }
 
+/** Initialize asm.js module. */
+
 function initAsm<ExportType extends DefaultExportType>(
 	binding: Binding<ExportType>,
 	callback: InitCallback<ExportType>
@@ -229,6 +259,8 @@ function initAsm<ExportType extends DefaultExportType>(
 	// Load the Asm.js module.
 	require(binding.binary.path);
 }
+
+/** Initialize native Node.js addon. */
 
 function initNode<ExportType extends DefaultExportType>(
 	binding: Binding<ExportType>,
