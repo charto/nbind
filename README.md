@@ -44,7 +44,7 @@ struct Greeter {
       &lt;&lt; name &lt;&lt; "!\n";
   }
 };</pre></td>
-<td valign="top">List your classes and methods:<br>
+<td valign="top">List your <a href="#classes-and-constructors">classes</a> and <a href="#methods-and-properties">methods</a>:<br>
 <pre>// Your original code here
 &nbsp;
 // Add these below it:
@@ -54,7 +54,7 @@ struct Greeter {
 NBIND_CLASS(Greeter) {
     method(sayHello);
 }</pre></td>
-<td valign="top">Add scripts to <code>package.json</code>:<br>
+<td valign="top"><a href="#creating-your-project">Add scripts</a> to <code>package.json</code>:<br>
 <pre>{
   "scripts": {
     "emcc-path": "emcc-path",
@@ -75,18 +75,18 @@ npm run -- autogypi \
   --init-gyp \
   -p nbind -s hello.cc</pre></td>
 <td valign="top">Compile to native binary:<br>
-<pre>npm run node-gyp \
+<pre>npm run -- node-gyp \
   configure build</pre>
 Or to Asm.js:<br>
-<pre>npm run node-gyp \
+<pre>npm run -- node-gyp \
   configure build \
   --asmjs=1</pre></td>
 <td valign="top">Call from Node.js:<br>
 <pre>var nbind = require('nbind');
-var lib = nbind.init();
+var lib = nbind.init().lib;
 &nbsp;
 lib.Greeter.sayHello('you');</pre>
-Or from a web browser (<a href="#publishing-for-web-browsers">see below</a>)
+Or from a web browser (<a href="#using-in-web-browsers">see below</a>).
 </td></tr>
 </table>
 
@@ -206,23 +206,84 @@ User guide
 - [Classes and constructors](#classes-and-constructors)
 - [Methods and properties](#methods-and-properties)
 - [Getters and setters](#getters-and-setters)
-- [Arrays and vectors](#arrays-and-vectors)
+- [Passing data structures](#passing-data-structures)
 - [Callbacks](#callbacks)
 - [Value types](#value-types)
 - [Type conversion](#type-conversion)
 - [Error handling](#error-handling)
 - [Publishing on npm](#publishing-on-npm)
-- [Publishing for web browsers](#publishing-for-web-browsers)
+- [Shipping an asm.js fallback](#shipping-an-asmjs-fallback)
+- [Using in web browsers](#using-in-web-browsers)
+- [Using with TypeScript](#using-with-typescript)
+- [Debugging](#debugging)
 
 Creating your project
 ---------------------
 
-TODO
+Once you have all [requirements](#requirements) installed, run:
+
+```bash
+npm init
+npm install --save nbind autogypi node-gyp
+```
+
+`nbind`, `autogypi` and `node-gyp` are all needed to compile
+a native Node.js addon from source when installing it.
+If you only distribute an asm.js version, you can use
+`--save-dev` instead of `--save` because users won't need to compile it.
+
+Next, to run commands without installing them globally, it's practical
+to add them in the `scripts` section of your `package.json` that `npm init`
+just generated. Let's add an install script as well:
+
+```json
+  "scripts": {
+    "emcc-path": "emcc-path",
+    "autogypi": "autogypi",
+    "install": "autogypi && node-gyp configure build"
+  }
+```
+
+`emcc-path` is needed internally by `nbind` when compiling for asm.js.
+It fixes some command line options that `node-gypi` generates on OS X
+and the Emscripten compiler doesn't like.
+You can leave it out if only compiling native addons.
+
+The `install` script runs when anyone installs your package.
+It calls `autogypi` and then uses `node-gyp` to compile a native addon.
+
+`autogypi` uses npm package information to set correct include paths
+for C/C++ compilers. It's needed when distributing addons on npm
+so the compiler can find header files from the `nbind` and `nan` packages
+installed on the user's machine. Initialize it like this:
+
+```bash
+npm run -- autogypi --init-gyp -p nbind -s hello.cc
+```
+
+Replace `hello.cc` with the name of your C++ source file.
+You can add multiple `-s` options, one for each source file.
+
+The `-p nbind` means the C++ code uses `nbind`. Multiple `-p`
+options can be added to add any other packages compatible with `autogypi`.
+
+The `--init-gyp` command generates files `binding.gyp` and `autogypi.json`
+that you should distribute with your package, so that `autogypi` and `node-gyp`
+will know what to do when the `install` script runs.
+
+Now you're ready to start writing code and compiling.
 
 Configuration
-----------
+-------------
 
-TODO
+Refer to [autogypi documentation](https://github.com/charto/autogypi#readme)
+to set up dependencies of your package, and how other packages
+should include it if it's a library usable directly from C++.
+
+`--asmjs=1` is the only existing configuration option for `nbind` itself.
+You pass it to `node-gyp` by calling it like `node-gyp configure build --asmjs=1`.
+It compiles your package using Emscripten instead of your default C++ compiler
+and produces asm.js output.
 
 Using nbind headers
 -------------------
@@ -305,7 +366,7 @@ NBIND_CLASS(MyClass) {
 Example used from JavaScript:
 
 ```JavaScript
-var lib = nbind.init();
+var lib = nbind.init().lib;
 
 var a = new lib.MyClass();
 var b = new lib.MyClass(42, 54);
@@ -315,15 +376,64 @@ var c = new lib.MyClass("Don't panic");
 Methods and properties
 ----------------------
 
-Methods are exported with a macro call `method(methodName);` which takes the name of the method as an argument (without any quotation marks). It gets exported to JavaScript with the same name. If the method is `static`, it becomes a property of the JavaScript constructor function and can be accessed like `className.methodName()`. Otherwise it becomes a property of the prototype and can be accessed like `obj = new className(); obj.methodName();`
+Methods are exported inside an `NBIND_CLASS` block with a macro call `method(methodName);`
+which takes the name of the method as an argument (without any quotation marks).
+The C++ method gets exported to JavaScript with the same name.
 
-TODO
+Properties should be accessed through [getter and setter functions](#getters-and-setters).
+
+Data types of method arguments and its return value are detected automatically
+so you don't have to specify them. Note the [supported data types](#type-conversion)
+because using other types may cause compiler errors that are difficult to understand.
+
+If the method is `static`, it becomes a property of the JavaScript constructor function
+and can be accessed like `className.methodName()`. Otherwise it becomes a property of
+the prototype and can be accessed like `obj = new className(); obj.methodName();`
+
+For example given a C++ class:
+
+```C++
+class MyClass {
+
+public:
+
+  void myMethod(std::string);
+
+  static std::vector<double> myStaticMethod(int, int);
+
+};
+
+```
+
+Adding JavaScript bindings for it:
+
+```C++
+
+NBIND_CLASS(MyClass) {
+  construct<>();
+
+  method(myMethod);
+  method(myStaticMethod);
+}
+```
+
+Example used from JavaScript:
+
+```JavaScript
+var lib = nbind.init().lib;
+
+console.log(lib.MyClass.myStaticMethod(42, 54).join(' '));
+
+var obj = new lib.MyClass();
+
+obj.myMethod('foo');
+```
 
 Getters and setters
 -------------------
 
-Property getters are exported with a macro call `getter(getterName)`
-which takes the name of the getter method.
+Property getters are exported inside an `NBIND_CLASS` block with a macro call
+`getter(getterName)` with the name of the getter method as an argument.
 `nbind` automatically strips a `get`/`Get`/`get_`/`Get_` prefix and
 converts the next letter to lowercase, so for example `getX` and `get_x`
 both would become getters of `x` to be accessed like `obj.x`
@@ -334,12 +444,58 @@ Both `getterName` and `setterName` are mangled individually so
 you can pair `getX` with `set_x` if you like.
 From JavaScript, `++obj.x` would then call both of them to read and change the property.
 
-TODO
+For example given a C++ class:
 
-Arrays and vectors
-------------------
+```C++
+class MyClass {
 
-TODO
+public:
+
+  void setValue(int value) { this.value = value; }
+  int getValue() { return(value); }
+
+private:
+
+  int value = 42;
+
+};
+
+```
+
+Adding JavaScript bindings for it:
+
+```C++
+
+NBIND_CLASS(MyClass) {
+  construct<>();
+
+  getset(getValue, setValue);
+}
+```
+
+Example used from JavaScript:
+
+```JavaScript
+var lib = nbind.init().lib;
+
+var obj = new lib.MyClass();
+
+console.log(obj.value++); // 42
+console.log(obj.value++); // 43
+```
+
+Passing data structures
+-----------------------
+
+`nbind` supports automatically converting between JavaScript arrays and C++
+`std::vector` or `std::array` types. Just use them as arguments or return values
+in C++ methods.
+
+Note that data structures don't use the same memory layout in both languages,
+so the data always gets copied which takes more time for more data.
+For example the strings in an array of strings also get copied,
+one character at a time. In asm.js data is copied twice, first to a temporary
+space using a common format both languages can read and write.
 
 Callbacks
 ---------
@@ -361,8 +517,6 @@ That means it's possible to create a function like `Array.map`
 which calls a callback zero or more times and then returns, never using the callback again.
 It's currently not possible to create a function like `setTimeout`
 which calls the callback after it has returned.
-
-TODO
 
 Value types
 -----------
@@ -414,8 +568,23 @@ Publishing on npm
 
 TODO
 
-Publishing for web browsers
+Shipping an asm.js fallback
 ---------------------------
+
+TODO
+
+Using in web browsers
+---------------------
+
+TODO
+
+Using with TypeScript
+---------------------
+
+TODO
+
+Debugging
+---------
 
 TODO
 
