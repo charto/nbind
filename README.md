@@ -31,7 +31,7 @@ C++ everywhere in 5 easy steps using Node.js, `nbind` and [autogypi](https://git
 	<th>Step 1 - bind</th>
 	<th>Step 2 - prepare</th>
 </tr><tr>
-<td valign="top">Original C++ code <code>hello.cc</code>:<br>
+<td valign="top">Original C++ code <a href="https://raw.githubusercontent.com/charto/nbind-example-minimal/master/hello.cc"><code>hello.cc</code></a>:<br>
 <pre>#include &lt;string&gt;
 #include &lt;iostream&gt;
 &nbsp;
@@ -52,14 +52,14 @@ struct Greeter {
 #include "nbind/nbind.h"
 &nbsp;
 NBIND_CLASS(Greeter) {
-    method(sayHello);
+  method(sayHello);
 }</pre></td>
-<td valign="top"><a href="#creating-your-project">Add scripts</a> to <code>package.json</code>:<br>
+<td valign="top"><a href="#creating-your-project">Add scripts</a> to <a href="https://raw.githubusercontent.com/charto/nbind-example-minimal/master/package.json"><code>package.json</code></a>:<br>
 <pre>{
   "scripts": {
-    "emcc-path": "emcc-path",
     "autogypi": "autogypi",
-    "node-gyp": "node-gyp"
+    "node-gyp": "node-gyp",
+    "emcc-path": "emcc-path"
   }
 }</pre></td>
 </tr><tr>
@@ -200,7 +200,7 @@ Warning: rebase is used within develop and feature branches (but not master).
 User guide
 ==========
 
-- [Running the examples](#running-the-examples)
+- [Installing the examples](#installing-the-examples)
 - [Creating your project](#creating-your-project)
 - [Configuration](#configuration)
 - [Using nbind headers](#using-nbind-headers)
@@ -218,8 +218,8 @@ User guide
 - [Using with TypeScript](#using-with-typescript)
 - [Debugging](#debugging)
 
-Running the examples
---------------------
+Installing the examples
+-----------------------
 
 `nbind` examples shown in this user guide are also available to download
 for easier testing as follows:
@@ -332,14 +332,25 @@ or want to pass around [callbacks](#callbacks) or [value types](#value-types).
 
 You can use an `#ifdef NBIND_CLASS` guard to skip your `nbind` export definitions when the headers weren't loaded.
 
-Example:
+Example that uses an `nbind` callback in C++ code:
+
+**[`1-headers.cc`](https://raw.githubusercontent.com/charto/nbind-examples/master/1-headers.cc)**
 
 ```C++
+#include <string>
+#include <iostream>
+
 // For nbind::cbFunction type.
 #include "nbind/api.h"
 
-class MyClass {
-  static void callJS(nbind::cbFunction &callback);
+class HeaderExample {
+
+public:
+
+  static void callJS(nbind::cbFunction &callback) {
+    std::cout << "JS says: " << callback.call<std::string>(1, 2, 3);
+  }
+
 };
 
 // For NBIND_CLASS() and method() macros.
@@ -347,7 +358,7 @@ class MyClass {
 
 #ifdef NBIND_CLASS
 
-NBIND_CLASS(MyClass) {
+NBIND_CLASS(HeaderExample) {
   method(callJS);
 }
 
@@ -356,12 +367,22 @@ NBIND_CLASS(MyClass) {
 
 Example used from JavaScript:
 
-```JavaScript
-var lib = nbind.init();
+**[`1-headers.js`](https://raw.githubusercontent.com/charto/nbind-examples/master/1-headers.js)**
 
-lib.MyClass.callJS(function(several, args, here) {
-  return(something);
+```JavaScript
+var nbind = require('nbind');
+
+var lib = nbind.init().lib;
+
+lib.HeaderExample.callJS(function(a, b, c) {
+  return('sum = ' + (a + b + c) + '\n');
 });
+```
+
+Run the example with `node 1-headers.js` after [installing](#installing-the-examples). It prints:
+
+```
+JS says: sum = 6
 ```
 
 Classes and constructors
@@ -373,24 +394,58 @@ Constructors are exported with a macro call `construct<types...>();` where `type
 
 Constructor arguments are the only types that `nbind` cannot detect automatically.
 
-Example:
+Example with different constructor argument counts and types:
+
+**[`2-classes.cc`](https://raw.githubusercontent.com/charto/nbind-examples/master/2-classes.cc)**
 
 ```C++
-NBIND_CLASS(MyClass) {
+#include <iostream>
+
+class ClassExample {
+
+public:
+
+  ClassExample() {
+    std::cout << "No arguments\n";
+  }
+  ClassExample(int a, int b) {
+    std::cout << "Ints: " << a << " " << b << "\n";
+  }
+  ClassExample(const char *msg) {
+    std::cout << "String: " << msg << "\n";
+  }
+
+};
+
+#include "nbind/nbind.h"
+
+NBIND_CLASS(ClassExample) {
   construct<>();
   construct<int, int>();
-  construct<std::string>();
+  construct<const char *>();
 }
 ```
 
 Example used from JavaScript:
 
+**[`2-classes.js`](https://raw.githubusercontent.com/charto/nbind-examples/master/2-classes.js)**
+
 ```JavaScript
+var nbind = require('nbind');
+
 var lib = nbind.init().lib;
 
-var a = new lib.MyClass();
-var b = new lib.MyClass(42, 54);
-var c = new lib.MyClass("Don't panic");
+var a = new lib.ClassExample();
+var b = new lib.ClassExample(42, 54);
+var c = new lib.ClassExample("Don't panic");
+```
+
+Run the example with `node 2-classes.js` after [installing](#installing-the-examples). It prints:
+
+```
+No arguments
+Ints: 42 54
+String: Don't panic
 ```
 
 Methods and properties
@@ -410,43 +465,74 @@ If the method is `static`, it becomes a property of the JavaScript constructor f
 and can be accessed like `className.methodName()`. Otherwise it becomes a property of
 the prototype and can be accessed like `obj = new className(); obj.methodName();`
 
-For example given a C++ class:
+Example with a method that counts a cumulative checksum of ASCII character values in strings,
+and a static method that processes an entire array of strings:
+
+**[`3-methods.cc`](https://raw.githubusercontent.com/charto/nbind-examples/master/3-methods.cc)**
 
 ```C++
-class MyClass {
+#include <string>
+#include <vector>
+
+class MethodExample {
 
 public:
 
-  void myMethod(std::string);
+  unsigned int add(std::string part) {
+    for(char &c : part) sum += c;
 
-  static std::vector<double> myStaticMethod(int, int);
+    return(sum);
+  }
+
+  static std::vector<unsigned int> check(std::vector<std::string> list) {
+    std::vector<unsigned int> result;
+    MethodExample example;
+
+    for(auto &&part : list) result.push_back(example.add(part));
+
+    return(result);
+  }
+
+  unsigned int sum = 0;
 
 };
 
-```
+#include "nbind/nbind.h"
 
-Adding JavaScript bindings for it:
-
-```C++
-
-NBIND_CLASS(MyClass) {
+NBIND_CLASS(MethodExample) {
   construct<>();
 
-  method(myMethod);
-  method(myStaticMethod);
+  method(add);
+  method(check);
 }
 ```
 
-Example used from JavaScript:
+Example used from JavaScript, first calling a method in a loop from JS
+and then a static method returning an array:
+
+**[`3-methods.js`](https://raw.githubusercontent.com/charto/nbind-examples/master/3-methods.js)**
 
 ```JavaScript
+var nbind = require('nbind');
+
 var lib = nbind.init().lib;
 
-console.log(lib.MyClass.myStaticMethod(42, 54).join(' '));
+var parts = ['foo', 'bar', 'quux'];
 
-var obj = new lib.MyClass();
+var checker = new lib.MethodExample();
 
-obj.myMethod('foo');
+console.log(parts.map(function(part) {
+  return(checker.add(part));
+}));
+
+console.log(lib.MethodExample.check(parts));
+```
+
+Run the example with `node 3-methods.js` after [installing](#installing-the-examples). It prints:
+
+```
+[ 324, 633, 1100 ]
+[ 324, 633, 1100 ]
 ```
 
 Getters and setters
@@ -464,14 +550,16 @@ Both `getterName` and `setterName` are mangled individually so
 you can pair `getX` with `set_x` if you like.
 From JavaScript, `++obj.x` would then call both of them to read and change the property.
 
-For example given a C++ class:
+Example class and property with a getter and setter:
+
+**[`4-getset.cc`](https://raw.githubusercontent.com/charto/nbind-examples/master/4-getset.cc)**
 
 ```C++
-class MyClass {
+class GetSetExample {
 
 public:
 
-  void setValue(int value) { this.value = value; }
+  void setValue(int value) { this->value = value; }
   int getValue() { return(value); }
 
 private:
@@ -480,13 +568,9 @@ private:
 
 };
 
-```
+#include "nbind/nbind.h"
 
-Adding JavaScript bindings for it:
-
-```C++
-
-NBIND_CLASS(MyClass) {
+NBIND_CLASS(GetSetExample) {
   construct<>();
 
   getset(getValue, setValue);
@@ -495,14 +579,20 @@ NBIND_CLASS(MyClass) {
 
 Example used from JavaScript:
 
+**[`4-getset.js`](https://raw.githubusercontent.com/charto/nbind-examples/master/4-getset.js)**
+
 ```JavaScript
+var nbind = require('nbind');
+
 var lib = nbind.init().lib;
 
-var obj = new lib.MyClass();
+var obj = new lib.GetSetExample();
 
 console.log(obj.value++); // 42
 console.log(obj.value++); // 43
 ```
+
+Run the example with `node 4-getset.js` after [installing](#installing-the-examples).
 
 Passing data structures
 -----------------------
@@ -569,7 +659,7 @@ are automatically converted between equivalent types:
 | number     | (un)signed char, short, int, long |
 | number     | float, double                     |
 | boolean    | bool                              |
-| string     | (const) (unsigned) char *         |
+| string     | const (unsigned) char *           |
 | string     | std::string                       |
 | Array      | std::vector&lt;type&gt;           |
 | Array      | std::array&lt;type, size&gt;      |
