@@ -1,6 +1,0 @@
-{
-	"dependencies": [
-		"nbind"
-	],
-	"output": "auto.gypi"
-}

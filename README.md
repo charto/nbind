@@ -200,6 +200,7 @@ Warning: rebase is used within develop and feature branches (but not master).
 User guide
 ==========
 
+- [Running the examples](#running-the-examples)
 - [Creating your project](#creating-your-project)
 - [Configuration](#configuration)
 - [Using nbind headers](#using-nbind-headers)
@@ -216,6 +217,25 @@ User guide
 - [Using in web browsers](#using-in-web-browsers)
 - [Using with TypeScript](#using-with-typescript)
 - [Debugging](#debugging)
+
+Running the examples
+--------------------
+
+`nbind` examples shown in this user guide are also available to download
+for easier testing as follows:
+
+Extract [this zip package](https://github.com/charto/nbind-examples/archive/master.zip) or run:
+
+```bash
+git clone https://github.com/charto/nbind-examples.git
+```
+
+Enter the examples directory and install:
+
+```bash
+cd nbind-examples
+npm install
+```
 
 Creating your project
 ---------------------
