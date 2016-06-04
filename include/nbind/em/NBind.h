@@ -18,3 +18,7 @@ public:
 };
 
 } // namespace
+
+extern "C" {
+    extern void nbind_debug(void);
+}

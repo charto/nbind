@@ -16,3 +16,5 @@ public:
 };
 
 } // namespace
+
+#define nbind_debug()

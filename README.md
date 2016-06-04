@@ -740,7 +740,9 @@ type argument to get full type checking for API calls from TypeScript.
 Debugging
 ---------
 
-TODO
+In the browser it can be difficult to stop and debug at the correct spot in
+optimized C++ code. `nbind` provides an `_nbind_debug()` function in `api.h`
+that you can call from C++ to invoke the browser's debugger when using asm.js.
 
 Authors
 =======
