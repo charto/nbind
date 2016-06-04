@@ -87,11 +87,7 @@ export function getLib() {
 /** Default callback that throws any error given to it. */
 
 function rethrow(err: any, result?: any) {
-	if(err) {
-		throw(err);
-	} else {
-		return(result);
-	}
+	if(err) throw(err);
 }
 
 /** Make list of possible paths for a single compiled output file name. */
@@ -127,12 +123,12 @@ function makeModulePathList(root: string, name: string) {
 	]);
 }
 
-export type FindCallback = (err: any, result?: ModuleSpec) => void;
+export type FindCallback<ResultType> = (err: any, result?: ModuleSpec) => ResultType;
 
-function findCompiledModule(
+function findCompiledModule<ResultType>(
 	root: string,
 	specList: ModuleSpec[],
-	callback: FindCallback
+	callback: FindCallback<ResultType>
 ) {
 	const resolvedList: string[] = [];
 
@@ -166,13 +162,13 @@ function findCompiledModule(
 
 /** Find compiled C++ binary under current working directory. */
 
-export function find(cb?: FindCallback): void;
+export function find<ResultType>(cb?: FindCallback<ResultType>): ResultType;
 
 /** Find compiled C++ binary under given path. */
 
-export function find(basePath: string, cb?: FindCallback): void;
+export function find<ResultType>(basePath: string, cb?: FindCallback<ResultType>): ResultType;
 
-export function find(basePath?: any, cb?: FindCallback) {
+export function find<ResultType>(basePath?: any, cb?: FindCallback<ResultType>) {
 	let callback = arguments[arguments.length - 1];
 	if(typeof(callback) != 'function') callback = rethrow;
 
@@ -187,20 +183,20 @@ export function find(basePath?: any, cb?: FindCallback) {
 export type InitCallback<ExportType extends DefaultExportType> = (
 	err: any,
 	result?: Binding<ExportType>
-) => void;
+) => any;
 
 /** Initialize compiled C++ binary under current working directory. */
 
 export function init<ExportType extends DefaultExportType>(
 	cb?: InitCallback<ExportType>
-): void;
+): Binding<ExportType>;
 
 /** Initialize compiled C++ binary under given path. */
 
 export function init<ExportType extends DefaultExportType>(
 	basePath: string,
 	cb?: InitCallback<ExportType>
-): void;
+): Binding<ExportType>;
 
 /** Initialize compiled C++ binary under given path and merge its API to given
   * object, which may contain options for Emscripten modules. */
@@ -209,7 +205,7 @@ export function init<ExportType extends DefaultExportType>(
 	basePath: string,
 	lib: ExportType,
 	cb?: InitCallback<ExportType>
-): void;
+): Binding<ExportType>;
 
 export function init<ExportType extends DefaultExportType>(
 	basePath?: any,
@@ -228,10 +224,12 @@ export function init<ExportType extends DefaultExportType>(
 		binding.lib = (lib != callback && lib) || ({} as ExportType);
 
 		if(binary.type == 'emcc') {
-			return(initAsm(binding, callback));
+			initAsm(binding, callback);
 		} else {
-			return(initNode(binding, callback));
+			initNode(binding, callback);
 		}
+
+		return(binding);
 	}));
 }
 
@@ -248,20 +246,16 @@ function initAsm<ExportType extends DefaultExportType>(
 	};
 
 	const runtimeInitialized = lib.onRuntimeInitialized;
-	let result: void;
 
 	lib.onRuntimeInitialized = function() {
 		if(runtimeInitialized) runtimeInitialized.apply(this, arguments);
 		lib.ccall('nbind_init');
-		result = callback(null, binding);
 	};
 
 	currentBinding = binding;
 
 	// Load the Asm.js module.
 	require(binding.binary.path);
-
-	return(result);
 }
 
 /** Initialize native Node.js addon. */
@@ -274,12 +268,13 @@ function initNode<ExportType extends DefaultExportType>(
 	const lib = require(binding.binary.path);
 
 	if(!lib || typeof(lib) != 'object') {
-		return(callback(new Error('Error loading addon')));
+		callback(new Error('Error loading addon'));
+		return;
 	}
 
 	Object.keys(lib).forEach(function(key: string) {
 		binding.lib[key] = lib[key];
 	});
 
-	return(callback(null, binding));
+	callback(null, binding);
 }
