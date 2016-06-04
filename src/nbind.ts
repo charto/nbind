@@ -123,12 +123,12 @@ function makeModulePathList(root: string, name: string) {
 	]);
 }
 
-export type FindCallback<ResultType> = (err: any, result?: ModuleSpec) => ResultType;
+export type FindCallback = (err: any, result?: ModuleSpec) => any;
 
 function findCompiledModule<ResultType>(
 	root: string,
 	specList: ModuleSpec[],
-	callback: FindCallback<ResultType>
+	callback: FindCallback
 ) {
 	const resolvedList: string[] = [];
 
@@ -143,7 +143,8 @@ function findCompiledModule<ResultType>(
 				spec.path = require.resolve(resolvedPath);
 
 				// Stop if a module was found.
-				return(callback(null, spec));
+				callback(null, spec);
+				return(spec);
 			} catch(err) {
 				resolvedList.push(resolvedPath);
 			}
@@ -157,18 +158,19 @@ function findCompiledModule<ResultType>(
 
 	(err as any).tries = resolvedList;
 
-	return(callback(err));
+	callback(err);
+	return(null);
 }
 
 /** Find compiled C++ binary under current working directory. */
 
-export function find<ResultType>(cb?: FindCallback<ResultType>): ResultType;
+export function find(cb?: FindCallback): ModuleSpec;
 
 /** Find compiled C++ binary under given path. */
 
-export function find<ResultType>(basePath: string, cb?: FindCallback<ResultType>): ResultType;
+export function find(basePath: string, cb?: FindCallback): ModuleSpec;
 
-export function find<ResultType>(basePath?: any, cb?: FindCallback<ResultType>) {
+export function find(basePath?: any, cb?: FindCallback) {
 	let callback = arguments[arguments.length - 1];
 	if(typeof(callback) != 'function') callback = rethrow;
 
@@ -215,10 +217,13 @@ export function init<ExportType extends DefaultExportType>(
 	let callback = arguments[arguments.length - 1];
 	if(typeof(callback) != 'function') callback = rethrow;
 
-	return(find(basePath != callback && basePath, (err: any, binary: ModuleSpec) => {
-		if(err) return(callback(err));
+	const binding = new Binding<ExportType>();
 
-		const binding = new Binding<ExportType>();
+	find(basePath != callback && basePath, (err: any, binary: ModuleSpec) => {
+		if(err) {
+			callback(err);
+			return;
+		}
 
 		binding.binary = binary;
 		binding.lib = (lib != callback && lib) || ({} as ExportType);
@@ -228,9 +233,9 @@ export function init<ExportType extends DefaultExportType>(
 		} else {
 			initNode(binding, callback);
 		}
+	});
 
-		return(binding);
-	}));
+	return(binding);
 }
 
 /** Initialize asm.js module. */
