@@ -59,7 +59,8 @@ NBIND_CLASS(Greeter) {
   "scripts": {
     "autogypi": "autogypi",
     "node-gyp": "node-gyp",
-    "emcc-path": "emcc-path"
+    "emcc-path": "emcc-path",
+    "copyasm": "copyasm"
   }
 }</pre></td>
 </tr><tr>
@@ -691,7 +692,7 @@ TODO
 Using with TypeScript
 ---------------------
 
-There are two ways to initialize `nbind`, synchronous:
+There are two ways to initialize `nbind`, synchronous for Node.js:
 
 ```TypeScript
 import * as nbind from 'nbind';
@@ -701,7 +702,7 @@ const lib = nbind.init<any>().lib;
 // Use the library.
 ```
 
-and asynchronous-ready:
+and asynchronous for browsers and Node.js:
 
 ```TypeScript
 import * as nbind from 'nbind';
@@ -713,10 +714,11 @@ nbind.init((err: any, binding: nbind.Binding<any>) => {
 });
 ```
 
-The callback passed to init currently also gets called synchronously
-but in the future some environment might require an async call.
-To avoid releasing [zalgo](http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony)
-you can for example wrap the call in a [bluebird](http://bluebirdjs.com/docs/api/promise.promisify.html) promise:
+The callback passed to init currently gets called synchronously in Node.js
+and asynchronously in browsers. To avoid releasing
+[zalgo](http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony)
+you can for example wrap the call in a
+[bluebird](http://bluebirdjs.com/docs/api/promise.promisify.html) promise:
 
 ```TypeScript
 import * as bluebird from 'bluebird';
@@ -729,7 +731,7 @@ bluebird.promisify(nbind.init)().then((binding: nbind.Binding<any>) => {
 });
 ```
 
-Note how somewhere there is a type argument `<any>` for the init call
+Note how there is a type argument `<any>` for the init call
 in all of the examples. It specifies the contents of `binding.lib` which are
 defined in C++ code so the TypeScript compiler cannot guess them.
 
