@@ -1,6 +1,6 @@
 {
   "name": "nbind",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Magical headers that make your C++ library accessible from JavaScript",
   "main": "dist/nbind.js",
   "typings": "dist/nbind.d.ts",
@@ -9,13 +9,13 @@
     "emcc-path": "bin/emcc-path.js"
   },
   "scripts": {
+    "autogypi": "autogypi",
+    "node-gyp": "node-gyp",
+    "emcc-path": "emcc-path",
+    "copyasm": "copyasm",
     "tsc": "tsc",
     "tslint": "tslint",
     "cbuild": "cbuild",
-    "autogypi": "autogypi",
-    "emcc-path": "emcc-path",
-    "node-gyp": "node-gyp",
-
     "lint": "tslint -c src/tslint.json src/*.ts src/em/*.ts",
     "prepublish": "npm run lint && tsc -p src/em && tsc -p src && cbuild -x -v -s dist/bundle/em-api.js -o dist/em-api.js",
     "clean-asm": "cd test/em && node-gyp clean",
@@ -39,13 +39,14 @@
   ],
   "dependencies": {
     "emscripten-library-decorator": "~0.1.6",
-    "nan": "^2.3.3"
+    "mkdirp": "~0.5.1",
+    "nan": "^2.3.5"
   },
   "devDependencies": {
     "autogypi": "~0.2.1",
     "cbuild": "~0.1.1",
     "node-gyp": "~3.3.1",
-    "tap": "~5.7.1",
+    "tap": "~5.7.2",
     "tslint": "^3.10.2",
     "typescript": "^1.8.10"
   }

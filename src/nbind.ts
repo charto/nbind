@@ -10,6 +10,7 @@ interface NodeRequire {
 	(name: string): any;
 	(name: 'path'): {
 		dirname(path: string): string;
+		extname(path: string): string;
 		resolve(...paths: string[]): string;
 	};
 	resolve(name: string): string;
@@ -37,6 +38,7 @@ declare var process: {
 
 export interface ModuleSpec {
 	type: 'node' | 'emcc';
+	ext: string;
 	name: string;
 	path?: string;
 }
@@ -126,17 +128,36 @@ function makeModulePathList(root: string, name: string) {
 export type FindCallback = (err: any, result?: ModuleSpec) => any;
 
 function findCompiledModule<ResultType>(
-	root: string,
+	basePath: string,
 	specList: ModuleSpec[],
 	callback: FindCallback
 ) {
 	const resolvedList: string[] = [];
+	const ext = path.extname(basePath);
+
+	/** If basePath has a known extension, check if it's a loadable module. */
+
+	for(let spec of specList) {
+		if(ext == spec.ext) {
+			try {
+				spec.path = require.resolve(basePath);
+
+				// Stop if a module was found.
+				callback(null, spec);
+				return(spec);
+			} catch(err) {
+				resolvedList.push(basePath);
+			}
+		}
+	}
+
+	/** Try all possible subdirectories of basePath. */
 
 	for(let spec of specList) {
 		// Check if any possible path contains a loadable module,
 		// and store unsuccessful attempts.
 
-		for(let pathParts of makeModulePathList(root, spec.name)) {
+		for(let pathParts of makeModulePathList(basePath, spec.name)) {
 			const resolvedPath = path.resolve.apply(path, pathParts);
 
 			try {
@@ -176,8 +197,8 @@ export function find(basePath?: any, cb?: FindCallback) {
 
 	return(findCompiledModule(
 		(basePath != callback && basePath) || process.cwd(), [
-			{ name: 'nbind.node', type: 'node' },
-			{ name: 'nbind.js',   type: 'emcc' }
+			{ ext: '.node', name: 'nbind.node', type: 'node' },
+			{ ext: '.js',   name: 'nbind.js',   type: 'emcc' }
 		], callback
 	));
 }

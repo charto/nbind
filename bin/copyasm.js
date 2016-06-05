@@ -2,6 +2,7 @@
 
 var fs = require('fs');
 var path = require('path');
+var mkdirp = require('mkdirp');
 
 var nbind = require('../dist/nbind.js');
 
@@ -55,15 +56,22 @@ console.log([
 	'',
 	'Copying:',
 	pathList.map(function(absolutePath) {
-		return('    ' + path.relative(cwd, absolutePath)); 
+		return('    ' + path.relative(cwd, absolutePath));
 	}).join('\n'),
 	'to:',
 	'    ' + targetPath,
 	''
 ].join('\n'));
 
-pathList.forEach(function(srcPath) {
-	var dstPath = path.join(targetPath, path.basename(srcPath));
+mkdirp(targetPath, function(err) {
+	if(err) {
+		console.error(err);
+		return;
+	}
 
-	fs.createReadStream(srcPath).pipe(fs.createWriteStream(dstPath));
-});
+	pathList.forEach(function(srcPath) {
+		var dstPath = path.join(targetPath, path.basename(srcPath));
+
+		fs.createReadStream(srcPath).pipe(fs.createWriteStream(dstPath));
+	});
+})
