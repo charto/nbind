@@ -101,6 +101,9 @@ npm install && npm test
 
 See it run!
 
+(Note: [nbind-example-universal](https://github.com/charto/nbind-example-universal)
+is a better starting point for development)
+
 Requirements
 ============
 
@@ -204,13 +207,14 @@ User guide
 - [Installing the examples](#installing-the-examples)
 - [Creating your project](#creating-your-project)
 - [Configuration](#configuration)
+- [Calling from Node.js](#calling-from-nodejs)
 - [Using nbind headers](#using-nbind-headers)
 - [Classes and constructors](#classes-and-constructors)
 - [Methods and properties](#methods-and-properties)
 - [Getters and setters](#getters-and-setters)
 - [Passing data structures](#passing-data-structures)
 - [Callbacks](#callbacks)
-- [Value types](#value-types)
+- [Using objects](#using-objects)
 - [Type conversion](#type-conversion)
 - [Error handling](#error-handling)
 - [Publishing on npm](#publishing-on-npm)
@@ -259,8 +263,11 @@ just generated. Let's add an install script as well:
 
 ```json
   "scripts": {
-    "emcc-path": "emcc-path",
     "autogypi": "autogypi",
+    "node-gyp": "node-gyp",
+    "emcc-path": "emcc-path",
+    "copyasm": "copyasm",
+
     "install": "autogypi && node-gyp configure build"
   }
 ```
@@ -306,6 +313,62 @@ You pass it to `node-gyp` by calling it like `node-gyp configure build --asmjs=1
 It compiles your package using Emscripten instead of your default C++ compiler
 and produces asm.js output.
 
+Calling from Node.js
+--------------------
+
+First `nbind` needs to be initialized by calling `nbind.init` which takes
+the following optional arguments:
+
+- Base path under which to look for compiled binaries.
+  Default is `process.cwd()` and `__dirname` is a good alternative.
+- Binary code exports object. Any classes from C++ API exported using `nbind`
+  will be added as members. Default is an empty object.
+  Any existing options will be seen by asm.js code and can be used to
+  [configure Emscripten output](https://kripken.github.io/emscripten-site/docs/api_reference/module.html).
+  Must follow base path (which may be set to `null` or `undefined`).
+- Node-style callback with 2 parameters:
+  - Error if present, otherwise `null`.
+  - Binary code exports object containing C++ classes.
+
+`nbind` can be initialized synchronously on Node.js and asynchronously on
+browsers and Node.js. Purely synchronous is easier but not as future-proof:
+
+```JavaScript
+var nbind = require('nbind');
+var lib = nbind.init().lib;
+
+// Use the library.
+```
+
+Using a callback also supports asynchronous initialization:
+
+```JavaScript
+var nbind = require('nbind');
+
+nbind.init(function(err, binding) {
+  var lib = binding.lib;
+
+  // Use the library.
+});
+```
+
+The callback passed to init currently gets called synchronously in Node.js
+and asynchronously in browsers. To avoid releasing
+[zalgo](http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony)
+you can for example wrap the call in a
+[bluebird](http://bluebirdjs.com/docs/api/promise.promisify.html) promise:
+
+```JavaScript
+var bluebird = require('bluebird');
+var nbind = require('nbind');
+
+bluebird.promisify(nbind.init)().then(function(binding) {
+  var lib = binding.lib;
+
+  // Use the library.
+});
+```
+
 Using nbind headers
 -------------------
 
@@ -329,7 +392,7 @@ so when those are undefined, the include file does nothing.
 
 Use `#include "nbind/api.h"` in your header files to use types in the nbind namespace
 if you need to [report errors](#error-handling) without throwing exceptions,
-or want to pass around [callbacks](#callbacks) or [value types](#value-types).
+or want to pass around [callbacks](#callbacks) or [objects](#using-objects).
 
 You can use an `#ifdef NBIND_CLASS` guard to skip your `nbind` export definitions when the headers weren't loaded.
 
@@ -536,6 +599,10 @@ Run the example with `node 3-methods.js` after [installing](#installing-the-exam
 [ 324, 633, 1100 ]
 ```
 
+The example serves to illustrate passing data.
+In practice, such simple calculations are faster to do in JavaScript
+rather than calling across languages because copying data is quite expensive.
+
 Getters and setters
 -------------------
 
@@ -629,11 +696,24 @@ which calls a callback zero or more times and then returns, never using the call
 It's currently not possible to create a function like `setTimeout`
 which calls the callback after it has returned.
 
-Value types
------------
+Using objects
+-------------
+
+C++ objects can be passed to/from JavaScript *by reference* using pointers
+or *by value* using objects as parameters and return values in C++ code.
+
+Using pointers is particularly:
+
+- **dangerous** in native addons because they pointer may become invalid
+  without JavaScript noticing it.
+- **annoying** in asm.js because browsers give no access to the garbage collector,
+  so memory may leak when pointers become garbage without C++ noticing it.
+
+Passing data by value using *value objects* solves both issues.
 
 Value objects are perhaps the most advanced concept implemented so far.
-They're based on a `toJS` function on the C++ side and a `fromJS` function on the JavaScript side.
+They're based on a `toJS` function on the C++ side
+and a `fromJS` function on the JavaScript side.
 Both receive a callback as an argument, and calling it with any parameters
 calls the constructor of the equivalent type in the other language
 (the bindings use [SFINAE](https://en.wikipedia.org/wiki/Substitution_failure_is_not_an_error)
@@ -644,8 +724,8 @@ Value objects are passed **by value** on the C++ side to and from the exported f
 `nbind` uses C++11 move semantics to avoid creating some additional copies on the way.
 
 The equivalent JavaScript constructor must be registered on the JavaScript side
-by calling `nbind.bind('CppClassName', JSClassName);`,
-so `nbind` knows which types to translate between each other.
+by calling `nbind.bind('CppClassName', JSClassName)`
+so that `nbind` knows which types to translate between each other.
 
 TODO
 
@@ -665,7 +745,7 @@ are automatically converted between equivalent types:
 | Array      | std::vector&lt;type&gt;           |
 | Array      | std::array&lt;type, size&gt;      |
 | Function   | nbind::cbFunction<br>(only as a parameter)<br>See [callbacks](#callbacks) |
-| Instance of any prototype<br>(with a fromJS method) | Instance of any class<br>(with a toJS method)<br>See [value types](#value-types) |
+| Instance of any prototype<br>(with a fromJS method) | Instance of any class<br>(with a toJS method)<br>See [using objects](#using-objects) |
 
 Error handling
 --------------
@@ -677,22 +757,80 @@ You can use the `NBIND_ERR("message here");` macro to report an error before ret
 Publishing on npm
 -----------------
 
-TODO
+Make sure your `package.json` file has at least the required `emcc-path`
+and `install` scripts:
+
+```json
+  "scripts": {
+    "emcc-path": "emcc-path",
+
+    "install": "autogypi && node-gyp configure build"
+  }
+```
+
+The `dependencies` section should have at least:
+
+```json
+  "dependencies": {
+    "autogypi": "^0.2.2",
+	"nbind": "^0.2.1",
+    "node-gyp": "^3.3.1"
+  }
+```
+
+Your package should also include `binding.gyp` and `autogypi.json` files.
 
 Shipping an asm.js fallback
 ---------------------------
 
-TODO
+[nbind-example-universal](https://github.com/charto/nbind-example-universal)
+is a good minimal example of compiling a native Node.js addon if possible,
+and otherwise using a pre-compiled asm.js version.
+
+It has two temporary build directories `build/native` and `build/asmjs`,
+for compiling both versions. `nbind` provides a binary `copyasm`
+that can then be used to copy the compiled asm.js library
+into a nicer location for publishing inside the final npm package.
+
+Note that the native version should be compiled in the `install` script
+so it runs for all users of the package, and the asm.js version should be
+compiled in the `prepublish` script so it gets packaged in npm for usage
+without the Emscripten compiler. See the
+[example `package.json` file](https://github.com/charto/nbind-example-universal/blob/master/package.json).
 
 Using in web browsers
 ---------------------
 
-TODO
+[nbind-example-universal](https://github.com/charto/nbind-example-universal)
+is a good minimal example also of calling compiled asm.js code from inside
+web browsers. The simplest way to get `nbind` working is to add
+these scripts in your HTML code as seen in the
+[example `index.html`](https://github.com/charto/nbind-example-universal/blob/master/public/index.html):
+
+```html
+<script type="text/javascript">
+  var Module = {
+    onRuntimeInitialized: function() {
+      this.ccall('nbind_init');
+      var lib = this;
+
+      // Use the library.
+    }
+  };
+</script>
+
+<script src="nbind.js"></script>
+```
+
+Make sure to fix the path to `nbind.js` on the last line if necessary.
 
 Using with TypeScript
 ---------------------
 
-There are two ways to initialize `nbind`, synchronous for Node.js:
+First see [calling from Node.js](#calling-from-nodejs).
+Initialization using TypeScript is similar.
+
+Purely synchronous:
 
 ```TypeScript
 import * as nbind from 'nbind';
@@ -702,7 +840,7 @@ const lib = nbind.init<any>().lib;
 // Use the library.
 ```
 
-and asynchronous for browsers and Node.js:
+Asynchronous-aware:
 
 ```TypeScript
 import * as nbind from 'nbind';
@@ -714,11 +852,7 @@ nbind.init((err: any, binding: nbind.Binding<any>) => {
 });
 ```
 
-The callback passed to init currently gets called synchronously in Node.js
-and asynchronously in browsers. To avoid releasing
-[zalgo](http://blog.izs.me/post/59142742143/designing-apis-for-asynchrony)
-you can for example wrap the call in a
-[bluebird](http://bluebirdjs.com/docs/api/promise.promisify.html) promise:
+Promise-based:
 
 ```TypeScript
 import * as bluebird from 'bluebird';
