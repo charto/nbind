@@ -96,6 +96,9 @@ function rethrow(err: any, result?: any) {
 
 function makeModulePathList(root: string, name: string) {
 	return([
+		// Binary copied using copyasm
+		[ root, name ],
+
 		// node-gyp's linked version in the "build" dir
 		[ root, 'build', name ],
 
@@ -276,6 +279,7 @@ function initAsm<ExportType extends DefaultExportType>(
 	lib.onRuntimeInitialized = function() {
 		if(runtimeInitialized) runtimeInitialized.apply(this, arguments);
 		lib.ccall('nbind_init');
+		callback(null, binding);
 	};
 
 	currentBinding = binding;
