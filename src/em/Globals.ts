@@ -155,7 +155,7 @@ export namespace _nbind {
 
 		// Check if the function has been overloaded.
 
-		if(overload) {
+		if(obj.hasOwnProperty(name) && overload) {
 			if(overload.arity || overload.arity === 0) {
 				// Found an existing function, but it's not an overloader.
 				// Make a new overloader and add the existing function to it.
