@@ -165,13 +165,15 @@ function findCompiledModule<ResultType>(
 
 			try {
 				spec.path = require.resolve(resolvedPath);
-
-				// Stop if a module was found.
-				callback(null, spec);
-				return(spec);
 			} catch(err) {
 				resolvedList.push(resolvedPath);
+				continue;
 			}
+
+			// Stop if a module was found.
+
+			callback(null, spec);
+			return(spec);
 		}
 	}
 
@@ -278,7 +280,14 @@ function initAsm<ExportType extends DefaultExportType>(
 
 	lib.onRuntimeInitialized = function() {
 		if(runtimeInitialized) runtimeInitialized.apply(this, arguments);
-		lib.ccall('nbind_init');
+
+		try {
+			lib.ccall('nbind_init');
+		} catch(err) {
+			callback(err);
+			return;
+		}
+
 		callback(null, binding);
 	};
 
