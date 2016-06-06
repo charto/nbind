@@ -27,7 +27,6 @@
 #define NBIND_CLASS(Name) \
 	template<class Bound> struct BindInvoker##Name { \
 		BindInvoker##Name(); \
-		nbind::BindClass<Name> linkage; \
 		nbind::BindDefiner<Name> definer; \
 	}; \
 	static struct BindInvoker##Name<Name> bindInvoker##Name; \

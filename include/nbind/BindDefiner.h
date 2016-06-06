@@ -63,7 +63,7 @@ class BindDefiner : public BindDefinerBase {
 public:
 
 	BindDefiner(const char *name) : BindDefinerBase(name), bindClass(BindClass<Bound>::getInstance()) {
-		bindClass.setName(name);
+		bindClass.init(name);
 
 		registerClass(bindClass);
 	}

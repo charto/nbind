@@ -13,9 +13,6 @@ class BindClassBase {
 
 public:
 
-	template<typename... Args>
-	explicit BindClassBase(Args... args) : idList {args...} {}
-
 	// Get type of method definitions to use in function pointers.
 
 #if defined(BUILDING_NODE_EXTENSION)
@@ -35,7 +32,6 @@ public:
 	const TYPEID *getTypes() const { return(idList); }
 
 	const char *getName() const { return(name); }
-	void setName(const char *name) { this->name = name; }
 
 	// The explicit nonzero test silences a compiler warning in Visual Studio.
 	bool isReady() const { return((readyState & 1) != 0); }
@@ -111,7 +107,7 @@ public:
 
 protected:
 
-	const TYPEID idList[3];
+	TYPEID idList[3];
 
 	int readyState = 0;
 
@@ -141,11 +137,12 @@ template <class Bound> class BindClass : public BindClassBase {
 
 public:
 
-	BindClass() : BindClassBase(
-		Typer<Bound>::makeID(),
-		Typer<Bound *>::makeID(),
-		Typer<const Bound *>::makeID()
-	) {
+	void init(const char *name) {
+		idList[0] = Typer<Bound>::makeID();
+		idList[1] = Typer<Bound *>::makeID();
+		idList[2] = Typer<const Bound *>::makeID();
+
+		this->name = name;
 		this->deleter = reinterpret_cast<jsMethod *>(&BindClass::destroy);
 	}
 
