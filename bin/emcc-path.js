@@ -4,4 +4,4 @@
 // this directory. node-gyp make_global_settings CXX and LINK require
 // absolute paths to the compiler.
 
-process.stdout.write(require.resolve('nbind/bin/emcc'));
+process.stdout.write(require('path').resolve(__dirname, 'emcc'));
