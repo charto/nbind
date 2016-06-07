@@ -47,6 +47,8 @@ export namespace _nbind {
 
 	export var Wrapper: typeof _class.Wrapper;
 	export var BindClass: typeof _class.BindClass;
+	export var BindClassPtr: typeof _class.BindClassPtr;
+	export var ptrMarker: typeof _class.ptrMarker;
 
 	export var CallbackType: typeof _callback.CallbackType;
 	export var unregisterCallback: typeof _callback.unregisterCallback;
@@ -170,7 +172,7 @@ class nbind { // tslint:disable-line:class-name
 		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 3);
 
 		class Bound extends _nbind.Wrapper {
-			constructor() {
+			constructor(marker: {}, ptr: number) {
 				// super() never gets called here but TypeScript 1.8 requires it.
 				if((false && super()) || !(this instanceof Bound)) {
 
@@ -188,7 +190,10 @@ class nbind { // tslint:disable-line:class-name
 
 				super();
 
-				_defineHidden(this.__nbindConstructor.apply(this, arguments))(this, '__nbindPtr');
+				_defineHidden(
+					marker === _nbind.ptrMarker ? ptr :
+					this.__nbindConstructor.apply(this, arguments)
+				)(this, '__nbindPtr');
 			}
 
 			@_defineHidden()
@@ -201,8 +206,8 @@ class nbind { // tslint:disable-line:class-name
 		/* tslint:disable:no-unused-expression */
 
 		new _nbind.BindClass(idList[0], name, Bound);
-		new _nbind.BindType(idList[1], name + ' *');
-		new _nbind.BindType(idList[2], 'const ' + name + ' *');
+		new _nbind.BindClassPtr(idList[1], name + ' *', Bound);
+		new _nbind.BindClassPtr(idList[2], 'const ' + name + ' *', Bound);
 
 		/* tslint:enable:no-unused-expression */
 
@@ -221,6 +226,11 @@ class nbind { // tslint:disable-line:class-name
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 		const proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
+		// The constructor returns a pointer to the new object.
+		// It fits in uint32_t.
+
+		typeList[0] = 'uint32_t';
+
 		_nbind.addMethod(
 			proto,
 			'__nbindConstructor',
@@ -229,7 +239,7 @@ class nbind { // tslint:disable-line:class-name
 		);
 
 		// First argument is a pointer to the C++ object to construct in place.
-		// It fits in an unsigned int...
+		// It fits in uint32_t.
 
 		typeList.splice(0, 1, 'void', 'uint32_t');
 

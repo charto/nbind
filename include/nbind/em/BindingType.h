@@ -38,6 +38,8 @@ THE SOFTWARE.
 
 namespace nbind {
 
+// Generic C++ object.
+
 template <typename ArgType> struct BindingType {
 
 	typedef ArgType Type;
@@ -50,6 +52,25 @@ template <typename ArgType> struct BindingType {
 	static inline Type fromWireType(WireType arg);
 
 	static inline WireType toWireType(Type arg);
+
+};
+
+// Object pointer.
+
+template <typename ArgType>
+struct BindingType<ArgType *> {
+
+	typedef ArgType *type;
+
+	typedef ArgType *WireType;
+
+	static inline bool checkType(WireType arg) {
+		// TODO
+		return(true);
+	}
+
+	static inline type fromWireType(WireType arg) { return(arg); }
+	static inline WireType toWireType(type arg) { return(arg); }
 
 };
 

@@ -68,6 +68,33 @@ export namespace _nbind {
 		proto: WrapperClass;
 	}
 
+	export var ptrMarker = {};
+
+	export function popPointer(ptr: number, type: BindClassPtr) {
+		if(ptr === 0) return(null);
+
+		return(new type.proto(ptrMarker, ptr));
+	}
+
+	export function pushPointer(obj: any, type: BindClassPtr) {
+		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
+
+		return(obj.__nbindPtr);
+	}
+
+	export class BindClassPtr extends BindType {
+		constructor(id: number, name: string, proto: WrapperClass) {
+			super(id, name);
+
+			this.proto = proto;
+		}
+
+		wireRead = (arg: number) => popPointer(arg, this);
+		wireWrite = (arg: any) => pushPointer(arg, this);
+
+		proto: WrapperClass;
+	}
+
 	@prepareNamespace('_nbind')
 	export class _ {} // tslint:disable-line:class-name
 }
