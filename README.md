@@ -699,35 +699,158 @@ which calls the callback after it has returned.
 Using objects
 -------------
 
-C++ objects can be passed to/from JavaScript *by reference* using pointers
+C++ objects can be passed to and from JavaScript *by reference* using pointers
 or *by value* using objects as parameters and return values in C++ code.
+
+Note: currently passing objects by pointer on Node.js requires the class
+to have a "copy constructor" initializing itself from a pointer.
+This will probably be fixed later.
 
 Using pointers is particularly:
 
-- **dangerous** in native addons because they pointer may become invalid
+- **dangerous** because the pointer may become invalid
   without JavaScript noticing it.
 - **annoying** in asm.js because browsers give no access to the garbage collector,
   so memory may leak when pointers become garbage without C++ noticing it.
+  Smart pointers are not supported until a workaround for this comes up.
 
 Passing data by value using *value objects* solves both issues.
-
-Value objects are perhaps the most advanced concept implemented so far.
 They're based on a `toJS` function on the C++ side
 and a `fromJS` function on the JavaScript side.
 Both receive a callback as an argument, and calling it with any parameters
-calls the constructor of the equivalent type in the other language
-(the bindings use [SFINAE](https://en.wikipedia.org/wiki/Substitution_failure_is_not_an_error)
-to detect the toJS function and turn the class into a value type).
+calls the constructor of the equivalent type in the other language.
 
 The callback on the C++ side is of type `nbind::cbOutput`.
-Value objects are passed **by value** on the C++ side to and from the exported function.
+Value objects are passed through the C++ stack to and from the exported function.
 `nbind` uses C++11 move semantics to avoid creating some additional copies on the way.
 
 The equivalent JavaScript constructor must be registered on the JavaScript side
-by calling `nbind.bind('CppClassName', JSClassName)`
+by calling `binding.bind('CppClassName', JSClassName)`
 so that `nbind` knows which types to translate between each other.
 
-TODO
+Example with a class `Coord` used as a value object, and a class
+`ObjectExample` which uses objects passed by values and references:
+
+**[`5-objects.cc`](https://raw.githubusercontent.com/charto/nbind-examples/master/5-objects.cc)**
+
+```C++
+#include <iostream>
+
+#include "nbind/api.h"
+
+class Coord {
+
+public:
+
+  Coord(signed int x = 0, signed int y = 0) : x(x), y(y) {}
+  explicit Coord(const Coord *other) : x(other->x), y(other->y) {}
+
+  void toJS(nbind::cbOutput output) {
+    output(x, y);
+  }
+
+  signed int getX() { std::cout << "Get X\n"; return(x); }
+  signed int getY() { std::cout << "Get Y\n"; return(y); }
+
+  void setX(signed int x) { this->x = x; }
+  void setY(signed int y) { this->y = y; }
+
+  signed int x, y;
+
+};
+
+class ObjectExample {
+
+public:
+
+  static void showByValue(Coord coord) {
+    std::cout << "C++ value " << coord.x << ", " << coord.y << "\n";
+  }
+
+  static void showByRef(Coord *coord) {
+    std::cout << "C++ ref " << coord->x << ", " << coord->y << "\n";
+  }
+
+  static Coord getValue() {
+    return(Coord(12, 34));
+  }
+
+  static Coord *getRef() {
+    static Coord coord(56, 78);
+    return(&coord);
+  }
+
+};
+
+#include "nbind/nbind.h"
+
+NBIND_CLASS(Coord) {
+  construct<>();
+  construct<const Coord *>();
+  construct<signed int, signed int>();
+
+  getset(getX, setX);
+  getset(getY, setY);
+}
+
+NBIND_CLASS(ObjectExample) {
+  method(showByValue);
+  method(showByRef);
+  method(getValue);
+  method(getRef);
+}
+```
+
+Example used from JavaScript:
+
+**[`5-objects.js`](https://raw.githubusercontent.com/charto/nbind-examples/master/5-objects.js)**
+
+```JavaScript
+var nbind = require('nbind');
+
+var binding = nbind.init();
+var lib = binding.lib;
+
+function Coord(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+Coord.prototype.fromJS = function(output) {
+  output(this.x, this.y);
+}
+
+Coord.prototype.show = function() {
+  console.log('JS value ' + this.x + ', ' + this.y);
+}
+
+binding.bind('Coord', Coord);
+
+var value1 = new Coord(123, 456);
+var value2 = lib.ObjectExample.getValue();
+var ref = lib.ObjectExample.getRef();
+
+lib.ObjectExample.showByValue(value1);
+lib.ObjectExample.showByValue(value2);
+value1.show();
+value2.show();
+
+lib.ObjectExample.showByRef(ref);
+console.log('JS ref ' + ref.x + ', ' + ref.y);
+```
+
+Run the example with `node 5-objects.js` after [installing](#installing-the-examples). It prints:
+
+```
+C++ value 123, 456
+C++ value 12, 34
+JS value 123, 456
+JS value 12, 34
+C++ ref 56, 78
+Get X
+Get Y
+JS ref 56, 78
+```
 
 Type conversion
 ---------------
