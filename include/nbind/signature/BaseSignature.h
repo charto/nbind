@@ -179,9 +179,8 @@ public:
 		if(!arityIsValid(nanArgs)) {
 			// TODO: When function is overloaded, this test could be skipped...
 
-			char buffer [40];
-			sprintf (buffer, "Wrong number of arguments, expected %d", (sizeof...(Args)));
-			Nan::ThrowError(buffer);
+			std::string msg = "Wrong number of arguments, expected " + std::to_string(sizeof...(Args));
+			Nan::ThrowError(msg.c_str());
 			return;
 		}
 
