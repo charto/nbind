@@ -4,3 +4,6 @@ dist/
 *.log.*
 *.log
 *.tgz
+
+test/auto-top.gypi
+
