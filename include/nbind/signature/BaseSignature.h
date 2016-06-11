@@ -178,7 +178,9 @@ public:
 
 		if(!arityIsValid(nanArgs)) {
 			// TODO: When function is overloaded, this test could be skipped...
-			Nan::ThrowError("Wrong number of arguments");
+
+			std::string msg = "Wrong number of arguments, expected " + std::to_string(sizeof...(Args));
+			Nan::ThrowError(msg.c_str());
 			return;
 		}
 

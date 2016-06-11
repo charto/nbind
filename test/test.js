@@ -202,3 +202,17 @@ test('Arrays', function(t) {
 
 	t.end();
 });
+
+
+test('Arguments checks', function(t) {
+	t.throws(
+		function() {
+			testModule.PrimitiveMethods.incrementIntStatic(42, null);
+		},
+		new Error('Wrong number of arguments, expected 1')
+	);
+
+	t.end();
+});
+
+

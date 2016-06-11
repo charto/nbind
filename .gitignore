@@ -4,3 +4,6 @@ dist/
 *.log.*
 *.log
 *.tgz
+
+auto*.gypi
+
