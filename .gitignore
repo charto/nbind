@@ -5,5 +5,5 @@ dist/
 *.log
 *.tgz
 
-test/auto-top.gypi
+auto*.gypi
 
