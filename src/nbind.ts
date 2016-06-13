@@ -64,26 +64,11 @@ export interface DefaultExportType {
 export class Binding<ExportType extends DefaultExportType> {
 	/** Bind a value type (class with a fromJS method) to an equivalent C++ type. */
 
-	bind(name: string, proto: ClassType ) {
-		if(this.lib._nbind_value) { // emcc
-			this.lib._nbind_value(name, proto);
-		} else if(this.lib.NBind) {
-			this.lib.NBind.bind_value(name, proto);
-		}
-	}
+	bind: (name: string, proto: ClassType ) => void;
 
 	binary: ModuleSpec;
 	/** Exported API of a C++ library compiled for nbind. */
 	lib: ExportType;
-}
-
-/** Binding currently being initialized. */
-let currentBinding: Binding<any>;
-
-/** Called from asm.js during init to get current module. @ignore internal use. */
-
-export function getLib() {
-	return(currentBinding.lib);
 }
 
 /** Default callback that throws any error given to it. */
@@ -276,25 +261,12 @@ function initAsm<ExportType extends DefaultExportType>(
 		return(path.resolve(path.dirname(binding.binary.path), name));
 	};
 
-	const runtimeInitialized = lib.onRuntimeInitialized;
-
-	lib.onRuntimeInitialized = function() {
-		if(runtimeInitialized) runtimeInitialized.apply(this, arguments);
-
-		try {
-			lib.ccall('nbind_init');
-		} catch(err) {
-			callback(err);
-			return;
-		}
-
-		callback(null, binding);
-	};
-
-	currentBinding = binding;
-
 	// Load the Asm.js module.
-	require(binding.binary.path);
+	require(binding.binary.path)(lib, (err: any, parts: Binding<ExportType>) => {
+		binding.bind = parts.bind;
+
+		callback(err, binding);
+	});
 }
 
 /** Initialize native Node.js addon. */
@@ -310,6 +282,8 @@ function initNode<ExportType extends DefaultExportType>(
 		callback(new Error('Error loading addon'));
 		return;
 	}
+
+	binding.bind = lib.NBind.bind_value;
 
 	Object.keys(lib).forEach(function(key: string) {
 		binding.lib[key] = lib[key];

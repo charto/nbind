@@ -1,1 +1,40 @@
-if(typeof(process)=='object' && typeof(process.versions)=='object' && process.versions.node) var Module = require('nbind').getLib();
+// This file is a public domain UMD wrapper for nbind asm.js output.
+// Returns a wrapper function with parameters:
+//   - Initial asm.js module object, use {} or pass additional options.
+//   - Node.js style callback, fires on error or when nbind is ready for use.
+
+// Export wrapper function for different module loaders.
+(function(root, wrapper) {
+	// AMD.
+	if(typeof(define) === 'function' && define.amd) define([], function() { return(wrapper); });
+	// Node.js style CommonJS.
+	else if(typeof(module) === 'object' && module.exports) module.exports = wrapper;
+	// Browser global.
+	else root.nbindModule = wrapper;
+
+// Define wrapper function, the main export from this module.
+}(this, function(Module, cb) {
+	// Set up nbind in asm.js runtime ready hook.
+	Module.onRuntimeInitialized = (function(init, cb) {
+		return(function() {
+			// Call any previous runtime ready hook.
+			if(init) init.apply(this, arguments);
+
+			try {
+				// Init the C++ side.
+				Module.ccall('nbind_init');
+			} catch(err) {
+				// Report failure.
+				cb(err);
+				return;
+			}
+
+			// Report success through callback passed to wrapper function.
+			cb(null, {
+				bind: Module._nbind_value,
+				lib: Module
+			});
+		});
+	})(Module.onRuntimeInitialized, cb);
+
+	// Emscripten-generated asm.js code begins.
