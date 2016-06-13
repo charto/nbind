@@ -950,7 +950,7 @@ these scripts in your HTML code as seen in the
 <script src="nbind.js"></script>
 
 <script type="text/javascript">
-  nbind_init(function(err, binding) {
+  nbind.init(function(err, binding) {
     var lib = binding.lib;
 
     // Use the library.

@@ -10,7 +10,7 @@
 	// Node.js style CommonJS.
 	else if(typeof(module) == 'object' && module.exports) module.exports = wrapper;
 	// Browser global.
-	else root.nbind_init = wrapper;
+	else (root.nbind = root.nbind || {}).init = wrapper;
 
 // Define wrapper function, the main export from this module.
 }(this, function(Module, cb) {
