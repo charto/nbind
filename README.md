@@ -195,11 +195,27 @@ Breaking changes will be listed in release notes of versions where `y` equals `0
 Contributing
 ============
 
-Pull requests are very welcome.
-When developing new features, writing tests first works best.
 Please report issues through Github.
+Pull requests are very welcome.
 
 Warning: rebase is used within develop and feature branches (but not master).
+
+When developing new features, writing tests first works best.
+If possible, please try to get them working on both Node.js and asm.js.
+Otherwise your pull request will get merged to Master only after
+maintainer(s) have fixed the other platform.
+
+Installing Emscripten to develop for asm.js can be tricky. It will require
+Python 2.7 and setting paths correctly, please refer to
+[Emscripten documentation](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html).
+The `bin/emcc` script in this package is just a wrapper,
+the actual `emcc` compiler binary should be in your path.
+
+You can rebuild the asm.js library and run tests as follows:
+
+```bash
+npm run clean-asm && npm run prepublish && npm run test-asm
+```
 
 User guide
 ==========
