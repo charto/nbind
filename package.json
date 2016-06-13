@@ -1,6 +1,6 @@
 {
   "name": "nbind",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Magical headers that make your C++ library accessible from JavaScript",
   "main": "dist/nbind.js",
   "typings": "dist/nbind.d.ts",
