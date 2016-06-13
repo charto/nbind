@@ -931,18 +931,15 @@ these scripts in your HTML code as seen in the
 [example `index.html`](https://github.com/charto/nbind-example-universal/blob/master/public/index.html):
 
 ```html
-<script type="text/javascript">
-  var Module = {
-    onRuntimeInitialized: function() {
-      this.ccall('nbind_init');
-      var lib = this;
-
-      // Use the library.
-    }
-  };
-</script>
-
 <script src="nbind.js"></script>
+
+<script type="text/javascript">
+  nbind_init(function(err, binding) {
+    var lib = binding.lib;
+
+    // Use the library.
+  });
+</script>
 ```
 
 Make sure to fix the path to `nbind.js` on the last line if necessary.
