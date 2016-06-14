@@ -273,9 +273,16 @@ class nbind { // tslint:disable-line:class-name
 	) {
 		const name = _readAsciiString(namePtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
+		let target: any;
+
+		if(typeID) {
+			target = (_nbind.typeList[typeID] as _class.BindClass).proto;
+		} else {
+			target = Module;
+		}
 
 		_nbind.addMethod(
-			(_nbind.typeList[typeID] as _class.BindClass).proto as any,
+			target,
 			name,
 			_nbind.makeCaller(ptr, num, direct, typeList),
 			typeCount - 1

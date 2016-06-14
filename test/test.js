@@ -92,6 +92,13 @@ test('Constructors and destructors', function(t) {
 	t.end();
 });
 
+test('Functions', function(t) {
+	t.strictEqual(testModule.incrementInt(1), 2);
+	t.strictEqual(testModule.decrementInt(2), 1);
+
+	t.end();
+});
+
 test('Getters and setters', function(t) {
 	var Type = testModule.GetterSetter;
 	var obj = new Type();

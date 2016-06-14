@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 #pragma once
@@ -6,6 +6,7 @@
 #if defined(BUILDING_NODE_EXTENSION) || defined(EMSCRIPTEN)
 
 #include "BindDefiner.h"
+#include "FunctionDefiner.h"
 
 // Support overloading macros by number of arguments.
 // See http://stackoverflow.com/a/16683147/16509
@@ -22,6 +23,12 @@
 #define VA_SELECT_HELPER(name, argc) VA_CONCAT(name ## _, argc)
 #define VA_SELECT(name, ...) VA_SELECT_HELPER(name, VA_EXPAND(VA_SIZE(__VA_ARGS__)))(__VA_ARGS__)
 
+#define NBIND_UNIQUE(name, line) VA_CONCAT(name, line)
+
+#define NBIND_GLOBAL() namespace
+
+#define function(name) nbind::FunctionDefiner NBIND_UNIQUE(definer, __LINE__)(#name, &name)
+
 // Define bindings for a C++ class using a syntax that looks like a function definition.
 
 #define NBIND_CLASS(Name) \
@@ -35,8 +42,8 @@
 // Define a method passing its name, and optionally the original C++ method name
 // if the name visible to JavaScript should be different.
 
-#define method_1(name) definer.function(#name, &Bound::name)
-#define method_2(name, boundName) definer.function(#name, &Bound::boundName)
+#define method_1(name) definer.method(#name, &Bound::name)
+#define method_2(name, boundName) definer.method(#name, &Bound::boundName)
 #define method(...) VA_SELECT(method, __VA_ARGS__)
 
 // Define a constructor.

@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 #ifdef EMSCRIPTEN
@@ -127,7 +127,8 @@ static void initModule() {
 
 	_nbind_register_type(Typer<cbFunction &>::makeID(), "cbFunction &");
 
-	// Register all classes before any functions, so they'll have type information ready.
+	// Register all classes before any functions or methods,
+	// so they'll have class type IDs available.
 
 	for(auto *bindClass : getClassList()) {
 		// Avoid registering the same class twice.
@@ -148,6 +149,22 @@ static void initModule() {
 	);
 
 	// Register all functions.
+
+	for(auto &func : getFunctionList()) {
+		const BaseSignature *signature = func.getSignature();
+
+		_nbind_register_function(
+			0,
+			signature->getTypeList(),
+			signature->getArity() + 1,
+			signature->getCaller(),
+			func.getName(),
+			func.getNum(),
+			func.getPtr()
+		);
+	}
+
+	// Register all methods.
 
 	for(auto *bindClass : getClassList()) {
 		if(bindClass->isDuplicate()) continue;

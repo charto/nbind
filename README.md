@@ -225,6 +225,7 @@ User guide
 - [Configuration](#configuration)
 - [Calling from Node.js](#calling-from-nodejs)
 - [Using nbind headers](#using-nbind-headers)
+- [Functions](#functions)
 - [Classes and constructors](#classes-and-constructors)
 - [Methods and properties](#methods-and-properties)
 - [Getters and setters](#getters-and-setters)
@@ -465,10 +466,52 @@ Run the example with `node 1-headers.js` after [installing](#installing-the-exam
 JS says: sum = 6
 ```
 
+Functions
+---------
+
+Functions not belonging to any class are exported inside an `NBIND_GLOBAL` block
+with a macro call `function(functionName);` which takes the name of the method as an argument
+(without any quotation marks). The C++ method gets exported to JavaScript with the same name.
+
+Note: you cannot put several `function(...);` calls on the same line!
+Otherwise you'll get an error about redefining a symbol.
+
+Example:
+
+**[`6-functions.cc`](https://raw.githubusercontent.com/charto/nbind-examples/master/2-functions.cc)**
+
+```C++
+#include <iostream>
+
+void sayHello(std::string name) {
+  std::cout << "Hello, " << name << "!\n";
+}
+
+#include "nbind/nbind.h"
+
+NBIND_GLOBAL() {
+  function(sayHello);
+}
+```
+
+Example used from JavaScript:
+
+**[`6-functions.js`](https://raw.githubusercontent.com/charto/nbind-examples/master/6-functions.js)**
+
+```JavaScript
+var nbind = require('nbind');
+var lib = nbind.init().lib;
+
+lib.sayHello('you');
+```
+
 Classes and constructors
 ------------------------
 
-The `NBIND_CLASS(className)` macro takes the name of your C++ class as an argument (without any quotation marks), and exports it to JavaScript using the same name. It's followed by a curly brace enclosed block of method exports, as if it was a function definition.
+The `NBIND_CLASS(className)` macro takes the name of your C++ class as an argument
+(without any quotation marks), and exports it to JavaScript using the same name.
+It's followed by a curly brace enclosed block of method exports,
+as if it was a function definition.
 
 Constructors are exported with a macro call `construct<types...>();` where `types` is a comma-separated list of arguments to the constructor, such as `int, int`. Calling `construct` multiple times allows overloading it, but **each overload must have a different number of arguments**.
 

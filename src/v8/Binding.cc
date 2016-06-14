@@ -55,6 +55,22 @@ static void initModule(Handle<Object> exports) {
 
 	Local<FunctionTemplate> nBindTemplate;
 
+	for(auto &func : getFunctionList()) {
+		const BaseSignature *signature = func.getSignature();
+
+		Local<FunctionTemplate> functionTemplate = Nan::New<FunctionTemplate>(
+			reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
+			Nan::New<Number>(func.getNum())
+		);
+
+		Local<v8::Function> jsFunction = functionTemplate->GetFunction();
+
+		exports->Set(
+			Nan::New<String>(func.getName()).ToLocalChecked(),
+			jsFunction
+		);
+	}
+
 	for(auto *bindClass : getClassList()) {
 		// Avoid registering the same class twice.
 		if(bindClass->isReady()) continue;

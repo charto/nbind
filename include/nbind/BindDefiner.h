@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 #pragma once
@@ -104,7 +104,7 @@ public:
 	}
 
 	template<typename ReturnType, typename... Args, typename... Policies>
-	BindDefiner &function(
+	BindDefiner &method(
 		const char* name,
 		ReturnType(*func)(Args...),
 		Policies...
@@ -115,7 +115,7 @@ public:
 	}
 
 	template<typename MethodType, typename... Policies>
-	BindDefiner &function(
+	BindDefiner &method(
 		const char* name,
 		MethodType method,
 		Policies...

@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 #pragma once
@@ -6,7 +6,14 @@
 namespace nbind {
 
 std::forward_list<BindClassBase *> &getClassList(void);
+std::forward_list<MethodDef> &getFunctionList(void);
 
 void registerClass(BindClassBase &bindClass);
+void registerFunction(
+	const char *name,
+	funcPtr ptr,
+	unsigned int num,
+	BaseSignature *signature
+);
 
 } // namespace

@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 #include "nbind/BindDefiner.h"
@@ -20,13 +20,31 @@ void NBind :: bind_value(const char *name, cbFunction &func) {
 	}
 }
 
-// Linkage for a list of all C++ class wrappers.
+// Linkage for lists of all C++ class and function wrappers.
 
 std::forward_list<BindClassBase *> &nbind :: getClassList() {
+	// This stops working if moved outside the function.
 	static std::forward_list<BindClassBase *> classList;
+
 	return(classList);
 }
 
-void nbind :: registerClass(BindClassBase &bindClass) {
-	getClassList().emplace_front(&bindClass);
+std::forward_list<MethodDef> &nbind :: getFunctionList() {
+	// This stops working if moved outside the function.
+	static std::forward_list<MethodDef> functionList;
+
+	return(functionList);
+}
+
+void nbind :: registerClass(BindClassBase &spec) {
+	getClassList().emplace_front(&spec);
+}
+
+void nbind :: registerFunction(
+	const char *name,
+	funcPtr ptr,
+	unsigned int num,
+	BaseSignature *signature
+) {
+	getFunctionList().emplace_front(name, ptr, num, signature);
 }
