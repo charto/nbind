@@ -469,16 +469,17 @@ JS says: sum = 6
 Functions
 ---------
 
-Functions not belonging to any class are exported inside an `NBIND_GLOBAL` block
-with a macro call `function(functionName);` which takes the name of the method as an argument
-(without any quotation marks). The C++ method gets exported to JavaScript with the same name.
+Functions not belonging to any class are exported inside an `NBIND_GLOBAL`
+block with a macro call `function(functionName);` which takes the name of
+the function as an argument (without any quotation marks).
+The C++ function gets exported to JavaScript with the same name.
 
 Note: you cannot put several `function(...);` calls on the same line!
 Otherwise you'll get an error about redefining a symbol.
 
 Example:
 
-**[`6-functions.cc`](https://raw.githubusercontent.com/charto/nbind-examples/master/2-functions.cc)**
+**[`6-functions.cc`](https://raw.githubusercontent.com/charto/nbind-examples/master/6-functions.cc)**
 
 ```C++
 #include <iostream>

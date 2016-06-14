@@ -45,30 +45,21 @@ namespace nbind {
 extern const char *emptyGetter;
 extern const char *emptySetter;
 
-// BindDefiner is a helper class to make class definition syntax match embind.
-
-class BindDefinerBase {
-
-protected:
-
-	BindDefinerBase(const char *name) : name(name) {}
-
-	const char *name;
-
-};
+// BindDefiner is a helper class to allow making
+// class definition syntax match embind.
 
 template <class Bound>
-class BindDefiner : public BindDefinerBase {
+class BindDefiner {
 
 public:
 
-	BindDefiner(const char *name) : BindDefinerBase(name), bindClass(BindClass<Bound>::getInstance()) {
+	BindDefiner(const char *name) : bindClass(BindClass<Bound>::getInstance()) {
 		bindClass.init(name);
 
 		registerClass(bindClass);
 	}
 
-	template<class Signature, typename MethodType>
+	template <class Signature, typename MethodType>
 	void addMethod(const char *name, MethodType method) {
 		bindClass.addMethod(
 			name,
@@ -78,23 +69,29 @@ public:
 		);
 	}
 
-	template<template <typename, class, typename, typename...> class Signature, typename ReturnType, typename... Args>
-	void addMethodMaybeConst(
+	template <
+		template <typename, class, typename, typename...> class Signature,
+		typename ReturnType,
+		typename... Args
+	> void addMethodMaybeConst(
 		const char* name,
 		ReturnType(Bound::*method)(Args...)
 	) {
 		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, method);
 	}
 
-	template<template <typename, class, typename, typename...> class Signature, typename ReturnType, typename... Args>
-	void addMethodMaybeConst(
+	template <
+		template <typename, class, typename, typename...> class Signature,
+		typename ReturnType,
+		typename... Args
+	> void addMethodMaybeConst(
 		const char* name,
 		ReturnType(Bound::*method)(Args...) const
 	) {
 		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, method);
 	}
 
-	template<typename... Args, typename... Policies>
+	template <typename... Args, typename... Policies>
 	BindDefiner &constructor(Policies...) {
 		typedef ConstructorSignature<Bound, Args...> Signature;
 
@@ -103,18 +100,18 @@ public:
 		return(*this);
 	}
 
-	template<typename ReturnType, typename... Args, typename... Policies>
+	template <typename ReturnType, typename... Args, typename... Policies>
 	BindDefiner &method(
 		const char* name,
 		ReturnType(*func)(Args...),
 		Policies...
 	) {
-		addMethod<FunctionSignature<decltype(func), Bound, ReturnType, Args...>>(name, func);
+		addMethod<FunctionSignature<decltype(func), std::nullptr_t, ReturnType, Args...>>(name, func);
 
 		return(*this);
 	}
 
-	template<typename MethodType, typename... Policies>
+	template <typename MethodType, typename... Policies>
 	BindDefiner &method(
 		const char* name,
 		MethodType method,
@@ -125,7 +122,7 @@ public:
 		return(*this);
 	}
 
-	template<typename GetterType, typename... Policies>
+	template <typename GetterType, typename... Policies>
 	BindDefiner &property(
 		const char* name,
 		GetterType getter,
@@ -137,7 +134,7 @@ public:
 		return(*this);
 	}
 
-	template<typename GetterType, typename SetterType, typename... Policies>
+	template <typename GetterType, typename SetterType, typename... Policies>
 	BindDefiner &property(
 		const char* name,
 		GetterType getter,
