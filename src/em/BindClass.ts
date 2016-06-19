@@ -16,6 +16,7 @@ export namespace _nbind {
 export namespace _nbind {
 
 	export var pushValue: typeof _value.pushValue;
+	export var popValue: typeof _value.popValue;
 
 	// Base class for wrapped instances of bound C++ classes.
 
@@ -51,13 +52,8 @@ export namespace _nbind {
 			this.proto = proto;
 		}
 
-		makeWireRead = (expr: string) => ('(' +
-			expr + '||' +
-			'_nbind.throwError("Value type JavaScript class is missing or not registered"),' +
-			'_nbind.value' +
-		')');
-
-		wireWrite = _nbind.pushValue;
+		wireRead = popValue;
+		wireWrite = pushValue;
 
 		// Optional type conversion code
 		// makeWireWrite = (expr: string) => '_nbind.pushValue(' + expr + ')';

@@ -28,6 +28,7 @@ export namespace _nbind {
 
 export namespace _nbind {
 
+	export var throwError: typeof _globals.throwError;
 	export var typeTbl: typeof _globals.typeTbl;
 
 	export interface ValueObject {
@@ -37,8 +38,10 @@ export namespace _nbind {
 		__nbindValueConstructor?: _globals.Func;
 	}
 
-	export var valueList: ValueObject[] = [];
+	/** Storage for value objects. Slot 0 is reserved to represent errors. */
+	export var valueList: ValueObject[] = [ null ];
 
+	/** List of free slots in value object storage. */
 	export var valueFreeList: number[] = [];
 
 	export function pushValue(value: ValueObject) {
@@ -49,6 +52,8 @@ export namespace _nbind {
 	}
 
 	export function popValue(num: number) {
+		if(!num) throwError('Value type JavaScript class is missing or not registered');
+
 		const obj = valueList[num];
 
 		valueList[num] = null;
@@ -63,7 +68,15 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		makeWireWrite = (expr: string) => '((_nbind.value=new ' + expr + '),0)';
+		makeWireWrite = (expr: string) => '(_nbind.pushValue(new ' + expr + '))';
+	}
+
+	export class Int64Type extends BindType {
+		constructor(id: number, name: string) {
+			super(id, name);
+		}
+
+		wireRead = popValue;
 	}
 
 	@prepareNamespace('_nbind')

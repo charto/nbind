@@ -1,7 +1,7 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-#include "nbind/BindDefiner.h"
+#include "nbind/nbind.h"
 
 using namespace nbind;
 
@@ -48,3 +48,7 @@ void nbind :: registerFunction(
 ) {
 	getFunctionList().emplace_front(name, ptr, num, signature);
 }
+
+#include "nbind/nbind.h"
+
+NBIND_CLASS(Int64) {}

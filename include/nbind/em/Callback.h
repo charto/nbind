@@ -45,7 +45,7 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	ReturnType call(Args... args) {
+	typename BindingType<ReturnType>::Type call(Args... args) {
 		// Restore linear allocator state in RAII style when done.
 		PoolRestore restore;
 
@@ -64,30 +64,33 @@ public:
 
 	struct CreateValue {};
 
-	cbOutput(cbFunction &jsConstructor) :
-		jsConstructor(jsConstructor) {}
+	explicit cbOutput(cbFunction &jsConstructor) :
+		jsConstructor(jsConstructor), original(*this) {}
 
-	// This overload is identical to cbFunction.
+	cbOutput(const cbOutput &other) :
+		jsConstructor(other.jsConstructor), original(other.original) {}
+
+	cbOutput &operator=(const cbOutput &) = delete;
+
 	template<typename... Args>
-	void operator()(Args&&... args) {
-		call<void>(args...);
+	inline int operator()(Args&&... args) {
+		original.slot = jsConstructor.call<CreateValue>(args...);
+
+		return(original.slot);
 	}
 
-	template <typename ReturnType, typename... Args>
-	void call(Args... args) {
-		jsConstructor.call<CreateValue>(args...);
-	}
+	int getSlot() { return(original.slot); }
 
 private:
 
 	cbFunction &jsConstructor;
+	cbOutput &original;
+	int slot = 0;
 
 };
 
 template<typename... Args>
 double cbFunction::callDouble(unsigned int num, Args... args) {
-	// NOTE: EM_ASM_DOUBLE may have a bug: https://github.com/kripken/emscripten/issues/3770
-
 	return(EM_ASM_DOUBLE({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 		CallbackSignature<double, Args...>::getInstance().getNum(),
 		num,
@@ -140,15 +143,12 @@ template<> struct cbFunction::Caller<float> {
 template<> struct cbFunction::Caller<cbOutput::CreateValue> {
 
 	template <typename... Args>
-	static cbOutput::CreateValue call(unsigned int num, Args... args) {
-		EM_ASM_ARGS({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
+	static int call(unsigned int num, Args... args) {
+		return(EM_ASM_ARGS({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 			CallbackSignature<cbOutput::CreateValue, Args...>::getInstance().getNum(),
 			num,
 			BindingType<Args>::toWireType(args)...
-		);
-
-		// Return empty dummy value.
-		return(cbOutput::CreateValue());
+		));
 	}
 
 };

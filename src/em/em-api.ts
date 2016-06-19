@@ -57,6 +57,7 @@ export namespace _nbind {
 	export var callbackSignatureList: typeof _callback.callbackSignatureList;
 
 	export var CreateValueType: typeof _value.CreateValueType;
+	export var Int64Type: typeof _value.Int64Type;
 	export var popValue: typeof _value.popValue;
 
 	export var StringType: typeof _std.StringType;
@@ -110,6 +111,7 @@ class nbind { // tslint:disable-line:class-name
 			'bool': _nbind.BooleanType,
 			'cbFunction &': _nbind.CallbackType,
 			'std::string': _nbind.StringType,
+			'Int64': _nbind.Int64Type,
 			'_nbind_new': _nbind.CreateValueType
 		};
 

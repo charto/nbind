@@ -17,7 +17,7 @@ namespace nbind {
 template <typename MemberType, size_t size>
 struct BindingType<std::array<MemberType, size>> {
 
-	typedef std::array<MemberType, size> type;
+	typedef std::array<MemberType, size> Type;
 
 	/** Temporary in-memory serialization format for the array,
 	  * easily read and written by both C++ and JavaScript. */
@@ -32,8 +32,8 @@ struct BindingType<std::array<MemberType, size>> {
 		typename BindingType<MemberType>::WireType data[1];
 	} *WireType;
 
-	static inline type fromWireType(WireType arg) {
-		type val;
+	static inline Type fromWireType(WireType arg) {
+		Type val;
 
 		for(uint32_t num = 0; num < size; ++num) {
 			val[num] = BindingType<MemberType>::fromWireType(arg->data[num]);
@@ -42,7 +42,7 @@ struct BindingType<std::array<MemberType, size>> {
 		return(val);
 	}
 
-	static inline WireType toWireType(type arg) {
+	static inline WireType toWireType(Type arg) {
 		/** Allocate space for wire type (which includes 1 array member) and
 		  * the other size-1 members, in temporary lalloc "stack frame". */
 		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val) + (size - 1) * sizeof(*val->data)));
@@ -63,7 +63,7 @@ struct BindingType<std::array<MemberType, size>> {
 template <typename MemberType>
 struct BindingType<std::vector<MemberType>> {
 
-	typedef std::vector<MemberType> type;
+	typedef std::vector<MemberType> Type;
 
 	/** Temporary in-memory serialization format for the vector,
 	  * easily read and written by both C++ and JavaScript. */
@@ -75,9 +75,9 @@ struct BindingType<std::vector<MemberType>> {
 		typename BindingType<MemberType>::WireType data[1];
 	} *WireType;
 
-	static inline type fromWireType(WireType arg) {
+	static inline Type fromWireType(WireType arg) {
 		uint32_t size = arg->length;
-		type val;
+		Type val;
 
 		val.reserve(size);
 
@@ -88,7 +88,7 @@ struct BindingType<std::vector<MemberType>> {
 		return(val);
 	}
 
-	static inline WireType toWireType(type arg) {
+	static inline WireType toWireType(Type arg) {
 		size_t size = arg.size();
 		/** Allocate space for wire type (which includes 1 vector member) and
 		  * the other size-1 members, in temporary lalloc "stack frame". */

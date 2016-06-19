@@ -16,8 +16,8 @@ public:
 		return(Coord(60, 25));
 	}
 
-	static Coord callWithCoord(nbind::cbFunction &callback, Coord a) {
-		return(callback.call<Coord>(a));
+	static Coord callWithCoord(nbind::cbFunction &callback, Coord a, Coord b) {
+		return(callback.call<Coord>(a, b));
 	}
 
 };

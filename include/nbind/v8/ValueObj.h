@@ -97,4 +97,41 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 	return(storage.getBound());
 }
 
+class Int64 {};
+
+template <>
+inline WireType BindingType<uint64_t>::toWireType(uint64_t arg) {
+	v8::Local<v8::Value> output = Nan::Undefined();
+	cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
+
+	if(jsConstructor != nullptr) {
+		cbOutput construct(*jsConstructor, &output);
+
+		construct(uint32_t(arg >> 32), uint32_t(arg), false);
+	} else {
+		throw(std::runtime_error("Int64 JavaScript class is missing or not registered"));
+	}
+
+	return(output);
+}
+
+template <>
+inline WireType BindingType<int64_t>::toWireType(int64_t arg) {
+	v8::Local<v8::Value> output = Nan::Undefined();
+	cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
+
+	if(jsConstructor != nullptr) {
+		cbOutput construct(*jsConstructor, &output);
+
+		bool sign = arg < 0;
+		if(sign) arg = -arg;
+
+		construct(uint32_t(uint64_t(arg) >> 32), uint32_t(arg), sign);
+	} else {
+		throw(std::runtime_error("Int64 JavaScript class is missing or not registered"));
+	}
+
+	return(output);
+}
+
 } // namespace

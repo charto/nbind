@@ -111,6 +111,8 @@ static void initModule() {
 	_nbind_register_type(Typer<bool>::makeID(), "bool");
 	_nbind_register_type(Typer<std::string>::makeID(), "std::string");
 	_nbind_register_type(Typer<cbOutput::CreateValue>::makeID(), "_nbind_new");
+	_nbind_register_type(Typer<uint64_t>::makeID(), "Int64");
+	_nbind_register_type(Typer<int64_t>::makeID(), "Int64");
 
 	_nbind_register_types(defineTypes<
 		unsigned char,  signed char,    char,
