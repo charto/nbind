@@ -242,6 +242,8 @@ NBIND_CLASS(NBind) {
 	construct<>();
 
 	method(bind_value);
+	method(reflect);
+
 	method(lalloc);
 	method(lreset);
 }

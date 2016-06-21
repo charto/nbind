@@ -37,6 +37,7 @@
 			// Report success through callback passed to wrapper function.
 			cb(null, {
 				bind: Module._nbind_value,
+				reflect: Module.NBind.reflect,
 				lib: Module
 			});
 		});

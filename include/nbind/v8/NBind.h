@@ -13,6 +13,11 @@ public:
 
 	static void bind_value(const char *name, cbFunction &func);
 
+	static void reflect(
+		cbFunction &outClass,
+		cbFunction &outMethod
+	);
+
 };
 
 } // namespace

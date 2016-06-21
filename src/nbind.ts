@@ -65,6 +65,7 @@ export class Binding<ExportType extends DefaultExportType> {
 	/** Bind a value type (class with a fromJS method) to an equivalent C++ type. */
 
 	bind: (name: string, proto: ClassType ) => void;
+	reflect: any; // TODO
 
 	binary: ModuleSpec;
 	/** Exported API of a C++ library compiled for nbind. */
@@ -264,6 +265,7 @@ function initAsm<ExportType extends DefaultExportType>(
 	// Load the Asm.js module.
 	require(binding.binary.path)(lib, (err: any, parts: Binding<ExportType>) => {
 		binding.bind = parts.bind;
+		binding.reflect = parts.reflect;
 
 		callback(err, binding);
 	});
@@ -284,6 +286,7 @@ function initNode<ExportType extends DefaultExportType>(
 	}
 
 	binding.bind = lib.NBind.bind_value;
+	binding.reflect = lib.NBind.reflect;
 
 	Object.keys(lib).forEach(function(key: string) {
 		binding.lib[key] = lib[key];

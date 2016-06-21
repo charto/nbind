@@ -5,7 +5,10 @@
 	},
 
 	"target_name": "nbind",
-	"sources": ["common.cc"],
+	"sources": [
+		"common.cc",
+		"reflect.cc"
+	],
 	"include_dirs": [
 		"../include"
 	],

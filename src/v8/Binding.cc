@@ -73,7 +73,10 @@ static void initModule(Handle<Object> exports) {
 
 	for(auto *bindClass : getClassList()) {
 		// Avoid registering the same class twice.
-		if(bindClass->isReady()) continue;
+		if(bindClass->isReady()) {
+			bindClass->setDuplicate();
+			continue;
+		}
 
 		bindClass->init();
 
@@ -195,6 +198,7 @@ NBIND_CLASS(NBind) {
 	construct<>();
 
 	method(bind_value);
+	method(reflect);
 }
 
 NODE_MODULE(nbind, initModule)
