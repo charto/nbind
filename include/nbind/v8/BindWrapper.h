@@ -39,8 +39,10 @@ public:
 		return(new BindWrapper(new Bound(args...)));
 	}
 
-	static BindWrapper *createPtr(Bound *ptr) {
-		return(new BindWrapper(ptr));
+	static void wrapPtr(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+		Bound *ptr = static_cast<Bound *>(v8::Handle<v8::External>::Cast(args[0])->Value());
+
+		(new BindWrapper(ptr))->wrapThis(args);
 	}
 
 	void destroy() {

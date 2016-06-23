@@ -34,20 +34,36 @@ public:
 
 		// Constructor called by JavaScript's "new" operator.
 		Nan::Callback *constructorJS = nullptr;
+
+		jsMethod wrapPtr = nullptr;
 	};
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		static std::vector<OverloadDef> &overloadVect = overloadVectStore();
+
+		// Fetch overloads of the requested function.
 		// The static cast silences a compiler warning in Visual Studio.
+
 		OverloadDef &def = overloadVect[static_cast<unsigned int>(args.Data()->IntegerValue()) >> overloadShift];
 
-		std::vector<funcPtr> &methodVect = def.methodVect;
 		unsigned int argc = args.Length();
+
+		// If the only argument is a pointer, assume we just want to wrap
+		// an already instantiated object.
+
+		if(argc == 1 && args[0]->IsExternal()) {
+			def.wrapPtr(args);
+			return;
+		}
+
+		std::vector<funcPtr> &methodVect = def.methodVect;
 		signed int maxArity = methodVect.size() - 1;
 
-		// Check if method was called with more than the maximum number
-		// of arguments it can accept.
+		// Check that the method wasn't called with more than
+		// its maximum number of arguments.
+
 		if(signed(argc) <= maxArity) {
+			// Get caller for requested arity.
 			jsMethod specializedCall = reinterpret_cast<jsMethod>(methodVect[argc]);
 
 			if(specializedCall != nullptr) {
@@ -176,6 +192,10 @@ public:
 		} else {
 			def.constructorJS->SetFunction(func);
 		}
+	}
+
+	static void setPtrWrapper(unsigned int num, jsMethod wrapPtr) {
+		getDef(num).wrapPtr = wrapPtr;
 	}
 
 	static OverloadDef &getDef(unsigned int num) {

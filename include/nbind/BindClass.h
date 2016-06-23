@@ -85,6 +85,7 @@ public:
 
 	unsigned int wrapperConstructorNum = Overloader::addGroup();
 	unsigned int valueConstructorNum = Overloader::addGroup();
+	jsMethod *wrapPtr;
 
 #endif // BUILDING_NODE_EXTENSION
 

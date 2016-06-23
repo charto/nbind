@@ -184,6 +184,7 @@ static void initModule(Handle<Object> exports) {
 		Local<v8::Function> jsConstructor = constructorTemplate->GetFunction();
 
 		Overloader::setConstructorJS(bindClass->wrapperConstructorNum, jsConstructor);
+		Overloader::setPtrWrapper(bindClass->wrapperConstructorNum, bindClass->wrapPtr);
 
 		exports->Set(
 			Nan::New<String>(bindClass->getName()).ToLocalChecked(),

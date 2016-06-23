@@ -56,6 +56,10 @@ public:
 	BindDefiner(const char *name) : bindClass(BindClass<Bound>::getInstance()) {
 		bindClass.init(name);
 
+#		if defined(BUILDING_NODE_EXTENSION)
+			bindClass.wrapPtr = BindWrapper<Bound>::wrapPtr;
+#		endif
+
 		registerClass(bindClass);
 	}
 
