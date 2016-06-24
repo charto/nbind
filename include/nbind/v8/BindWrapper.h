@@ -61,7 +61,12 @@ public:
 	}
 
 	void wrapThis(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		addInstance(args.This());
+
+#		if !defined(DUPLICATE_POINTERS)
+
+			addInstance(args.This());
+
+#		endif // DUPLICATE_POINTERS
 
 		this->Wrap(args.This());
 	}

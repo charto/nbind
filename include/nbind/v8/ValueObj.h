@@ -30,6 +30,9 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 	const unsigned int argc = 1;
 	v8::Local<v8::Value> argv = Nan::New<v8::External>(arg);
 
+	// This will try to call the C++ constructor, so Overloader or Creator
+	// needs to detect the argument is a v8::External and just wrap it instead.
+
 	return(constructor->NewInstance(argc, &argv));
 }
 

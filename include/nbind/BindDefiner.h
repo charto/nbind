@@ -57,6 +57,9 @@ public:
 		bindClass.init(name);
 
 #		if defined(BUILDING_NODE_EXTENSION)
+			// Set up handler to wrap object pointers instantiated in C++
+			// for use in JavaScript.
+
 			bindClass.wrapPtr = BindWrapper<Bound>::wrapPtr;
 #		endif
 

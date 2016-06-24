@@ -85,6 +85,8 @@ public:
 
 	unsigned int wrapperConstructorNum = Overloader::addGroup();
 	unsigned int valueConstructorNum = Overloader::addGroup();
+
+	/** Handler to wrap object pointers instantiated in C++ for use in JavaScript. */
 	jsMethod *wrapPtr;
 
 #endif // BUILDING_NODE_EXTENSION
