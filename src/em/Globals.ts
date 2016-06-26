@@ -141,6 +141,8 @@ export namespace _nbind {
 		const mangleMap: { [name: string]: string; } = {
 			float32_t: 'f',
 			float64_t: 'd',
+			int64_t: 'd',
+			uint64_t: 'd',
 			void: 'v'
 		};
 

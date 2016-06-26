@@ -61,6 +61,15 @@ export namespace _nbind {
 		return(obj);
 	}
 
+	// 2^64, first integer not representable with uint64_t.
+	// Start of range used for other flags.
+	const valueBase = 18446744073709551616.0;
+
+	export function pop64(num: number): number | any {
+		if(num < valueBase) return(num);
+		return(popValue((num - valueBase) / 4096));
+	}
+
 	// Special type that constructs a new object.
 
 	export class CreateValueType extends BindType {
@@ -76,7 +85,7 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		wireRead = popValue;
+		wireRead = pop64;
 	}
 
 	@prepareNamespace('_nbind')

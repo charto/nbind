@@ -157,6 +157,9 @@ class nbind { // tslint:disable-line:class-name
 			if(isPointer) {
 				// tslint:disable-next-line:no-unused-expression
 				new _nbind.CStringType(id, name + ' *');
+			} else if(size == 8 && !isFloat) {
+				// tslint:disable-next-line:no-unused-expression
+				new _nbind.Int64Type(id, name);
 			} else {
 				// tslint:disable-next-line:no-unused-expression
 				new _nbind.PrimitiveType(id, name, size, !!isUnsigned, !!isFloat);

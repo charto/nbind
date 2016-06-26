@@ -102,39 +102,87 @@ ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
 
 class Int64 {};
 
-template <>
-inline WireType BindingType<uint64_t>::toWireType(uint64_t arg) {
-	v8::Local<v8::Value> output = Nan::Undefined();
-	cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
-
-	if(jsConstructor != nullptr) {
-		cbOutput construct(*jsConstructor, &output);
-
-		construct(uint32_t(arg >> 32), uint32_t(arg), false);
-	} else {
-		throw(std::runtime_error("Int64 JavaScript class is missing or not registered"));
+template <int size> struct Int64Converter {
+	template <typename ArgType>
+	static inline WireType uint64ToWire(ArgType arg) {
+		return(Nan::New<v8::Uint32>(static_cast<uint32_t>(arg)));
 	}
 
-	return(output);
+	template <typename ArgType>
+	static inline WireType int64ToWire(ArgType arg) {
+		return(Nan::New<v8::Int32>(static_cast<int32_t>(arg)));
+	}
+};
+
+template<> struct Int64Converter<8> {
+	template <typename ArgType>
+	static inline WireType uint64ToWire(ArgType arg) {
+		if(arg <= 0xffffffffU) {
+			return(Nan::New<v8::Uint32>(static_cast<uint32_t>(arg)));
+		} else if(arg <= 0x20000000000000ULL) {
+			return(Nan::New<v8::Number>(static_cast<double>(arg)));
+		}
+
+		cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
+
+		if(jsConstructor != nullptr) {
+			v8::Local<v8::Value> output = Nan::Undefined();
+			cbOutput construct(*jsConstructor, &output);
+
+			construct(uint32_t(arg >> 32), uint32_t(arg), false);
+
+			return(output);
+		} else {
+			// Int64 JavaScript class is missing or not registered.
+			return(Nan::New<v8::Number>(static_cast<double>(arg)));
+		}
+	}
+
+	template <typename ArgType>
+	static inline WireType int64ToWire(ArgType arg) {
+		if(arg >= -0x80000000 && arg <= 0x7fffffff) {
+			return(Nan::New<v8::Int32>(static_cast<int32_t>(arg)));
+		} else if(arg >= -0x20000000000000LL && arg <= 0x20000000000000LL) {
+			return(Nan::New<v8::Number>(static_cast<double>(arg)));
+		}
+
+		cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
+
+		if(jsConstructor != nullptr) {
+			v8::Local<v8::Value> output = Nan::Undefined();
+			cbOutput construct(*jsConstructor, &output);
+
+			bool sign = arg < 0;
+			if(sign) arg = -arg;
+
+			construct(uint32_t(uint64_t(arg) >> 32), uint32_t(arg), sign);
+
+			return(output);
+		} else {
+			// Int64 JavaScript class is missing or not registered.
+			return(Nan::New<v8::Number>(static_cast<double>(arg)));
+		}
+	}
+};
+
+template <>
+inline WireType BindingType<unsigned long>::toWireType(unsigned long arg) {
+	return(Int64Converter<sizeof(type)>::uint64ToWire(arg));
 }
 
 template <>
-inline WireType BindingType<int64_t>::toWireType(int64_t arg) {
-	v8::Local<v8::Value> output = Nan::Undefined();
-	cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
+inline WireType BindingType<unsigned long long>::toWireType(unsigned long long arg) {
+	return(Int64Converter<sizeof(type)>::uint64ToWire(arg));
+}
 
-	if(jsConstructor != nullptr) {
-		cbOutput construct(*jsConstructor, &output);
+template <>
+inline WireType BindingType<long>::toWireType(long arg) {
+	return(Int64Converter<sizeof(type)>::int64ToWire(arg));
+}
 
-		bool sign = arg < 0;
-		if(sign) arg = -arg;
-
-		construct(uint32_t(uint64_t(arg) >> 32), uint32_t(arg), sign);
-	} else {
-		throw(std::runtime_error("Int64 JavaScript class is missing or not registered"));
-	}
-
-	return(output);
+template <>
+inline WireType BindingType<long long>::toWireType(long long arg) {
+	return(Int64Converter<sizeof(type)>::int64ToWire(arg));
 }
 
 } // namespace

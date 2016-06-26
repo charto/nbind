@@ -70,15 +70,18 @@ template <> struct BindingType<ArgType> {                   \
 	}                                                       \
 }
 
-DEFINE_NATIVE_BINDING_TYPE(bool,    BooleanValue,v8::Boolean);
-DEFINE_NATIVE_BINDING_TYPE(double,  NumberValue, v8::Number);
-DEFINE_NATIVE_BINDING_TYPE(float,   NumberValue, v8::Number);
-DEFINE_NATIVE_BINDING_TYPE(uint32_t,Uint32Value, v8::Uint32);
-DEFINE_NATIVE_BINDING_TYPE(uint16_t,Uint32Value, v8::Uint32);
-DEFINE_NATIVE_BINDING_TYPE(uint8_t, Uint32Value, v8::Uint32);
-DEFINE_NATIVE_BINDING_TYPE(int32_t, Int32Value,  v8::Int32);
-DEFINE_NATIVE_BINDING_TYPE(int16_t, Int32Value,  v8::Int32);
-DEFINE_NATIVE_BINDING_TYPE(int8_t,  Int32Value,  v8::Int32);
+DEFINE_NATIVE_BINDING_TYPE(bool, BooleanValue, v8::Boolean);
+
+DEFINE_NATIVE_BINDING_TYPE(double, NumberValue, v8::Number);
+DEFINE_NATIVE_BINDING_TYPE(float, NumberValue, v8::Number);
+
+DEFINE_NATIVE_BINDING_TYPE(unsigned int, Uint32Value, v8::Uint32);
+DEFINE_NATIVE_BINDING_TYPE(unsigned short, Uint32Value, v8::Uint32);
+DEFINE_NATIVE_BINDING_TYPE(unsigned char, Uint32Value, v8::Uint32);
+
+DEFINE_NATIVE_BINDING_TYPE(int, Int32Value, v8::Int32);
+DEFINE_NATIVE_BINDING_TYPE(short, Int32Value, v8::Int32);
+DEFINE_NATIVE_BINDING_TYPE(char, Int32Value, v8::Int32);
 
 #define DEFINE_STRING_BINDING_TYPE(ArgType)             \
 template <> struct BindingType<ArgType> {               \

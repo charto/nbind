@@ -84,12 +84,14 @@ template <> struct BindingType<ArgType> { \
 
 DEFINE_NATIVE_BINDING_TYPE(double, double);
 DEFINE_NATIVE_BINDING_TYPE(float, double);
-DEFINE_NATIVE_BINDING_TYPE(uint32_t, int);
-DEFINE_NATIVE_BINDING_TYPE(uint16_t, int);
-DEFINE_NATIVE_BINDING_TYPE(uint8_t, int);
-DEFINE_NATIVE_BINDING_TYPE(int32_t, int);
-DEFINE_NATIVE_BINDING_TYPE(int16_t, int);
-DEFINE_NATIVE_BINDING_TYPE(int8_t, int);
+
+DEFINE_NATIVE_BINDING_TYPE(unsigned int, int);
+DEFINE_NATIVE_BINDING_TYPE(unsigned short, int);
+DEFINE_NATIVE_BINDING_TYPE(unsigned char, int);
+
+DEFINE_NATIVE_BINDING_TYPE(int, int);
+DEFINE_NATIVE_BINDING_TYPE(short, int);
+DEFINE_NATIVE_BINDING_TYPE(char, int);
 
 DEFINE_NATIVE_BINDING_TYPE(unsigned char *, unsigned char *);
 DEFINE_NATIVE_BINDING_TYPE(char *, char *);

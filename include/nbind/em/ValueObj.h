@@ -47,36 +47,94 @@ inline int BindingType<ArgType>::toWireType(ArgType arg) {
 
 class Int64 {};
 
-template <>
-inline int BindingType<uint64_t>::toWireType(uint64_t arg) {
-	cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
+// 2^64, first integer not representable with uint64_t.
+// Start of range used for other flags.
+const double valueBase = 18446744073709551616.0;
 
-	if(jsConstructor != nullptr) {
-		cbOutput construct(*jsConstructor);
-
-		return(construct(uint32_t(arg >> 32), uint32_t(arg), false));
-	} else {
-		// Int64 JavaScript class is missing or not registered.
-		return(0);
+template <int size> struct Int64Converter {
+	template <typename ArgType>
+	static inline double uint64ToWire(ArgType arg) {
+		return(static_cast<double>(arg));
 	}
-}
 
-template <>
-inline int BindingType<int64_t>::toWireType(int64_t arg) {
-	cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
-
-	if(jsConstructor != nullptr) {
-		cbOutput construct(*jsConstructor);
-
-		bool sign = arg < 0;
-		if(sign) arg = -arg;
-
-		return(construct(uint32_t(arg >> 32), uint32_t(arg), sign));
-	} else {
-		// Int64 JavaScript class is missing or not registered.
-		return(0);
+	template <typename ArgType>
+	static inline double int64ToWire(ArgType arg) {
+		return(static_cast<double>(arg));
 	}
-}
+};
+
+template<> struct Int64Converter<8> {
+	template <typename ArgType>
+	static inline double uint64ToWire(ArgType arg) {
+		if(arg <= 0x20000000000000ULL) {
+			return(static_cast<double>(arg));
+		}
+
+		cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
+
+		if(jsConstructor != nullptr) {
+			cbOutput construct(*jsConstructor);
+
+			return(construct(static_cast<uint32_t>(arg >> 32), static_cast<uint32_t>(arg), false) * 4096 + valueBase);
+		} else {
+			// Int64 JavaScript class is missing or not registered.
+			return(static_cast<double>(arg));
+		}
+	}
+
+	template <typename ArgType>
+	static inline double int64ToWire(ArgType arg) {
+		if(arg >= -0x20000000000000LL && arg <= 0x20000000000000LL) {
+			return(static_cast<double>(arg));
+		}
+
+		cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
+
+		if(jsConstructor != nullptr) {
+			cbOutput construct(*jsConstructor);
+
+			bool sign = arg < 0;
+			if(sign) arg = -arg;
+
+			return(construct(static_cast<uint32_t>(arg >> 32), static_cast<uint32_t>(arg), sign) * 4096 + valueBase);
+		} else {
+			// Int64 JavaScript class is missing or not registered.
+			return(static_cast<double>(arg));
+		}
+	}
+};
+
+template <> struct BindingType<unsigned long> {
+	typedef unsigned long Type;
+	typedef double WireType;
+	static inline double toWireType(Type arg) {
+		return(Int64Converter<sizeof(Type)>::uint64ToWire(arg));
+	}
+};
+
+template <> struct BindingType<unsigned long long> {
+	typedef unsigned long long Type;
+	typedef double WireType;
+	static inline double toWireType(Type arg) {
+		return(Int64Converter<sizeof(Type)>::uint64ToWire(arg));
+	}
+};
+
+template <> struct BindingType<long> {
+	typedef long Type;
+	typedef double WireType;
+	static inline double toWireType(Type arg) {
+		return(Int64Converter<sizeof(Type)>::int64ToWire(arg));
+	}
+};
+
+template <> struct BindingType<long long> {
+	typedef long long Type;
+	typedef double WireType;
+	static inline double toWireType(Type arg) {
+		return(Int64Converter<sizeof(Type)>::int64ToWire(arg));
+	}
+};
 
 template <typename ArgType>
 ArgType BindingType<ArgType>::fromWireType(int index) {
