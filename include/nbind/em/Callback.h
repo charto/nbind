@@ -165,8 +165,8 @@ template <> struct BindingType<cbFunction &> {
 
 };
 
-template<>
-struct ArgFromWire<cbFunction &> {
+template<typename PolicyList>
+struct ArgFromWire<PolicyList, cbFunction &> {
 
 	explicit ArgFromWire(unsigned int num) : val(num) {}
 

@@ -5,6 +5,7 @@
 		"GetterSetter.cc",
 		"Callback.cc",
 		"Value.cc",
+		"Reference.cc",
 		"Array.cc"
 	]
 }

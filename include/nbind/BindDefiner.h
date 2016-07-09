@@ -66,8 +66,13 @@ public:
 		registerClass(bindClass);
 	}
 
-	template <class Signature, typename MethodType>
-	void addMethod(const char *name, MethodType method) {
+	template <
+		class Signature,
+		typename MethodType
+	> void addMethod(
+		const char *name,
+		MethodType method
+	) {
 		bindClass.addMethod(
 			name,
 			Signature::getDirect(method),
@@ -79,28 +84,38 @@ public:
 	template <
 		template <typename, class, typename, typename...> class Signature,
 		typename ReturnType,
-		typename... Args
+		typename... Args,
+		typename... Policies
 	> void addMethodMaybeConst(
 		const char* name,
-		ReturnType(Bound::*method)(Args...)
+		ReturnType(Bound::*method)(Args...),
+		Policies... policies
 	) {
-		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, method);
+		addMethod<
+			Signature<decltype(method), Bound, PolicyListType<Policies...>, ReturnType, Args...>,
+			decltype(method)
+		>(name, method);
 	}
 
 	template <
 		template <typename, class, typename, typename...> class Signature,
 		typename ReturnType,
-		typename... Args
+		typename... Args,
+		typename... Policies
 	> void addMethodMaybeConst(
 		const char* name,
-		ReturnType(Bound::*method)(Args...) const
+		ReturnType(Bound::*method)(Args...) const,
+		Policies... policies
 	) {
-		addMethod<Signature<decltype(method), Bound, ReturnType, Args...>>(name, method);
+		addMethod<
+			Signature<decltype(method), Bound, PolicyListType<Policies...>, ReturnType, Args...>,
+			decltype(method)
+		>(name, method);
 	}
 
 	template <typename... Args, typename... Policies>
 	BindDefiner &constructor(Policies...) {
-		typedef ConstructorSignature<Bound, Args...> Signature;
+		typedef ConstructorSignature<Bound, PolicyListType<Policies...>, Args...> Signature;
 
 		bindClass.addConstructor(&Signature::getInstance());
 
@@ -111,9 +126,12 @@ public:
 	BindDefiner &method(
 		const char* name,
 		ReturnType(*func)(Args...),
-		Policies...
+		Policies... policies
 	) {
-		addMethod<FunctionSignature<decltype(func), std::nullptr_t, ReturnType, Args...>>(name, func);
+		addMethod<
+			FunctionSignature<decltype(func), std::nullptr_t, PolicyListType<Policies...>, ReturnType, Args...>,
+			decltype(func)
+		>(name, func);
 
 		return(*this);
 	}
@@ -122,9 +140,12 @@ public:
 	BindDefiner &method(
 		const char* name,
 		MethodType method,
-		Policies...
+		Policies... policies
 	) {
-		addMethodMaybeConst<MethodSignature>(name, method);
+		addMethodMaybeConst<
+			MethodSignature,
+			Policies...
+		>(name, method, policies...);
 
 		return(*this);
 	}
@@ -133,9 +154,13 @@ public:
 	BindDefiner &property(
 		const char* name,
 		GetterType getter,
-		Policies...
+		Policies... policies
 	) {
-		addMethodMaybeConst<GetterSignature>(name, getter);
+		addMethodMaybeConst<
+			GetterSignature,
+			Policies...
+		>(name, getter, policies...);
+
 		bindClass.addMethod(emptySetter);
 
 		return(*this);
@@ -146,10 +171,17 @@ public:
 		const char* name,
 		GetterType getter,
 		SetterType setter,
-		Policies...
+		Policies... policies
 	) {
-		addMethodMaybeConst<GetterSignature>(name, getter);
-		addMethodMaybeConst<SetterSignature>(name, setter);
+		addMethodMaybeConst<
+			GetterSignature,
+			Policies...
+		>(name, getter, policies...);
+
+		addMethodMaybeConst<
+			SetterSignature,
+			Policies...
+		>(name, setter, policies...);
 
 		return(*this);
 	}

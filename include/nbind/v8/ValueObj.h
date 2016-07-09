@@ -12,7 +12,7 @@ namespace nbind {
 
 template <typename ArgType>
 inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
-	if(arg == nullptr) return(Nan::Undefined());
+	if(arg == nullptr) return(Nan::Null());
 
 #ifndef DUPLICATE_POINTERS
 
@@ -165,24 +165,28 @@ template<> struct Int64Converter<8> {
 	}
 };
 
-template <>
-inline WireType BindingType<unsigned long>::toWireType(unsigned long arg) {
-	return(Int64Converter<sizeof(type)>::uint64ToWire(arg));
+// if(arg->IsNumber())
+
+#define DEFINE_INT64_BINDING_TYPE(ArgType, decode)          \
+template <> struct BindingType<ArgType> {                   \
+	typedef ArgType type;                                   \
+	                                                        \
+	static inline bool checkType(WireType arg) {            \
+		return(true);                                       \
+	}                                                       \
+	                                                        \
+	static inline WireType toWireType(type arg) {           \
+		return(Int64Converter<sizeof(type)>::decode(arg));  \
+	}                                                       \
+	                                                        \
+	static inline type fromWireType(WireType arg) {         \
+		return(static_cast<type>(arg->NumberValue()));      \
+	}                                                       \
 }
 
-template <>
-inline WireType BindingType<unsigned long long>::toWireType(unsigned long long arg) {
-	return(Int64Converter<sizeof(type)>::uint64ToWire(arg));
-}
-
-template <>
-inline WireType BindingType<long>::toWireType(long arg) {
-	return(Int64Converter<sizeof(type)>::int64ToWire(arg));
-}
-
-template <>
-inline WireType BindingType<long long>::toWireType(long long arg) {
-	return(Int64Converter<sizeof(type)>::int64ToWire(arg));
-}
+DEFINE_INT64_BINDING_TYPE(unsigned long, uint64ToWire);
+DEFINE_INT64_BINDING_TYPE(unsigned long long, uint64ToWire);
+DEFINE_INT64_BINDING_TYPE(signed long, int64ToWire);
+DEFINE_INT64_BINDING_TYPE(signed long long, int64ToWire);
 
 } // namespace

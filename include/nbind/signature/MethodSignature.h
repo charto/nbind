@@ -12,14 +12,14 @@ namespace nbind {
 
 // Wrapper for all C++ methods with matching class, argument and return types.
 
-template <typename PtrType, class Bound, typename ReturnType, typename... Args>
-class MethodSignature : public TemplatedBaseSignature<MethodSignature<PtrType, Bound, ReturnType, Args...>, ReturnType, Args...> {
+template <typename PtrType, class Bound, typename PolicyList, typename ReturnType, typename... Args>
+class MethodSignature : public TemplatedBaseSignature<MethodSignature<PtrType, Bound, PolicyList, ReturnType, Args...>, PolicyList, ReturnType, Args...> {
 
 public:
 
 	typedef PtrType MethodType;
 
-	typedef TemplatedBaseSignature<MethodSignature, ReturnType, Args...> Parent;
+	typedef TemplatedBaseSignature<MethodSignature, PolicyList, ReturnType, Args...> Parent;
 
 	static constexpr auto typeExpr = BaseSignature::Type::method;
 
@@ -47,7 +47,7 @@ public:
 	) {
 		auto method = Parent::getMethod(num).func;
 
-		return(Caller<ReturnType, Args...>::callMethod(*target, method, args...));
+		return(Caller<PolicyList, ReturnType, Args...>::callMethod(*target, method, args...));
 	}
 
 #endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN

@@ -62,7 +62,7 @@ private:
 // Everything must be static because the V8 JavaScript engine wants a single
 // function pointer to call, so each template variant is a singleton class.
 
-template <class Signature, typename ReturnType, typename... Args>
+template <class Signature, typename PolicyList, typename ReturnType, typename... Args>
 class TemplatedBaseSignature : public BaseSignature {
 
 public:
@@ -126,6 +126,7 @@ public:
 	typedef Caller<
 		ReturnType,
 		typename emscripten::internal::MapWithIndex<
+			PolicyList,
 			TypeList,
 			ArgFromWire,
 			Args...
@@ -136,6 +137,7 @@ public:
 	static bool typesAreValid(NanArgs &args) {
 		typedef Checker<
 			typename emscripten::internal::MapWithIndex<
+				PolicyList,
 				TypeList,
 				CheckWire,
 				Args...

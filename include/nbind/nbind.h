@@ -15,8 +15,8 @@
 #define VA_EXPAND(args) args
 
 // _1, _2... are dummy parameters to discard original macro arguments.
-#define VA_SIZE_HELPER(_3, _2, _1, ARGC, ...) ARGC
-#define VA_SIZE(...) VA_EXPAND(VA_SIZE_HELPER(__VA_ARGS__, 3, 2, 1))
+#define VA_SIZE_HELPER(_6, _5, _4, _3, _2, _1, ARGC, ...) ARGC
+#define VA_SIZE(...) VA_EXPAND(VA_SIZE_HELPER(__VA_ARGS__, n, n, n, n, 2, 1))
 
 #define VA_CONCAT(A, B) A ## B
 
@@ -44,6 +44,7 @@
 
 #define method_1(name) definer.method(#name, &Bound::name)
 #define method_2(name, boundName) definer.method(#name, &Bound::boundName)
+#define method_n(name, boundName, ...) definer.method(#name, &Bound::boundName, __VA_ARGS__)
 #define method(...) VA_SELECT(method, __VA_ARGS__)
 
 // Define a constructor.

@@ -52,27 +52,27 @@ namespace emscripten {
 
         // MapWithIndex_
 
-        template<template<size_t, typename> class Mapper, size_t CurrentIndex, typename... Args>
+        template<typename PolicyList, template<typename, size_t, typename> class Mapper, size_t CurrentIndex, typename... Args>
         struct MapWithIndex_;
 
-        template<template<size_t, typename> class Mapper, size_t CurrentIndex, typename First, typename... Rest>
-        struct MapWithIndex_<Mapper, CurrentIndex, First, Rest...> {
+        template<typename PolicyList, template<typename, size_t, typename> class Mapper, size_t CurrentIndex, typename First, typename... Rest>
+        struct MapWithIndex_<PolicyList, Mapper, CurrentIndex, First, Rest...> {
             typedef typename Cons<
-                Mapper<CurrentIndex, First>,
-                typename MapWithIndex_<Mapper, CurrentIndex + 1, Rest...>::type
+                Mapper<PolicyList, CurrentIndex, First>,
+                typename MapWithIndex_<PolicyList, Mapper, CurrentIndex + 1, Rest...>::type
                 >::type type;
         };
 
-        template<template<size_t, typename> class Mapper, size_t CurrentIndex>
-        struct MapWithIndex_<Mapper, CurrentIndex> {
+        template<typename PolicyList, template<typename, size_t, typename> class Mapper, size_t CurrentIndex>
+        struct MapWithIndex_<PolicyList, Mapper, CurrentIndex> {
             typedef TypeList<> type;
         };
 
-        template<template<typename...> class Output, template<size_t, typename> class Mapper, typename... Args>
+        template<typename PolicyList, template<typename...> class Output, template<typename, size_t, typename> class Mapper, typename... Args>
         struct MapWithIndex {
             typedef typename internal::Apply<
                 Output,
-                typename MapWithIndex_<Mapper, 0, Args...>::type
+                typename MapWithIndex_<PolicyList, Mapper, 0, Args...>::type
             >::type type;
         };
     }

@@ -56,6 +56,7 @@ private:
 
 #include "TypeID.h"
 #include "TypeStd.h"
+#include "Policy.h"
 
 #if defined(BUILDING_NODE_EXTENSION)
 

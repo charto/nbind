@@ -13,9 +13,9 @@ public:
 	FunctionDefiner(
 		const char* name,
 		ReturnType(*func)(Args...),
-		Policies...
+		Policies... policies
 	) {
-		typedef FunctionSignature<decltype(func), std::nullptr_t, ReturnType, Args...> Signature;
+		typedef FunctionSignature<decltype(func), std::nullptr_t, PolicyListType<Policies...>, ReturnType, Args...> Signature;
 
 		registerFunction(
 			name,

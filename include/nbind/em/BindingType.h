@@ -64,10 +64,23 @@ struct BindingType<ArgType *> {
 
 	typedef ArgType *WireType;
 
-	static inline bool checkType(WireType arg) {
-		// TODO
-		return(true);
-	}
+	// checkType is not called on Emscripten target.
+	// static inline bool checkType(WireType arg) { return(arg != nullptr); }
+
+	static inline type fromWireType(WireType arg) { return(arg); }
+	static inline WireType toWireType(type arg) { return(arg); }
+
+};
+
+template <typename ArgType>
+struct BindingType<NullableType<ArgType>> {
+
+	typedef typename BindingType<ArgType>::type type;
+
+	typedef typename BindingType<ArgType>::WireType WireType;
+
+	// checkType is not called on Emscripten target.
+	// static inline bool checkType(WireType arg) { return(true); }
 
 	static inline type fromWireType(WireType arg) { return(arg); }
 	static inline WireType toWireType(type arg) { return(arg); }
@@ -123,17 +136,23 @@ template<> struct BindingType<void> {
 
 };
 
-template<typename ArgType>
+template<typename PolicyList, typename ArgType>
 struct ArgFromWire {
+
+	typedef typename ExecutePolicies<PolicyList>::template Transformed<ArgType>::Type TransformedType;
 
 	explicit ArgFromWire(typename BindingType<ArgType>::WireType arg) {}
 
-	inline ArgType get(typename BindingType<ArgType>::WireType arg) const { return(BindingType<ArgType>::fromWireType(arg)); }
+	// TODO: maybe return type should be like TransformedType::Type
+
+	inline ArgType get(typename BindingType<ArgType>::WireType arg) const {
+		return(BindingType<TransformedType>::fromWireType(arg));
+	}
 
 };
 
-template<>
-struct ArgFromWire<void> {
+template<typename PolicyList>
+struct ArgFromWire<PolicyList, void> {
 
 	explicit ArgFromWire() {}
 

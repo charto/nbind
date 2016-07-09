@@ -5,14 +5,14 @@
 
 namespace nbind {
 
-template<class Bound, typename... Args>
+template<typename PolicyList, class Bound, typename... Args>
 struct Creator {
 	static inline Bound *create(typename BindingType<Args>::WireType... args) {
-		return(new Bound(ArgFromWire<Args>(args).get(args)...));
+		return(new Bound(ArgFromWire<PolicyList, Args>(args).get(args)...));
 	}
 
 	static void createValue(ArgStorage &storage, typename BindingType<Args>::WireType... args) {
-		static_cast<TemplatedArgStorage<Bound> &>(storage).init(ArgFromWire<Args>(args).get(args)...);
+		static_cast<TemplatedArgStorage<Bound> &>(storage).init(ArgFromWire<PolicyList, Args>(args).get(args)...);
 	}
 
 };

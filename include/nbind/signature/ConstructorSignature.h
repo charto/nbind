@@ -10,8 +10,8 @@ namespace nbind {
 // Constructor. Call() creates an instance of a bound C++ class, while
 // createValue() constructs it in place, directly in the stack for passing by value.
 
-template <class Bound, typename... Args>
-class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<Bound, Args...>, Bound *, Args...> {
+template <class Bound, typename PolicyList, typename... Args>
+class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<Bound, PolicyList, Args...>, Bound *, PolicyList, Args...> {
 
 public:
 
@@ -22,7 +22,7 @@ public:
 	// Unused dummy type.
 	typedef void *MethodType;
 
-	typedef TemplatedBaseSignature<ConstructorSignature, Bound *, Args...> Parent;
+	typedef TemplatedBaseSignature<ConstructorSignature, PolicyList, Bound *, Args...> Parent;
 
 	static constexpr auto typeExpr = BaseSignature::Type::constructor;
 
@@ -31,6 +31,7 @@ public:
 	typedef Creator<
 		Bound,
 		typename emscripten::internal::MapWithIndex<
+			PolicyList,
 			TypeList,
 			ArgFromWire,
 			Args...
@@ -48,6 +49,7 @@ public:
 #elif defined(EMSCRIPTEN)
 
 	typedef Creator<
+		PolicyList,
 		Bound,
 		Args...
 	> ConstructWrapper;

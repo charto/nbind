@@ -181,6 +181,20 @@ test('Value objects', function(t) {
 	t.end();
 });
 
+test('Passing by reference', function(t) {
+	var Type = testModule.Reference;
+
+	Type.foo(Type.getCoord());
+	t.strictEqual(Type.getNull(), null);
+	t.throws(function() {
+		Type.foo(null);
+	}, {message: 'Type mismatch'});
+
+	Type.bar(null);
+
+	t.end();
+});
+
 test('Arrays', function(t) {
 	var ArrayType = testModule.Array;
 	var VectorType = testModule.Vector;

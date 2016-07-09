@@ -5,7 +5,7 @@
 
 namespace nbind {
 
-template<typename ReturnType, typename... Args>
+template<typename PolicyList, typename ReturnType, typename... Args>
 struct Caller {
 
 	template<typename MethodType, class Bound>
@@ -15,7 +15,7 @@ struct Caller {
 		typename BindingType<Args>::WireType... args
 	) {
 		return(BindingType<ReturnType>::toWireType(
-			(target.*method)(ArgFromWire<Args>(args).get(args)...)
+			(target.*method)(ArgFromWire<PolicyList, Args>(args).get(args)...)
 		));
 	}
 
@@ -25,7 +25,7 @@ struct Caller {
 		typename BindingType<Args>::WireType... args
 	) {
 		return(BindingType<ReturnType>::toWireType(
-			(*func)(ArgFromWire<Args>(args).get(args)...)
+			(*func)(ArgFromWire<PolicyList, Args>(args).get(args)...)
 		));
 	}
 
@@ -34,8 +34,8 @@ struct Caller {
 // Specialize Caller for void return type, because toWireType needs a non-void
 // argument.
 
-template<typename... Args>
-struct Caller<void, Args...> {
+template<typename PolicyList, typename... Args>
+struct Caller<PolicyList, void, Args...> {
 
 	template<typename MethodType, class Bound>
 	static void callMethod(
@@ -43,7 +43,7 @@ struct Caller<void, Args...> {
 		MethodType method,
 		typename BindingType<Args>::WireType... args
 	) {
-		(target.*method)(ArgFromWire<Args>(args).get(args)...);
+		(target.*method)(ArgFromWire<PolicyList, Args>(args).get(args)...);
 	}
 
 	template<typename FunctionType>
@@ -51,7 +51,7 @@ struct Caller<void, Args...> {
 		FunctionType func,
 		typename BindingType<Args>::WireType... args
 	) {
-		(*func)(ArgFromWire<Args>(args).get(args)...);
+		(*func)(ArgFromWire<PolicyList, Args>(args).get(args)...);
 	}
 
 };

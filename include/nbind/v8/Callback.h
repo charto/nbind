@@ -15,7 +15,7 @@ namespace nbind {
 
 class cbFunction {
 
-	template<size_t Index,typename ArgType>
+	template<typename PolicyList, size_t Index, typename ArgType>
 	friend struct ArgFromWire;
 
 public:
@@ -113,8 +113,8 @@ template <> struct BindingType<cbFunction &> {
 // Handle callback functions. They are converted to a functor of type cbFunction,
 // which can be called directly from C++ with arguments of any type.
 
-template<size_t Index>
-struct ArgFromWire<Index, cbFunction &> {
+template<typename PolicyList, size_t Index>
+struct ArgFromWire<PolicyList, Index, cbFunction &> {
 
 	template <typename NanArgs>
 	ArgFromWire(const NanArgs &args) : val(args[Index].template As<v8::Function>()) {}
