@@ -13,6 +13,8 @@ const char *Status :: message;
 
 void NBind :: bind_value(const char *name, cbFunction &func) {
 	for(auto *bindClass : getClassList()) {
+		if(!bindClass) continue;
+
 		if(strcmp(bindClass->getName(), name) == 0) {
 			bindClass->setValueConstructorJS(func);
 			break;

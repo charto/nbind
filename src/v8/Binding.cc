@@ -71,10 +71,14 @@ static void initModule(Handle<Object> exports) {
 		);
 	}
 
-	for(auto *bindClass : getClassList()) {
+	auto &classList = getClassList();
+
+	for(auto pos = classList.begin(); pos != classList.end(); ++pos ) {
+		auto *bindClass = *pos;
+
 		// Avoid registering the same class twice.
-		if(bindClass->isReady()) {
-			bindClass->setDuplicate();
+		if(!bindClass || bindClass->isReady()) {
+			*pos = nullptr;
 			continue;
 		}
 

@@ -40,7 +40,7 @@ void NBind :: reflect(
 ) {
 
 	for(auto *bindClass : getClassList()) {
-		if(bindClass->isDuplicate()) continue;
+		if(!bindClass) continue;
 
 		const TYPEID *classTypes = bindClass->getTypes();
 		uint64_t classType = reinterpret_cast<uint64_t>(classTypes[0]);

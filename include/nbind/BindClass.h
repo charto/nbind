@@ -35,9 +35,6 @@ public:
 
 	// The explicit nonzero test silences a compiler warning in Visual Studio.
 	bool isReady() const { return((readyState & 1) != 0); }
-	bool isDuplicate() const { return((readyState & 2) != 0); }
-
-	void setDuplicate() { readyState |= 2; }
 
 	void init() { readyState |= 1; }
 
@@ -73,7 +70,12 @@ public:
 
 	// Add a method to the class.
 
-	void addMethod(const char *name, funcPtr ptr = nullptr, unsigned int num = 0, BaseSignature *signature = nullptr) {
+	void addMethod(
+		const char *name,
+		funcPtr ptr = nullptr,
+		unsigned int num = 0,
+		BaseSignature *signature = nullptr
+	) {
 		methodList.emplace_front(name, ptr, num, signature);
 	}
 

@@ -132,10 +132,14 @@ static void initModule() {
 	// Register all classes before any functions or methods,
 	// so they'll have class type IDs available.
 
-	for(auto *bindClass : getClassList()) {
+	auto &classList = getClassList();
+
+	for(auto pos = classList.begin(); pos != classList.end(); ++pos ) {
+		auto *bindClass = *pos;
+
 		// Avoid registering the same class twice.
-		if(bindClass->isReady()) {
-			bindClass->setDuplicate();
+		if(!bindClass || bindClass->isReady()) {
+			*pos = nullptr;
 			continue;
 		}
 
@@ -169,7 +173,7 @@ static void initModule() {
 	// Register all methods.
 
 	for(auto *bindClass : getClassList()) {
-		if(bindClass->isDuplicate()) continue;
+		if(!bindClass) continue;
 
 		TYPEID id = bindClass->getTypes()[0];
 
