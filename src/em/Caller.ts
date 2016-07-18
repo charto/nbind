@@ -18,6 +18,7 @@ export namespace _nbind {
 	type Func = _globals.Func;
 	type FuncList = _globals.FuncList;
 	type TypeIdList = _globals.TypeIdList;
+	type PolicyTbl = _globals.PolicyTbl;
 
 	export var getTypes: typeof _globals.getTypes;
 	export var makeSignature: typeof _globals.makeSignature;
@@ -60,6 +61,47 @@ export namespace _nbind {
 		));
 	}
 
+	function makeWireRead(
+		convertParamList: any[],
+		policyTbl: PolicyTbl,
+		type: _type.BindType,
+		expr: string
+	) {
+		/** Next free slot number in type converter data list. */
+		const paramNum = convertParamList.length;
+
+		if(type.makeWireRead) {
+			return(type.makeWireRead(expr, convertParamList, paramNum));
+		} else if(type.wireRead) {
+			convertParamList[paramNum] = type.wireRead;
+			return('(convertParamList[' + paramNum + '](' + expr + '))');
+		} else return(expr);
+	}
+
+	function makeWireWrite(
+		convertParamList: any[],
+		policyTbl: PolicyTbl,
+		type: _type.BindType,
+		expr: string
+	) {
+		let wireWrite: any;
+		/** Next free slot number in type converter data list. */
+		const paramNum = convertParamList.length;
+
+		if(type.makeWireWrite) {
+			wireWrite = type.makeWireWrite(expr, policyTbl, convertParamList, paramNum);
+		} else wireWrite = type.wireWrite;
+
+		if(wireWrite) {
+			if(typeof(wireWrite) == 'string') {
+				return(wireWrite);
+			} else {
+				convertParamList[paramNum] = wireWrite;
+				return('(convertParamList[' + paramNum + '](' + expr + '))');
+			}
+		} else return(expr);
+	}
+
 	/** Dynamically build a function that calls an Asm.js invoker
 	  * with appropriate type conversion for complicated types:
 		* - Push arguments to stack.
@@ -70,6 +112,7 @@ export namespace _nbind {
 		dynCall: Func,
 		ptr: number,
 		num: number,
+		policyTbl: PolicyTbl,
 		needsWireWrite: boolean,
 		prefix: string,
 		returnType: _type.BindType,
@@ -79,34 +122,21 @@ export namespace _nbind {
 		/** List of arbitrary data for type converters.
 		  * Each one may read and write its own slot. */
 		const convertParamList: any[] = [];
-		/** Next free slot number in type converter data list. */
-		let paramNum = 0;
-
-		function makeWireRead(type: _type.BindType, expr: string) {
-			if(type.makeWireRead) {
-				return(type.makeWireRead(expr, convertParamList, paramNum++));
-			} else if(type.wireRead) {
-				convertParamList[paramNum] = type.wireRead;
-				return('(convertParamList[' + (paramNum++) + '](' + expr + '))');
-			} else return(expr);
-		}
-
-		function makeWireWrite(type: _type.BindType, expr: string) {
-			if(type.makeWireWrite) {
-				return(type.makeWireWrite(expr, convertParamList, paramNum++));
-			} else if(type.wireWrite) {
-				convertParamList[paramNum] = type.wireWrite;
-				return('(convertParamList[' + (paramNum++) + '](' + expr + '))');
-			} else return(expr);
-		}
 
 		// Build code for function call and type conversion.
 
 		const callExpression = makeWireRead(
+			convertParamList,
+			policyTbl,
 			returnType,
 			'dynCall(' +
 				[prefix].concat(argList.map(
-					(name: string, index: number) => makeWireWrite(argTypeList[index], name)
+					(name: string, index: number) => makeWireWrite(
+						convertParamList,
+						policyTbl,
+						argTypeList[index],
+						name
+					)
 				)).join(',') +
 			')'
 		);
@@ -143,32 +173,19 @@ export namespace _nbind {
 		/** List of arbitrary data for type converters.
 		  * Each one may read and write its own slot. */
 		const convertParamList: any[] = [];
-		/** Next free slot number in type converter data list. */
-		let paramNum = 0;
-
-		function makeWireRead(type: _type.BindType, expr: string) {
-			if(type.makeWireRead) {
-				return(type.makeWireRead(expr, convertParamList, paramNum++));
-			} else if(type.wireRead) {
-				convertParamList[paramNum] = type.wireRead;
-				return('convertParamList[' + (paramNum++) + '](' + expr + ')');
-			} else return(expr);
-		}
-
-		function makeWireWrite(type: _type.BindType, expr: string) {
-			if(type.makeWireWrite) {
-				return(type.makeWireWrite(expr, convertParamList, paramNum));
-			} else if(type.wireWrite) {
-				convertParamList[paramNum] = type.wireWrite;
-				return('convertParamList[' + (paramNum++) + '](' + expr + ')');
-			} else return(expr);
-		}
 
 		const callExpression = makeWireWrite(
+			convertParamList,
+			null,
 			returnType,
 			'_nbind.callbackList[num](' +
 				argList.map(
-					(name: string, index: number) => makeWireRead(argTypeList[index], name)
+					(name: string, index: number) => makeWireRead(
+						convertParamList,
+						null,
+						argTypeList[index],
+						name
+					)
 				).join(',') +
 			')'
 		);
@@ -237,7 +254,8 @@ export namespace _nbind {
 		ptr: number,
 		num: number,
 		boundID: number,
-		idList: TypeIdList
+		idList: TypeIdList,
+		policyTbl: PolicyTbl
 	) {
 		const argCount = idList.length - 1;
 
@@ -279,6 +297,7 @@ export namespace _nbind {
 			dynCall,
 			ptr,
 			num,
+			policyTbl,
 			needsWireWrite,
 			'ptr,num,this.__nbindPtr',
 			returnType,
@@ -292,7 +311,8 @@ export namespace _nbind {
 		ptr: number,
 		num: number,
 		direct: number,
-		idList: TypeIdList
+		idList: TypeIdList,
+		policyTbl: PolicyTbl
 	) {
 		const argCount = idList.length - 1;
 
@@ -346,6 +366,7 @@ export namespace _nbind {
 			dynCall,
 			ptr,
 			num,
+			policyTbl,
 			needsWireWrite,
 			prefix,
 			returnType,

@@ -18,6 +18,11 @@ struct Nullable {
 	struct Transform<ArgType *, Transformed> {
 		typedef NullableType<Transformed> Type;
 	};
+
+	static const char *getName() {
+		static const char *name = "Nullable";
+		return(name);
+	}
 };
 
 template <typename...>

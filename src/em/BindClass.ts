@@ -15,6 +15,8 @@ export namespace _nbind {
 
 export namespace _nbind {
 
+	export type PolicyTbl = _globals.PolicyTbl;
+
 	export var pushValue: typeof _value.pushValue;
 	export var popValue: typeof _value.popValue;
 
@@ -73,9 +75,13 @@ export namespace _nbind {
 	}
 
 	export function pushPointer(obj: any, type: BindClassPtr) {
+		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
+
+		return(obj.__nbindPtr);
+	}
+
+	export function pushNullablePointer(obj: any, type: BindClassPtr) {
 		// Handle null pointers.
-		// TODO: only allow null pointers when using Nullable policy.
-		// Therefore there should be 2 versions of BindClassPtr...
 		if(!obj) return(0);
 		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
 
@@ -91,6 +97,11 @@ export namespace _nbind {
 
 		wireRead = (arg: number) => popPointer(arg, this);
 		wireWrite = (arg: any) => pushPointer(arg, this);
+		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
+			policyTbl['Nullable'] ?
+			(arg: any) => pushNullablePointer(arg, this) :
+			(arg: any) => pushPointer(arg, this)
+		);
 
 		proto: WrapperClass;
 	}

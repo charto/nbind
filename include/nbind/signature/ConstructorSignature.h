@@ -11,7 +11,7 @@ namespace nbind {
 // createValue() constructs it in place, directly in the stack for passing by value.
 
 template <class Bound, typename PolicyList, typename... Args>
-class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<Bound, PolicyList, Args...>, Bound *, PolicyList, Args...> {
+class ConstructorSignature : public TemplatedBaseSignature<ConstructorSignature<Bound, PolicyList, Args...>, PolicyList, Bound *, Args...> {
 
 public:
 

@@ -19,6 +19,8 @@ export namespace _nbind {
 
 export namespace _nbind {
 
+	export type PolicyTbl = _globals.PolicyTbl;
+
 	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
 
@@ -39,7 +41,12 @@ export namespace _nbind {
 		wireWrite: (arg: any) => number;
 
 		makeWireRead: (expr: string, convertParamList?: any[], num?: number) => string;
-		makeWireWrite: (expr: string, convertParamList?: any[], num?: number) => string;
+		makeWireWrite: (
+			expr: string,
+			policyTbl?: PolicyTbl,
+			convertParamList?: any[],
+			num?: number
+		) => string | ((arg: any) => number);
 
 		readResources: _resource.Resource[];
 		writeResources: _resource.Resource[];

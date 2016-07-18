@@ -39,6 +39,8 @@ export namespace _nbind {
 	export var MethodType: typeof _globals.MethodType;
 	export var addMethod: typeof _globals.addMethod;
 	export var readTypeIdList: typeof _globals.readTypeIdList;
+	export var readAsciiString: typeof _globals.readAsciiString;
+	export var readPolicyList: typeof _globals.readPolicyList;
 
 	export var BindType: typeof _type.BindType;
 	export var PrimitiveType: typeof _type.PrimitiveType;
@@ -67,14 +69,6 @@ export namespace _nbind {
 }
 
 publishNamespace('_nbind');
-
-function _readAsciiString(ptr: number) {
-	let endPtr = ptr;
-
-	while(HEAPU8[endPtr++]);
-
-	return(String.fromCharCode.apply('', HEAPU8.subarray(ptr, endPtr - 1)));
-}
 
 @exportLibrary
 class nbind { // tslint:disable-line:class-name
@@ -105,7 +99,7 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_register_type(id: number, namePtr: number) {
-		const name = _readAsciiString(namePtr);
+		const name = _nbind.readAsciiString(namePtr);
 		type TypeConstructor = { new(id: number, name: string): _type.BindType };
 		const constructorTbl: { [name: string]: TypeConstructor } = {
 			'bool': _nbind.BooleanType,
@@ -171,9 +165,9 @@ class nbind { // tslint:disable-line:class-name
 		}
 	}
 
-	@dep('_nbind', _readAsciiString, '__extends')
+	@dep('_nbind', '__extends')
 	static _nbind_register_class(idListPtr: number, namePtr: number) {
-		const name = _readAsciiString(namePtr);
+		const name = _nbind.readAsciiString(namePtr);
 		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 3);
 
 		class Bound extends _nbind.Wrapper {
@@ -223,11 +217,13 @@ class nbind { // tslint:disable-line:class-name
 	@dep('_nbind')
 	static _nbind_register_constructor(
 		typeID: number,
+		policyListPtr: number,
 		typeListPtr: number,
 		typeCount: number,
 		ptr: number,
 		ptrValue: number
 	) {
+		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 		const proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
@@ -239,7 +235,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			proto,
 			'__nbindConstructor',
-			_nbind.makeCaller(null, 0, ptr, typeList),
+			_nbind.makeCaller(null, 0, ptr, typeList, policyTbl),
 			typeCount - 1
 		);
 
@@ -251,7 +247,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			proto,
 			'__nbindValueConstructor',
-			_nbind.makeCaller(null, 0, ptrValue, typeList),
+			_nbind.makeCaller(null, 0, ptrValue, typeList, policyTbl),
 			typeCount
 		);
 	}
@@ -261,14 +257,15 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _class.BindClass).proto.prototype,
 			'free',
-			_nbind.makeMethodCaller(ptr, 0, typeID, ['void']),
+			_nbind.makeMethodCaller(ptr, 0, typeID, ['void'], null),
 			0
 		);
 	}
 
-	@dep('_nbind', _readAsciiString)
+	@dep('_nbind')
 	static _nbind_register_function(
 		typeID: number,
+		policyListPtr: number,
 		typeListPtr: number,
 		typeCount: number,
 		ptr: number,
@@ -276,7 +273,8 @@ class nbind { // tslint:disable-line:class-name
 		num: number,
 		direct: number
 	) {
-		const name = _readAsciiString(namePtr);
+		const name = _nbind.readAsciiString(namePtr);
+		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 		let target: any;
 
@@ -289,14 +287,15 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			target,
 			name,
-			_nbind.makeCaller(ptr, num, direct, typeList),
+			_nbind.makeCaller(ptr, num, direct, typeList, policyTbl),
 			typeCount - 1
 		);
 	}
 
-	@dep('_nbind', _readAsciiString)
+	@dep('_nbind')
 	static _nbind_register_method(
 		typeID: number,
+		policyListPtr: number,
 		typeListPtr: number,
 		typeCount: number,
 		ptr: number,
@@ -304,7 +303,8 @@ class nbind { // tslint:disable-line:class-name
 		num: number,
 		methodType: number
 	) {
-		let name = _readAsciiString(namePtr);
+		let name = _nbind.readAsciiString(namePtr);
+		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 		const proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
@@ -312,7 +312,7 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.addMethod(
 				proto,
 				name,
-				_nbind.makeMethodCaller(ptr, num, typeID, typeList),
+				_nbind.makeMethodCaller(ptr, num, typeID, typeList, policyTbl),
 				typeCount - 1
 			);
 
@@ -333,12 +333,12 @@ class nbind { // tslint:disable-line:class-name
 			// temporarily store an invoker in the property.
 			// The getter definition then binds it properly.
 
-			proto[name] = _nbind.makeMethodCaller(ptr, num, typeID, typeList);
+			proto[name] = _nbind.makeMethodCaller(ptr, num, typeID, typeList, policyTbl);
 		} else {
 			Object.defineProperty(proto, name, {
 				configurable: true,
 				enumerable: true,
-				get: _nbind.makeMethodCaller(ptr, num, typeID, typeList),
+				get: _nbind.makeMethodCaller(ptr, num, typeID, typeList, policyTbl),
 				set: proto[name]
 			});
 		}

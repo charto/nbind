@@ -24,6 +24,7 @@ export namespace _nbind {
 	export type FuncList = { (...args: any[]): any }[];
 	export type Invoker = (ptr: number, ...args: any[]) => any;
 	export type TypeIdList = (number | string)[];
+	export type PolicyTbl = { [name: string]: boolean };
 
 	export var ArrayType: typeof _std.ArrayType;
 
@@ -130,6 +131,30 @@ export namespace _nbind {
 			typeListPtr / 4,
 			typeListPtr / 4 + typeCount
 		));
+	}
+
+	export function readAsciiString(ptr: number) {
+		let endPtr = ptr;
+
+		while(HEAPU8[endPtr++]);
+
+		return(String.fromCharCode.apply('', HEAPU8.subarray(ptr, endPtr - 1)));
+	}
+
+	export function readPolicyList(policyListPtr: number) {
+		const policyTbl: PolicyTbl = {};
+
+		if(policyListPtr) {
+			while(1) {
+				const namePtr = HEAPU32[policyListPtr / 4];
+				if(!namePtr) break;
+
+				policyTbl[readAsciiString(namePtr)] = true;
+				policyListPtr += 4;
+			}
+		}
+
+		return(policyTbl);
 	}
 
 	// Generate a mangled signature from argument types.

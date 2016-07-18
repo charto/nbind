@@ -24,8 +24,13 @@ public:
 
 	enum class Type: unsigned int { function, method, getter, setter, constructor };
 
-	BaseSignature(Type type, funcPtr caller, const TYPEID *typeList, unsigned int arity) :
-		type(type), caller(caller), typeList(typeList), arity(arity) {}
+	BaseSignature(
+		Type type,
+		funcPtr caller,
+		const char **policyNameList,
+		const TYPEID *typeList,
+		unsigned int arity
+	) : type(type), caller(caller), policyNameList(policyNameList), typeList(typeList), arity(arity) {}
 
 	Type getType() const { return(type); }
 	funcPtr getCaller() const { return(caller); }
@@ -35,6 +40,10 @@ public:
 
 	const TYPEID *getTypeList() const { return(typeList); }
 	unsigned int getArity() const { return(arity); }
+
+	const char **getPolicies() const {
+		return(policyNameList);
+	}
 
 	// A value constructor pointer is included in each signature,
 	// but only used for constructors.
@@ -51,10 +60,22 @@ private:
 
 	const Type type;
 	const funcPtr caller;
+	const char **policyNameList;
 	const TYPEID *typeList;
 	const unsigned int arity;
 	funcPtr valueConstructor;
 
+};
+
+template <typename PolicyList>
+struct PolicyLister {};
+
+template <typename... Policies>
+struct PolicyLister<PolicyListType<Policies...>> {
+	static const char **getNameList() {
+		static const char *nameList[] = { Policies::getName()..., nullptr };
+		return(nameList);
+	}
 };
 
 // Templated static class for each different function call signature exposed by the
@@ -70,6 +91,7 @@ public:
 	TemplatedBaseSignature() : BaseSignature(
 		Signature::typeExpr,
 		reinterpret_cast<funcPtr>(Signature::call),
+		PolicyLister<PolicyList>::getNameList(),
 		listTypes<ReturnType, Args...>(),
 		sizeof...(Args)
 	) {}
