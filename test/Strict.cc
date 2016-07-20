@@ -32,14 +32,14 @@ NBIND_CLASS(Strict) {
 	method(testCString, "strictCString", nbind::Strict());
 }
 
-/*
 NBIND_GLOBAL() {
 	function(testInt);
 	function(testString);
+	function(testCString);
 
 	function(testInt, "strictInt", nbind::Strict());
 	function(testString, "strictString", nbind::Strict());
+	function(testCString, "strictCString", nbind::Strict());
 }
-*/
 
 #endif

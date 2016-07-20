@@ -27,7 +27,10 @@
 
 #define NBIND_GLOBAL() namespace
 
-#define function(name) nbind::FunctionDefiner NBIND_UNIQUE(definer, __LINE__)(#name, &name)
+#define function_1(name) nbind::FunctionDefiner NBIND_UNIQUE(definer, __LINE__)(#name, &name)
+#define function_2(name, boundName) nbind::FunctionDefiner NBIND_UNIQUE(definer, __LINE__)(boundName, &name)
+#define function_n(name, boundName, ...) nbind::FunctionDefiner NBIND_UNIQUE(definer, __LINE__)(boundName, &name, __VA_ARGS__)
+#define function(...) VA_SELECT(function, __VA_ARGS__)
 
 // Define bindings for a C++ class using a syntax that looks like a function definition.
 
