@@ -121,7 +121,7 @@ template <> struct BindingType<std::string> {
 	typedef std::string type;
 
 	static inline bool checkType(WireType arg) {
-		return(arg->IsString());
+		return(true);
 	}
 
 	static inline type fromWireType(WireType arg) {
@@ -133,6 +133,12 @@ template <> struct BindingType<std::string> {
 		return(Nan::New<v8::String>(arg.c_str(), arg.length()).ToLocalChecked());
 	}
 
+};
+
+template <> struct BindingType<StrictType<std::string>> : public BindingType<std::string> {
+	static inline bool checkType(WireType arg) {
+		return(arg->IsString());
+	}
 };
 
 } // namespace

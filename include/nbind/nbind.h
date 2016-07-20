@@ -43,8 +43,8 @@
 // if the name visible to JavaScript should be different.
 
 #define method_1(name) definer.method(#name, &Bound::name)
-#define method_2(name, boundName) definer.method(#name, &Bound::boundName)
-#define method_n(name, boundName, ...) definer.method(#name, &Bound::boundName, __VA_ARGS__)
+#define method_2(name, boundName) definer.method(boundName, &Bound::name)
+#define method_n(name, boundName, ...) definer.method(boundName, &Bound::name, __VA_ARGS__)
 #define method(...) VA_SELECT(method, __VA_ARGS__)
 
 // Define a constructor.

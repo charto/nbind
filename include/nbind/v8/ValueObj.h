@@ -182,6 +182,12 @@ template <> struct BindingType<ArgType> {                   \
 	static inline type fromWireType(WireType arg) {         \
 		return(static_cast<type>(arg->NumberValue()));      \
 	}                                                       \
+};                                                          \
+                                                            \
+template <> struct BindingType<StrictType<ArgType>> : public BindingType<ArgType> { \
+	static inline bool checkType(WireType arg) {            \
+		return(arg->IsNumber());                            \
+	}                                                       \
 }
 
 DEFINE_INT64_BINDING_TYPE(unsigned long, uint64ToWire);

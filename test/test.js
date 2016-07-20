@@ -227,3 +227,32 @@ test('Arrays', function(t) {
 
 	t.end();
 });
+
+test('Strict conversion policy', function(t) {
+	var Type = testModule.Strict;
+
+	t.strictEqual(Type.testInt(1), 1);
+	t.strictEqual(Type.testString('foo'), 'foo');
+	t.strictEqual(Type.testCString('foo'), 'foo');
+	t.strictEqual(Type.testInt('123'), 123);
+	t.strictEqual(Type.testString(123), '123');
+	t.strictEqual(Type.testCString(123), '123');
+
+	t.strictEqual(Type.strictInt(1), 1);
+	t.strictEqual(Type.strictString('foo'), 'foo');
+	t.strictEqual(Type.strictCString('foo'), 'foo');
+
+	t.throws(function() {
+		Type.strictInt('123');
+	}, {message: 'Type mismatch'});
+
+	t.throws(function() {
+		Type.strictString(123);
+	}, {message: 'Type mismatch'});
+
+	t.throws(function() {
+		Type.strictCString(123);
+	}, {message: 'Type mismatch'});
+
+	t.end();
+});

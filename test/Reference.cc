@@ -38,7 +38,7 @@ NBIND_CLASS(Reference) {
 	method(getCoord);
 	method(getNull);
 	method(foo);
-	method(bar, bar, nbind::Nullable());
+	method(bar, "bar", nbind::Nullable());
 }
 
 #endif

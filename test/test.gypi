@@ -6,6 +6,7 @@
 		"Callback.cc",
 		"Value.cc",
 		"Reference.cc",
-		"Array.cc"
+		"Array.cc",
+		"Strict.cc"
 	]
 }

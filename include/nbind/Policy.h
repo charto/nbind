@@ -25,6 +25,49 @@ struct Nullable {
 	}
 };
 
+#define DEFINE_STRICT_BINDING_TYPE(ArgType) \
+template<typename Transformed>              \
+struct Transform<ArgType, Transformed> {    \
+	typedef StrictType<Transformed> Type;   \
+}
+
+template <typename ArgType>
+struct StrictType {};
+
+struct Strict {
+	template <typename ArgType, typename Transformed>
+	struct Transform {
+		typedef Transformed Type;
+	};
+
+	DEFINE_STRICT_BINDING_TYPE(bool);
+
+	DEFINE_STRICT_BINDING_TYPE(double);
+	DEFINE_STRICT_BINDING_TYPE(float);
+
+	DEFINE_STRICT_BINDING_TYPE(unsigned int);
+	DEFINE_STRICT_BINDING_TYPE(unsigned short);
+	DEFINE_STRICT_BINDING_TYPE(unsigned char);
+
+	DEFINE_STRICT_BINDING_TYPE(signed int);
+	DEFINE_STRICT_BINDING_TYPE(signed short);
+	DEFINE_STRICT_BINDING_TYPE(signed char);
+
+	DEFINE_STRICT_BINDING_TYPE(char);
+
+	DEFINE_STRICT_BINDING_TYPE(unsigned char *);
+	DEFINE_STRICT_BINDING_TYPE(char *);
+	DEFINE_STRICT_BINDING_TYPE(const unsigned char *);
+	DEFINE_STRICT_BINDING_TYPE(const char *);
+
+	DEFINE_STRICT_BINDING_TYPE(std::string);
+
+	static const char *getName() {
+		static const char *name = "Strict";
+		return(name);
+	}
+};
+
 template <typename...>
 struct PolicyListType {};
 
