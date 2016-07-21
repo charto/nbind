@@ -142,10 +142,7 @@ public:
 		MethodType method,
 		Policies... policies
 	) {
-		addMethodMaybeConst<
-			MethodSignature,
-			Policies...
-		>(name, method, policies...);
+		addMethodMaybeConst<MethodSignature>(name, method, policies...);
 
 		return(*this);
 	}
@@ -156,10 +153,7 @@ public:
 		GetterType getter,
 		Policies... policies
 	) {
-		addMethodMaybeConst<
-			GetterSignature,
-			Policies...
-		>(name, getter, policies...);
+		addMethodMaybeConst<GetterSignature>(name, getter, policies...);
 
 		bindClass.addMethod(emptySetter);
 
@@ -173,15 +167,8 @@ public:
 		SetterType setter,
 		Policies... policies
 	) {
-		addMethodMaybeConst<
-			GetterSignature,
-			Policies...
-		>(name, getter, policies...);
-
-		addMethodMaybeConst<
-			SetterSignature,
-			Policies...
-		>(name, setter, policies...);
+		addMethodMaybeConst<GetterSignature>(name, getter, policies...);
+		addMethodMaybeConst<SetterSignature>(name, setter, policies...);
 
 		return(*this);
 	}
