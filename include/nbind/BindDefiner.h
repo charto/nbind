@@ -45,6 +45,26 @@ namespace nbind {
 extern const char *emptyGetter;
 extern const char *emptySetter;
 
+template <typename PolicyList>
+struct SkipNamePolicy {
+	typedef PolicyList Type;
+};
+
+template <typename... Policies>
+struct SkipNamePolicy<PolicyListType<const char *, Policies...>> {
+	typedef PolicyListType<Policies...> Type;
+};
+
+template <typename... Policies>
+const char *executeNamePolicy(const char *name, Policies... policies) {
+	return(name);
+}
+
+template <typename... Policies>
+const char *executeNamePolicy(const char *name, const char *boundName, Policies... policies) {
+	return(boundName);
+}
+
 // BindDefiner is a helper class to allow making
 // class definition syntax match embind.
 
@@ -92,9 +112,15 @@ public:
 		Policies... policies
 	) {
 		addMethod<
-			Signature<decltype(method), Bound, PolicyListType<Policies...>, ReturnType, Args...>,
+			Signature<
+				decltype(method),
+				Bound,
+				typename SkipNamePolicy<PolicyListType<Policies...>>::Type,
+				ReturnType,
+				Args...
+			>,
 			decltype(method)
-		>(name, method);
+		>(executeNamePolicy(name, policies...), method);
 	}
 
 	template <
@@ -108,14 +134,24 @@ public:
 		Policies... policies
 	) {
 		addMethod<
-			Signature<decltype(method), Bound, PolicyListType<Policies...>, ReturnType, Args...>,
+			Signature<
+				decltype(method),
+				Bound,
+				typename SkipNamePolicy<PolicyListType<Policies...>>::Type,
+				ReturnType,
+				Args...
+			>,
 			decltype(method)
-		>(name, method);
+		>(executeNamePolicy(name, policies...), method);
 	}
 
 	template <typename... Args, typename... Policies>
 	BindDefiner &constructor(Policies...) {
-		typedef ConstructorSignature<Bound, PolicyListType<Policies...>, Args...> Signature;
+		typedef ConstructorSignature<
+			Bound,
+			typename SkipNamePolicy<PolicyListType<Policies...>>::Type,
+			Args...
+		> Signature;
 
 		bindClass.addConstructor(&Signature::getInstance());
 
@@ -129,9 +165,15 @@ public:
 		Policies... policies
 	) {
 		addMethod<
-			FunctionSignature<decltype(func), std::nullptr_t, PolicyListType<Policies...>, ReturnType, Args...>,
+			FunctionSignature<
+				decltype(func),
+				std::nullptr_t,
+				typename SkipNamePolicy<PolicyListType<Policies...>>::Type,
+				ReturnType,
+				Args...
+			>,
 			decltype(func)
-		>(name, func);
+		>(executeNamePolicy(name, policies...), func);
 
 		return(*this);
 	}

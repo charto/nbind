@@ -8,9 +8,23 @@ class Strict {
 
 public:
 
+	int testInt(int x) { return(x); }
+	std::string testString(std::string x) { return(x); }
+	const char *testCString(const char *x) { return(x); }
+
+	int strictInt(int x) { return(x); }
+
+};
+
+class StrictStatic {
+
+public:
+
 	static int testInt(int x) { return(x); }
 	static std::string testString(std::string x) { return(x); }
 	static const char *testCString(const char *x) { return(x); }
+
+	static int strictInt(int x) { return(x); }
 
 };
 
@@ -18,16 +32,30 @@ int testInt(int x) { return(x); }
 std::string testString(std::string x) { return(x); }
 const char *testCString(const char *x) { return(x); }
 
+int strictInt(int x) { return(x); }
+
 #include "nbind/nbind.h"
 
 #ifdef NBIND_CLASS
 
 NBIND_CLASS(Strict) {
+	construct<>();
+
 	method(testInt);
 	method(testString);
 	method(testCString);
 
-	method(testInt, "strictInt", nbind::Strict());
+	method(strictInt, nbind::Strict());
+	method(testString, "strictString", nbind::Strict());
+	method(testCString, "strictCString", nbind::Strict());
+}
+
+NBIND_CLASS(StrictStatic) {
+	method(testInt);
+	method(testString);
+	method(testCString);
+
+	method(strictInt, nbind::Strict());
 	method(testString, "strictString", nbind::Strict());
 	method(testCString, "strictCString", nbind::Strict());
 }
@@ -37,7 +65,7 @@ NBIND_GLOBAL() {
 	function(testString);
 	function(testCString);
 
-	function(testInt, "strictInt", nbind::Strict());
+	function(strictInt, nbind::Strict());
 	function(testString, "strictString", nbind::Strict());
 	function(testCString, "strictCString", nbind::Strict());
 }

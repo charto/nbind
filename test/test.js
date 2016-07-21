@@ -229,9 +229,9 @@ test('Arrays', function(t) {
 });
 
 test('Strict conversion policy', function(t) {
-	var typeList = [ testModule.Strict, testModule ];
+	var typeList = [ testModule, testModule.StrictStatic, new testModule.Strict() ];
 
-	for(var i = 0; i < 2; ++i) {
+	for(var i = 0; i < typeList.length; ++i) {
 		var Type = typeList[i];
 
 		t.strictEqual(Type.testInt(1), 1);

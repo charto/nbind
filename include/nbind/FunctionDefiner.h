@@ -15,10 +15,16 @@ public:
 		ReturnType(*func)(Args...),
 		Policies... policies
 	) {
-		typedef FunctionSignature<decltype(func), std::nullptr_t, PolicyListType<Policies...>, ReturnType, Args...> Signature;
+		typedef FunctionSignature<
+			decltype(func),
+			std::nullptr_t,
+			typename SkipNamePolicy<PolicyListType<Policies...>>::Type,
+			ReturnType,
+			Args...
+		> Signature;
 
 		registerFunction(
-			name,
+			executeNamePolicy(name, policies...),
 			Signature::getDirect(func),
 			Signature::addMethod(func),
 			&Signature::getInstance()

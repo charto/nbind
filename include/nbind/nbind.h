@@ -16,7 +16,7 @@
 
 // _1, _2... are dummy parameters to discard original macro arguments.
 #define VA_SIZE_HELPER(_6, _5, _4, _3, _2, _1, ARGC, ...) ARGC
-#define VA_SIZE(...) VA_EXPAND(VA_SIZE_HELPER(__VA_ARGS__, n, n, n, n, 2, 1))
+#define VA_SIZE(...) VA_EXPAND(VA_SIZE_HELPER(__VA_ARGS__, n, n, n, n, n, 1))
 
 #define VA_CONCAT(A, B) A ## B
 
@@ -28,8 +28,7 @@
 #define NBIND_GLOBAL() namespace
 
 #define function_1(name) nbind::FunctionDefiner NBIND_UNIQUE(definer, __LINE__)(#name, &name)
-#define function_2(name, boundName) nbind::FunctionDefiner NBIND_UNIQUE(definer, __LINE__)(boundName, &name)
-#define function_n(name, boundName, ...) nbind::FunctionDefiner NBIND_UNIQUE(definer, __LINE__)(boundName, &name, __VA_ARGS__)
+#define function_n(name, ...) nbind::FunctionDefiner NBIND_UNIQUE(definer, __LINE__)(#name, &name, __VA_ARGS__)
 #define function(...) VA_SELECT(function, __VA_ARGS__)
 
 // Define bindings for a C++ class using a syntax that looks like a function definition.
@@ -46,8 +45,7 @@
 // if the name visible to JavaScript should be different.
 
 #define method_1(name) definer.method(#name, &Bound::name)
-#define method_2(name, boundName) definer.method(boundName, &Bound::name)
-#define method_n(name, boundName, ...) definer.method(boundName, &Bound::name, __VA_ARGS__)
+#define method_n(name, ...) definer.method(#name, &Bound::name, __VA_ARGS__)
 #define method(...) VA_SELECT(method, __VA_ARGS__)
 
 // Define a constructor.
