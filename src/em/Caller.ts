@@ -42,10 +42,10 @@ export namespace _nbind {
 	/** Check if any type on the list requires conversion writing to C++.
 	  * Mainly numbers can be passed as-is between Asm.js and JavaScript. */
 
-	function anyNeedsWireWrite(typeList: _type.BindType[]) {
+	function anyNeedsWireWrite(typeList: _type.BindType[], policyTbl: PolicyTbl) {
 		return(typeList.reduce(
 			(result: boolean, type: _type.BindType) =>
-				(result || !!type.wireWrite || !!type.makeWireWrite),
+				(result || type.needsWireWrite(policyTbl)),
 			false
 		));
 	}
@@ -53,10 +53,10 @@ export namespace _nbind {
 	/** Check if any type on the list requires conversion reading from C++.
 	  * Mainly numbers can be passed as-is between Asm.js and JavaScript. */
 
-	function anyNeedsWireRead(typeList: _type.BindType[]) {
+	function anyNeedsWireRead(typeList: _type.BindType[], policyTbl: PolicyTbl) {
 		return(typeList.reduce(
 			(result: boolean, type: _type.BindType) =>
-				(result || !!type.wireRead || !!type.makeWireRead),
+				(result || !!type.needsWireRead(policyTbl)),
 			false
 		));
 	}
@@ -222,8 +222,8 @@ export namespace _nbind {
 		const typeList = getTypes(idList);
 		const returnType = typeList[0];
 		const argTypeList = typeList.slice(1);
-		const needsWireRead = anyNeedsWireRead(argTypeList);
-		const needsWireWrite = returnType.wireWrite || returnType.makeWireWrite;
+		const needsWireRead = anyNeedsWireRead(argTypeList, null);
+		const needsWireWrite = returnType.needsWireWrite(null);
 
 		if(!needsWireWrite && !needsWireRead) {
 			switch(argCount) {
@@ -268,8 +268,8 @@ export namespace _nbind {
 		const typeList = getTypes(idList);
 		const returnType = typeList[0];
 		const argTypeList = typeList.slice(3);
-		const needsWireRead = returnType.wireRead || returnType.makeWireRead;
-		const needsWireWrite = anyNeedsWireWrite(argTypeList);
+		const needsWireRead = returnType.needsWireRead(policyTbl);
+		const needsWireWrite = anyNeedsWireWrite(argTypeList, policyTbl);
 
 		const dynCall = Module['dynCall_' + makeSignature(typeList)];
 
@@ -319,8 +319,8 @@ export namespace _nbind {
 		const typeList = getTypes(idList);
 		const returnType = typeList[0];
 		const argTypeList = typeList.slice(1);
-		const needsWireRead = returnType.wireRead || returnType.makeWireRead;
-		const needsWireWrite = anyNeedsWireWrite(argTypeList);
+		const needsWireRead = returnType.needsWireRead(policyTbl);
+		const needsWireWrite = anyNeedsWireWrite(argTypeList, policyTbl);
 
 		if(direct && !needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,

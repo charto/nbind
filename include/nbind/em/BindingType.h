@@ -93,7 +93,9 @@ template <> struct BindingType<ArgType> { \
 	typedef ArgWireType WireType; \
 	static inline Type fromWireType(WireType arg) { return(arg); } \
 	static inline WireType toWireType(Type arg) { return(arg); } \
-};
+}; \
+\
+template <> struct BindingType<StrictType<ArgType>> : public BindingType<ArgType> {}
 
 DEFINE_NATIVE_BINDING_TYPE(double, double);
 DEFINE_NATIVE_BINDING_TYPE(float, double);
@@ -122,6 +124,8 @@ template<> struct BindingType<bool> {
 	static inline WireType toWireType(Type arg) { return(arg); }
 
 };
+
+template <> struct BindingType<StrictType<bool>> : public BindingType<bool> {};
 
 template<> struct BindingType<void> {
 

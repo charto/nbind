@@ -19,6 +19,8 @@ export namespace _nbind {
 
 export namespace _nbind {
 
+	export type PolicyTbl = _globals.PolicyTbl;
+
 	export var resources: typeof _resource.resources;
 
 	export function pushArray(arr: any[], type: ArrayType) {
@@ -115,9 +117,16 @@ export namespace _nbind {
 		size: number;
 	}
 
-	export function pushString(str: string) {
-		if(str === null || str === undefined) return(0);
-		str = str.toString();
+	export function pushString(str: string, policyTbl?: PolicyTbl) {
+		if(str === null || str === undefined) {
+			if(policyTbl && policyTbl['Nullable']) {
+				str = '';
+			} else throw(new Error('Type mismatch'));
+		}
+
+		if(policyTbl && policyTbl['Strict']) {
+			if(typeof(str) != 'string') throw(new Error('Type mismatch'));
+		} else str = str.toString();
 
 		const length = Module.lengthBytesUTF8(str);
 
@@ -145,12 +154,11 @@ export namespace _nbind {
 			super(id, name);
 		}
 
+		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
+			(arg: any) => pushString(arg, policyTbl)
+		);
 		wireRead = popString;
 		wireWrite = pushString;
-
-		// Optional type conversion code
-		// makeWireRead = (expr: string) => '_nbind.popString(' + expr + ')';
-		// makeWireWrite = (expr: string) => '_nbind.pushString(' + expr + ')';
 
 		readResources = [ resources.pool ];
 		writeResources = [ resources.pool ];

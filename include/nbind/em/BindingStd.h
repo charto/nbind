@@ -139,4 +139,6 @@ template<> struct BindingType<std::string> {
 
 };
 
+template <> struct BindingType<StrictType<std::string>> : public BindingType<std::string> {};
+
 } // namespace

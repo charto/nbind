@@ -161,7 +161,7 @@ static void initModule() {
 
 		_nbind_register_function(
 			0,
-			nullptr,
+			signature->getPolicies(),
 			signature->getTypeList(),
 			signature->getArity() + 1,
 			signature->getCaller(),

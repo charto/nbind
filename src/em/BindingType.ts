@@ -37,6 +37,14 @@ export namespace _nbind {
 			typeList[id] = this;
 		}
 
+		needsWireRead(policyTbl: PolicyTbl) {
+			return(!!this.wireRead || !!this.makeWireRead);
+		}
+
+		needsWireWrite(policyTbl: PolicyTbl) {
+			return(!!this.wireWrite || !!this.makeWireWrite);
+		}
+
 		wireRead: (arg: number) => any;
 		wireWrite: (arg: any) => number;
 
@@ -86,13 +94,33 @@ export namespace _nbind {
 			this.heap = heapTbl[size * 8];
 			this.ptrSize = size;
 		}
+
+		needsWireWrite(policyTbl: PolicyTbl) {
+			return(!!policyTbl && !!policyTbl['Strict']);
+		}
+
+		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
+			policyTbl && policyTbl['Strict'] ?
+			(arg: any) => {
+				if(typeof(arg) == 'number') return(arg);
+				throw(new Error('Type mismatch'));
+			} :
+			null
+		);
 	}
 
 	// Push a string to the C++ stack, zero-terminated and UTF-8 encoded.
 
-	export function pushCString(str: string) {
-		if(str === null || str === undefined) return(0);
-		str = str.toString();
+	export function pushCString(str: string, policyTbl?: PolicyTbl) {
+		if(str === null || str === undefined) {
+			if(policyTbl && policyTbl['Nullable']) {
+				return(0);
+			} else throw(new Error('Type mismatch'));
+		}
+
+		if(policyTbl && policyTbl['Strict']) {
+			if(typeof(str) != 'string') throw(new Error('Type mismatch'));
+		} else str = str.toString();
 
 		const length = Module.lengthBytesUTF8(str) + 1;
 		const result = Pool.lalloc(length);
@@ -118,12 +146,11 @@ export namespace _nbind {
 			super(id, name);
 		}
 
+		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
+			(arg: any) => pushCString(arg, policyTbl)
+		);
 		wireRead = popCString;
 		wireWrite = pushCString;
-
-		// Optional type conversion code
-		// makeWireRead = (expr: string) => '_nbind.popCString(' + expr + ')';
-		// makeWireWrite = (expr: string) => '_nbind.pushCString(' + expr + ')';
 
 		readResources = [ resources.pool ];
 		writeResources = [ resources.pool ];

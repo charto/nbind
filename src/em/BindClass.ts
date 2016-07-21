@@ -74,15 +74,9 @@ export namespace _nbind {
 		return(new type.proto(ptrMarker, ptr));
 	}
 
-	export function pushPointer(obj: any, type: BindClassPtr) {
-		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
-
-		return(obj.__nbindPtr);
-	}
-
-	export function pushNullablePointer(obj: any, type: BindClassPtr) {
+	export function pushPointer(obj: any, type: BindClassPtr, policyTbl?: PolicyTbl) {
 		// Handle null pointers.
-		if(!obj) return(0);
+		if(!obj && policyTbl['Nullable']) return(0);
 		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
 
 		return(obj.__nbindPtr);
@@ -95,13 +89,11 @@ export namespace _nbind {
 			this.proto = proto;
 		}
 
+		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
+			(arg: any) => pushPointer(arg, this, policyTbl)
+		);
 		wireRead = (arg: number) => popPointer(arg, this);
 		wireWrite = (arg: any) => pushPointer(arg, this);
-		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
-			policyTbl['Nullable'] ?
-			(arg: any) => pushNullablePointer(arg, this) :
-			(arg: any) => pushPointer(arg, this)
-		);
 
 		proto: WrapperClass;
 	}
