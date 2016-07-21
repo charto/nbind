@@ -164,9 +164,21 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		wireRead = (arg: number) => !!arg;
+		needsWireWrite(policyTbl: PolicyTbl) {
+			return(!!policyTbl && !!policyTbl['Strict']);
+		}
 
 		makeWireRead = (expr: string) => '!!(' + expr + ')';
+		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
+			policyTbl && policyTbl['Strict'] ?
+			(arg: any) => {
+				if(typeof(arg) == 'boolean') return(arg);
+				throw(new Error('Type mismatch'));
+			} :
+			null
+		);
+
+		wireRead = (arg: number) => !!arg;
 	}
 
 	@prepareNamespace('_nbind')

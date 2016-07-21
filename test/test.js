@@ -235,18 +235,25 @@ test('Strict conversion policy', function(t) {
 		var Type = typeList[i];
 
 		t.strictEqual(Type.testInt(1), 1);
+		t.strictEqual(Type.testBool(true), true);
 		t.strictEqual(Type.testString('foo'), 'foo');
 		t.strictEqual(Type.testCString('foo'), 'foo');
 		t.strictEqual(Type.testInt('123'), 123);
+		t.strictEqual(Type.testBool(0), false);
 		t.strictEqual(Type.testString(123), '123');
 		t.strictEqual(Type.testCString(123), '123');
 
 		t.strictEqual(Type.strictInt(1), 1);
+		t.strictEqual(Type.strictBool(true), true);
 		t.strictEqual(Type.strictString('foo'), 'foo');
 		t.strictEqual(Type.strictCString('foo'), 'foo');
 
 		t.throws(function() {
 			Type.strictInt('123');
+		}, {message: 'Type mismatch'});
+
+		t.throws(function() {
+			Type.strictBool(0);
 		}, {message: 'Type mismatch'});
 
 		t.throws(function() {
