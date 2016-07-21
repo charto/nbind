@@ -993,7 +993,7 @@ these scripts in your HTML code as seen in the
 ```html
 <script src="nbind.js"></script>
 
-<script type="text/javascript">
+<script>
   nbind.init(function(err, binding) {
     var lib = binding.lib;
 
@@ -1002,7 +1002,7 @@ these scripts in your HTML code as seen in the
 </script>
 ```
 
-Make sure to fix the path to `nbind.js` on the last line if necessary.
+Make sure to fix the path to `nbind.js` on the first line if necessary.
 
 Using with TypeScript
 ---------------------
