@@ -1,4 +1,5 @@
 var nbind = require('..');
+var Int64 = require('../dist/Int64.js').Int64;
 var test = require('tap').test;
 
 var binding = nbind.init();
@@ -263,6 +264,44 @@ test('Strict conversion policy', function(t) {
 		t.throws(function() {
 			Type.strictCString(123);
 		}, {message: 'Type mismatch'});
+	}
+
+	t.end();
+});
+
+test('64-bit integers', function(t) {
+	var Type = testModule.PrimitiveMethods;
+	var lastDigit;
+
+	var x = Type.ftoul(42);
+	var y = Type.ftol(42);
+	var z = Type.ftol(-42);
+
+	t.strictEqual(Type.ultof(x), 42);
+	t.strictEqual(Type.ltof(y), 42);
+	t.strictEqual(Type.ltof(z), -42);
+
+	for(var j = 0; j < 2; ++j) {
+		for(var n = 2, i = 1; i < 63; ++i) {
+			x = Type.ftoull(n);
+			y = Type.ftoll(n);
+			z = Type.ftoll(-n);
+
+			t.strictEqual(Type.ulltof(x), n);
+			t.strictEqual(Type.lltof(y), n);
+			t.strictEqual(Type.lltof(z), -n);
+
+			if(j) {
+				lastDigit = '5137'.charAt(i & 3);
+				t.strictEqual(('' + x).substr(-1), lastDigit);
+				t.strictEqual(('' + y).substr(-1), lastDigit);
+				t.strictEqual(('' + z).substr(-1), lastDigit);
+			}
+
+			n *= 2;
+		}
+
+		binding.bind('Int64', Int64);
 	}
 
 	t.end();

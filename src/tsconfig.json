@@ -9,6 +9,7 @@
 		"target": "es5"
 	},
 	"files": [
+		"Int64.ts",
 		"nbind.ts"
 	]
 }

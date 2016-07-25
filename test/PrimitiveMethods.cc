@@ -49,6 +49,28 @@ public:
 		return((unsigned char *)buf);
 	}
 
+	template <typename T>
+	static T toInt(double x) {
+		T y = x;
+
+		return((y < 0) ? y + 1 : y - 1);
+	}
+
+	template <typename T>
+	static double toFloat(T x) {
+		return((x < 0) ? x - 1 : x + 1);
+	}
+
+	static long ftol(double x) { return(toInt<long>(x)); }
+	static unsigned long ftoul(double x) { return(toInt<unsigned long>(x)); }
+	static long long ftoll(double x) { return(toInt<long long>(x)); }
+	static unsigned long long ftoull(double x) { return(toInt<unsigned long long>(x)); }
+
+	static double ltof(long x) { return(toFloat(x)); }
+	static double ultof(unsigned long x) { return(toFloat(x)); }
+	static double lltof(long long x) { return(toFloat(x)); }
+	static double ulltof(unsigned long long x) { return(toFloat(x)); }
+
 private:
 
 	static char buf[12];
@@ -88,6 +110,16 @@ NBIND_CLASS(PrimitiveMethods) {
 
 	method(catenateStatic);
 	method(catenate);
+
+	method(ftol);
+	method(ftoul);
+	method(ftoll);
+	method(ftoull);
+
+	method(ltof);
+	method(ultof);
+	method(lltof);
+	method(ulltof);
 }
 
 #endif

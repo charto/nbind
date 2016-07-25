@@ -207,6 +207,8 @@ export namespace _nbind {
 		throw(new Error(message));
 	}
 
+	export var bigEndian = false;
+
 	// Export the namespace to Emscripten compiled output.
 	// This must be at the end of the namespace!
 	// The dummy class is needed because unfortunately namespaces can't have decorators.

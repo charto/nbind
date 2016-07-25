@@ -35,6 +35,7 @@ export namespace _nbind {
 	export type Func = _globals.Func;
 
 	export var typeList: typeof _globals.typeList;
+	export var bigEndian: typeof _globals.bigEndian;
 
 	export var MethodType: typeof _globals.MethodType;
 	export var addMethod: typeof _globals.addMethod;
@@ -72,6 +73,11 @@ publishNamespace('_nbind');
 
 @exportLibrary
 class nbind { // tslint:disable-line:class-name
+
+	@dep('_nbind')
+	static _nbind_register_endian(byte: number) {
+		if(byte == 1) _nbind.bigEndian = true;
+	}
 
 	@dep('_nbind')
 	static _nbind_register_pool(

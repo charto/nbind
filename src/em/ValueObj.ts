@@ -30,9 +30,10 @@ export namespace _nbind {
 
 	export var throwError: typeof _globals.throwError;
 	export var typeTbl: typeof _globals.typeTbl;
+	export var bigEndian: typeof _globals.bigEndian;
 
 	export interface ValueObject {
-		fromJS(output: () => void): void;
+		fromJS(output: (...args: any[]) => void): void;
 
 		/** This is mandatory, but dynamically created inside nbind. */
 		__nbindValueConstructor?: _globals.Func;
@@ -65,6 +66,15 @@ export namespace _nbind {
 	// Start of range used for other flags.
 	const valueBase = 18446744073709551616.0;
 
+	export function push64(num: number | any) {
+		if(typeof(num) == 'number') return(num);
+
+		const wrapNum = valueFreeList.pop() || valueList.length;
+
+		valueList[wrapNum] = num;
+		return(wrapNum * 4096 + valueBase);
+	}
+
 	export function pop64(num: number): number | any {
 		if(num < valueBase) return(num);
 		return(popValue((num - valueBase) / 4096));
@@ -85,6 +95,7 @@ export namespace _nbind {
 			super(id, name);
 		}
 
+		wireWrite = push64;
 		wireRead = pop64;
 	}
 
@@ -104,6 +115,31 @@ class nbind { // tslint:disable-line:class-name
 				this,
 				Array.prototype.concat.apply([ptr], arguments)
 			);
+		});
+	}
+
+	@dep('_nbind')
+	static _nbind_get_int_64(num: number, ptr: number) {
+		const obj = _nbind.popValue(num);
+
+		obj.fromJS(function(lo: number, hi: number, sign: boolean) {
+			if(sign) {
+				lo = ~lo;
+				hi = ~hi;
+
+				if(!++lo) ++hi;
+			}
+
+			ptr >>= 2;
+
+			// TODO: flip these on big endian platforms!
+			if(_nbind.bigEndian) {
+				HEAP32[ptr] = hi;
+				HEAP32[ptr + 1] = lo;
+			} else {
+				HEAP32[ptr] = lo;
+				HEAP32[ptr + 1] = hi;
+			}
 		});
 	}
 

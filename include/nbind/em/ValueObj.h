@@ -11,7 +11,8 @@
 namespace nbind {
 
 extern "C" {
-	extern unsigned int _nbind_get_value_object(unsigned int index, ArgStorage &storage);
+	extern unsigned int _nbind_get_value_object(unsigned int index, ArgStorage *storage);
+	extern unsigned int _nbind_get_int_64(unsigned int index, uint32_t *storage);
 }
 
 template<> struct BindingType<cbOutput::CreateValue> {
@@ -19,15 +20,6 @@ template<> struct BindingType<cbOutput::CreateValue> {
 	typedef int Type;
 
 };
-
-/*
-TODO:
-
-template <typename ArgType>
-inline uint32_t BindingType<ArgType *>::toWireType(ArgType *arg) {
-	return(0);
-}
-*/
 
 template <typename ArgType>
 inline int BindingType<ArgType>::toWireType(ArgType arg) {
@@ -45,6 +37,16 @@ inline int BindingType<ArgType>::toWireType(ArgType arg) {
 	}
 }
 
+template <typename ArgType>
+ArgType BindingType<ArgType>::fromWireType(int index) {
+	// Constructor argument is an unused dummy value.
+	TemplatedArgStorage<ArgType> storage(0);
+
+	_nbind_get_value_object(index, &storage);
+
+	return(storage.getBound());
+}
+
 class Int64 {};
 
 // 2^64, first integer not representable with uint64_t.
@@ -52,38 +54,56 @@ class Int64 {};
 const double valueBase = 18446744073709551616.0;
 
 template <int size> struct Int64Converter {
+	typedef int WireType;
+
 	template <typename ArgType>
-	static inline double uint64ToWire(ArgType arg) {
-		return(static_cast<double>(arg));
+	static inline WireType uint64ToWire(ArgType arg) {
+		return(static_cast<int>(arg));
 	}
 
 	template <typename ArgType>
-	static inline double int64ToWire(ArgType arg) {
-		return(static_cast<double>(arg));
+	static inline WireType int64ToWire(ArgType arg) {
+		return(static_cast<int>(arg));
+	}
+
+	template <typename ArgType>
+	static inline ArgType fromWire(WireType arg) {
+		return(arg);
 	}
 };
 
 template<> struct Int64Converter<8> {
+	typedef double WireType;
+
 	template <typename ArgType>
-	static inline double uint64ToWire(ArgType arg) {
+	static inline WireType uint64ToWire(ArgType arg) {
 		if(arg <= 0x20000000000000ULL) {
+			// Number fits in double.
 			return(static_cast<double>(arg));
 		}
 
 		cbFunction *jsConstructor = BindClass<Int64>::getInstance().getValueConstructorJS();
 
 		if(jsConstructor != nullptr) {
+			// Construct custom bignum object from high and low 32-bit halves.
 			cbOutput construct(*jsConstructor);
 
-			return(construct(static_cast<uint32_t>(arg >> 32), static_cast<uint32_t>(arg), false) * 4096 + valueBase);
+			return(
+				construct(
+					static_cast<uint32_t>(arg),
+					static_cast<uint32_t>(arg >> 32),
+					false
+				) * 4096 + valueBase
+			);
 		} else {
 			// Int64 JavaScript class is missing or not registered.
+			// Just cast to double then.
 			return(static_cast<double>(arg));
 		}
 	}
 
 	template <typename ArgType>
-	static inline double int64ToWire(ArgType arg) {
+	static inline WireType int64ToWire(ArgType arg) {
 		if(arg >= -0x20000000000000LL && arg <= 0x20000000000000LL) {
 			return(static_cast<double>(arg));
 		}
@@ -96,55 +116,54 @@ template<> struct Int64Converter<8> {
 			bool sign = arg < 0;
 			if(sign) arg = -arg;
 
-			return(construct(static_cast<uint32_t>(arg >> 32), static_cast<uint32_t>(arg), sign) * 4096 + valueBase);
+			return(
+				construct(
+					static_cast<uint32_t>(arg),
+					static_cast<uint32_t>(static_cast<uint64_t>(arg) >> 32),
+					sign
+				) * 4096 + valueBase
+			);
 		} else {
 			// Int64 JavaScript class is missing or not registered.
 			return(static_cast<double>(arg));
 		}
 	}
-};
 
-template <> struct BindingType<unsigned long> {
-	typedef unsigned long Type;
-	typedef double WireType;
-	static inline double toWireType(Type arg) {
-		return(Int64Converter<sizeof(Type)>::uint64ToWire(arg));
+	template <typename ArgType>
+	static inline ArgType fromWire(WireType arg) {
+		if(arg <= valueBase) return(arg);
+
+		unsigned int index = (arg - valueBase) / 4096;
+		ArgType storage = 0;
+
+		_nbind_get_int_64(index, reinterpret_cast<uint32_t *>(&storage));
+
+		return(storage);
 	}
 };
 
-template <> struct BindingType<unsigned long long> {
-	typedef unsigned long long Type;
-	typedef double WireType;
-	static inline double toWireType(Type arg) {
-		return(Int64Converter<sizeof(Type)>::uint64ToWire(arg));
-	}
-};
+#define DEFINE_INT64_BINDING_TYPE(ArgType, encode)          \
+template <> struct BindingType<ArgType> {                   \
+	typedef ArgType Type;                                   \
+	typedef typename Int64Converter<sizeof(Type)>::WireType WireType; \
+	                                                        \
+	static inline WireType toWireType(Type arg) {           \
+		return(Int64Converter<sizeof(Type)>::encode(arg));  \
+	}                                                       \
+	                                                        \
+	static inline Type fromWireType(WireType arg) {         \
+		return(Int64Converter<sizeof(Type)>::fromWire<Type>(arg)); \
+	}                                                       \
+};                                                          \
+                                                            \
+template <> struct BindingType<StrictType<ArgType>> : public BindingType<ArgType> {}
 
-template <> struct BindingType<long> {
-	typedef long Type;
-	typedef double WireType;
-	static inline double toWireType(Type arg) {
-		return(Int64Converter<sizeof(Type)>::int64ToWire(arg));
-	}
-};
+// Handle possibly 64-bit types.
+// Types detected to fit in 32 bits automatically use a faster code path.
 
-template <> struct BindingType<long long> {
-	typedef long long Type;
-	typedef double WireType;
-	static inline double toWireType(Type arg) {
-		return(Int64Converter<sizeof(Type)>::int64ToWire(arg));
-	}
-};
-
-template <typename ArgType>
-ArgType BindingType<ArgType>::fromWireType(int index) {
-	// Argument is an unused dummy value.
-
-	TemplatedArgStorage<ArgType> storage(0);
-
-	_nbind_get_value_object(index, storage);
-
-	return(storage.getBound());
-}
+DEFINE_INT64_BINDING_TYPE(unsigned long, uint64ToWire);
+DEFINE_INT64_BINDING_TYPE(unsigned long long, uint64ToWire);
+DEFINE_INT64_BINDING_TYPE(signed long, int64ToWire);
+DEFINE_INT64_BINDING_TYPE(signed long long, int64ToWire);
 
 } // namespace

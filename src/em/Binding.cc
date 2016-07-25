@@ -11,6 +11,7 @@
 using namespace nbind;
 
 extern "C" {
+	extern void _nbind_register_endian(unsigned char byte);
 	extern void _nbind_register_pool(unsigned int pageSize, unsigned int *usedPtr, unsigned char *rootPtr, unsigned char **pagePtr);
 	extern void _nbind_register_method_getter_setter_id(unsigned int methodID, unsigned int getterID, unsigned int setterID);
 	extern void _nbind_register_types(const void **data);
@@ -105,6 +106,10 @@ PoolRestore :: ~PoolRestore() {
 }
 
 static void initModule() {
+	uint32_t endianTest = 0x01020304;
+
+	_nbind_register_endian(*(uint8_t *)&endianTest);
+
 	_nbind_register_pool(Pool::pageSize, &Pool::used, Pool::rootPage, &Pool::page);
 
 	_nbind_register_type(Typer<void>::makeID(), "void");
