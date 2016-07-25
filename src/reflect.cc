@@ -7,7 +7,7 @@ using namespace nbind;
 
 typedef BaseSignature::Type SigType;
 
-void listMethods(uint64_t classType, std::forward_list<MethodDef> &methodList, cbFunction &outMethod) {
+void listMethods(uintptr_t classType, std::forward_list<MethodDef> &methodList, cbFunction &outMethod) {
 	for(auto &func : methodList) {
 		const BaseSignature *signature = func.getSignature();
 
@@ -15,42 +15,79 @@ void listMethods(uint64_t classType, std::forward_list<MethodDef> &methodList, c
 			continue;
 		}
 
-		auto rawTypes = signature->getTypeList();
-		std::vector<uint64_t> argTypes;
+		auto rawTypePtr = signature->getTypeList();
+		std::vector<uintptr_t> argTypeList;
 
 		unsigned int arity = signature->getArity() + 1;
-		argTypes.reserve(arity);
+		argTypeList.reserve(arity);
 
-		for(uint32_t num = 0; num < arity; ++num) {
-			argTypes.push_back(reinterpret_cast<uint64_t>(rawTypes[num]));
+		while(arity--) {
+			argTypeList.push_back(reinterpret_cast<uintptr_t>(*rawTypePtr));
+			++rawTypePtr;
+		}
+
+		const char **rawPolicyPtr = signature->getPolicies();
+		std::vector<const char *> policyNameList;
+
+		while(*rawPolicyPtr) {
+			policyNameList.push_back(*rawPolicyPtr);
+			++rawPolicyPtr;
 		}
 
 		outMethod(
 			classType,
 			func.getName(),
 			static_cast<unsigned int>(signature->getType()),
-			argTypes
+			argTypeList,
+			policyNameList
 		);
 	}
 }
 
 void NBind :: reflect(
+	cbFunction &outPrimitive,
+	cbFunction &outType,
 	cbFunction &outClass,
 	cbFunction &outMethod
 ) {
+
+	const void **primitiveData = getPrimitiveList();
+	const uint32_t *sizePtr = static_cast<const uint32_t *>(primitiveData[1]);
+	const uint8_t *flagPtr = static_cast<const uint8_t *>(primitiveData[2]);
+
+	for(const TYPEID *type = static_cast<const TYPEID *>(primitiveData[0]); *type; ++type) {
+		outPrimitive(
+			reinterpret_cast<uintptr_t>(*type),
+			*(sizePtr++),
+			*(flagPtr++)
+		);
+	}
+
+	for(const void **type = getNamedTypeList(); *type; type += 2) {
+		outType(
+			reinterpret_cast<uintptr_t>(type[0]),
+			static_cast<const char *>(type[1])
+		);
+	}
 
 	for(auto *bindClass : getClassList()) {
 		if(!bindClass) continue;
 
 		const TYPEID *classTypes = bindClass->getTypes();
-		uint64_t classType = reinterpret_cast<uint64_t>(classTypes[0]);
+		uintptr_t classType = reinterpret_cast<uintptr_t>(classTypes[0]);
 
 		outClass(
 			classType,
-			reinterpret_cast<uint64_t>(classTypes[1]),
-			reinterpret_cast<uint64_t>(classTypes[2]),
+			reinterpret_cast<uintptr_t>(classTypes[1]),
+			reinterpret_cast<uintptr_t>(classTypes[2]),
 			bindClass->getName()
 		);
+	}
+
+	for(auto *bindClass : getClassList()) {
+		if(!bindClass) continue;
+
+		uintptr_t classType = reinterpret_cast<uintptr_t>(bindClass->getTypes()[0]);
 
 		listMethods(classType, bindClass->getMethodList(), outMethod);
 	}

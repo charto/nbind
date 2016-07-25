@@ -14,7 +14,7 @@ extern "C" {
 	extern void _nbind_register_endian(unsigned char byte);
 	extern void _nbind_register_pool(unsigned int pageSize, unsigned int *usedPtr, unsigned char *rootPtr, unsigned char **pagePtr);
 	extern void _nbind_register_method_getter_setter_id(unsigned int methodID, unsigned int getterID, unsigned int setterID);
-	extern void _nbind_register_types(const void **data);
+	extern void _nbind_register_primitive(  TYPEID typeID, unsigned int size, unsigned char flag);
 	extern void _nbind_register_type(       TYPEID typeID,    const char *name);
 	extern void _nbind_register_class(const TYPEID *typeList, const char *name);
 	extern void _nbind_register_destructor( TYPEID classType, funcPtr func);
@@ -112,25 +112,20 @@ static void initModule() {
 
 	_nbind_register_pool(Pool::pageSize, &Pool::used, Pool::rootPage, &Pool::page);
 
-	_nbind_register_type(Typer<void>::makeID(), "void");
-	_nbind_register_type(Typer<bool>::makeID(), "bool");
+	const void **primitiveData = getPrimitiveList();
+	const uint32_t *sizePtr = static_cast<const uint32_t *>(primitiveData[1]);
+	const uint8_t *flagPtr = static_cast<const uint8_t *>(primitiveData[2]);
 
-	_nbind_register_types(defineTypes<
-		unsigned char,  signed char,    char,
-		unsigned short, signed short,
-		unsigned int,   signed int,
-		unsigned long,  signed long,
-		unsigned long long, signed long long,
+	for(const TYPEID *type = static_cast<const TYPEID *>(primitiveData[0]); *type; ++type) {
+		_nbind_register_primitive(*type, *(sizePtr++), *(flagPtr++));
+	}
 
-		float, double,
-
-		unsigned char *, const unsigned char *,
-		signed   char *, const signed   char *,
-		         char *, const          char *
-	>());
-
-	_nbind_register_type(Typer<std::string>::makeID(), "std::string");
-	_nbind_register_type(Typer<cbFunction &>::makeID(), "cbFunction &");
+	for(const void **type = getNamedTypeList(); *type; type += 2) {
+		_nbind_register_type(
+			static_cast<TYPEID>(type[0]),
+			static_cast<const char *>(type[1])
+		);
+	}
 
 	_nbind_register_type(Typer<cbOutput::CreateValue>::makeID(), "_nbind_new");
 

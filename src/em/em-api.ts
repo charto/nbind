@@ -122,52 +122,37 @@ class nbind { // tslint:disable-line:class-name
 	}
 
 	@dep('_nbind')
-	static _nbind_register_types(dataPtr: number) {
-		const count       = HEAPU32[dataPtr / 4];
-		const idListPtr   = HEAPU32[dataPtr / 4 + 1] / 4;
-		const sizeListPtr = HEAPU32[dataPtr / 4 + 2] / 4;
-		const flagListPtr = HEAPU32[dataPtr / 4 + 3];
+	static _nbind_register_primitive(id: number, size: number, flag: number) {
+		const isSignless = flag & 16;
+		const isConst    = flag & 8;
+		const isPointer  = flag & 4;
+		const isFloat    = flag & 2;
+		const isUnsigned = flag & 1;
 
-		const idList   = HEAPU32.subarray(idListPtr,   idListPtr   + count);
-		const sizeList = HEAPU32.subarray(sizeListPtr, sizeListPtr + count);
-		const flagList = HEAPU8. subarray(flagListPtr, flagListPtr + count);
+		let name = isConst ? 'const ' : '';
 
-		function createType(id: number, flag: number, size: number) {
-			const isSignless = flag & 16;
-			const isConst    = flag & 8;
-			const isPointer  = flag & 4;
-			const isFloat    = flag & 2;
-			const isUnsigned = flag & 1;
-
-			let name = isConst ? 'const ' : '';
-
-			if(isSignless) {
-				name += 'char';
-			} else if(isPointer) {
-				if(isUnsigned) name += 'un';
-				name += 'signed char';
-			} else {
-				name += (
-					(isUnsigned ? 'u' : '') +
-					(isFloat ? 'float' : 'int') +
-					(size * 8 + '_t')
-				);
-			}
-
-			if(isPointer) {
-				// tslint:disable-next-line:no-unused-expression
-				new _nbind.CStringType(id, name + ' *');
-			} else if(size == 8 && !isFloat) {
-				// tslint:disable-next-line:no-unused-expression
-				new _nbind.Int64Type(id, name);
-			} else {
-				// tslint:disable-next-line:no-unused-expression
-				new _nbind.PrimitiveType(id, name, size, !!isUnsigned, !!isFloat);
-			}
+		if(isSignless) {
+			name += 'char';
+		} else if(isPointer) {
+			if(isUnsigned) name += 'un';
+			name += 'signed char';
+		} else {
+			name += (
+				(isUnsigned ? 'u' : '') +
+				(isFloat ? 'float' : 'int') +
+				(size * 8 + '_t')
+			);
 		}
 
-		for(let num = 0; num < count; ++num) {
-			createType(idList[num], flagList[num], sizeList[num]);
+		if(isPointer) {
+			// tslint:disable-next-line:no-unused-expression
+			new _nbind.CStringType(id, name + ' *');
+		} else if(size == 8 && !isFloat) {
+			// tslint:disable-next-line:no-unused-expression
+			new _nbind.Int64Type(id, name);
+		} else {
+			// tslint:disable-next-line:no-unused-expression
+			new _nbind.PrimitiveType(id, name, size, !!isUnsigned, !!isFloat);
 		}
 	}
 

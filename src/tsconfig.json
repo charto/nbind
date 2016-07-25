@@ -10,6 +10,7 @@
 	},
 	"files": [
 		"int64.ts",
+		"reflect.ts",
 		"nbind.ts"
 	]
 }

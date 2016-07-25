@@ -14,6 +14,8 @@ public:
 	static void bind_value(const char *name, cbFunction &func);
 
 	static void reflect(
+		cbFunction &outPrimitive,
+		cbFunction &outType,
 		cbFunction &outClass,
 		cbFunction &outMethod
 	);
