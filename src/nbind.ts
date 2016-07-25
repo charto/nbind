@@ -264,8 +264,10 @@ function initAsm<ExportType extends DefaultExportType>(
 
 	// Load the Asm.js module.
 	require(binding.binary.path)(lib, (err: any, parts: Binding<ExportType>) => {
-		binding.bind = parts.bind;
-		binding.reflect = parts.reflect;
+		if(!err) {
+			binding.bind = parts.bind;
+			binding.reflect = parts.reflect;
+		}
 
 		callback(err, binding);
 	});

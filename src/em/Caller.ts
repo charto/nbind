@@ -21,7 +21,7 @@ export namespace _nbind {
 	type PolicyTbl = _globals.PolicyTbl;
 
 	export var getTypes: typeof _globals.getTypes;
-	export var makeSignature: typeof _globals.makeSignature;
+	export var getDynCall: typeof _globals.getDynCall;
 
 	export var callbackList: typeof _callback.callbackList;
 
@@ -271,7 +271,7 @@ export namespace _nbind {
 		const needsWireRead = returnType.needsWireRead(policyTbl);
 		const needsWireWrite = anyNeedsWireWrite(argTypeList, policyTbl);
 
-		const dynCall = Module['dynCall_' + makeSignature(typeList)];
+		const dynCall = getDynCall(typeList);
 
 		if(!needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
@@ -326,7 +326,7 @@ export namespace _nbind {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
-			const dynCall = Module['dynCall_' + makeSignature(typeList)];
+			const dynCall = getDynCall(typeList);
 
 			switch(argCount) {
 				case 0: return(() =>
@@ -360,7 +360,7 @@ export namespace _nbind {
 			prefix = 'ptr';
 		}
 
-		const dynCall = Module['dynCall_' + makeSignature(getTypes(idList))];
+		const dynCall = getDynCall(getTypes(idList));
 
 		return(buildCallerFunction(
 			dynCall,

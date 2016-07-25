@@ -162,7 +162,7 @@ export namespace _nbind {
 	// with slightly mangled type signatures appended to their names.
 
 	// tslint:disable-next-line:no-shadowed-variable
-	export function makeSignature(typeList: _type.BindType[]) {
+	export function getDynCall(typeList: _type.BindType[]) {
 		const mangleMap: { [name: string]: string; } = {
 			float32_t: 'f',
 			float64_t: 'd',
@@ -171,7 +171,21 @@ export namespace _nbind {
 			void: 'v'
 		};
 
-		return(typeList.map((type: _type.BindType) => (mangleMap[type.name] || 'i')).join(''));
+		const signature = typeList.map(
+			(type: _type.BindType) => (mangleMap[type.name] || 'i')
+		).join('');
+
+		const dynCall = Module['dynCall_' + signature];
+
+		if(!dynCall) {
+			throw(new Error(
+				'dynCall_' + signature + ' not found for ' + (
+					typeList.map((type: _type.BindType) => type.name)
+				).join(', ')
+			));
+		}
+
+		return(dynCall);
 	}
 
 	// Add a method to a C++ class constructor (for static methods) or prototype,
