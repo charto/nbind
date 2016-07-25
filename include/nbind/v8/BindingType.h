@@ -16,14 +16,14 @@ typedef v8::Local<v8::Value> WireType;
 
 template <typename ArgType> struct BindingType {
 
-	typedef ArgType type;
+	typedef ArgType Type;
 
 	static inline bool checkType(WireType arg) {
 		// TODO: Also check type of object!
 		return(arg->IsObject());
 	}
 
-	static inline type fromWireType(WireType arg);
+	static inline Type fromWireType(WireType arg);
 
 	static inline WireType toWireType(ArgType arg);
 
@@ -34,37 +34,37 @@ template <typename ArgType> struct BindingType {
 template <typename ArgType>
 struct BindingType<ArgType *> {
 
-	typedef ArgType *type;
+	typedef ArgType *Type;
 
 	static inline bool checkType(WireType arg) {
 		// TODO: Also check type of object!
 		return(arg->IsObject());
 	}
 
-	static inline type fromWireType(WireType arg) {
+	static inline Type fromWireType(WireType arg) {
 		v8::Local<v8::Object> argWrapped = arg->ToObject();
 		return(node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
 	}
 
-	static inline WireType toWireType(type arg);
+	static inline WireType toWireType(Type arg);
 
 };
 
 template <typename ArgType>
 struct BindingType<NullableType<ArgType>> {
 
-	typedef typename BindingType<ArgType>::type type;
+	typedef typename BindingType<ArgType>::Type Type;
 
 	static inline bool checkType(WireType arg) {
 		return(arg->IsNull() || arg->IsUndefined() || BindingType<ArgType>::checkType(arg));
 	}
 
-	static inline type fromWireType(WireType arg) {
+	static inline Type fromWireType(WireType arg) {
 		if(arg->IsNull() || arg->IsUndefined()) return(nullptr);
 		return(BindingType<ArgType>::fromWireType(arg));
 	}
 
-	static inline WireType toWireType(type arg) {
+	static inline WireType toWireType(Type arg) {
 		if(arg == nullptr) return(Nan::Null());
 		return(BindingType<ArgType>::toWireType(arg));
 	}
@@ -76,17 +76,17 @@ struct BindingType<NullableType<ArgType>> {
 
 #define DEFINE_NATIVE_BINDING_TYPE(ArgType, check, decode, jsClass) \
 template <> struct BindingType<ArgType> {                   \
-	typedef ArgType type;                                   \
+	typedef ArgType Type;                                   \
 	                                                        \
 	static inline bool checkType(WireType arg) {            \
 		return(true);                                       \
 	}                                                       \
 	                                                        \
-	static inline type fromWireType(WireType arg) {         \
-		return(static_cast<type>(arg->decode()));           \
+	static inline Type fromWireType(WireType arg) {         \
+		return(static_cast<Type>(arg->decode()));           \
 	}                                                       \
 	                                                        \
-	static inline WireType toWireType(type arg) {           \
+	static inline WireType toWireType(Type arg) {           \
 		return(Nan::New<jsClass>(arg));                     \
 	}                                                       \
 };                                                          \
@@ -114,13 +114,13 @@ DEFINE_NATIVE_BINDING_TYPE(char, IsNumber, Int32Value, v8::Int32);
 
 #define DEFINE_STRING_BINDING_TYPE(ArgType)             \
 template <> struct BindingType<ArgType> {               \
-	typedef ArgType type;                               \
+	typedef ArgType Type;                               \
 	                                                    \
 	static inline bool checkType(WireType arg) {        \
 		return(true);                                   \
 	}                                                   \
 	                                                    \
-	static inline WireType toWireType(type arg) {       \
+	static inline WireType toWireType(Type arg) {       \
 		const char *buf = (arg == nullptr) ? "" : reinterpret_cast<const char *>(arg); \
 		return(Nan::New<v8::String>(buf, strlen(buf)).ToLocalChecked()); \
 	}                                                   \
@@ -153,11 +153,11 @@ DEFINE_STRING_BINDING_TYPE(const char *);
 
 template <> struct BindingType<void> {
 
-	typedef std::nullptr_t type;
+	typedef std::nullptr_t Type;
 
-	static inline type fromWireType(WireType arg) { return(nullptr); }
+	static inline Type fromWireType(WireType arg) { return(nullptr); }
 
-	static inline WireType toWireType(type arg) { return(Nan::Undefined()); }
+	static inline WireType toWireType(Type arg) { return(Nan::Undefined()); }
 
 };
 

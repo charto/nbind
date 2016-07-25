@@ -132,8 +132,9 @@ class nbind { // tslint:disable-line:class-name
 
 			ptr >>= 2;
 
-			// TODO: flip these on big endian platforms!
 			if(_nbind.bigEndian) {
+				// Emscripten itself might not work on big endian,
+				// but we support it here anyway.
 				HEAP32[ptr] = hi;
 				HEAP32[ptr + 1] = lo;
 			} else {

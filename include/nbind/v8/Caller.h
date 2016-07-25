@@ -53,11 +53,11 @@ template<typename ReturnType> struct MethodResultConverter {
 		target.toJS(*(ReturnType *)nullptr, *(cbOutput *)nullptr),
 		// Actual return type of this function: WireType (decltype adds a reference, which is removed).
 		*(WireType *)nullptr
-	)>::type {
+	)>::Type {
 		// This function is similar to BindingType<ArgType>::toWireType(ArgType &&arg).
 
 		v8::Local<v8::Value> output = Nan::Undefined();
-		cbFunction *jsConstructor = getValueConstructorJS<typename std::remove_pointer<ReturnType>::type>();
+		cbFunction *jsConstructor = getValueConstructorJS<typename std::remove_pointer<ReturnType>::Type>();
 
 		if(jsConstructor != nullptr) {
 			cbOutput construct(*jsConstructor, &output);

@@ -17,7 +17,7 @@ namespace nbind {
 template <typename ArgType, size_t size>
 struct BindingType<std::array<ArgType, size>> {
 
-	typedef std::array<ArgType, size> type;
+	typedef std::array<ArgType, size> Type;
 
 	static inline bool checkType(WireType arg) {
 		if(!arg->IsArray()) return(false);
@@ -27,12 +27,12 @@ struct BindingType<std::array<ArgType, size>> {
 		return(arr->Length() >= size);
 	}
 
-	static inline type fromWireType(WireType arg) {
+	static inline Type fromWireType(WireType arg) {
 		// TODO: Don't convert sparse arrays.
 
 		v8::Local<v8::Array> arr = arg.template As<v8::Array>();
 
-		type val;
+		Type val;
 
 		// Length of arr is checked in checkType().
 		for(uint32_t num = 0; num < size; ++num) {
@@ -51,7 +51,7 @@ struct BindingType<std::array<ArgType, size>> {
 		return(val);
 	}
 
-	static inline WireType toWireType(type arg) {
+	static inline WireType toWireType(Type arg) {
 		v8::Local<v8::Array> arr = Nan::New<v8::Array>(size);
 
 		for(uint32_t num = 0; num < size; ++num) {
@@ -68,13 +68,13 @@ struct BindingType<std::array<ArgType, size>> {
 template <typename ArgType>
 struct BindingType<std::vector<ArgType>> {
 
-	typedef std::vector<ArgType> type;
+	typedef std::vector<ArgType> Type;
 
 	static inline bool checkType(WireType arg) {
 		return(arg->IsArray());
 	}
 
-	static inline type fromWireType(WireType arg) {
+	static inline Type fromWireType(WireType arg) {
 		// TODO: Don't convert sparse arrays.
 
 		v8::Local<v8::Array> arr = arg.template As<v8::Array>();
@@ -82,7 +82,7 @@ struct BindingType<std::vector<ArgType>> {
 
 		// We know the length, so it's faster to preallocate the vector.
 
-		type val;
+		Type val;
 		val.reserve(count);
 
 		for(uint32_t num = 0; num < count; ++num) {
@@ -101,7 +101,7 @@ struct BindingType<std::vector<ArgType>> {
 		return(val);
 	}
 
-	static inline WireType toWireType(type arg) {
+	static inline WireType toWireType(Type arg) {
 		uint32_t count = arg.size();
 		v8::Local<v8::Array> arr = Nan::New<v8::Array>(count);
 
@@ -118,18 +118,18 @@ struct BindingType<std::vector<ArgType>> {
 
 template <> struct BindingType<std::string> {
 
-	typedef std::string type;
+	typedef std::string Type;
 
 	static inline bool checkType(WireType arg) {
 		return(true);
 	}
 
-	static inline type fromWireType(WireType arg) {
+	static inline Type fromWireType(WireType arg) {
 		Nan::Utf8String val(arg->ToString());
 		return(std::string(*val, val.length()));
 	}
 
-	static inline WireType toWireType(type arg) {
+	static inline WireType toWireType(Type arg) {
 		return(Nan::New<v8::String>(arg.c_str(), arg.length()).ToLocalChecked());
 	}
 

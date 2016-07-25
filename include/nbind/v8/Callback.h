@@ -30,7 +30,7 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::type call(Args... args) {
+	typename BindingType<ReturnType>::Type call(Args... args) {
 		v8::Local<v8::Value> argv[] = {
 			(BindingType<Args>::toWireType(args))...,
 			Nan::Null()
@@ -39,7 +39,7 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::type callMethod(v8::Local<v8::Object> target, Args... args) {
+	typename BindingType<ReturnType>::Type callMethod(v8::Local<v8::Object> target, Args... args) {
 		v8::Local<v8::Value> argv[] = {
 			(BindingType<Args>::toWireType(args))...
 		};
@@ -88,13 +88,13 @@ private:
 
 template <> struct BindingType<cbFunction> {
 
-	typedef const cbFunction type;
+	typedef const cbFunction Type;
 
 	static inline bool checkType(WireType arg) {
 		return(arg->IsFunction());
 	}
 
-	static inline type fromWireType(WireType arg) {
+	static inline Type fromWireType(WireType arg) {
 		return(cbFunction(arg.As<v8::Function>()));
 	}
 
@@ -102,7 +102,7 @@ template <> struct BindingType<cbFunction> {
 
 template <> struct BindingType<cbFunction &> {
 
-	typedef const cbFunction & type;
+	typedef const cbFunction & Type;
 
 	static inline bool checkType(WireType arg) {
 		return(arg->IsFunction());

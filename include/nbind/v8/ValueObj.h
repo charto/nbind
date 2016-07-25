@@ -254,27 +254,28 @@ template<> struct Int64Converter<8> {
 
 #define DEFINE_INT64_BINDING_TYPE(ArgType, encode, decode)  \
 template <> struct BindingType<ArgType> {                   \
-	typedef ArgType type;                                   \
+	typedef ArgType Type;                                   \
 	                                                        \
 	static inline bool checkType(WireType arg) {            \
 		return(true);                                       \
 	}                                                       \
 	                                                        \
-	static inline WireType toWireType(type arg) {           \
-		return(Int64Converter<sizeof(type)>::encode(arg));  \
+	static inline WireType toWireType(Type arg) {           \
+		return(Int64Converter<sizeof(Type)>::encode(arg));  \
 	}                                                       \
 	                                                        \
-	static inline type fromWireType(WireType arg) {         \
+	static inline Type fromWireType(WireType arg) {         \
 		if(arg->IsObject()) {                               \
-			return(int64FromWire<ArgType>(arg, Int64Converter<sizeof(type)>::decode<ArgType>)); \
+			return(int64FromWire<ArgType>(arg, Int64Converter<sizeof(Type)>::decode<ArgType>)); \
 		} else {                                            \
-			return(static_cast<type>(arg->NumberValue()));  \
+			return(static_cast<Type>(arg->NumberValue()));  \
 		}                                                   \
 	}                                                       \
 };                                                          \
                                                             \
 template <> struct BindingType<StrictType<ArgType>> : public BindingType<ArgType> { \
 	static inline bool checkType(WireType arg) {            \
+		/* TODO: check type of object (bound to Int64?) */  \
 		return(arg->IsNumber() || arg->IsObject());         \
 	}                                                       \
 }
