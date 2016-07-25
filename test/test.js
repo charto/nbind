@@ -1,5 +1,5 @@
 var nbind = require('..');
-var Int64 = require('../dist/Int64.js').Int64;
+var Int64 = require('../dist/int64.js').Int64;
 var test = require('tap').test;
 
 var binding = nbind.init();
