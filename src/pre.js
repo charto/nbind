@@ -38,6 +38,7 @@
 			cb(null, {
 				bind: Module._nbind_value,
 				reflect: Module.NBind.reflect,
+				queryType: Module.NBind.queryType,
 				lib: Module
 			});
 		});

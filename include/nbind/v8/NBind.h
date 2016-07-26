@@ -20,6 +20,8 @@ public:
 		cbFunction &outMethod
 	);
 
+	static void queryType(uintptr_t type, cbFunction &outTypeDetail);
+
 };
 
 } // namespace

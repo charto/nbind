@@ -47,6 +47,8 @@ export interface ModuleSpec {
 
 export type ClassType = { new(...args: any[]): any };
 
+export enum MethodKind { func, method, getter, setter, construct };
+
 export interface DefaultExportType {
 	[ key: string ]: any;
 
@@ -65,7 +67,29 @@ export class Binding<ExportType extends DefaultExportType> {
 	/** Bind a value type (class with a fromJS method) to an equivalent C++ type. */
 
 	bind: (name: string, proto: ClassType ) => void;
-	reflect: any; // TODO
+
+	reflect: (
+		outPrimitive: (id: number, size: number, flag: number) => void,
+		outType: (id: number, name: string) => void,
+		outClass: (
+			id: number,
+			ptrId: number,
+			constPtrId: number,
+			name: string
+		) => void,
+		outMethod: (
+			classId: number,
+			name: string,
+			kind: MethodKind,
+			argTypeList: number[],
+			policyList: string[]
+		) => void
+	) => void;
+
+	queryType: (
+		id: number,
+		outTypeDetail: (kind: number, ...args: any[]) => void
+	) => void;
 
 	binary: ModuleSpec;
 	/** Exported API of a C++ library compiled for nbind. */
@@ -267,6 +291,7 @@ function initAsm<ExportType extends DefaultExportType>(
 		if(!err) {
 			binding.bind = parts.bind;
 			binding.reflect = parts.reflect;
+			binding.queryType = parts.queryType;
 		}
 
 		callback(err, binding);
@@ -289,6 +314,7 @@ function initNode<ExportType extends DefaultExportType>(
 
 	binding.bind = lib.NBind.bind_value;
 	binding.reflect = lib.NBind.reflect;
+	binding.queryType = lib.NBind.queryType;
 
 	Object.keys(lib).forEach(function(key: string) {
 		binding.lib[key] = lib[key];

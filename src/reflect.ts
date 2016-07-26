@@ -1,7 +1,7 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-import {Binding} from './nbind';
+import {Binding, MethodKind} from './nbind';
 
 export class BindType {
 	constructor(id: number, name: string) {
@@ -55,6 +55,32 @@ export class BindPrimitive extends BindType {
 	isUnsigned: boolean;
 }
 
+export class BindVector extends BindType {
+	constructor(id: number, target: BindType) {
+		super(id, 'std::vector<' + target.name + '>');
+
+		this.target = target;
+	}
+
+	isVector = true;
+
+	target: BindType;
+}
+
+export class BindArray extends BindType {
+	constructor(id: number, target: BindType, length: number) {
+		super(id, 'std::array<' + target.name + ', ' + length + '>');
+
+		this.target = target;
+		this.length = length;
+	}
+
+	isVector = true;
+
+	target: BindType;
+	length: number;
+}
+
 export class BindPointer extends BindType {
 	constructor(id: number, target: BindType, isConst?: boolean) {
 		super(id, (isConst ? 'const ' : '') + target.name.replace(/([^*])$/, '$1 ') + '*');
@@ -74,13 +100,14 @@ export class BindClass extends BindType {
 		super(id, name);
 	}
 
-	addMethod(name: string, kind: number, argTypeList: BindType[], policyList: string[]) {
+	addMethod(name: string, kind: MethodKind, typeList: BindType[], policyList: string[]) {
 		const bindMethod = new BindMethod(
 			this,
 			name,
-			argTypeList[0],
-			argTypeList.slice(1),
-			policyList
+			typeList[0],
+			typeList.slice(1),
+			policyList,
+			kind == MethodKind.func
 		);
 
 		this.methodTbl[name] = bindMethod;
@@ -102,13 +129,15 @@ export class BindMethod {
 		name: string,
 		returnType: BindType,
 		argTypeList: BindType[],
-		policyList: string[]
+		policyList: string[],
+		isStatic: boolean
 	) {
 		this.bindClass = bindClass;
 		this.name = name;
 		this.returnType = returnType;
 		this.argTypeList = argTypeList;
 		this.policyList = policyList;
+		this.isStatic = isStatic;
 	}
 
 	bindClass: BindClass;
@@ -129,6 +158,8 @@ export class Reflect {
 		this.registerType(globalScope);
 		this.classList.push(globalScope);
 
+		this.binding = binding;
+
 		binding.reflect(
 			this.readPrimitive.bind(this),
 			this.readType.bind(this),
@@ -144,21 +175,28 @@ export class Reflect {
 		this.typeList.push(bindType);
 	}
 
-	private getTypes(typeIdList: number[]) {
-		const bindTypeList: BindType[] = [];
+	private getType(id: number) {
+		let bindType = this.typeIdTbl[id];
 
-		for(let id of typeIdList) {
-			let bindType = this.typeIdTbl[id];
+		if(bindType) return(bindType);
 
-			if(!bindType) {
-				// TODO
-				bindType = null;
+		this.binding.queryType(id, (kind: number, ...args: any[]) => {
+			switch(kind) {
+				case 1:
+					bindType = new BindVector(id, this.getType(args[0]));
+					break;
+
+				case 2:
+					bindType = new BindArray(id, this.getType(args[0]), args[1]);
+					break;
+
+				default:
+					// throw(new Error('Undefined type ' + id));
+					console.error('Undefined type ' + id); // tslint:disable-line
 			}
+		});
 
-			bindTypeList.push(bindType);
-		}
-
-		return(bindTypeList);
+		return(bindType);
 	}
 
 	private readPrimitive(id: number, size: number, flag: number) {
@@ -200,8 +238,8 @@ export class Reflect {
 	private readMethod(
 		classId: number,
 		name: string,
-		kind: number,
-		argTypeList: number[],
+		kind: MethodKind,
+		typeIdList: number[],
 		policyList: string[]
 	) {
 		const bindClass = this.typeIdTbl[classId] as BindClass;
@@ -209,7 +247,9 @@ export class Reflect {
 		if(!bindClass) {
 			throw(new Error('Unknown class ID ' + classId + ' for method ' + name));
 		} else {
-			bindClass.addMethod(name, kind, this.getTypes(argTypeList), policyList);
+			const typeList = typeIdList.map((id: number) => this.getType(id));
+
+			bindClass.addMethod(name, kind, typeList, policyList);
 		}
 	}
 
@@ -242,6 +282,8 @@ export class Reflect {
 	}
 
 	/* tslint:enable */
+
+	binding: Binding<any>;
 
 	typeIdTbl: { [id: number]: BindType } = {};
 	typeNameTbl: { [name: string]: BindType } = {};

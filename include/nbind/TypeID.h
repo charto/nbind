@@ -16,7 +16,7 @@ struct Typer {
 	// Reserve a single byte of memory to uniquely represent a type.
 	// The address of this byte is a unique type-specific constant.
 	static const struct SpecType {
-		const char placeholderFlag;
+		const unsigned char placeholderFlag;
 	} spec;
 
 	static NBIND_CONSTEXPR TYPEID makeID() {

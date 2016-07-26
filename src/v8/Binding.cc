@@ -204,6 +204,7 @@ NBIND_CLASS(NBind) {
 
 	method(bind_value);
 	method(reflect);
+	method(queryType);
 }
 
 NODE_MODULE(nbind, initModule)

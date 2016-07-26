@@ -16,13 +16,13 @@ void listMethods(uintptr_t classType, std::forward_list<MethodDef> &methodList, 
 		}
 
 		auto rawTypePtr = signature->getTypeList();
-		std::vector<uintptr_t> argTypeList;
+		std::vector<uintptr_t> typeIdList;
 
 		unsigned int arity = signature->getArity() + 1;
-		argTypeList.reserve(arity);
+		typeIdList.reserve(arity);
 
 		while(arity--) {
-			argTypeList.push_back(reinterpret_cast<uintptr_t>(*rawTypePtr));
+			typeIdList.push_back(reinterpret_cast<uintptr_t>(*rawTypePtr));
 			++rawTypePtr;
 		}
 
@@ -38,7 +38,7 @@ void listMethods(uintptr_t classType, std::forward_list<MethodDef> &methodList, 
 			classType,
 			func.getName(),
 			static_cast<unsigned int>(signature->getType()),
-			argTypeList,
+			typeIdList,
 			policyNameList
 		);
 	}
@@ -93,4 +93,40 @@ void NBind :: reflect(
 	}
 
 	listMethods(0, getFunctionList(), outMethod);
+}
+
+void NBind :: queryType(
+	uintptr_t id,
+	cbFunction &outTypeDetail
+) {
+	VectorStructure *vectorSpec;
+	ArrayStructure *arraySpec;
+
+	StructureType placeholderFlag = static_cast<StructureType>(
+		*reinterpret_cast<const unsigned char *>(id)
+	);
+
+	switch(placeholderFlag) {
+		case StructureType :: vector:
+			vectorSpec = reinterpret_cast<VectorStructure *>(id);
+			outTypeDetail(
+				static_cast<unsigned char>(placeholderFlag),
+				reinterpret_cast<uintptr_t>(vectorSpec->member)
+			);
+
+			break;
+
+		case StructureType :: array:
+			arraySpec = reinterpret_cast<ArrayStructure *>(id);
+			outTypeDetail(
+				static_cast<unsigned char>(placeholderFlag),
+				reinterpret_cast<uintptr_t>(arraySpec->member),
+				arraySpec->length
+			);
+
+			break;
+
+		default:
+			outTypeDetail(static_cast<unsigned char>(placeholderFlag));
+	}
 }

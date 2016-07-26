@@ -251,6 +251,7 @@ NBIND_CLASS(NBind) {
 
 	method(bind_value);
 	method(reflect);
+	method(queryType);
 
 	method(lalloc);
 	method(lreset);
