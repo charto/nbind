@@ -5,6 +5,12 @@
 
 namespace nbind {
 
+enum class StructureType : unsigned char {
+	raw = 0,
+	vector = 1,
+	array = 2
+};
+
 // Type ID system, based on Embind.
 
 typedef const void *TYPEID;
@@ -16,7 +22,7 @@ struct Typer {
 	// Reserve a single byte of memory to uniquely represent a type.
 	// The address of this byte is a unique type-specific constant.
 	static const struct SpecType {
-		const unsigned char placeholderFlag;
+		const StructureType placeholderFlag;
 	} spec;
 
 	static NBIND_CONSTEXPR TYPEID makeID() {
@@ -26,7 +32,9 @@ struct Typer {
 
 // Linkage for placeholder bytes representing types.
 template<typename ArgType>
-const typename Typer<ArgType>::SpecType Typer<ArgType>::spec = {0};
+const typename Typer<ArgType>::SpecType Typer<ArgType>::spec = {
+	StructureType :: raw
+};
 
 // Type description helpers.
 

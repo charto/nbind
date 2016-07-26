@@ -9,19 +9,13 @@
 
 namespace nbind {
 
-	enum class StructureType {
-		raw = 0,
-		vector = 1,
-		array = 2
-	};
-
 	typedef struct {
-		const unsigned char placeholderFlag;
+		const StructureType placeholderFlag;
 		const TYPEID member;
 	} VectorStructure;
 
 	typedef struct {
-		const unsigned char placeholderFlag;
+		const StructureType placeholderFlag;
 		const TYPEID member;
 		const size_t length;
 	} ArrayStructure;
@@ -37,7 +31,7 @@ namespace nbind {
 
 	template<typename MemberType>
 	const VectorStructure Typer<std::vector<MemberType>>::spec = {
-		static_cast<unsigned char>(StructureType :: vector),
+		StructureType :: vector,
 		Typer<MemberType>::makeID()
 	};
 
@@ -52,7 +46,7 @@ namespace nbind {
 
 	template<typename MemberType, size_t size>
 	const ArrayStructure Typer<std::array<MemberType, size>>::spec = {
-		static_cast<unsigned char>(StructureType :: array),
+		StructureType :: array,
 		Typer<MemberType>::makeID(),
 		size
 	};

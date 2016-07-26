@@ -102,9 +102,7 @@ void NBind :: queryType(
 	VectorStructure *vectorSpec;
 	ArrayStructure *arraySpec;
 
-	StructureType placeholderFlag = static_cast<StructureType>(
-		*reinterpret_cast<const unsigned char *>(id)
-	);
+	StructureType placeholderFlag = *reinterpret_cast<const StructureType *>(id);
 
 	switch(placeholderFlag) {
 		case StructureType :: vector:
