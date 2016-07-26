@@ -169,7 +169,7 @@ static void initModule(Handle<Object> exports) {
 
 				case SigType::constructor:
 
-					// Impossible! Constructors are not added to the method list.
+					// Constructors in method list are ignored.
 					// They're handled by overloaders for wrappers and values.
 
 					break;

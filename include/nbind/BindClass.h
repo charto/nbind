@@ -54,11 +54,9 @@ public:
 				signature->getValueConstructor()
 			);
 
-#		elif defined(EMSCRIPTEN)
-
-			methodList.emplace_front(nullptr, nullptr, 0, signature);
-
 #		endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
+
+		methodList.emplace_front(nullptr, nullptr, 0, signature);
 
 	}
 
