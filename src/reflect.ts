@@ -258,23 +258,34 @@ export class Reflect {
 	dumpPseudo() {
 		const lineList: string[] = [];
 		let indent: string;
+		let staticPrefix: string;
 
-		for(let bindClass of this.classList) {
+		for(let bindClass of this.classList.reverse()) {
 			if(bindClass.id) {
-				console.log(bindClass.name + ' {');
+				console.log('class ' + bindClass.name + ' {');
 				indent = '\t';
-			} else indent = '';
+				staticPrefix = 'static ';
+			} else {
+				indent = '';
+				staticPrefix = '';
+			}
 
-			for(let method of bindClass.methodList) {
+			for(let method of bindClass.methodList.reverse()) {
 				console.log(
 					indent +
+					(method.isStatic ? staticPrefix : '') +
 					method.returnType + ' ' +
 					method.name + '(' + method.argTypeList.join(', ') + ')' +
-					method.policyList.map((name) => ' <' + name + '>').join('')
+					';' +
+					(
+						method.policyList.length ?
+						' // ' + method.policyList.join(', ') :
+						''
+					)
 				);
 			}
 
-			if(indent) console.log('}');
+			if(indent) console.log('};');
 			console.log('');
 		}
 
