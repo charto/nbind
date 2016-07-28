@@ -1,7 +1,8 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-import {Binding, MethodKind} from './nbind';
+import {Binding} from './nbind';
+import {SignatureType, StructureType} from './enums';
 
 export class BindType {
 	constructor(id: number, name: string) {
@@ -100,14 +101,14 @@ export class BindClass extends BindType {
 		super(id, name);
 	}
 
-	addMethod(name: string, kind: MethodKind, typeList: BindType[], policyList: string[]) {
+	addMethod(name: string, kind: SignatureType, typeList: BindType[], policyList: string[]) {
 		const bindMethod = new BindMethod(
 			this,
 			name,
 			typeList[0],
 			typeList.slice(1),
 			policyList,
-			kind == MethodKind.func
+			kind == SignatureType.func
 		);
 
 		this.methodTbl[name] = bindMethod;
@@ -182,11 +183,11 @@ export class Reflect {
 
 		this.binding.queryType(id, (kind: number, ...args: any[]) => {
 			switch(kind) {
-				case 1:
+				case StructureType.vector:
 					bindType = new BindVector(id, this.getType(args[0]));
 					break;
 
-				case 2:
+				case StructureType.array:
 					bindType = new BindArray(id, this.getType(args[0]), args[1]);
 					break;
 
@@ -238,7 +239,7 @@ export class Reflect {
 	private readMethod(
 		classId: number,
 		name: string,
-		kind: MethodKind,
+		kind: SignatureType,
 		typeIdList: number[],
 		policyList: string[]
 	) {

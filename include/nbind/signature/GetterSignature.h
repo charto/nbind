@@ -26,7 +26,7 @@ public:
 
 	typedef TemplatedBaseSignature<GetterSignature, PolicyList, ReturnType, Args...> Parent;
 
-	static constexpr auto typeExpr = BaseSignature::Type::getter;
+	static constexpr auto typeExpr = BaseSignature :: SignatureType :: getter;
 
 #if defined(BUILDING_NODE_EXTENSION)
 

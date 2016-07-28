@@ -5,10 +5,12 @@
 
 namespace nbind {
 
+// These must match JavaScript enum StructureType in enums.ts
+
 enum class StructureType : unsigned char {
 	raw = 0,
-	vector = 1,
-	array = 2
+	vector,
+	array
 };
 
 // Type ID system, based on Embind.

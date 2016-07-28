@@ -21,7 +21,7 @@ public:
 
 	typedef TemplatedBaseSignature<FunctionSignature, PolicyList, ReturnType, Args...> Parent;
 
-	static constexpr auto typeExpr = BaseSignature::Type::function;
+	static constexpr auto typeExpr = BaseSignature :: SignatureType :: func;
 
 	static inline funcPtr getDirect(MethodType func) {
 		return(reinterpret_cast<funcPtr>(func));

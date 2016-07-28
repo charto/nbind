@@ -5,7 +5,7 @@
 
 using namespace nbind;
 
-typedef BaseSignature::Type SigType;
+typedef BaseSignature :: SignatureType SignatureType;
 
 void listMethods(uintptr_t classType, std::forward_list<MethodDef> &methodList, cbFunction &outMethod) {
 	for(auto &func : methodList) {

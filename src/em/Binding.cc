@@ -26,8 +26,6 @@ extern "C" {
 	);
 }
 
-typedef BaseSignature::Type SigType;
-
 unsigned int Pool::used = 0;
 unsigned char *Pool::rootPage = new unsigned char[Pool::pageSize];
 unsigned char *Pool::page = nullptr;
@@ -105,6 +103,8 @@ PoolRestore :: ~PoolRestore() {
 	NBind::lreset(used, reinterpret_cast<unsigned int>(page));
 }
 
+typedef BaseSignature :: SignatureType SignatureType;
+
 static void initModule() {
 	uint32_t endianTest = 0x01020304;
 
@@ -148,12 +148,6 @@ static void initModule() {
 		_nbind_register_class(bindClass->getTypes(), bindClass->getName());
 	}
 
-	_nbind_register_method_getter_setter_id(
-		static_cast<unsigned int>(SigType::method),
-		static_cast<unsigned int>(SigType::getter),
-		static_cast<unsigned int>(SigType::setter)
-	);
-
 	// Register all functions.
 
 	for(auto &func : getFunctionList()) {
@@ -189,9 +183,9 @@ static void initModule() {
 			}
 
 			switch(signature->getType()) {
-				case SigType::method:
-				case SigType::getter:
-				case SigType::setter:
+				case SignatureType :: method:
+				case SignatureType :: getter:
+				case SignatureType :: setter:
 
 					_nbind_register_method(
 						id,
@@ -206,7 +200,7 @@ static void initModule() {
 
 					break;
 
-				case SigType::function:
+				case SignatureType :: func:
 
 					_nbind_register_function(
 						id,
@@ -221,7 +215,7 @@ static void initModule() {
 
 					break;
 
-				case SigType::constructor:
+				case SignatureType :: construct:
 
 					_nbind_register_constructor(
 						id,

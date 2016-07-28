@@ -4,6 +4,8 @@
 // makeModulePathList and findCompiledModule are adapted from the npm module
 // "bindings" licensed under the MIT license terms in BINDINGS-LICENSE.
 
+import {SignatureType} from './enums';
+
 /** Typings for Node.js require(). */
 
 interface NodeRequire {
@@ -47,8 +49,6 @@ export interface ModuleSpec {
 
 export type ClassType = { new(...args: any[]): any };
 
-export enum MethodKind { func, method, getter, setter, construct };
-
 export interface DefaultExportType {
 	[ key: string ]: any;
 
@@ -80,7 +80,7 @@ export class Binding<ExportType extends DefaultExportType> {
 		outMethod: (
 			classId: number,
 			name: string,
-			kind: MethodKind,
+			kind: SignatureType,
 			argTypeList: number[],
 			policyList: string[]
 		) => void

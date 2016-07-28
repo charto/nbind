@@ -9,6 +9,7 @@ import {_nbind as _class} from './BindClass';
 import {_nbind as _std} from './BindingStd';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
+import {_nbind as _enums} from './enums';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -26,6 +27,8 @@ export namespace _nbind {
 	export type TypeIdList = (number | string)[];
 	export type PolicyTbl = { [name: string]: boolean };
 
+	export var StructureType: typeof _enums.StructureType;
+
 	export var ArrayType: typeof _std.ArrayType;
 
 	export var resources: typeof _resource.resources;
@@ -37,14 +40,6 @@ export namespace _nbind {
 
 	export var typeTbl: { [name: string]: _type.BindType } = {};
 	export var typeList: _type.BindType[] = [];
-
-	// Enum specifying if a method is a getter or setter or not.
-
-	export var MethodType: {
-		method: number;
-		getter: number;
-		setter: number;
-	} = {} as any;
 
 	export var value: any;
 
@@ -97,12 +92,11 @@ export namespace _nbind {
 
 		if(!memberType) throw(new Error('Unbound member type ' + memberId));
 
-		// These numbers must match TypeStd.h
 		switch(placeholderFlag) {
-			case 1: // Vector
+			case _nbind.StructureType.vector:
 				type = new _nbind.ArrayType(id, memberType);
 				break;
-			case 2: // Array
+			case _nbind.StructureType.array:
 				const size = HEAPU32[((id as number) >> 2) + 2];
 				type = new _nbind.ArrayType(id, memberType, size);
 				break;

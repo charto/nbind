@@ -19,8 +19,9 @@ import {_nbind as _value} from './ValueObj';
 import {_nbind as _std} from './BindingStd';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
+import {_nbind as _enums} from './enums';
 
-export {_globals, _type, _class, _callback, _value, _std, _caller, _resource};
+export {_globals, _type, _class, _callback, _value, _std, _caller, _resource, _enums};
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -37,7 +38,8 @@ export namespace _nbind {
 	export var typeList: typeof _globals.typeList;
 	export var bigEndian: typeof _globals.bigEndian;
 
-	export var MethodType: typeof _globals.MethodType;
+	export var SignatureType: typeof _enums.SignatureType;
+
 	export var addMethod: typeof _globals.addMethod;
 	export var readTypeIdList: typeof _globals.readTypeIdList;
 	export var readAsciiString: typeof _globals.readAsciiString;
@@ -90,17 +92,6 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.Pool.usedPtr = usedPtr / 4;
 		_nbind.Pool.rootPtr = rootPtr;
 		_nbind.Pool.pagePtr = pagePtr / 4;
-	}
-
-	@dep('_nbind')
-	static _nbind_register_method_getter_setter_id(
-		methodID: number,
-		getterID: number,
-		setterID: number
-	) {
-		_nbind.MethodType.method = methodID;
-		_nbind.MethodType.getter = getterID;
-		_nbind.MethodType.setter = setterID;
 	}
 
 	@dep('_nbind')
@@ -292,14 +283,14 @@ class nbind { // tslint:disable-line:class-name
 		ptr: number,
 		namePtr: number,
 		num: number,
-		methodType: number
+		signatureType: number
 	) {
 		let name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 		const proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
-		if(methodType == _nbind.MethodType.method) {
+		if(signatureType == _nbind.SignatureType.method) {
 			_nbind.addMethod(
 				proto,
 				name,
@@ -318,7 +309,7 @@ class nbind { // tslint:disable-line:class-name
 			(match: string, initial: string) => initial.toLowerCase()
 		);
 
-		if(methodType == _nbind.MethodType.setter) {
+		if(signatureType == _nbind.SignatureType.setter) {
 
 			// A setter is always followed by a getter, so we can just
 			// temporarily store an invoker in the property.

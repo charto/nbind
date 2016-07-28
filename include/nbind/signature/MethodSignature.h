@@ -21,7 +21,7 @@ public:
 
 	typedef TemplatedBaseSignature<MethodSignature, PolicyList, ReturnType, Args...> Parent;
 
-	static constexpr auto typeExpr = BaseSignature::Type::method;
+	static constexpr auto typeExpr = BaseSignature :: SignatureType :: method;
 
 #if defined(BUILDING_NODE_EXTENSION)
 

@@ -45,7 +45,7 @@ const char *stripGetterPrefix(const char *name, char *&nameBuf) {
 	return(name);
 }
 
-typedef BaseSignature::Type SigType;
+typedef BaseSignature :: SignatureType SignatureType;
 
 static void initModule(Handle<Object> exports) {
 	// Register NBind a second time to make sure it's first on the list
@@ -127,7 +127,7 @@ static void initModule(Handle<Object> exports) {
 			}
 
 			switch(signature->getType()) {
-				case SigType::method:
+				case SignatureType :: method:
 					Nan::SetPrototypeTemplate(constructorTemplate, func.getName(),
 						Nan::New<FunctionTemplate>(
 							reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
@@ -137,7 +137,7 @@ static void initModule(Handle<Object> exports) {
 
 					break;
 
-				case SigType::function:
+				case SignatureType :: func:
 					Nan::SetTemplate(constructorTemplate, func.getName(),
 						Nan::New<FunctionTemplate>(
 							reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
@@ -147,13 +147,13 @@ static void initModule(Handle<Object> exports) {
 
 					break;
 
-				case SigType::setter:
+				case SignatureType :: setter:
 					setter = signature->getCaller();
 					setterNum = func.getNum();
 
 					break;
 
-				case SigType::getter:
+				case SignatureType :: getter:
 					getter = signature->getCaller();
 					getterNum = func.getNum();
 
@@ -167,7 +167,7 @@ static void initModule(Handle<Object> exports) {
 
 					break;
 
-				case SigType::constructor:
+				case SignatureType :: construct:
 
 					// Constructors in method list are ignored.
 					// They're handled by overloaders for wrappers and values.

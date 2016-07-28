@@ -21,18 +21,25 @@ public:
 
 	// Type of the signature.
 	// Determines the actual signature class of each instance.
+	// These must match JavaScript enum SignatureType in enums.ts
 
-	enum class Type: unsigned int { function, method, getter, setter, constructor };
+	enum class SignatureType: unsigned int {
+		func = 0,
+		method,
+		getter,
+		setter,
+		construct
+	};
 
 	BaseSignature(
-		Type type,
+		SignatureType type,
 		funcPtr caller,
 		const char **policyNameList,
 		const TYPEID *typeList,
 		unsigned int arity
 	) : type(type), caller(caller), policyNameList(policyNameList), typeList(typeList), arity(arity) {}
 
-	Type getType() const { return(type); }
+	SignatureType getType() const { return(type); }
 	funcPtr getCaller() const { return(caller); }
 
 	// Type list is one item longer than arity,
@@ -58,7 +65,7 @@ public:
 
 private:
 
-	const Type type;
+	const SignatureType type;
 	const funcPtr caller;
 	const char **policyNameList;
 	const TYPEID *typeList;
