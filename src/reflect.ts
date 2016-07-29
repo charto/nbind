@@ -102,6 +102,8 @@ export class BindClass extends BindType {
 	}
 
 	addMethod(name: string, kind: SignatureType, typeList: BindType[], policyList: string[]) {
+		if(this.methodTbl[name]) return;
+
 		const bindMethod = new BindMethod(
 			this,
 			name,
@@ -115,13 +117,32 @@ export class BindClass extends BindType {
 		this.methodList.push(bindMethod);
 	}
 
+	addProperty(name: string, kind: SignatureType, typeList: BindType[], policyList: string[]) {
+		name = removeAccessorPrefix(name);
+
+		let bindProperty = this.propertyTbl[name];
+
+		if(!bindProperty) {
+			bindProperty = new BindProperty(this, name);
+
+			this.propertyTbl[name] = bindProperty;
+			this.propertyList.push(bindProperty);
+		}
+
+		if(kind == SignatureType.getter) {
+			bindProperty.makeReadable(typeList[0]);
+		} else {
+			bindProperty.makeWritable(typeList[1]);
+		}
+	}
+
 	isClass = true;
 
 	methodTbl: { [name: string]: BindMethod } = {};
 	methodList: BindMethod[] = [];
 
-	// propertyTbl: { [name: string]: BindProperty } = {};
-	// propertyList: BindProperty = [];
+	propertyTbl: { [name: string]: BindProperty } = {};
+	propertyList: BindProperty[] = [];
 }
 
 export class BindMethod {
@@ -150,6 +171,33 @@ export class BindMethod {
 	policyList: string[];
 
 	isStatic: boolean;
+}
+
+export class BindProperty {
+	constructor(
+		bindClass: BindClass,
+		name: string
+	) {
+		this.bindClass = bindClass;
+		this.name = name;
+	}
+
+	makeReadable(bindType: BindType) {
+		this.bindType = bindType;
+		this.isReadable = true;
+	}
+
+	makeWritable(bindType: BindType) {
+		this.bindType = bindType;
+		this.isWritable = true;
+	}
+
+	bindClass: BindClass;
+	name: string;
+	bindType: BindType;
+
+	isReadable = false;
+	isWritable = false;
 }
 
 export class Reflect {
@@ -258,7 +306,7 @@ export class Reflect {
 
 				case SignatureType.getter:
 				case SignatureType.setter:
-					console.error(removeAccessorPrefix(name)); // tslint:disable-line
+					bindClass.addProperty(name, kind, typeList, policyList);
 					break;
 
 				default:
@@ -294,6 +342,22 @@ export class Reflect {
 					(
 						method.policyList.length ?
 						' // ' + method.policyList.join(', ') :
+						''
+					)
+				);
+			}
+
+			console.log('');
+
+			for(let property of bindClass.propertyList.reverse()) {
+				console.log(
+					indent +
+					property.bindType + ' ' +
+					property.name +
+					';' +
+					(
+						!(property.isReadable && property.isWritable) ?
+						' // ' + (property.isReadable ? 'Read-only' : 'Write-only') :
 						''
 					)
 				);
