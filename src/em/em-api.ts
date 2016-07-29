@@ -19,14 +19,17 @@ import {_nbind as _value} from './ValueObj';
 import {_nbind as _std} from './BindingStd';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
-import {_nbind as _enums} from './enums';
+import * as common from '../common';
 
-export {_globals, _type, _class, _callback, _value, _std, _caller, _resource, _enums};
+export {_globals, _type, _class, _callback, _value, _std, _caller, _resource};
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
 const _defineHidden = defineHidden;
+const _SignatureType = common.SignatureType;
+type _SignatureType = common.SignatureType;
+const _removeAccessorPrefix = common.removeAccessorPrefix;
 
 export namespace _nbind {
 	export var Pool = _globals.Pool;
@@ -37,8 +40,6 @@ export namespace _nbind {
 
 	export var typeList: typeof _globals.typeList;
 	export var bigEndian: typeof _globals.bigEndian;
-
-	export var SignatureType: typeof _enums.SignatureType;
 
 	export var addMethod: typeof _globals.addMethod;
 	export var readTypeIdList: typeof _globals.readTypeIdList;
@@ -274,7 +275,7 @@ class nbind { // tslint:disable-line:class-name
 		);
 	}
 
-	@dep('_nbind')
+	@dep('_nbind', '_SignatureType', '_removeAccessorPrefix')
 	static _nbind_register_method(
 		typeID: number,
 		policyListPtr: number,
@@ -283,14 +284,14 @@ class nbind { // tslint:disable-line:class-name
 		ptr: number,
 		namePtr: number,
 		num: number,
-		signatureType: number
+		signatureType: _SignatureType
 	) {
 		let name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
 		const proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
 
-		if(signatureType == _nbind.SignatureType.method) {
+		if(signatureType == _SignatureType.method) {
 			_nbind.addMethod(
 				proto,
 				name,
@@ -301,15 +302,9 @@ class nbind { // tslint:disable-line:class-name
 			return;
 		}
 
-		// The C++ side gives the same name to getters and setters.
-		const prefixMatcher = /^[Gg]et_?([A-Z]?)/;
+		name = _removeAccessorPrefix(name);
 
-		name = name.replace(
-			prefixMatcher,
-			(match: string, initial: string) => initial.toLowerCase()
-		);
-
-		if(signatureType == _nbind.SignatureType.setter) {
+		if(signatureType == _SignatureType.setter) {
 
 			// A setter is always followed by a getter, so we can just
 			// temporarily store an invoker in the property.

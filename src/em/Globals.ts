@@ -9,10 +9,12 @@ import {_nbind as _class} from './BindClass';
 import {_nbind as _std} from './BindingStd';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
-import {_nbind as _enums} from './enums';
+import * as common from '../common';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
+
+const _StructureType = common.StructureType;
 
 // Namespace that will be made available inside Emscripten compiled module.
 
@@ -26,8 +28,6 @@ export namespace _nbind {
 	export type Invoker = (ptr: number, ...args: any[]) => any;
 	export type TypeIdList = (number | string)[];
 	export type PolicyTbl = { [name: string]: boolean };
-
-	export var StructureType: typeof _enums.StructureType;
 
 	export var ArrayType: typeof _std.ArrayType;
 
@@ -93,10 +93,10 @@ export namespace _nbind {
 		if(!memberType) throw(new Error('Unbound member type ' + memberId));
 
 		switch(placeholderFlag) {
-			case _nbind.StructureType.vector:
+			case _StructureType.vector:
 				type = new _nbind.ArrayType(id, memberType);
 				break;
-			case _nbind.StructureType.array:
+			case _StructureType.array:
 				const size = HEAPU32[((id as number) >> 2) + 2];
 				type = new _nbind.ArrayType(id, memberType, size);
 				break;
@@ -222,6 +222,6 @@ export namespace _nbind {
 	// The dummy class is needed because unfortunately namespaces can't have decorators.
 	// Everything after it inside the namespace will be discarded.
 
-	@prepareNamespace('_nbind')
+	@prepareNamespace('_nbind', '_StructureType')
 	export class _ {} // tslint:disable-line:class-name
 }

@@ -2,7 +2,7 @@
 // Released under the MIT license, see LICENSE.
 
 import {Binding} from './nbind';
-import {SignatureType, StructureType} from './enums';
+import {SignatureType, StructureType, removeAccessorPrefix} from './common';
 
 export class BindType {
 	constructor(id: number, name: string) {
@@ -250,7 +250,20 @@ export class Reflect {
 		} else {
 			const typeList = typeIdList.map((id: number) => this.getType(id));
 
-			bindClass.addMethod(name, kind, typeList, policyList);
+			switch(kind) {
+				case SignatureType.func:
+				case SignatureType.method:
+					bindClass.addMethod(name, kind, typeList, policyList);
+					break;
+
+				case SignatureType.getter:
+				case SignatureType.setter:
+					console.error(removeAccessorPrefix(name)); // tslint:disable-line
+					break;
+
+				default:
+					break;
+			}
 		}
 	}
 

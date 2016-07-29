@@ -17,7 +17,7 @@
     "tslint": "tslint",
     "cbuild": "cbuild",
     "lint": "tslint -c src/tslint.json src/*.ts src/em/*.ts",
-    "prepublish": "npm run lint && tsc -p src/em && tsc -p src && cbuild -x -v -s dist/bundle/em-api.js -o dist/em-api.js",
+    "prepublish": "npm run lint && tsc -p src/em && tsc -p src && cbuild -x -v -s dist/bundle/em/em-api.js -o dist/em-api.js",
     "clean-asm": "cd test/em && node-gyp clean",
     "test-asm": "autogypi -c test/autogypi.json && cd test/em && node-gyp configure build --asmjs=1 && tap ../test.js",
     "test":     "autogypi -c test/autogypi.json && cd test/v8 && node-gyp configure build           && tap --gc ../test.js && tap --gc ../test-v8.js"
@@ -38,7 +38,7 @@
     "win32"
   ],
   "dependencies": {
-    "emscripten-library-decorator": "~0.1.6",
+    "emscripten-library-decorator": "~0.1.7",
     "mkdirp": "~0.5.1",
     "nan": "^2.4.0"
   },
