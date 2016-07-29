@@ -71,7 +71,9 @@ public:
 		this->Wrap(args.This());
 	}
 
-	Bound *getBound() { return(bound.get()); }
+	inline std::shared_ptr<Bound> getShared() { return(bound); }
+
+	inline Bound *getBound() { return(bound.get()); }
 
 #if !defined(DUPLICATE_POINTERS)
 
