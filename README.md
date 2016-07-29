@@ -233,6 +233,7 @@ User guide
 - [Callbacks](#callbacks)
 - [Using objects](#using-objects)
 - [Type conversion](#type-conversion)
+- [64-bit integers](#64-bit-integers)
 - [Error handling](#error-handling)
 - [Publishing on npm](#publishing-on-npm)
 - [Shipping an asm.js fallback](#shipping-an-asmjs-fallback)
@@ -922,6 +923,7 @@ are automatically converted between equivalent types:
 | ---------- | --------------------------------- |
 | number     | (un)signed char, short, int, long |
 | number     | float, double                     |
+| number or [bignum](#64-bit-integers) | (un)signed long, long long |
 | boolean    | bool                              |
 | string     | const (unsigned) char *           |
 | string     | std::string                       |
@@ -929,6 +931,23 @@ are automatically converted between equivalent types:
 | Array      | std::array&lt;type, size&gt;      |
 | Function   | nbind::cbFunction<br>(only as a parameter)<br>See [callbacks](#callbacks) |
 | Instance of any prototype<br>(with a fromJS method) | Instance of any class<br>(with a toJS method)<br>See [using objects](#using-objects) |
+
+64-bit integers
+---------------
+
+Normally C++ 64-bit integer types are first converted to `double` and then to JavaScript number
+which can only hold 53 bits of precision, but it's possible to preserve all bits by using a bignum class.
+It should have a constructor taking the following arguments:
+
+- Integer containing 32 bits from the least important half.
+- Integer containing 32 bits from the most important half.
+- Boolean, true if the number is negative.
+
+It should also have a `fromJS` function which takes a callback,
+and calls it with those same arguments to pass the data back to C++ when needed.
+
+An example implementation also capable of printing 64-bit numbers to strings
+in bases 2, 4, 10 and 16 is [included](https://raw.githubusercontent.com/charto/nbind/master/src/int64.ts).
 
 Error handling
 --------------
