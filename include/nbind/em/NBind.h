@@ -22,8 +22,8 @@ public:
 
 	static void queryType(uintptr_t type, cbFunction &outTypeDetail);
 
-	static unsigned int lalloc(size_t size);
-	static void lreset(unsigned int used, unsigned int page);
+	static uintptr_t lalloc(size_t size);
+	static void lreset(unsigned int used, uintptr_t page);
 
 };
 

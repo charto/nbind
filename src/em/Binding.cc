@@ -43,7 +43,7 @@ unsigned char *Pool::page = nullptr;
   * Returned bytes must be aligned to 8 bytes to support storing doubles.
   * Asm.js can't handle unaligned access. */
 
-unsigned int NBind :: lalloc(size_t size) {
+uintptr_t NBind :: lalloc(size_t size) {
 	// Round size up to a multiple of 8 bytes (size of a double)
 	// to align pointers allocated later.
 	size = (size + 7) & ~7;
@@ -68,12 +68,14 @@ unsigned int NBind :: lalloc(size_t size) {
 		// Make the new block the current one.
 		Pool::page = page;
 
-		return(reinterpret_cast<unsigned int>(page) + 8);
+		return(reinterpret_cast<uintptr_t>(page) + 8);
 	} else {
+		uintptr_t result = reinterpret_cast<uintptr_t>(Pool::rootPage) + Pool::used;
+
 		// Allocate a block on the root page by simply growing the used byte count.
 		Pool::used += size;
 
-		return(reinterpret_cast<unsigned int>(Pool::rootPage) + Pool::used);
+		return(result);
 	}
 }
 
@@ -81,7 +83,7 @@ unsigned int NBind :: lalloc(size_t size) {
   * a stack frame. Set root page used byte count to match the earlier state
   * and free all blocks allocated since then. */
 
-void NBind :: lreset(unsigned int used, unsigned int page) {
+void NBind :: lreset(unsigned int used, uintptr_t page) {
 	// Free all blocks allocated since the earlier state.
 
 	while(Pool::page != reinterpret_cast<unsigned char *>(page)) {
