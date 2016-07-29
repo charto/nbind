@@ -102,8 +102,6 @@ export class BindClass extends BindType {
 	}
 
 	addMethod(name: string, kind: SignatureType, typeList: BindType[], policyList: string[]) {
-		if(this.methodTbl[name]) return;
-
 		const bindMethod = new BindMethod(
 			this,
 			name,
@@ -299,6 +297,7 @@ export class Reflect {
 			const typeList = typeIdList.map((id: number) => this.getType(id));
 
 			switch(kind) {
+				case SignatureType.construct:
 				case SignatureType.func:
 				case SignatureType.method:
 					bindClass.addMethod(name, kind, typeList, policyList);
@@ -321,6 +320,7 @@ export class Reflect {
 		const lineList: string[] = [];
 		let indent: string;
 		let staticPrefix: string;
+		let nameReturn: string;
 
 		for(let bindClass of this.classList.reverse()) {
 			if(bindClass.id) {
@@ -333,11 +333,20 @@ export class Reflect {
 			}
 
 			for(let method of bindClass.methodList.reverse()) {
+				if(method.name) {
+					nameReturn = (
+						(method.isStatic ? staticPrefix : '') +
+						method.returnType + ' ' +
+						method.name
+					);
+				} else {
+					nameReturn = bindClass.name;
+				}
+
 				console.log(
 					indent +
-					(method.isStatic ? staticPrefix : '') +
-					method.returnType + ' ' +
-					method.name + '(' + method.argTypeList.join(', ') + ')' +
+					nameReturn +
+					'(' + method.argTypeList.join(', ') + ')' +
 					';' +
 					(
 						method.policyList.length ?
