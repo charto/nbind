@@ -232,12 +232,12 @@ User guide
 - [Passing data structures](#passing-data-structures)
 - [Callbacks](#callbacks)
 - [Using objects](#using-objects)
-- [Type conversion](#type-conversion)
-- [64-bit integers](#64-bit-integers)
+- [Type conversion](#type-conversion) <sup>updated in 0.3.1</sup>
+- [64-bit integers](#64-bit-integers) <sup>new in 0.3.0</sup>
 - [Error handling](#error-handling)
 - [Publishing on npm](#publishing-on-npm)
 - [Shipping an asm.js fallback](#shipping-an-asmjs-fallback)
-- [Using in web browsers](#using-in-web-browsers)
+- [Using in web browsers](#using-in-web-browsers) <sup>updated in 0.3.0</sup>
 - [Using with TypeScript](#using-with-typescript)
 - [Debugging](#debugging)
 
@@ -473,7 +473,9 @@ Functions
 Functions not belonging to any class are exported inside an `NBIND_GLOBAL`
 block with a macro call `function(functionName);` which takes the name of
 the function as an argument (without any quotation marks).
-The C++ function gets exported to JavaScript with the same name.
+The C++ function gets exported to JavaScript with the same name,
+or it can be renamed by adding a second argument (with quotation marks):
+`function(cppFunctionName, "jsExportedName");`
 
 Note: you cannot put several `function(...);` calls on the same line!
 Otherwise you'll get an error about redefining a symbol.
@@ -931,6 +933,25 @@ are automatically converted between equivalent types:
 | Array      | std::array&lt;type, size&gt;      |
 | Function   | nbind::cbFunction<br>(only as a parameter)<br>See [callbacks](#callbacks) |
 | Instance of any prototype<br>(with a fromJS method) | Instance of any class<br>(with a toJS method)<br>See [using objects](#using-objects) |
+
+Type conversion is customizable by passing policies as additional arguments
+to `construct`, `function` or `method` inside an `NBIND_CLASS` or `NBIND_GLOBAL` block.
+Currently supported policies are:
+
+- `nbind::Nullable()` allows passing `null` as an argument when a C++ class instance is expected.
+  The C++ function will then receive a `nullptr`.
+- `nbind::Strict()` enables stricter type checking.
+  Normally anything in JavaScript can be converted to `number`, `string` or `boolean` when expected by a C++ function.
+  This policy requires passing the exact JavaScript type instead.
+
+Policies are listed after the method or function names, for example:
+
+```C++
+NBIND_CLASS(Reference) {
+    method(reticulateSplines, "reticulate", nbind::Nullable());
+    method(printString, nbind::Strict());
+}
+```
 
 64-bit integers
 ---------------
