@@ -146,6 +146,7 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static nbind_value(name: string, proto: any) {
+		if(!_nbind.typeTbl[name]) _nbind.throwError('Unknown value type ' + name);
 		Module['NBind'].bind_value(name, proto);
 
 		// Copy value constructor reference from C++ wrapper prototype

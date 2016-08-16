@@ -4,6 +4,22 @@
 import {Binding} from './nbind';
 import {SignatureType, StructureType, removeAccessorPrefix} from './common';
 
+class NBindType {
+	constructor(id: number) {
+		this.id = id;
+	}
+
+	fromJS(output: (id: number) => void) {
+		output(this.id);
+	}
+
+	toString() {
+		return('' + this.id);
+	}
+
+	id: number;
+}
+
 export class BindType {
 	constructor(id: number, name: string) {
 		this.id = id;
@@ -200,12 +216,9 @@ export class BindProperty {
 
 export class Reflect {
 	constructor(binding: Binding<any>) {
-		const globalScope = new BindClass(0, 'global');
-
-		this.registerType(globalScope);
-		this.classList.push(globalScope);
-
 		this.binding = binding;
+
+		binding.bind('NBindType', NBindType);
 
 		binding.reflect(
 			this.readPrimitive.bind(this),
@@ -292,7 +305,14 @@ export class Reflect {
 		const bindClass = this.typeIdTbl[classId] as BindClass;
 
 		if(!bindClass) {
-			throw(new Error('Unknown class ID ' + classId + ' for method ' + name));
+			if(!this.globalScope) {
+				this.globalScope = new BindClass(classId, 'global');
+
+				this.registerType(this.globalScope);
+				this.classList.push(this.globalScope);
+			} else {
+				throw(new Error('Unknown class ID ' + classId + ' for method ' + name));
+			}
 		} else {
 			const typeList = typeIdList.map((id: number) => this.getType(id));
 
@@ -388,6 +408,7 @@ export class Reflect {
 
 	primitiveTbl: { [key: string]: BindPrimitive } = {};
 
+	globalScope: BindClass;
 	typeList: BindType[] = [];
 	classList: BindClass[] = [];
 }

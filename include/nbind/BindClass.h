@@ -179,7 +179,7 @@ public:
 
 template <class Bound>
 cbFunction *getValueConstructorJS() {
-	return(BindClass<Bound>::getInstance()->getValueConstructorJS());
+	return(BindClass<Bound>::getInstance().getValueConstructorJS());
 }
 
 } // namespace

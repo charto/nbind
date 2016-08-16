@@ -45,6 +45,49 @@ const char *stripGetterPrefix(const char *name, char *&nameBuf) {
 	return(name);
 }
 
+NBindType :: NBindType(TYPEID id) : id(id), name(nullptr) {}
+
+NBindType :: NBindType(const NBindType &other) :
+	id(other.id), name(other.name ? strdup(other.name) : nullptr) {}
+
+NBindType :: NBindType(NBindType &&other) : id(other.id), name(other.name) {
+	other.name = nullptr;
+}
+
+NBindType :: ~NBindType() {
+	if(name) delete(name);
+	name = nullptr;
+}
+
+const void *NBindType :: getStructure() const {
+	return(structure);
+}
+
+StructureType NBindType :: getStructureType() const {
+	return(*structureType);
+}
+
+const char *NBindType :: toString() {
+	if(!name) {
+		static const char *alphabet = "0123456789abcdef";
+
+		char *newName = new char[sizeof(id) * 2 + 1];
+		unsigned int pos = sizeof(id) * 2;
+		uintptr_t code = reinterpret_cast<uintptr_t>(id);
+
+		newName[pos] = 0;
+
+		while(pos--) {
+			newName[pos] = alphabet[code & 15];
+			code >>= 4;
+		}
+
+		name = newName;
+	}
+
+	return(name);
+}
+
 typedef BaseSignature :: SignatureType SignatureType;
 
 static void initModule(Handle<Object> exports) {
@@ -205,6 +248,10 @@ NBIND_CLASS(NBind) {
 	method(bind_value);
 	method(reflect);
 	method(queryType);
+}
+
+NBIND_CLASS(NBindType) {
+	method(toString);
 }
 
 NODE_MODULE(nbind, initModule)

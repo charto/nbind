@@ -26,24 +26,27 @@ public:
 
 	template<typename... Args>
 	void operator()(Args&&... args) {
-		call<void>(std::forward<Args>(args)...);
+		call<void>(std::move(args)...);
 	}
 
 	template <typename ReturnType, typename... Args>
 	typename BindingType<ReturnType>::Type call(Args... args) {
 		v8::Local<v8::Value> argv[] = {
-			(BindingType<Args>::toWireType(args))...,
+			(convertToWire(std::move(args), 0.0))...,
+			// Avoid error C2466: cannot allocate an array of constant size 0.
 			Nan::Null()
 		};
-		return(BindingType<ReturnType>::fromWireType(func.Call(sizeof...(Args), argv)));
+		return(convertFromWire<ReturnType>(func.Call(sizeof...(Args), argv), 0.0));
 	}
 
 	template <typename ReturnType, typename... Args>
 	typename BindingType<ReturnType>::Type callMethod(v8::Local<v8::Object> target, Args... args) {
 		v8::Local<v8::Value> argv[] = {
-			(BindingType<Args>::toWireType(args))...
+			(convertToWire(std::move(args), 0.0))...,
+			// Avoid error C2466: cannot allocate an array of constant size 0.
+			Nan::Null()
 		};
-		return(BindingType<ReturnType>::fromWireType(func.Call(target, sizeof...(Args), argv)));
+		return(convertFromWire<ReturnType>(func.Call(target, sizeof...(Args), argv), 0.0));
 	}
 
 	v8::Local<v8::Function> getJsFunction() const { return(func.GetFunction()); }
@@ -51,38 +54,6 @@ public:
 private:
 
 	Nan::Callback func;
-
-};
-
-class cbOutput {
-
-	template<typename ArgType>
-	friend struct BindingType;
-
-public:
-
-	cbOutput(cbFunction &jsConstructor, v8::Local<v8::Value> *output) :
-		jsConstructor(jsConstructor), output(output) {}
-
-	// This overload is identical to cbFunction.
-	template<typename... Args>
-	void operator()(Args&&... args) {
-		call<void>(args...);
-	}
-
-	template <typename ReturnType, typename... Args>
-	void call(Args... args) {
-		v8::Local<v8::Value> argv[] = {
-			(BindingType<Args>::toWireType(args))...
-		};
-
-		*output = jsConstructor.getJsFunction()->NewInstance(sizeof...(Args), argv);
-	}
-
-private:
-
-	cbFunction &jsConstructor;
-	v8::Local<v8::Value> *output;
 
 };
 
@@ -127,5 +98,14 @@ struct ArgFromWire<PolicyList, Index, cbFunction &> {
 	cbFunction val;
 
 };
+
+template <typename ReturnType, typename... Args>
+void cbOutput :: call(Args... args) {
+	v8::Local<v8::Value> argv[] = {
+		(BindingType<Args>::toWireType(args))...
+	};
+
+	*output = jsConstructor.getJsFunction()->NewInstance(sizeof...(Args), argv);
+}
 
 } // namespace

@@ -95,6 +95,21 @@ void NBind :: lreset(unsigned int used, uintptr_t page) {
 	Pool::used = used;
 }
 
+NBindType :: NBindType(TYPEID id) : id(id) {}
+NBindType :: NBindType(uintptr_t ptr) : id(reinterpret_cast<TYPEID>(ptr)) {}
+
+const void *NBindType :: getStructure() const {
+	return(structure);
+}
+
+StructureType NBindType :: getStructureType() const {
+	return(*structureType);
+}
+
+void NBindType :: toJS(cbOutput output) const {
+	output(reinterpret_cast<uintptr_t>(id));
+}
+
 /** RAII constructor to store the lalloc pool state. */
 
 PoolRestore :: PoolRestore() : used(Pool::used), page(Pool::page) {}
@@ -251,6 +266,10 @@ NBIND_CLASS(NBind) {
 
 	method(lalloc);
 	method(lreset);
+}
+
+NBIND_CLASS(NBindType) {
+	construct<uintptr_t>();
 }
 
 #endif

@@ -63,6 +63,9 @@ private:
 #	include "v8/BindWrapper.h"
 #	include "v8/BindingType.h"
 #	include "v8/NBind.h"
+#	include "v8/Output.h"
+#	include "v8/Convert.h"
+#	include "v8/ArgFromWire.h"
 #	include "v8/Callback.h"
 #	include "v8/BindingStd.h"
 

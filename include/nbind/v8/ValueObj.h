@@ -44,33 +44,8 @@ template <> struct BindingType<v8::Local<v8::Function>> {
 
 };
 
-// Call the toJS method of a returned C++ object, to convert it into a JavaScript object.
-// This is used when a C++ function is called from JavaScript.
-// A functor capable of calling the correct JavaScript constructor is passed to toJS,
-// which must call the functor with arguments in the correct order.
-// The functor calls the JavaScript constructor and writes a pointer to the resulting object
-// directly into a local handle called "output" which is returned to JavaScript.
-
 template <typename ArgType>
-inline WireType BindingType<ArgType>::toWireType(ArgType arg) {
-	v8::Local<v8::Value> output = Nan::Undefined();
-	cbFunction *jsConstructor = BindClass<ArgType>::getInstance().getValueConstructorJS();
-
-	if(jsConstructor != nullptr) {
-		cbOutput construct(*jsConstructor, &output);
-
-		arg.toJS(construct);
-	} else {
-		throw(std::runtime_error("Value type JavaScript class is missing or not registered"));
-	}
-
-	return(output);
-}
-
-template <typename ArgType>
-ArgType BindingType<ArgType>::fromWireType(WireType arg) noexcept(false) {
-	Nan::HandleScope();
-
+inline ArgType convertFromWire(WireType arg) noexcept(false) {
 	auto target = arg->ToObject();
 	auto fromJS = target->Get(Nan::New<v8::String>("fromJS").ToLocalChecked());
 

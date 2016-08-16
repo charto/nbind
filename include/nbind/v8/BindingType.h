@@ -19,13 +19,16 @@ template <typename ArgType> struct BindingType {
 	typedef ArgType Type;
 
 	static inline bool checkType(WireType arg) {
-		// TODO: Also check type of object!
-		return(arg->IsObject());
+		return(BindingType<ArgType *>::checkType(arg));
 	}
 
-	static inline Type fromWireType(WireType arg);
+	static inline Type fromWireType(WireType arg) {
+		return(*BindingType<ArgType *>::fromWireType(arg));
+	}
 
-	static inline WireType toWireType(ArgType arg);
+	static inline WireType toWireType(ArgType arg) {
+		return(BindingType<ArgType *>::toWireType(new ArgType(arg)));
+	}
 
 };
 
@@ -185,75 +188,13 @@ template <> struct BindingType<void> {
 template<typename PolicyList, size_t Index, typename ArgType>
 struct CheckWire {
 
+	typedef ArgType Type;
 	typedef typename ExecutePolicies<PolicyList>::template Transformed<ArgType>::Type TransformedType;
 
 	template <typename NanArgs>
 	static inline bool check(const NanArgs &args) {
 		return(BindingType<TransformedType>::checkType(args[Index]));
 	}
-
-};
-
-// ArgFromWire converts JavaScript types into C++ types, usually with BindingType<>::fromWireType
-// but some types require additional temporary storage, such as a string converted to C style.
-// FromWire is a struct, so wrappers for all objects can be constructed as function arguments,
-// and their actual values passed to the called function are returned by the get() function.
-// The wrappers go out of scope and are destroyed at the end of the function call.
-
-// Handle most C++ types.
-
-template<typename PolicyList, size_t Index, typename ArgType>
-struct ArgFromWire {
-
-	typedef typename ExecutePolicies<PolicyList>::template Transformed<ArgType>::Type TransformedType;
-
-	template <typename NanArgs>
-	ArgFromWire(const NanArgs &args) {}
-
-	// TODO: maybe return type should be like TransformedType::Type
-
-	template <typename NanArgs>
-	inline ArgType get(const NanArgs &args) noexcept(false) {
-		return(BindingType<TransformedType>::fromWireType(args[Index]));
-	}
-
-};
-
-// Handle char pointers, which will receive a C string representation of any JavaScript value.
-
-template<typename PolicyList, size_t Index>
-struct ArgFromWire<PolicyList, Index, const char *> {
-
-	template <typename NanArgs>
-	ArgFromWire(const NanArgs &args) : val(args[Index]->ToString()) {}
-
-	template <typename NanArgs>
-	inline const char *get(const NanArgs &args) {
-		return(*val);
-	}
-
-	// RAII style storage for the string data.
-
-	Nan::Utf8String val;
-
-};
-
-// Automatically cast char to unsigned if the C++ function expects it.
-
-template<typename PolicyList, size_t Index>
-struct ArgFromWire<PolicyList, Index, const unsigned char *> {
-
-	template <typename NanArgs>
-	ArgFromWire(const NanArgs &args) : val(args[Index]->ToString()) {}
-
-	template <typename NanArgs>
-	inline const unsigned char *get(const NanArgs &args) {
-		return(reinterpret_cast<const unsigned char *>(*val));
-	}
-
-	// RAII style storage for the string data.
-
-	Nan::Utf8String val;
 
 };
 

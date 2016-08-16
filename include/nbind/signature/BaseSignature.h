@@ -162,18 +162,23 @@ public:
 		>::type
 	> CallWrapper;
 
+	typedef Checker<
+		typename emscripten::internal::MapWithIndex<
+			PolicyList,
+			TypeList,
+			CheckWire,
+			Args...
+		>::type
+	> CheckWrapper;
+
 	template <typename NanArgs>
 	static bool typesAreValid(NanArgs &args) {
-		typedef Checker<
-			typename emscripten::internal::MapWithIndex<
-				PolicyList,
-				TypeList,
-				CheckWire,
-				Args...
-			>::type
-		> checker;
+		return(CheckWrapper::typesAreValid(args));
+	}
 
-		return(checker::typesAreValid(args));
+	template <typename NanArgs>
+	static v8::Local<v8::Value> getTypeError(NanArgs &args) {
+		return(CheckWrapper::getTypeError(args, getInstance().getTypeList()));
 	}
 
 	static bool arityIsValid(const Nan::FunctionCallbackInfo<v8::Value> &args) {
@@ -216,7 +221,7 @@ public:
 		}
 
 		if(!Signature::typesAreValid(args)) {
-			Nan::ThrowTypeError("Type mismatch");
+			Nan::ThrowError(Signature::getTypeError(args));
 			return;
 		}
 

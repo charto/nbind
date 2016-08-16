@@ -42,7 +42,7 @@ struct BindingType<std::array<ArgType, size>> {
 				Nan::Get(arr, num).ToLocal(&item) &&
 				BindingType<ArgType>::checkType(item)
 			) {
-				val[num] = BindingType<ArgType>::fromWireType(item);
+				val[num] = convertFromWire<ArgType>(item, 0.0);
 			} else {
 				throw(std::runtime_error("Error converting array element"));
 			}
@@ -55,7 +55,7 @@ struct BindingType<std::array<ArgType, size>> {
 		v8::Local<v8::Array> arr = Nan::New<v8::Array>(size);
 
 		for(uint32_t num = 0; num < size; ++num) {
-			arr->Set(num, BindingType<ArgType>::toWireType(arg[num]));
+			arr->Set(num, convertToWire(arg[num], 0.0));
 		}
 
 		return(arr);
@@ -92,7 +92,7 @@ struct BindingType<std::vector<ArgType>> {
 				Nan::Get(arr, num).ToLocal(&item) &&
 				BindingType<ArgType>::checkType(item)
 			) {
-				val.push_back(BindingType<ArgType>::fromWireType(item));
+				val.push_back(convertFromWire<ArgType>(item, 0.0));
 			} else {
 				throw(std::runtime_error("Error converting array element"));
 			}
@@ -106,7 +106,7 @@ struct BindingType<std::vector<ArgType>> {
 		v8::Local<v8::Array> arr = Nan::New<v8::Array>(count);
 
 		for(uint32_t num = 0; num < count; ++num) {
-			arr->Set(num, BindingType<ArgType>::toWireType(arg[num]));
+			arr->Set(num, convertToWire(arg[num], 0.0));
 		}
 
 		return(arr);

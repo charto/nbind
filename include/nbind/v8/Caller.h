@@ -10,6 +10,30 @@ namespace nbind {
 
 template<typename...> struct TypeList {};
 
+template <typename NanArgs>
+v8::Local<v8::Value> makeTypeError(
+	NanArgs &args,
+	uint32_t count,
+	const TYPEID *typeList,
+	bool *flagList
+) {
+	(void)args; // Silence compiler warning about unused parameter.
+
+	v8::Local<v8::Value> err = Nan::TypeError("Type mismatch");
+	v8::Local<v8::Object> errObj = err->ToObject();
+	// v8::Local<v8::Array> typeArray = Nan::New<v8::Array>(count);
+	v8::Local<v8::Array> flagArray = Nan::New<v8::Array>(count);
+
+	for(uint32_t num = 0; num < count; ++num) {
+		flagArray->Set(num, Nan::New<v8::Boolean>(flagList[num]));
+	}
+
+	// errObj->Set(Nan::New<v8::String>("types").ToLocalChecked(), typeArray);
+	errObj->Set(Nan::New<v8::String>("flags").ToLocalChecked(), flagArray);
+
+	return(err);
+}
+
 template<typename ArgList> struct Checker;
 
 template<typename... Args>
@@ -32,48 +56,13 @@ struct Checker<TypeList<Args...>> {
 		return(validFlag);
 	}
 
-};
+	template <typename NanArgs>
+	static v8::Local<v8::Value> getTypeError(NanArgs &args, const TYPEID *typeList) {
+		(void)args; // Silence possible compiler warning about unused parameter.
 
-// This just calls BindClass<Bound>::getInstance()->getValueConstructorJS();
-// It's in a wrapper function defined in BindClass.h to break a circular
-// dependency between header files.
+		bool flagList[] = { Args::check(args)..., true };
 
-template <class Bound>
-cbFunction *getValueConstructorJS();
-
-// Handle value types as return values.
-// This converter allows overriding the return type's toJS function
-// with the wrapped object's toJS function.
-
-template<typename ReturnType> struct MethodResultConverter {
-
-	template <typename Bound>
-	static inline auto toWireType(ReturnType &&result, Bound &target) -> typename std::remove_reference<decltype(
-		// SFINAE, use this template only if Bound::toJS(ReturnType, cbOutput) exists.
-		target.toJS(*(ReturnType *)nullptr, *(cbOutput *)nullptr),
-		// Actual return type of this function: WireType (decltype adds a reference, which is removed).
-		*(WireType *)nullptr
-	)>::Type {
-		// This function is similar to BindingType<ArgType>::toWireType(ArgType &&arg).
-
-		v8::Local<v8::Value> output = Nan::Undefined();
-		cbFunction *jsConstructor = getValueConstructorJS<typename std::remove_pointer<ReturnType>::Type>();
-
-		if(jsConstructor != nullptr) {
-			cbOutput construct(*jsConstructor, &output);
-
-			target.toJS(std::move(result), construct);
-		} else {
-			// Throw error here?
-		}
-
-		return(output);
-	}
-
-	// If Bound::toJS(ReturnType, cbOutput) is missing, fall back to ReturnType::toJS(cbOutput).
-	template <typename Bound>
-	static inline WireType toWireType(ReturnType &&result, Bound &target) {
-		return(BindingType<ReturnType>::toWireType(std::move(result)));
+		return(makeTypeError(args, sizeof...(Args), typeList, flagList));
 	}
 
 };
@@ -90,7 +79,8 @@ struct Caller<ReturnType, TypeList<Args...>> {
 		// Note that Args().get may throw.
 		return(MethodResultConverter<ReturnType>::toWireType(
 			(target.*method)(Args(args).get(args)...),
-			target
+			target,
+			0.0
 		));
 	}
 
@@ -99,8 +89,9 @@ struct Caller<ReturnType, TypeList<Args...>> {
 		(void)args; // Silence possible compiler warning about unused parameter.
 
 		// Note that Args().get may throw.
-		return(BindingType<ReturnType>::toWireType(
-			(*func)(Args(args).get(args)...)
+		return(convertToWire<ReturnType>(
+			(*func)(Args(args).get(args)...),
+			0.0
 		));
 	}
 
