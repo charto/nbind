@@ -68,6 +68,8 @@ private:
 #	include "v8/ArgFromWire.h"
 #	include "v8/Callback.h"
 #	include "v8/BindingStd.h"
+#	include "Buffer.h"
+#	include "v8/Buffer.h"
 
 #elif defined(EMSCRIPTEN)
 

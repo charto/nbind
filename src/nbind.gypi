@@ -46,7 +46,10 @@
 
 		}, {
 
-			"sources": ["v8/Binding.cc"],
+			"sources": [
+				"Buffer.cc",
+				"v8/Binding.cc"
+			],
 			"cflags_cc": [
 				"-O3",
 				"-std=c++11",
