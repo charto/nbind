@@ -25,8 +25,8 @@ export namespace _nbind {
 	export var resources: typeof _resource.resources;
 
 	function getBuffer(
-		buf: number[] | ArrayBuffer | DataView | Uint8Array
-	): number[] | Uint8Array {
+		buf: number[] | ArrayBuffer | DataView | Uint8Array | Buffer
+	): number[] | Uint8Array | Buffer {
 		if(buf instanceof ArrayBuffer) {
 			return(new Uint8Array(buf));
 		} else if(buf instanceof DataView) {
@@ -35,7 +35,7 @@ export namespace _nbind {
 	}
 
 	export function pushBuffer(
-		buf: number[] | ArrayBuffer | DataView | Uint8Array,
+		buf: number[] | ArrayBuffer | DataView | Uint8Array | Buffer,
 		policyTbl?: PolicyTbl
 	) {
 		if(buf === null || buf === undefined) {
@@ -75,15 +75,16 @@ export namespace _nbind {
 		writeResources = [ resources.pool ];
 	}
 
-	/* tslint:disable */
 	export function commitBuffer(num: number, data: number, length: number) {
 		const buf = _nbind.externalList[num] as
 			number[] | ArrayBuffer | DataView | Uint8Array | Buffer;
 
-		var NodeBuffer: typeof Buffer = Buffer;
+		let NodeBuffer: typeof Buffer = Buffer;
+		// tslint:disable-next-line:no-empty
 		if(typeof(Buffer) != 'function') NodeBuffer = (function() {}) as any;
 
 		if(buf instanceof Array) {
+			// TODO if needed
 		} else {
 			const src = HEAPU8.subarray(data, data + length);
 
@@ -98,7 +99,6 @@ export namespace _nbind {
 			} else (getBuffer(buf) as Uint8Array).set(src);
 		}
 	}
-	/* tslint:enable */
 
 	@prepareNamespace('_nbind')
 	export class _ {} // tslint:disable-line:class-name

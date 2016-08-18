@@ -38,4 +38,8 @@ declare class Buffer {
 	static from(src: Uint8Array): Buffer;
 
 	copy(target: Buffer): number;
+
+	length: number;
+
+	[index: number]: number;
 }
