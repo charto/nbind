@@ -109,4 +109,6 @@ template<> struct BindingType<Buffer> {
 
 };
 
+inline void Buffer :: commit() {}
+
 } // namespace

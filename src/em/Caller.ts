@@ -7,7 +7,7 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
-import {_nbind as _callback} from './Callback';
+import {_nbind as _external} from './External';
 import {_nbind as _resource} from './Resource';
 
 // Let decorators run eval in current scope to read function source code.
@@ -23,7 +23,7 @@ export namespace _nbind {
 	export var getTypes: typeof _globals.getTypes;
 	export var getDynCall: typeof _globals.getDynCall;
 
-	export var callbackList: typeof _callback.callbackList;
+	export var externalList: typeof _external.externalList;
 
 	export var listResources: typeof _resource.listResources;
 	export var resources: typeof _resource.resources;
@@ -178,7 +178,7 @@ export namespace _nbind {
 			convertParamList,
 			null,
 			returnType,
-			'_nbind.callbackList[num](' +
+			'_nbind.externalList[num](' +
 				argList.map(
 					(name: string, index: number) => makeWireRead(
 						convertParamList,
@@ -228,13 +228,13 @@ export namespace _nbind {
 		if(!needsWireWrite && !needsWireRead) {
 			switch(argCount) {
 				case 0: return(function(dummy: number, num: number) {
-				                    return(callbackList[num](    )); });
+				                    return(externalList[num](    )); });
 				case 1: return(function(dummy: number, num: number, a1: any) {
-				                    return(callbackList[num](       a1    )); });
+				                    return(externalList[num](       a1    )); });
 				case 2: return(function(dummy: number, num: number, a1: any, a2: any) {
-				                    return(callbackList[num](       a1,      a2    )); });
+				                    return(externalList[num](       a1,      a2    )); });
 				case 3: return(function(dummy: number, num: number, a1: any, a2: any, a3: any) {
-				                    return(callbackList[num](       a1,      a2,      a3    )); });
+				                    return(externalList[num](       a1,      a2,      a3    )); });
 				default:
 					// Function takes over 3 arguments.
 					// Let's create the invoker dynamically then.

@@ -24,6 +24,19 @@ public:
 		return(sum);
 	}
 
+	static void mul2(nbind::Buffer buf) {
+		size_t length = buf.length();
+		unsigned char *data = buf.data();
+
+		if(!data || !length) return;
+
+		for(size_t pos = 0; pos < length; ++pos) {
+			data[pos] *= 2;
+		}
+
+		buf.commit();
+	}
+
 };
 
 #include "nbind/nbind.h"
@@ -32,6 +45,7 @@ public:
 
 NBIND_CLASS(Buffer) {
 	method(sum);
+	method(mul2);
 }
 
 #endif

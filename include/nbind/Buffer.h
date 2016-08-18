@@ -5,19 +5,28 @@
 
 namespace nbind {
 
-class Buffer {
+class Buffer : public External {
 
 public:
 
-	Buffer(unsigned char *ptr, size_t len);
+#if defined(BUILDING_NODE_EXTENSION)
+	Buffer(unsigned char *ptr, size_t len) :
+		ptr(ptr), len(len) {}
+#elif defined(EMSCRIPTEN)
+	Buffer(unsigned char *ptr, size_t len, unsigned int num = 0) :
+		External(num), ptr(ptr), len(len) {}
+#endif
 
-	unsigned char *data();
-	size_t length();
+	inline unsigned char *data() const { return(ptr); }
+
+	inline size_t length() const { return(len); }
+
+	inline void commit();
 
 private:
 
-	unsigned char *ptr;
-	size_t len;
+	unsigned char * const ptr;
+	const size_t len;
 
 };
 

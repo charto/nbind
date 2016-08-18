@@ -11,17 +11,18 @@ import {
 	exportLibrary,
 	dep
 } from 'emscripten-library-decorator';
-import {_nbind as _globals} from './Globals';
-import {_nbind as _type} from './BindingType';
-import {_nbind as _class} from './BindClass';
-import {_nbind as _callback} from './Callback';
-import {_nbind as _value} from './ValueObj';
-import {_nbind as _std} from './BindingStd';
-import {_nbind as _caller} from './Caller';
-import {_nbind as _resource} from './Resource';
-import * as common from '../common';
 
-export {_globals, _type, _class, _callback, _value, _std, _caller, _resource};
+import { _nbind as _globals } from './Globals';   export { _globals };
+import { _nbind as _type } from './BindingType';  export { _type };
+import { _nbind as _class } from './BindClass';   export { _class };
+import { _nbind as _external } from './External'; export { _external };
+import { _nbind as _callback } from './Callback'; export { _callback };
+import { _nbind as _value } from './ValueObj';    export { _value };
+import { _nbind as _std } from './BindingStd';    export { _std };
+import { _nbind as _caller } from './Caller';     export { _caller };
+import { _nbind as _resource } from './Resource'; export { _resource };
+import { _nbind as _buffer } from './Buffer';     export { _buffer };
+import * as common from '../common';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -57,10 +58,6 @@ export namespace _nbind {
 	export var ptrMarker: typeof _class.ptrMarker;
 
 	export var CallbackType: typeof _callback.CallbackType;
-	export var unregisterCallback: typeof _callback.unregisterCallback;
-
-	export var callbackRefCountList: typeof _callback.callbackRefCountList;
-	export var callbackSignatureList: typeof _callback.callbackSignatureList;
 
 	export var CreateValueType: typeof _value.CreateValueType;
 	export var Int64Type: typeof _value.Int64Type;
@@ -70,6 +67,8 @@ export namespace _nbind {
 
 	export var makeCaller: typeof _caller.makeCaller;
 	export var makeMethodCaller: typeof _caller.makeMethodCaller;
+
+	export var BufferType: typeof _buffer.BufferType;
 }
 
 publishNamespace('_nbind');
@@ -103,6 +102,7 @@ class nbind { // tslint:disable-line:class-name
 			'bool': _nbind.BooleanType,
 			'cbFunction &': _nbind.CallbackType,
 			'std::string': _nbind.StringType,
+			'Buffer': _nbind.BufferType,
 			'Int64': _nbind.Int64Type,
 			'_nbind_new': _nbind.CreateValueType
 		};

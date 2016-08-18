@@ -19,6 +19,8 @@ declare var Runtime: {
 	stackAlloc(size: number): number;
 };
 
+declare var _malloc: (size: number) => number;
+
 // The HEAP* arrays are the main way to access the C++ heap.
 
 declare var HEAP8: Int8Array;
@@ -29,3 +31,11 @@ declare var HEAPU16: Uint16Array;
 declare var HEAPU32: Uint32Array;
 declare var HEAPF32: Float32Array;
 declare var HEAPF64: Float64Array;
+
+declare class Buffer {
+	constructor(src: Uint8Array);
+
+	static from(src: Uint8Array): Buffer;
+
+	copy(target: Buffer): number;
+}

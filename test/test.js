@@ -321,6 +321,14 @@ test('Buffers', function(t) {
 		t.strictEqual(Type.sum(view), 120);
 		t.strictEqual(Type.sum(view.subarray(2, 12)), 65);
 		t.strictEqual(Type.sum(new Uint8Array(buf, 2, 12)), 90);
+
+		Type.mul2(buf);
+
+		t.strictEqual(Type.sum(buf), 240);
+
+		Type.mul2(view);
+
+		t.strictEqual(Type.sum(view), 480);
 	}
 
 	if(Buffer) {
@@ -329,6 +337,10 @@ test('Buffers', function(t) {
 		for(var i = 0; i < 16; ++i) buf[i] = i;
 
 		t.strictEqual(Type.sum(buf), 120);
+
+		Type.mul2(buf);
+
+		t.strictEqual(Type.sum(buf), 240);
 	}
 
 	t.end();

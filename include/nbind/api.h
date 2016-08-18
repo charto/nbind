@@ -66,6 +66,7 @@ private:
 #	include "v8/Output.h"
 #	include "v8/Convert.h"
 #	include "v8/ArgFromWire.h"
+#	include "v8/External.h"
 #	include "v8/Callback.h"
 #	include "v8/BindingStd.h"
 #	include "Buffer.h"
@@ -77,7 +78,10 @@ private:
 #	include "signature/CallbackSignature.h"
 #	include "em/NBind.h"
 #	include "em/Pool.h"
+#	include "em/External.h"
 #	include "em/Callback.h"
 #	include "em/BindingStd.h"
+#	include "Buffer.h"
+#	include "em/Buffer.h"
 
 #endif

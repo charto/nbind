@@ -9,24 +9,9 @@
 
 namespace nbind {
 
-extern "C" {
-	extern void _nbind_reference_callback(unsigned int num);
-	extern void _nbind_free_callback(unsigned int num);
-}
+class cbFunction : public External {
 
-class cbFunction {
-
-public:
-
-	explicit cbFunction(unsigned int num) : num(num) {}
-
-	cbFunction(const cbFunction &func) : num(func.num) {
-		_nbind_reference_callback(num);
-	}
-
-	~cbFunction() {
-		_nbind_free_callback(num);
-	}
+private:
 
 	// Wrapper class to specialize call function for different return types,
 	// since function template partial specialization is forbidden.
@@ -38,6 +23,10 @@ public:
 
 	template<typename... Args>
 	static double callDouble(unsigned int num, Args... args);
+
+public:
+
+	explicit cbFunction(unsigned int num = 0) : External(num) {}
 
 	template<typename... Args>
 	void operator()(Args&&... args) {
@@ -52,7 +41,6 @@ public:
 		return(Caller<ReturnType>::call(num, args...));
 	}
 
-	const unsigned int num;
 };
 
 class cbOutput {
@@ -91,7 +79,8 @@ private:
 
 template<typename... Args>
 double cbFunction::callDouble(unsigned int num, Args... args) {
-	return(EM_ASM_DOUBLE({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
+	return(EM_ASM_DOUBLE(
+		{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 		CallbackSignature<double, Args...>::getInstance().getNum(),
 		num,
 		BindingType<Args>::toWireType(args)...
@@ -101,7 +90,8 @@ double cbFunction::callDouble(unsigned int num, Args... args) {
 template <typename ReturnType> template <typename... Args>
 ReturnType cbFunction::Caller<ReturnType>::call(unsigned int num, Args... args) {
 	return(BindingType<ReturnType>::fromWireType(reinterpret_cast<typename BindingType<ReturnType>::WireType>(
-		EM_ASM_INT({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
+		EM_ASM_INT(
+			{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 			CallbackSignature<ReturnType, Args...>::getInstance().getNum(),
 			num,
 			BindingType<Args>::toWireType(args)...
@@ -113,7 +103,8 @@ template<> struct cbFunction::Caller<void> {
 
 	template <typename... Args>
 	static void call(unsigned int num, Args... args) {
-		EM_ASM_ARGS({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
+		EM_ASM_ARGS(
+			{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 			CallbackSignature<void, Args...>::getInstance().getNum(),
 			num,
 			BindingType<Args>::toWireType(args)...
