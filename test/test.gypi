@@ -7,6 +7,7 @@
 		"Value.cc",
 		"Reference.cc",
 		"Array.cc",
-		"Strict.cc"
+		"Strict.cc",
+		"Buffer.cc"
 	]
 }

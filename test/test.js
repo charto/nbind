@@ -306,3 +306,30 @@ test('64-bit integers', function(t) {
 
 	t.end();
 });
+
+test('Buffers', function(t) {
+	var Type = testModule.Buffer;
+	var buf;
+
+	if(ArrayBuffer && (typeof(process) != 'object' || typeof(process.versions) != 'object' || process.versions.modules >= 14)) {
+		buf = new ArrayBuffer(16);
+		var view = new Uint8Array(buf);
+
+		for(var i = 0; i < 16; ++i) view[i] = i;
+
+		t.strictEqual(Type.sum(buf), 120);
+		t.strictEqual(Type.sum(view), 120);
+		t.strictEqual(Type.sum(view.subarray(2, 12)), 65);
+		t.strictEqual(Type.sum(new Uint8Array(buf, 2, 12)), 90);
+	}
+
+	if(Buffer) {
+		buf = Buffer.alloc ? Buffer.alloc(16) : new Buffer(16);
+
+		for(var i = 0; i < 16; ++i) buf[i] = i;
+
+		t.strictEqual(Type.sum(buf), 120);
+	}
+
+	t.end();
+});
