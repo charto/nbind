@@ -42,7 +42,9 @@ public:
 		_nbind_free_external(num);
 	}
 
-protected:
+	inline unsigned int getNum() const { return(num); }
+
+private:
 
 	unsigned int num;
 };

@@ -21,6 +21,7 @@ setEvil((code: string) => eval(code));
 
 export namespace _nbind {
 	export var BindType = _type.BindType;
+	export var External = _external.External;
 }
 
 export namespace _nbind {
@@ -45,7 +46,7 @@ export namespace _nbind {
 		wireWrite = (func: _globals.Func) => {
 			if(typeof(func) != 'function') _nbind.throwError('Type mismatch');
 
-			return(registerExternal(func));
+			return(registerExternal(new External(func)));
 		}
 
 		// Optional type conversion code

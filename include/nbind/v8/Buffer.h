@@ -13,7 +13,7 @@ template<> struct BindingType<Buffer> {
 
 #if NODE_MODULE_VERSION >= 14 // Node.js 0.12
 
-	static inline Type bufferFromArray(WireType arg) {
+	static inline void initFromArray(WireType arg, Buffer &result) {
 		v8::Local<v8::ArrayBuffer> buf;
 		unsigned char *data = nullptr;
 		size_t offset = 0;
@@ -64,10 +64,8 @@ template<> struct BindingType<Buffer> {
 			}
 		#endif
 
-		return(Buffer(
-			data + offset,
-			length
-		));
+		result.ptr = data + offset;
+		result.len = length;
 	}
 
 #endif
@@ -85,22 +83,22 @@ template<> struct BindingType<Buffer> {
 	}
 
 	static inline Type fromWireType(WireType arg) {
+		Buffer result(nullptr, 0, arg->ToObject());
+
 #		if NODE_MODULE_VERSION >= 14 // Node.js 0.12
 			if(arg->IsArrayBuffer() || arg->IsArrayBufferView()) {
-				return(bufferFromArray(arg));
+				initFromArray(arg, result);
 			}
 #		endif
 
 #		if NODE_MODULE_VERSION <= 44 // IO.js 2.0
 			if(node::Buffer::HasInstance(arg)) {
-				return(Buffer(
-					reinterpret_cast<unsigned char *>(node::Buffer::Data(arg)),
-					node::Buffer::Length(arg)
-				));
+				result.ptr = reinterpret_cast<unsigned char *>(node::Buffer::Data(arg));
+				result.len = node::Buffer::Length(arg);
 			}
 #		endif
 
-		return(Buffer(nullptr, 0));
+		return(result);
 	}
 
 	static inline WireType toWireType(Type arg) {

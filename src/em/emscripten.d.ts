@@ -20,6 +20,7 @@ declare var Runtime: {
 };
 
 declare var _malloc: (size: number) => number;
+declare var _free: (ptr: number) => void;
 
 // The HEAP* arrays are the main way to access the C++ heap.
 

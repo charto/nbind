@@ -5,16 +5,25 @@
 
 namespace nbind {
 
-class Buffer : public External {
+class Buffer {
+
+	friend struct BindingType<Buffer>;
 
 public:
 
 #if defined(BUILDING_NODE_EXTENSION)
-	Buffer(unsigned char *ptr, size_t len) :
+
+	Buffer(unsigned char *ptr = nullptr, size_t len = 0) :
 		ptr(ptr), len(len) {}
+
+	Buffer(unsigned char *ptr, size_t len, v8::Local<v8::Object> obj) :
+		ptr(ptr), len(len), handle(obj) {}
+
 #elif defined(EMSCRIPTEN)
-	Buffer(unsigned char *ptr, size_t len, unsigned int num = 0) :
-		External(num), ptr(ptr), len(len) {}
+
+	Buffer(unsigned char *ptr = nullptr, size_t len = 0, unsigned int num = 0) :
+		ptr(ptr), len(len), handle(num) {}
+
 #endif
 
 	inline unsigned char *data() const { return(ptr); }
@@ -25,8 +34,9 @@ public:
 
 private:
 
-	unsigned char * const ptr;
-	const size_t len;
+	unsigned char *ptr;
+	size_t len;
+	External handle;
 
 };
 

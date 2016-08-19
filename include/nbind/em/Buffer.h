@@ -30,7 +30,7 @@ template<> struct BindingType<Buffer> {
 inline void Buffer :: commit() {
 	EM_ASM_ARGS(
 		{_nbind.commitBuffer($0,$1,$2);},
-		num, ptr, len
+		handle.getNum(), ptr, len
 	);
 }
 

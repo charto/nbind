@@ -9,7 +9,7 @@
 
 namespace nbind {
 
-class cbFunction : public External {
+class cbFunction {
 
 private:
 
@@ -24,9 +24,11 @@ private:
 	template<typename... Args>
 	static double callDouble(unsigned int num, Args... args);
 
+	External handle;
+
 public:
 
-	explicit cbFunction(unsigned int num = 0) : External(num) {}
+	explicit cbFunction(unsigned int num = 0) : handle(num) {}
 
 	template<typename... Args>
 	void operator()(Args&&... args) {
@@ -38,7 +40,7 @@ public:
 		// Restore linear allocator state in RAII style when done.
 		PoolRestore restore;
 
-		return(Caller<ReturnType>::call(num, args...));
+		return(Caller<ReturnType>::call(handle.getNum(), args...));
 	}
 
 };

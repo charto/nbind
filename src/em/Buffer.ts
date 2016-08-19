@@ -13,6 +13,7 @@ setEvil((code: string) => eval(code));
 export namespace _nbind {
 	export var Pool = _globals.Pool;
 	export var BindType = _type.BindType;
+	export var External = _external.External;
 }
 
 export namespace _nbind {
@@ -23,6 +24,17 @@ export namespace _nbind {
 	export var externalList: typeof _external.externalList;
 
 	export var resources: typeof _resource.resources;
+
+	class ExternalBuffer extends External {
+		constructor(buf: any, ptr: number) {
+			super(buf);
+			this.ptr = ptr;
+		}
+
+		free() { _free(this.ptr); }
+
+		ptr: number;
+	}
 
 	function getBuffer(
 		buf: number[] | ArrayBuffer | DataView | Uint8Array | Buffer
@@ -54,7 +66,7 @@ export namespace _nbind {
 
 		HEAPU32[ptr++] = length;
 		HEAPU32[ptr++] = data;
-		HEAPU32[ptr++] = registerExternal(buf);
+		HEAPU32[ptr++] = registerExternal(new ExternalBuffer(buf, data));
 
 		HEAPU8.set(getBuffer(buf), data);
 
@@ -76,7 +88,7 @@ export namespace _nbind {
 	}
 
 	export function commitBuffer(num: number, data: number, length: number) {
-		const buf = _nbind.externalList[num] as
+		const buf = _nbind.externalList[num].data as
 			number[] | ArrayBuffer | DataView | Uint8Array | Buffer;
 
 		let NodeBuffer: typeof Buffer = Buffer;

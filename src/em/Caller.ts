@@ -178,7 +178,7 @@ export namespace _nbind {
 			convertParamList,
 			null,
 			returnType,
-			'_nbind.externalList[num](' +
+			'_nbind.externalList[num].data(' +
 				argList.map(
 					(name: string, index: number) => makeWireRead(
 						convertParamList,
@@ -228,13 +228,13 @@ export namespace _nbind {
 		if(!needsWireWrite && !needsWireRead) {
 			switch(argCount) {
 				case 0: return(function(dummy: number, num: number) {
-				                    return(externalList[num](    )); });
+				                    return(externalList[num].data(    )); });
 				case 1: return(function(dummy: number, num: number, a1: any) {
-				                    return(externalList[num](       a1    )); });
+				                    return(externalList[num].data(       a1    )); });
 				case 2: return(function(dummy: number, num: number, a1: any, a2: any) {
-				                    return(externalList[num](       a1,      a2    )); });
+				                    return(externalList[num].data(       a1,      a2    )); });
 				case 3: return(function(dummy: number, num: number, a1: any, a2: any, a3: any) {
-				                    return(externalList[num](       a1,      a2,      a3    )); });
+				                    return(externalList[num].data(       a1,      a2,      a3    )); });
 				default:
 					// Function takes over 3 arguments.
 					// Let's create the invoker dynamically then.
