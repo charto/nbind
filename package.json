@@ -1,6 +1,6 @@
 {
   "name": "nbind",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Magical headers that make your C++ library accessible from JavaScript",
   "main": "dist/nbind.js",
   "typings": "dist/nbind.d.ts",
@@ -46,8 +46,8 @@
     "autogypi": "~0.2.2",
     "cbuild": "~0.1.1",
     "node-gyp": "^3.4.0",
-    "tap": "^6.2.0",
-    "tslint": "^3.13.0",
+    "tap": "^6.3.2",
+    "tslint": "^3.14.0",
     "typescript": "^1.8.10"
   }
 }
