@@ -11,21 +11,6 @@ namespace nbind {
 
 class cbFunction {
 
-private:
-
-	// Wrapper class to specialize call function for different return types,
-	// since function template partial specialization is forbidden.
-	template <typename ReturnType>
-	struct Caller {
-		template <typename... Args>
-		static ReturnType call(unsigned int num, Args... args);
-	};
-
-	template<typename... Args>
-	static double callDouble(unsigned int num, Args... args);
-
-	External handle;
-
 public:
 
 	explicit cbFunction(unsigned int num = 0) : handle(num) {}
@@ -42,6 +27,21 @@ public:
 
 		return(Caller<ReturnType>::call(handle.getNum(), args...));
 	}
+
+private:
+
+	// Wrapper class to specialize call function for different return types,
+	// since function template partial specialization is forbidden.
+	template <typename ReturnType>
+	struct Caller {
+		template <typename... Args>
+		static ReturnType call(unsigned int num, Args... args);
+	};
+
+	template<typename... Args>
+	static double callDouble(unsigned int num, Args... args);
+
+	External handle;
 
 };
 
@@ -151,10 +151,6 @@ template <> struct BindingType<cbFunction &> {
 	typedef cbFunction & Type;
 
 	typedef unsigned int WireType;
-
-//	static inline Type fromWireType(WireType arg);
-
-//	static inline WireType toWireType(Type arg);
 
 };
 
