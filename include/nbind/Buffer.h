@@ -19,6 +19,12 @@ public:
 	Buffer(unsigned char *ptr, size_t len, v8::Local<v8::Object> obj) :
 		ptr(ptr), len(len), handle(obj) {}
 
+#	if NODE_MODULE_VERSION < 45 // < IO.js 3.0
+
+	static void destroy(unsigned char *ptr) { free(ptr); }
+
+#	endif
+
 #elif defined(EMSCRIPTEN)
 
 	Buffer(unsigned char *ptr = nullptr, size_t len = 0, unsigned int num = 0) :
@@ -36,6 +42,7 @@ private:
 
 	unsigned char *ptr;
 	size_t len;
+	// Reference the JavaScript object to protect it from garbage collection.
 	External handle;
 
 };

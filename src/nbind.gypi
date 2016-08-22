@@ -48,6 +48,7 @@
 		}, {
 
 			"sources": [
+				"v8/Buffer.cc",
 				"v8/Binding.cc"
 			],
 
