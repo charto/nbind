@@ -195,8 +195,8 @@ Breaking changes will be listed in release notes of versions where `y` equals `0
 Contributing
 ============
 
-Please report issues through Github.
-Pull requests are very welcome.
+Please report issues through Github and mention the platform you're targeting
+(Node.js, asm.js, Electron or something else). Pull requests are very welcome.
 
 Warning: rebase is used within develop and feature branches (but not master).
 
@@ -233,12 +233,14 @@ User guide
 - [Callbacks](#callbacks)
 - [Using objects](#using-objects)
 - [Type conversion](#type-conversion) <sup>updated in 0.3.1</sup>
+- [Buffers](#buffers) <sup>new in 0.3.1</sup>
 - [64-bit integers](#64-bit-integers) <sup>new in 0.3.0</sup>
 - [Error handling](#error-handling)
 - [Publishing on npm](#publishing-on-npm)
 - [Shipping an asm.js fallback](#shipping-an-asmjs-fallback)
 - [Using in web browsers](#using-in-web-browsers) <sup>updated in 0.3.0</sup>
 - [Using with TypeScript](#using-with-typescript)
+- [Binding plain C](#binding-plain-c)
 - [Debugging](#debugging)
 
 Installing the examples
@@ -752,12 +754,12 @@ If the return value is needed, the callback must be called like `arg.call<type>(
 where type is the desired C++ type that the return value should be converted to.
 This is because the C++ compiler cannot otherwise know what the callback might return.
 
-Warning: currently callbacks have a very short lifetime!
-They can be called only until the first function that received them returns.
-That means it's possible to create a function like `Array.map`
-which calls a callback zero or more times and then returns, never using the callback again.
-It's currently not possible to create a function like `setTimeout`
-which calls the callback after it has returned.
+Warning: while callbacks are currently passed by reference,
+they're freed after the called C++ function returns!
+That's intended for synchronous functions like `Array.map`
+which calls a callback zero or more times and then returns.
+For asynchronous functions like `setTimeout` which calls the callback after it has returned,
+you need to copy the argument to a new `nbind::cbFunction` and store it somewhere.
 
 Using objects
 -------------
@@ -921,18 +923,19 @@ Type conversion
 Parameters and return values of function calls between languages
 are automatically converted between equivalent types:
 
-| JavaScript | C++                               |
-| ---------- | --------------------------------- |
-| number     | (un)signed char, short, int, long |
-| number     | float, double                     |
-| number or [bignum](#64-bit-integers) | (un)signed long, long long |
-| boolean    | bool                              |
-| string     | const (unsigned) char *           |
-| string     | std::string                       |
-| Array      | std::vector&lt;type&gt;           |
-| Array      | std::array&lt;type, size&gt;      |
-| Function   | nbind::cbFunction<br>(only as a parameter)<br>See [callbacks](#callbacks) |
+| JavaScript | C++                                         |
+| ---------- | ------------------------------------------- |
+| number     | (`un`)`signed char`, `short`, `int`, `long` |
+| number     | `float`, `double`                           |
+| number or [bignum](#64-bit-integers) | (`un`)`signed long`, `long long` |
+| boolean    | `bool`                                      |
+| string     | `const` (`unsigned`) `char *`               |
+| string     | `std::string`                               |
+| Array      | `std::vector<type>`                         |
+| Array      | `std::array<type, size>`                    |
+| Function   | `nbind::cbFunction`<br>(only as a parameter)<br>See [callbacks](#callbacks) |
 | Instance of any prototype<br>(with a fromJS method) | Instance of any class<br>(with a toJS method)<br>See [using objects](#using-objects) |
+| ArrayBuffer(View), Int*Array<br>or Buffer | `nbind::Buffer` struct<br>(data pointer and length)<br>See [buffers](#buffers) |
 
 Type conversion is customizable by passing policies as additional arguments
 to `construct`, `function` or `method` inside an `NBIND_CLASS` or `NBIND_GLOBAL` block.
@@ -951,6 +954,62 @@ NBIND_CLASS(Reference) {
     method(reticulateSplines, "reticulate", nbind::Nullable());
     method(printString, nbind::Strict());
 }
+```
+
+Buffers
+-------
+
+Transferring large chunks of data between languages is fastest using typed arrays or Node.js buffers in JavaScript.
+Both are accessible from C++ as plain blocks of memory if passed in through the `nbind::Buffer` data type which has the methods:
+
+- `data()` returns an `unsigned char *` pointing to a block of memory also seen by JavaScript.
+- `length()` returns the length of the block in bytes.
+- `commit()` copies data from C++ back to JavaScript (only needed with Emscripten).
+
+This is especially useful for passing `canvas.getContext('2d').getImageData(...).data` to C++
+and drawing to an on-screen bitmap when targeting Emscripten or Electron.
+
+Example:
+
+```C++
+#include "nbind/api.h"
+
+void range(nbind::Buffer buf) {
+  size_t length = buf.length();
+  unsigned char *data = buf.data();
+
+  if(!data || !length) return;
+
+  for(size_t pos = 0; pos < length; ++pos) {
+    data[pos] = pos;
+  }
+
+  buf.commit();
+}
+
+#include "nbind/nbind.h"
+
+NBIND_GLOBAL() {
+  function(range);
+}
+```
+
+Example used from JavaScript:
+
+```JavaScript
+var nbind = require('nbind');
+var lib = nbind.init().lib;
+
+var data = new Uint8Array(16);
+lib.range(data);
+
+console.log(data.join(' '));
+```
+
+It prints:
+
+```
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
 ```
 
 64-bit integers
@@ -1092,6 +1151,28 @@ defined in C++ code so the TypeScript compiler cannot guess them.
 In a future version `nbind` will also generate a `.ts` file containing an
 interface definition for the C++ API. You can then import and use it as the
 type argument to get full type checking for API calls from TypeScript.
+
+Binding plain C
+---------------
+
+nbind generates bindings using C++ templates for compile-time introspection
+of argument and return types of functions and methods.
+
+Since plain C doesn't have templates, there's no standard way to have a
+C compiler generate new wrapper code for type conversion and output type
+information available at run-time.
+
+The easiest way to use nbind with C is to write a C++ wrapper calling
+the C code, and use nbind with that.
+
+Mapping idiomatic C to JavaScript classes may require some manual work,
+since it's common to reinvent new ways to do object-oriented programming,
+usually by using structs as classes and simulating methods by passing struct
+pointers to functions. C++ classes and methods should be used for these.
+
+A good example is [libui-node](https://github.com/parro-it/libui-node) which
+uses nbind to generate bindings for [libui](https://github.com/andlabs/libui),
+mainly a C library.
 
 Debugging
 ---------

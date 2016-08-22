@@ -5,6 +5,9 @@
 
 namespace nbind {
 
+// Holds a permanent reference to a JavaScript object, protecting it
+// from garbage collection.
+
 class External {
 
 public:
@@ -38,12 +41,17 @@ public:
 		return(*this);
 	}
 
+	// Call callback with data when external object is garbage collected.
+
 	template<typename Data>
 	void addDestructor(void callback(Data *), Data *data) {
 		new Destructor<Data>(callback, data, handle);
 	}
 
 private:
+
+	// Destructor info attached to an object for detecting when it gets
+	// garbage collected.
 
 	template<typename Data>
 	struct Destructor {
@@ -65,6 +73,8 @@ private:
 			weak.MarkIndependent();
 		}
 
+		// Called by V8, calls callback and deletes the destructor.
+
 		static void gc(const Nan::WeakCallbackInfo<Destructor<Data>> &data) {
 			Destructor<Data> *arg = data.GetParameter();
 
@@ -73,8 +83,13 @@ private:
 			delete arg;
 		}
 
+		// Callback and its arbitrary data for notifying about destruction
+		// of watched object.
 		void (*callback)(Data *);
 		Data *data;
+
+		// Hold a weak reference to the object, so we'll detect but not
+		// prevent garbage collecting it.
 		Nan::Persistent<v8::Object> weak;
 
 	};

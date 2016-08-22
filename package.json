@@ -32,6 +32,17 @@
     "url": "https://github.com/charto/nbind/issues"
   },
   "homepage": "https://github.com/charto/nbind#readme",
+  "keywords": [
+    "asm.js",
+    "bindings",
+    "build",
+    "c++",
+    "electron",
+    "emscripten",
+    "nan",
+    "native",
+    "node-gyp"
+  ],
   "os": [
     "darwin",
     "linux",
