@@ -8,6 +8,6 @@
 		"Reference.cc",
 		"Array.cc",
 		"Strict.cc",
-		"Buffer.cc"
+		"Buffers.cc"
 	]
 }

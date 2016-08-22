@@ -7,8 +7,7 @@
 	"target_name": "nbind",
 	"sources": [
 		"common.cc",
-		"reflect.cc",
-		"Buffer.cc"
+		"reflect.cc"
 	],
 	"include_dirs": [
 		"../include"
