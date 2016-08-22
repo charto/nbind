@@ -9,7 +9,7 @@ const char *nbind :: emptyGetter = "";
 const char *nbind :: emptySetter = "";
 
 // Linkage for module-wide error message.
-const char *Status :: message;
+char *Status :: message;
 
 void NBind :: bind_value(const char *name, cbFunction &func) {
 	for(auto *bindClass : getClassList()) {

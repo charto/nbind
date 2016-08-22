@@ -41,14 +41,22 @@ class Status {
 public:
 
 	static inline const char *getError() { return(message); }
-	static inline void clearError() { Status::message = nullptr; }
+
+	static inline void clearError() {
+		if(Status::message) delete Status::message;
+		Status::message = nullptr;
+	}
+
 	static inline void setError(const char *message) {
-		if(!Status::message) Status::message = message;
+		if(!Status::message) {
+			Status::message = new char[strlen(message) + 1];
+			if(Status::message) strcpy(Status::message, message);
+		}
 	}
 
 private:
 
-	static const char *message;
+	static char *message;
 
 };
 
