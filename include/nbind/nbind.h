@@ -33,7 +33,7 @@
 
 // Define bindings for a C++ class using a syntax that looks like a function definition.
 
-#define NBIND_CLASS(Name) \
+#define NBIND_CLASS_1(Name) \
 	template<class Bound> struct BindInvoker##Name { \
 		BindInvoker##Name(); \
 		nbind::BindDefiner<Name> definer; \
@@ -41,8 +41,17 @@
 	static struct BindInvoker##Name<Name> bindInvoker##Name; \
 	template<class Bound> BindInvoker##Name<Bound>::BindInvoker##Name():definer(#Name)
 
-// Define a method passing its name, and optionally the original C++ method name
-// if the name visible to JavaScript should be different.
+#define NBIND_CLASS_n(Name, visible) \
+	template<class Bound> struct BindInvoker##visible { \
+		BindInvoker##visible(); \
+		nbind::BindDefiner<Name> definer; \
+	}; \
+	static struct BindInvoker##visible<Name> bindInvoker##visible; \
+	template<class Bound> BindInvoker##visible<Bound>::BindInvoker##visible():definer(#visible)
+
+#define NBIND_CLASS(...) VA_SELECT(NBIND_CLASS, __VA_ARGS__)
+
+// Define a method by name in C++, and optionally a different name visible to JavaScript.
 
 #define method_1(name) definer.method(#name, &Bound::name)
 #define method_n(name, ...) definer.method(#name, &Bound::name, __VA_ARGS__)
