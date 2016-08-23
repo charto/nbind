@@ -53,6 +53,27 @@ struct BindingType<ArgType *> {
 
 };
 
+// Const reference.
+
+template <typename ArgType>
+struct BindingType<const ArgType &> {
+
+	typedef const ArgType &Type;
+
+	static inline bool checkType(WireType arg) {
+		// TODO: Also check type of object!
+		return(arg->IsObject());
+	}
+
+	static inline Type fromWireType(WireType arg) {
+		v8::Local<v8::Object> argWrapped = arg->ToObject();
+		return(*node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
+	}
+
+	// static inline WireType toWireType(Type arg);
+
+};
+
 template <typename ArgType>
 struct BindingType<std::shared_ptr<ArgType>> {
 

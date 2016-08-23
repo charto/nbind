@@ -110,7 +110,7 @@ public:
 
 protected:
 
-	TYPEID idList[3];
+	TYPEID idList[5];
 
 	int readyState = 0;
 
@@ -144,6 +144,8 @@ public:
 		idList[0] = Typer<Bound>::makeID();
 		idList[1] = Typer<Bound *>::makeID();
 		idList[2] = Typer<const Bound *>::makeID();
+		idList[3] = Typer<Bound &>::makeID();
+		idList[4] = Typer<const Bound &>::makeID();
 
 		this->name = name;
 		this->deleter = reinterpret_cast<jsMethod *>(&BindClass::destroy);

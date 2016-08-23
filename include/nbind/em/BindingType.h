@@ -72,6 +72,20 @@ struct BindingType<ArgType *> {
 
 };
 
+// Const reference.
+
+template <typename ArgType>
+struct BindingType<const ArgType &> {
+
+	typedef const ArgType &type;
+
+	typedef const ArgType &WireType;
+
+	static inline type fromWireType(WireType arg) { return(arg); }
+	static inline WireType toWireType(type arg) { return(arg); }
+
+};
+
 template <typename ArgType>
 struct BindingType<NullableType<ArgType>> {
 

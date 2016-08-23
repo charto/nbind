@@ -151,7 +151,7 @@ class nbind { // tslint:disable-line:class-name
 	@dep('_nbind', '__extends')
 	static _nbind_register_class(idListPtr: number, namePtr: number) {
 		const name = _nbind.readAsciiString(namePtr);
-		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 3);
+		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 5);
 
 		class Bound extends _nbind.Wrapper {
 			constructor(marker: {}, ptr: number) {
@@ -190,6 +190,8 @@ class nbind { // tslint:disable-line:class-name
 		new _nbind.BindClass(idList[0], name, Bound);
 		new _nbind.BindClassPtr(idList[1], name + ' *', Bound);
 		new _nbind.BindClassPtr(idList[2], 'const ' + name + ' *', Bound);
+		new _nbind.BindClassPtr(idList[3], name + ' &', Bound);
+		new _nbind.BindClassPtr(idList[4], 'const ' + name + ' &', Bound);
 
 		/* tslint:enable:no-unused-expression */
 
