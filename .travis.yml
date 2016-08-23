@@ -16,28 +16,28 @@ env:
 #  - CC=clang-3.8 CXX=clang++-3.8 npm_config_clang=1
 
 matrix:
-  include:
-    - os: linux
-      env: CC=gcc-4.8 CXX=g++-4.8
-      node_js: "iojs-v3.0.0"
-    - os: linux
-      env: CC=gcc-4.8 CXX=g++-4.8
-      node_js: "iojs-v2.0.0"
-    - os: linux
-      env: CC=gcc-4.8 CXX=g++-4.8
-      node_js: "iojs-v1.1.0"
-    - os: linux
-      env: CC=gcc-4.8 CXX=g++-4.8
-      node_js: "6.0"
-    - os: linux
-      env: CC=gcc-4.8 CXX=g++-4.8
-      node_js: "5.12"
-    - os: linux
-      env: CC=gcc-4.8 CXX=g++-4.8
-      node_js: "5.0"
-    - os: linux
-      env: CC=gcc-4.8 CXX=g++-4.8
-      node_js: "4.0"
+#  include:
+#    - os: linux
+#      env: CC=gcc-4.8 CXX=g++-4.8
+#      node_js: "iojs-v3.0.0"
+#    - os: linux
+#      env: CC=gcc-4.8 CXX=g++-4.8
+#      node_js: "iojs-v2.0.0"
+#    - os: linux
+#      env: CC=gcc-4.8 CXX=g++-4.8
+#      node_js: "iojs-v1.1.0"
+#    - os: linux
+#      env: CC=gcc-4.8 CXX=g++-4.8
+#      node_js: "6.0"
+#    - os: linux
+#      env: CC=gcc-4.8 CXX=g++-4.8
+#      node_js: "5.12"
+#    - os: linux
+#      env: CC=gcc-4.8 CXX=g++-4.8
+#      node_js: "5.0"
+#    - os: linux
+#      env: CC=gcc-4.8 CXX=g++-4.8
+#      node_js: "4.0"
   exclude:
     - os: linux
       env: CC=clang CXX=clang
