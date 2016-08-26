@@ -36,6 +36,13 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 	return(constructor->NewInstance(argc, &argv));
 }
 
+template <typename ArgType>
+inline WireType BindingType<const ArgType &>::toWireType(const ArgType &arg) {
+	// TODO: Somehow prevent using the object as a non-const argument later!
+
+	return(BindingType<ArgType *>::toWireType(const_cast<ArgType *>(&arg)));
+}
+
 template <> struct BindingType<v8::Local<v8::Function>> {
 
 	static inline WireType toWireType(v8::Local<v8::Function> arg) {

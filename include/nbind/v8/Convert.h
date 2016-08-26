@@ -24,7 +24,8 @@ inline typename BindingType<ArgType>::Type convertFromWire(WireType arg, int dum
 
 template <typename ArgType>
 inline auto convertFromWire(WireType arg, double dummy) -> typename std::remove_reference<decltype(
-	// SFINAE, use this template only if ArgType::toJS(cbOutput) exists.
+	// SFINAE, use this template only if ArgType::toJS(cbOutput) exists
+	// (and is const if necessary).
 	std::declval<ArgType>().toJS(*(cbOutput *)nullptr),
 	// Actual return type of this function: ArgType
 	*(ArgType *)nullptr
@@ -45,7 +46,11 @@ inline auto convertToWire(ReturnType result, double dummy) -> typename std::remo
 	*(WireType *)nullptr
 )>::type {
 	v8::Local<v8::Value> output = Nan::Undefined();
-	cbFunction *jsConstructor = getValueConstructorJS<ReturnType>();
+	cbFunction *jsConstructor = getValueConstructorJS<
+		typename std::remove_const<
+			typename std::remove_reference<ReturnType>::type
+		>::type
+	>();
 
 	if(jsConstructor != nullptr) {
 		cbOutput construct(*jsConstructor, &output);
@@ -74,7 +79,7 @@ template<typename ReturnType> struct MethodResultConverter {
 	template <typename Bound>
 	static inline auto toWireType(ReturnType &&result, Bound &target, int dummy) -> typename std::remove_reference<decltype(
 		// SFINAE, use this template only if Bound::toJS(ReturnType, cbOutput) exists.
-		target.toJS(*(ReturnType *)nullptr, *(cbOutput *)nullptr),
+		target.toJS(std::declval<ReturnType>(), *(cbOutput *)nullptr),
 		// Actual return type of this function: WireType (decltype adds a reference, which is removed).
 		*(WireType *)nullptr
 	)>::type {
@@ -96,7 +101,7 @@ template<typename ReturnType> struct MethodResultConverter {
 
 	template <typename Bound>
 	static inline WireType toWireType(ReturnType &&result, Bound &target, double dummy) {
-		return(convertToWire(std::move(result), 0.0));
+		return(convertToWire<ReturnType>(result, 0.0));
 	}
 
 };

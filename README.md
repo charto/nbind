@@ -228,6 +228,7 @@ User guide
 - [Functions](#functions)
 - [Classes and constructors](#classes-and-constructors)
 - [Methods and properties](#methods-and-properties)
+- [Overloaded functions](#overloaded-functions) <sup>new in 0.3.2</sup>
 - [Getters and setters](#getters-and-setters)
 - [Passing data structures](#passing-data-structures)
 - [Callbacks](#callbacks)
@@ -479,6 +480,10 @@ The C++ function gets exported to JavaScript with the same name,
 or it can be renamed by adding a second argument (with quotation marks):
 `function(cppFunctionName, "jsExportedName");`
 
+If the C++ function is overloaded, an `nbind::Overloaded<>()` policy is needed
+as the second argument (so any rename string will come third).
+See [overloaded functions](#overloaded-functions).
+
 Note: you cannot put several `function(...);` calls on the same line!
 Otherwise you'll get an error about redefining a symbol.
 
@@ -584,6 +589,9 @@ Methods are exported inside an `NBIND_CLASS` block with a macro call `method(met
 which takes the name of the method as an argument (without any quotation marks).
 The C++ method gets exported to JavaScript with the same name.
 
+Also see the [functions](#functions) section about renaming and overloading
+methods, which works identically to functions.
+
 Properties should be accessed through [getter and setter functions](#getters-and-setters).
 
 Data types of method arguments and its return value are detected automatically
@@ -667,6 +675,39 @@ Run the example with `node 3-methods.js` after [installing](#installing-the-exam
 The example serves to illustrate passing data.
 In practice, such simple calculations are faster to do in JavaScript
 rather than calling across languages because copying data is quite expensive.
+
+Overloaded functions
+--------------------
+
+The `function()` and `method()` macroes cannot distinguish between several
+overloaded versions of the same function or method, causing an error.
+In this case the `nbind::Overloaded<>()` policy can be used to select the
+intended version. Unlike other policies, it must be listed first, even before
+any renaming.
+
+For example consider an overloaded method:
+
+```C++
+unsigned int test(unsigned int x) const;
+unsigned int test(unsigned char *x);
+```
+
+In bindings, one of the versions needs to be explicitly selected.
+The first of the two would be referenced like:
+
+```C++
+method(test, nbind::Overloaded<unsigned int(unsigned int) const>());
+```
+
+If it needs to be renamed, the call would be:
+
+```C++
+method(
+  test,
+  nbind::Overloaded<unsigned int(unsigned int) const>(),
+  "myTest"
+);
+```
 
 Getters and setters
 -------------------
@@ -947,7 +988,7 @@ Currently supported policies are:
   Normally anything in JavaScript can be converted to `number`, `string` or `boolean` when expected by a C++ function.
   This policy requires passing the exact JavaScript type instead.
 
-Policies are listed after the method or function names, for example:
+Type conversion policies are listed after the method or function names, for example:
 
 ```C++
 NBIND_CLASS(Reference) {

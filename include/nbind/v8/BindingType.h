@@ -70,7 +70,7 @@ struct BindingType<const ArgType &> {
 		return(*node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
 	}
 
-	// static inline WireType toWireType(Type arg);
+	static inline WireType toWireType(Type arg);
 
 };
 
