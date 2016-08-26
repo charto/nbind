@@ -178,10 +178,43 @@ public:
 		return(*this);
 	}
 
+	template <typename ReturnType, typename... Args, typename... Policies>
+	BindDefiner &method(
+		const char* name,
+		ReturnType(*func)(Args...),
+		Overloaded<ReturnType(Args...)>,
+		Policies... policies
+	) {
+		addMethod<
+			FunctionSignature<
+				decltype(func),
+				std::nullptr_t,
+				typename SkipNamePolicy<PolicyListType<Policies...>>::Type,
+				ReturnType,
+				Args...
+			>,
+			decltype(func)
+		>(executeNamePolicy(name, policies...), func);
+
+		return(*this);
+	}
+
 	template <typename MethodType, typename... Policies>
 	BindDefiner &method(
 		const char* name,
 		MethodType method,
+		Policies... policies
+	) {
+		addMethodMaybeConst<MethodSignature>(name, method, policies...);
+
+		return(*this);
+	}
+
+	template <typename MethodType, typename... Policies>
+	BindDefiner &method(
+		const char* name,
+		MethodType (Bound::*method),
+		Overloaded<MethodType>,
 		Policies... policies
 	) {
 		addMethodMaybeConst<MethodSignature>(name, method, policies...);
