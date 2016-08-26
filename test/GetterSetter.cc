@@ -20,6 +20,8 @@ public:
 
 	void sett(const char *t) {this->t = strdup(t);}
 
+	int getXYZ() const { return(x + y + z); }
+
 private:
 
 	int x = 1, y = 2, z = 3;
@@ -38,6 +40,7 @@ NBIND_CLASS(GetterSetter) {
 	getset(Gety, Sety);
 	getset(getZ, setZ);
 	getset(gett, sett);
+	getter(getXYZ);
 }
 
 #endif

@@ -13,34 +13,40 @@ using namespace nbind;
 // Convert getter names like "getFoo" into property names like "foo".
 // This could be so much more concisely written with regexps...
 const char *stripGetterPrefix(const char *name, char *&nameBuf) {
-	if((name[0] == 'G' || name[0] == 'g') && name[1] == 'e' && name[2] == 't') {
-		char c = name[3];
+	if(
+		strlen(name) <= 3 ||
+		(name[0] != 'G' && name[0] != 'g') ||
+		name[1] != 'e' ||
+		name[2] != 't'
+	) return(name);
 
-		if(c == '_') {
-			// "Get_foo", "get_foo" => Remove 4 first characters.
+	char c = name[3];
 
-			name += 4;
-		} else if(c >= 'a' && c <= 'z') {
-			// "Getfoo", "getfoo" => Remove 3 first characters.
+	// "Get_foo", "get_foo" => Remove 4 first characters.
+	if(c == '_') return(name + 4);
 
-			name += 3;
-		} else if(c >= 'A' && c <= 'Z') {
-			// "GetFoo", "getFoo" => Remove 3 first characters,
-			// make a modifiable copy and lowercase first letter.
+	// "Getfoo", "getfoo" => Remove 3 first characters.
+	if(c >= 'a' && c <= 'z') return(name + 3);
 
-			if(nameBuf != nullptr) free(nameBuf);
-			nameBuf = strdup(name + 3);
+	if(c >= 'A' && c <= 'Z') {
+		// "GetFOO", "getFOO" => Remove first 3 characters.
+		if(name[4] >= 'A' && name[4] <= 'Z') return(name + 3);
+	} else return(name);
 
-			if(nameBuf != nullptr) {
-				nameBuf[0] = c + ('a' - 'A');
-				name = nameBuf;
-			} else {
-				// Memory allocation failed.
-				// The world will soon end anyway, so just declare
-				// the getter without stripping the "get" prefix.
-			}
-		}
+	// "GetFoo", "getFoo" => Remove 3 first characters,
+	// make a modifiable copy and lowercase first letter.
+
+	if(nameBuf != nullptr) free(nameBuf);
+	nameBuf = strdup(name + 3);
+
+	if(nameBuf != nullptr) {
+		nameBuf[0] = c + ('a' - 'A');
+		return(nameBuf);
 	}
+
+	// Memory allocation failed.
+	// The world will soon end anyway, so just declare
+	// the getter without stripping the "get" prefix.
 
 	return(name);
 }

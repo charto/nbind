@@ -21,10 +21,12 @@ export enum StructureType {
 
 export function removeAccessorPrefix(name: string) {
 	// The C++ side gives the same name to getters and setters.
-	const prefixMatcher = /^[Gg]et_?([A-Z]?)/;
+	const prefixMatcher = /^[Gg]et_?([A-Z]?([A-Z]?))/;
 
 	return(name.replace(
 		prefixMatcher,
-		(match: string, initial: string) => initial.toLowerCase()
+		(match: string, initial: string, second: string) => (
+			second ? initial : initial.toLowerCase()
+		)
 	));
 }

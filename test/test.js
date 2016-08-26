@@ -108,6 +108,7 @@ test('Getters and setters', function(t) {
 	t.strictEqual(obj.y, 2);
 	t.strictEqual(obj.z, 3);
 	t.strictEqual(obj.t, 'foobar');
+	t.strictEqual(obj.XYZ, 6);
 
 	obj.y = 4;
 	obj.z = 5;
