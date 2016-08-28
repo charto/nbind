@@ -1,8 +1,9 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-// This file handles type conversion of JavaScript callback functions
-// accessible from C++. See also Caller.ts
+// This file allows C++ to hold references to arbitrary JavaScript objects.
+// Each object is stored in a JavaScript array, and C++ receives its index.
+// C++ can then call JavaScript methods and refer to the object by index.
 
 import {
 	setEvil,
@@ -16,46 +17,55 @@ setEvil((code: string) => eval(code));
 
 export namespace _nbind {
 
-	export class External {
-		constructor(data: any) {
-			this.data = data;
-		}
-
-		// tslint:disable-next-line:no-empty
-		free() {}
-
-		refCount = 1;
-		data: any;
-	}
-
-	External.prototype.free = null;
-
 	// External JavaScript types are stored in a list,
 	// so C++ code can find them by number.
 	// A reference count allows storing them in C++ without leaking memory.
 	// The first element is a dummy value just so that a valid index to
 	// the list always tests as true (useful for the free list implementation).
 
-	export var externalList: External[] = [null];
+	export var externalList: (External<any> | number)[] = [null];
 
-	// Free list for recycling available slots in the externals list.
+	// Head of free list for recycling available slots in the externals list.
+	let firstFreeExternal = 0;
 
-	export var externalFreeList: number[] = [];
+	export class External<Member> {
+		constructor(data: Member) {
+			this.data = data;
+		}
 
-	export function registerExternal(external: External) {
-		const num = externalFreeList.pop() || externalList.length;
+		// Store this external in a JavaScript array and return its index
+		// creating a reference that can be passed to C++.
 
-		externalList[num] = external;
+		register() {
+			let num = firstFreeExternal;
 
-		return(num);
+			if(num) {
+				firstFreeExternal = externalList[num] as number;
+			} else num = externalList.length;
+
+			externalList[num] = this;
+
+			return(num);
+		}
+
+		// Called by C++ side destructor through unregisterExternal
+		// to free any related JavaScript resources.
+
+		free() {} // tslint:disable-line:no-empty
+
+		refCount = 1;
+		data: any;
 	}
 
+	// Remove empty free method, still allowing child classes to override it.
+	External.prototype.free = null;
+
 	export function unregisterExternal(num: number) {
-		const external = externalList[num];
+		const external = externalList[num] as External<any>;
 		if(external.free) external.free();
 
-		externalList[num] = null;
-		externalFreeList.push(num);
+		externalList[num] = firstFreeExternal;
+		firstFreeExternal = num;
 	}
 
 	@prepareNamespace('_nbind')
@@ -67,12 +77,14 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_reference_external(num: number) {
-		++_nbind.externalList[num].refCount;
+		++(_nbind.externalList[num] as _nbind.External<any>).refCount;
 	}
 
 	@dep('_nbind')
 	static _nbind_free_external(num: number) {
-		if(--_nbind.externalList[num].refCount == 0) _nbind.unregisterExternal(num);
+		if(--(_nbind.externalList[num] as _nbind.External<any>).refCount == 0) {
+			_nbind.unregisterExternal(num);
+		}
 	}
 
 }

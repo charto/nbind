@@ -31,8 +31,6 @@ export namespace _nbind {
 
 	export var makeJSCaller: typeof _caller.makeJSCaller;
 
-	export var registerExternal: typeof _external.registerExternal;
-
 	// List of invoker functions for all argument and return value combinations
 	// seen so far.
 
@@ -46,7 +44,7 @@ export namespace _nbind {
 		wireWrite = (func: _globals.Func) => {
 			if(typeof(func) != 'function') _nbind.throwError('Type mismatch');
 
-			return(registerExternal(new External(func)));
+			return(new External(func).register());
 		}
 
 		// Optional type conversion code

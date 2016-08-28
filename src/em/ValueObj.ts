@@ -40,13 +40,17 @@ export namespace _nbind {
 	}
 
 	/** Storage for value objects. Slot 0 is reserved to represent errors. */
-	export var valueList: ValueObject[] = [ null ];
+	const valueList: (ValueObject | number)[] = [ null ];
 
-	/** List of free slots in value object storage. */
-	export var valueFreeList: number[] = [];
+	/** Value object storage slot free list head. */
+	let firstFreeValue = 0;
 
 	export function pushValue(value: ValueObject) {
-		const num = valueFreeList.pop() || valueList.length;
+		let num = firstFreeValue;
+
+		if(num) {
+			firstFreeValue = valueList[num] as number;
+		} else num = valueList.length;
 
 		valueList[num] = value;
 		return(num);
@@ -55,10 +59,11 @@ export namespace _nbind {
 	export function popValue(num: number) {
 		if(!num) throwError('Value type JavaScript class is missing or not registered');
 
-		const obj = valueList[num];
+		const obj = valueList[num] as ValueObject;
 
-		valueList[num] = null;
-		valueFreeList.push(num);
+		valueList[num] = firstFreeValue;
+		firstFreeValue = num;
+
 		return(obj);
 	}
 
@@ -69,10 +74,7 @@ export namespace _nbind {
 	export function push64(num: number | any) {
 		if(typeof(num) == 'number') return(num);
 
-		const wrapNum = valueFreeList.pop() || valueList.length;
-
-		valueList[wrapNum] = num;
-		return(wrapNum * 4096 + valueBase);
+		return(pushValue(num) * 4096 + valueBase);
 	}
 
 	export function pop64(num: number): number | any {

@@ -20,12 +20,13 @@ export namespace _nbind {
 
 	export type PolicyTbl = _globals.PolicyTbl;
 
-	export var registerExternal: typeof _external.registerExternal;
 	export var externalList: typeof _external.externalList;
 
 	export var resources: typeof _resource.resources;
 
-	class ExternalBuffer extends External {
+	class ExternalBuffer extends External<
+		number[] | ArrayBuffer | DataView | Uint8Array | Buffer
+	> {
 		constructor(buf: any, ptr: number) {
 			super(buf);
 			this.ptr = ptr;
@@ -66,7 +67,7 @@ export namespace _nbind {
 
 		HEAPU32[ptr++] = length;
 		HEAPU32[ptr++] = data;
-		HEAPU32[ptr++] = registerExternal(new ExternalBuffer(buf, data));
+		HEAPU32[ptr++] = new ExternalBuffer(buf, data).register();
 
 		HEAPU8.set(getBuffer(buf), data);
 
@@ -88,8 +89,7 @@ export namespace _nbind {
 	}
 
 	export function commitBuffer(num: number, data: number, length: number) {
-		const buf = _nbind.externalList[num].data as
-			number[] | ArrayBuffer | DataView | Uint8Array | Buffer;
+		const buf = (_nbind.externalList[num] as ExternalBuffer).data;
 
 		let NodeBuffer: typeof Buffer = Buffer;
 		// tslint:disable-next-line:no-empty

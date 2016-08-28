@@ -23,7 +23,7 @@ export namespace _nbind {
 	export var getTypes: typeof _globals.getTypes;
 	export var getDynCall: typeof _globals.getDynCall;
 
-	export var externalList: typeof _external.externalList;
+	export var externalList: _external.External<any>[];
 
 	export var listResources: typeof _resource.listResources;
 	export var resources: typeof _resource.resources;
