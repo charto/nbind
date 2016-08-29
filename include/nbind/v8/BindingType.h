@@ -38,6 +38,7 @@ template <typename ArgType>
 struct BindingType<ArgType *> {
 
 	typedef ArgType *Type;
+	typedef typename std::remove_const<ArgType>::type BaseType;
 
 	static inline bool checkType(WireType arg) {
 		// TODO: Also check type of object!
@@ -46,19 +47,27 @@ struct BindingType<ArgType *> {
 
 	static inline Type fromWireType(WireType arg) {
 		v8::Local<v8::Object> argWrapped = arg->ToObject();
-		return(node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
+		WrapperFlags flags = std::is_const<ArgType>::value ?
+			WrapperFlags::constant :
+			WrapperFlags::none;
+
+		return(
+			node::ObjectWrap::Unwrap<
+				BindWrapper<BaseType>
+			>(argWrapped)->getBound(flags)
+		);
 	}
 
 	static inline WireType toWireType(Type arg);
 
 };
 
-// Const reference.
+// Object reference.
 
 template <typename ArgType>
-struct BindingType<const ArgType &> {
+struct BindingType<ArgType &> {
 
-	typedef const ArgType &Type;
+	typedef ArgType &Type;
 
 	static inline bool checkType(WireType arg) {
 		// TODO: Also check type of object!
@@ -66,8 +75,7 @@ struct BindingType<const ArgType &> {
 	}
 
 	static inline Type fromWireType(WireType arg) {
-		v8::Local<v8::Object> argWrapped = arg->ToObject();
-		return(*node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getBound());
+		return(*BindingType<ArgType *>::fromWireType(arg));
 	}
 
 	static inline WireType toWireType(Type arg);

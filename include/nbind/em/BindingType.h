@@ -61,7 +61,6 @@ template <typename ArgType>
 struct BindingType<ArgType *> {
 
 	typedef ArgType *type;
-
 	typedef ArgType *WireType;
 
 	// checkType is not called on Emscripten target.
@@ -72,29 +71,27 @@ struct BindingType<ArgType *> {
 
 };
 
-// Const reference.
+// Object reference.
 
 template <typename ArgType>
-struct BindingType<const ArgType &> {
+struct BindingType<ArgType &> {
 
-	typedef const ArgType &type;
-
-	typedef const ArgType &WireType;
+	typedef ArgType &type;
+	typedef ArgType &WireType;
 
 	static inline type fromWireType(WireType arg) { return(arg); }
 	static inline WireType toWireType(type arg) { return(arg); }
 
 };
 
+// Nullable type, just calls the non-nullable version.
+// Functional differences are on JS side.
+
 template <typename ArgType>
 struct BindingType<NullableType<ArgType>> {
 
 	typedef typename BindingType<ArgType>::type type;
-
 	typedef typename BindingType<ArgType>::WireType WireType;
-
-	// checkType is not called on Emscripten target.
-	// static inline bool checkType(WireType arg) { return(true); }
 
 	static inline type fromWireType(WireType arg) { return(arg); }
 	static inline WireType toWireType(type arg) { return(arg); }

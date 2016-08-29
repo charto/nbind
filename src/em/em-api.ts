@@ -154,7 +154,7 @@ class nbind { // tslint:disable-line:class-name
 		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 5);
 
 		class Bound extends _nbind.Wrapper {
-			constructor(marker: {}, ptr: number) {
+			constructor(marker: {}, ptr: number, flags: number) {
 				// super() never gets called here but TypeScript 1.8 requires it.
 				if((false && super()) || !(this instanceof Bound)) {
 
@@ -172,26 +172,33 @@ class nbind { // tslint:disable-line:class-name
 
 				super();
 
-				_defineHidden(
-					marker === _nbind.ptrMarker ? ptr :
-					this.__nbindConstructor.apply(this, arguments)
-				)(this, '__nbindPtr');
+				let bits = flags;
+
+				if(marker !== _nbind.ptrMarker) {
+					ptr = this.__nbindConstructor.apply(this, arguments);
+					bits = 0;
+				}
+
+				_defineHidden(bits)(this, '__nbindFlags');
+				_defineHidden(ptr)(this, '__nbindPtr');
 			}
 
 			@_defineHidden()
-			__nbindConstructor: _nbind.Func; // tslint:disable-line:variable-name
+			// tslint:disable-next-line:variable-name
+			__nbindConstructor: (...args: any[]) => number;
 
 			@_defineHidden()
-			__nbindValueConstructor: _nbind.Func; // tslint:disable-line:variable-name
+			// tslint:disable-next-line:variable-name
+			__nbindValueConstructor: _nbind.Func;
 		}
 
 		/* tslint:disable:no-unused-expression */
 
 		new _nbind.BindClass(idList[0], name, Bound);
 		new _nbind.BindClassPtr(idList[1], name + ' *', Bound);
-		new _nbind.BindClassPtr(idList[2], 'const ' + name + ' *', Bound);
+		new _nbind.BindClassPtr(idList[2], 'const ' + name + ' *', Bound, _nbind.Wrapper.constant);
 		new _nbind.BindClassPtr(idList[3], name + ' &', Bound);
-		new _nbind.BindClassPtr(idList[4], 'const ' + name + ' &', Bound);
+		new _nbind.BindClassPtr(idList[4], 'const ' + name + ' &', Bound, _nbind.Wrapper.constant);
 
 		/* tslint:enable:no-unused-expression */
 

@@ -35,7 +35,8 @@ inline auto convertFromWire(WireType arg, double dummy) -> typename std::remove_
 
 template <typename ReturnType>
 inline WireType convertToWire(ReturnType result, int dummy) {
-	return(BindingType<ReturnType>::toWireType(std::move(result)));
+	// std::move doesn't work with non-const references.
+	return(BindingType<ReturnType>::toWireType(std::forward<ReturnType>(result)));
 }
 
 template <typename ReturnType>

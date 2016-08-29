@@ -14,9 +14,13 @@ template <typename ArgType>
 inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 	if(arg == nullptr) return(Nan::Null());
 
+	WrapperFlags flags = std::is_const<ArgType>::value ?
+		WrapperFlags::constant :
+		WrapperFlags::none;
+
 #ifndef DUPLICATE_POINTERS
 
-	auto ref = BindWrapper<ArgType>::findInstance(arg);
+	auto ref = BindWrapper<BaseType>::findInstance(arg, flags);
 
 	if(!ref->IsEmpty()) {
 		return(Nan::New<v8::Object>(*ref));
@@ -24,23 +28,28 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 
 #endif // DUPLICATE_POINTERS
 
-	unsigned int constructorNum = BindClass<ArgType>::getInstance().wrapperConstructorNum;
+	unsigned int constructorNum = BindClass<BaseType>::getInstance().wrapperConstructorNum;
 	v8::Local<v8::Function> constructor = Overloader::getDef(constructorNum).constructorJS->GetFunction();
 
-	const unsigned int argc = 1;
-	v8::Local<v8::Value> argv = Nan::New<v8::External>(arg);
+	// TODO: first argument should be a unique marker of some kind.
+
+	const unsigned int argc = 2;
+	v8::Local<v8::Value> argv[] = {
+		Nan::New<v8::External>(const_cast<BaseType *>(arg)),
+		Nan::New<v8::Uint32>(static_cast<uint32_t>(flags))
+	};
 
 	// This will try to call the C++ constructor, so Overloader or Creator
 	// needs to detect the argument is a v8::External and just wrap it instead.
 
-	return(constructor->NewInstance(argc, &argv));
+	return(constructor->NewInstance(argc, argv));
 }
 
 template <typename ArgType>
-inline WireType BindingType<const ArgType &>::toWireType(const ArgType &arg) {
+inline WireType BindingType<ArgType &>::toWireType(ArgType &arg) {
 	// TODO: Somehow prevent using the object as a non-const argument later!
 
-	return(BindingType<ArgType *>::toWireType(const_cast<ArgType *>(&arg)));
+	return(BindingType<ArgType *>::toWireType(&arg));
 }
 
 template <> struct BindingType<v8::Local<v8::Function>> {

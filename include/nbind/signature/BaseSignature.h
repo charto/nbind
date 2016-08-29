@@ -194,7 +194,10 @@ public:
 	template <typename NanArgs, typename Bound>
 	static bool getTargetSafely(NanArgs &nanArgs, Bound **targetOut) {
 		v8::Local<v8::Object> targetWrapped = nanArgs.This();
-		Bound *target = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped)->getBound();
+		// TODO: instead of 0, should pass flag whether method is const!
+		Bound *target = node::ObjectWrap::Unwrap<
+			BindWrapper<Bound>
+		>(targetWrapped)->getBound(WrapperFlags::none);
 
 		if(target == nullptr) return(false);
 

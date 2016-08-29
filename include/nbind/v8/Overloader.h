@@ -51,7 +51,7 @@ public:
 		// If the only argument is a pointer, assume we just want to wrap
 		// an already instantiated object.
 
-		if(argc == 1 && args[0]->IsExternal()) {
+		if(argc == 2 && args[0]->IsExternal()) {
 			def.wrapPtr(args);
 			return;
 		}

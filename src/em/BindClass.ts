@@ -27,14 +27,19 @@ export namespace _nbind {
 
 		/* tslint:disable:variable-name */
 
+		__nbindFlags: number;
+
 		/** Dynamically set by _nbind_register_constructor.
 		  * Calls the C++ constructor and returns a numeric heap pointer. */
 		__nbindConstructor: (...args: any[]) => number;
 		__nbindValueConstructor: _globals.Func;
+
 		/** __nbindConstructor return value. */
 		__nbindPtr: number;
 
 		/* tslint:enable:variable-name */
+
+		static constant = 1;
 	}
 
 	// Any subtype (not instance but type) of Wrapper.
@@ -71,7 +76,9 @@ export namespace _nbind {
 	export function popPointer(ptr: number, type: BindClassPtr) {
 		if(ptr === 0) return(null);
 
-		return(new type.proto(ptrMarker, ptr));
+		const obj = new type.proto(ptrMarker, ptr, type.flags);
+
+		return(obj);
 	}
 
 	export function pushPointer(obj: any, type: BindClassPtr, policyTbl?: PolicyTbl) {
@@ -79,14 +86,19 @@ export namespace _nbind {
 		if(!obj && policyTbl['Nullable']) return(0);
 		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
 
+		if((obj.__nbindFlags & Wrapper.constant) && !(type.flags & Wrapper.constant)) {
+			throw(new Error('Passing a const value as a non-const argument'));
+		}
+
 		return(obj.__nbindPtr);
 	}
 
 	export class BindClassPtr extends BindType {
-		constructor(id: number, name: string, proto: WrapperClass) {
+		constructor(id: number, name: string, proto: WrapperClass, flags?: number) {
 			super(id, name);
 
 			this.proto = proto;
+			this.flags = flags || 0;
 		}
 
 		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
@@ -96,6 +108,7 @@ export namespace _nbind {
 		wireWrite = (arg: any) => pushPointer(arg, this);
 
 		proto: WrapperClass;
+		flags: number;
 	}
 
 	@prepareNamespace('_nbind')
