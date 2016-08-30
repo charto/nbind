@@ -81,12 +81,15 @@ export namespace _nbind {
 		return(obj);
 	}
 
-	export function pushPointer(obj: any, type: BindClassPtr, policyTbl?: PolicyTbl) {
-		// Handle null pointers.
-		if(!obj && policyTbl['Nullable']) return(0);
+	export function pushPointer(obj: any, type: BindClassPtr) {
+		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
+		return(obj.__nbindPtr);
+	}
+
+	export function pushNonConstPointer(obj: any, type: BindClassPtr) {
 		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
 
-		if((obj.__nbindFlags & Wrapper.constant) && !(type.flags & Wrapper.constant)) {
+		if(obj.__nbindFlags & Wrapper.constant) {
 			throw(new Error('Passing a const value as a non-const argument'));
 		}
 
@@ -99,13 +102,19 @@ export namespace _nbind {
 
 			this.proto = proto;
 			this.flags = flags || 0;
-		}
 
-		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
-			(arg: any) => pushPointer(arg, this, policyTbl)
-		);
-		wireRead = (arg: number) => popPointer(arg, this);
-		wireWrite = (arg: any) => pushPointer(arg, this);
+			const push = flags & Wrapper.constant ? pushPointer : pushNonConstPointer;
+
+			this.makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
+				policyTbl['Nullable'] ?
+					// Handle null pointers.
+					(arg: any) => (arg ? push(arg, this) : 0) :
+					(arg: any) => push(arg, this)
+			);
+
+			this.wireRead = (arg: number) => popPointer(arg, this);
+			this.wireWrite = (arg: any) => push(arg, this);
+		}
 
 		proto: WrapperClass;
 		flags: number;

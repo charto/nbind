@@ -42,9 +42,7 @@ public:
 		static std::vector<OverloadDef> &overloadVect = overloadVectStore();
 
 		// Fetch overloads of the requested function.
-		// The static cast silences a compiler warning in Visual Studio.
-
-		OverloadDef &def = overloadVect[static_cast<unsigned int>(args.Data()->IntegerValue()) >> overloadShift];
+		OverloadDef &def = overloadVect[args.Data()->Uint32Value() >> overloadShift];
 
 		unsigned int argc = args.Length();
 
@@ -102,8 +100,7 @@ public:
 	}
 
 	static void callNew(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		// The static cast silences a compiler warning in Visual Studio.
-		OverloadDef &def = getDef(static_cast<unsigned int>(args.Data()->IntegerValue()) >> overloadShift);
+		OverloadDef &def = getDef(args.Data()->Uint32Value() >> overloadShift);
 
 		unsigned int argc = args.Length();
 		std::vector<v8::Local<v8::Value>> argv(argc);
