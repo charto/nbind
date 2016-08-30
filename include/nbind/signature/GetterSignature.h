@@ -31,17 +31,21 @@ public:
 #if defined(BUILDING_NODE_EXTENSION)
 
 	template <typename V8Args, typename NanArgs>
-	static void callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
+	static void callInner(const typename Parent::MethodInfo &method, V8Args &args, NanArgs &nanArgs, Bound *target) {
 		nanArgs.GetReturnValue().Set(Parent::CallWrapper::callMethod(
 			*target,
-			Parent::getMethod(nanArgs.Data()->IntegerValue() & accessorGetterMask).func,
+			method.func,
 			args
 		));
 	}
 
 	static void call(v8::Local<v8::String> property, const Nan::PropertyCallbackInfo<v8::Value> &args) {
 		// Note: this may do useless arity checks...
-		Parent::template callInnerSafely<Bound>(args, args);
+		Parent::template callInnerSafely<Bound>(
+			args,
+			args,
+			args.Data()->Uint32Value() & accessorGetterMask
+		);
 	}
 
 #elif defined(EMSCRIPTEN)

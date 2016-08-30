@@ -26,7 +26,7 @@ public:
 		registerFunction(
 			executeNamePolicy(name, policies...),
 			Signature::getDirect(func),
-			Signature::addMethod(func),
+			Signature::addMethod(func, WrapperFlags::none),
 			&Signature::getInstance()
 		);
 	}

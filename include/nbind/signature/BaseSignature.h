@@ -120,9 +120,10 @@ public:
 
 		typedef typename Signature::MethodType MethodType;
 
-		MethodInfo(MethodType func) : func(func) {}
+		MethodInfo(MethodType func, WrapperFlags flags) : func(func), flags(flags) {}
 
 		const MethodType func;
+		const WrapperFlags flags;
 
 	};
 
@@ -131,7 +132,7 @@ public:
 	}
 
 	template <typename MethodType>
-	static unsigned int addMethod(MethodType func) {
+	static unsigned int addMethod(MethodType func, WrapperFlags flags) {
 		auto &funcVect = getInstance().funcVect;
 
 #		if defined(BUILDING_NODE_EXTENSION)
@@ -143,7 +144,7 @@ public:
 
 #		endif // BUILDING_NODE_EXTENSION
 
-		funcVect.emplace_back(func);
+		funcVect.emplace_back(func, flags);
 
 		return(funcVect.size() - 1);
 	}
@@ -192,14 +193,26 @@ public:
 	}
 
 	template <typename NanArgs, typename Bound>
-	static bool getTargetSafely(NanArgs &nanArgs, Bound **targetOut) {
-		v8::Local<v8::Object> targetWrapped = nanArgs.This();
-		// TODO: instead of 0, should pass flag whether method is const!
-		Bound *target = node::ObjectWrap::Unwrap<
+	static bool getTargetSafely(
+		NanArgs &nanArgs,
+		Bound **targetOut,
+		WrapperFlags flags
+	) {
+		BindWrapper<Bound> *wrapper = node::ObjectWrap::Unwrap<
 			BindWrapper<Bound>
-		>(targetWrapped)->getBound(WrapperFlags::none);
+		>(nanArgs.This());
 
-		if(target == nullptr) return(false);
+		if(!!(wrapper->getFlags() & WrapperFlags::constant) && !(flags & WrapperFlags::constant)) {
+			Nan::ThrowError("Calling a non-const method on a const object");
+			return(false);
+		}
+
+		Bound *target = wrapper->getBound(flags);
+
+		if(target == nullptr) {
+			Nan::ThrowError("Attempt to access deleted object");
+			return(false);
+		}
 
 		*targetOut = target;
 		return(true);
@@ -207,12 +220,16 @@ public:
 
 	// Overload second argument, effectively a partial specialization of the function template above.
 	template <typename NanArgs>
-	static bool getTargetSafely(NanArgs &nanArgs, void **targetOut) {
+	static bool getTargetSafely(
+		NanArgs &nanArgs,
+		void **targetOut,
+		WrapperFlags flags
+	) {
 		return(true);
 	}
 
 	template <typename Bound, typename V8Args, typename NanArgs>
-	static void callInnerSafely(V8Args &args, NanArgs &nanArgs) {
+	static void callInnerSafely(V8Args &args, NanArgs &nanArgs, unsigned int methodNum) {
 		Bound *target = nullptr;
 
 		if(!arityIsValid(nanArgs)) {
@@ -228,15 +245,14 @@ public:
 			return;
 		}
 
-		if(!getTargetSafely(nanArgs, &target)) {
-			Nan::ThrowError("Attempt to access deleted object");
-			return;
-		}
+		const MethodInfo &method = getMethod(methodNum);
+
+		if(!getTargetSafely(nanArgs, &target, method.flags)) return;
 
 		Status::clearError();
 
 		try {
-			Signature::callInner(args, nanArgs, target);
+			Signature::callInner(method, args, nanArgs, target);
 			if(Status::getError() != nullptr) Nan::ThrowError(Status::getError());
 		} catch(const std::exception &ex) {
 			const char *message = Status::getError();

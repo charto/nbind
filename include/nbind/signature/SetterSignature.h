@@ -31,11 +31,10 @@ public:
 #if defined(BUILDING_NODE_EXTENSION)
 
 	template <typename V8Args, typename NanArgs>
-	static void callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
+	static void callInner(const typename Parent::MethodInfo &method, V8Args &args, NanArgs &nanArgs, Bound *target) {
 		Parent::CallWrapper::callMethod(
 			*target,
-			// The static cast silences a compiler warning in Visual Studio.
-			Parent::getMethod(static_cast<unsigned int>(nanArgs.Data()->IntegerValue()) >> accessorSetterShift).func,
+			method.func,
 			args
 		);
 	}
@@ -43,7 +42,11 @@ public:
 	static void call(v8::Local<v8::String> property, v8::Local<v8::Value> value, const Nan::PropertyCallbackInfo<void> &args) {
 		auto *valuePtr = &value;
 
-		Parent::template callInnerSafely<Bound>(valuePtr, args);
+		Parent::template callInnerSafely<Bound>(
+			valuePtr,
+			args,
+			args.Data()->Uint32Value() >> accessorSetterShift
+		);
 	}
 
 #elif defined(EMSCRIPTEN)

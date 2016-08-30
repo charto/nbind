@@ -127,6 +127,8 @@ public:
 
 	inline std::shared_ptr<Bound> getShared() { return(bound); }
 
+	inline WrapperFlags getFlags() const { return(flags); }
+
 	inline Bound *getBound(WrapperFlags argFlags) {
 		if(!!(flags & WrapperFlags::constant) && !(argFlags & WrapperFlags::constant)) {
 			throw(std::runtime_error("Passing a const value as a non-const argument"));

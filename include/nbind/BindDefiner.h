@@ -91,12 +91,13 @@ public:
 		typename MethodType
 	> void addMethod(
 		const char *name,
-		MethodType method
+		MethodType method,
+		WrapperFlags flags = WrapperFlags::none
 	) {
 		bindClass.addMethod(
 			name,
 			Signature::getDirect(method),
-			Signature::addMethod(method),
+			Signature::addMethod(method, flags),
 			&Signature::getInstance()
 		);
 	}
@@ -142,7 +143,11 @@ public:
 				Args...
 			>,
 			decltype(method)
-		>(executeNamePolicy(name, policies...), method);
+		>(
+			executeNamePolicy(name, policies...),
+			method,
+			WrapperFlags::constant
+		);
 	}
 
 	template <typename... Args, typename... Policies>

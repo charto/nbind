@@ -26,16 +26,20 @@ public:
 #if defined(BUILDING_NODE_EXTENSION)
 
 	template <typename V8Args, typename NanArgs>
-	static void callInner(V8Args &args, NanArgs &nanArgs, Bound *target) {
+	static void callInner(const typename Parent::MethodInfo &method, V8Args &args, NanArgs &nanArgs, Bound *target) {
 		nanArgs.GetReturnValue().Set(Parent::CallWrapper::callMethod(
 			*target,
-			Parent::getMethod(nanArgs.Data()->IntegerValue() & signatureMemberMask).func,
+			method.func,
 			args
 		));
 	}
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		Parent::template callInnerSafely<Bound>(args, args);
+		Parent::template callInnerSafely<Bound>(
+			args,
+			args,
+			args.Data()->Uint32Value() & signatureMemberMask
+		);
 	}
 
 #elif defined(EMSCRIPTEN)
