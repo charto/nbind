@@ -96,9 +96,10 @@ public:
 	) {
 		bindClass.addMethod(
 			name,
+			&Signature::getInstance(),
 			Signature::getDirect(method),
 			Signature::addMethod(method, flags),
-			&Signature::getInstance()
+			flags
 		);
 	}
 

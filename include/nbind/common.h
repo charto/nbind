@@ -15,7 +15,8 @@ void registerFunction(
 	const char *name,
 	funcPtr ptr,
 	unsigned int num,
-	BaseSignature *signature
+	BaseSignature *signature,
+	WrapperFlags flags
 );
 
 } // namespace

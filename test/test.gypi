@@ -7,6 +7,7 @@
 		"Value.cc",
 		"Reference.cc",
 		"Array.cc",
+		"Nullable.cc",
 		"Strict.cc",
 		"Overload.cc",
 		"Buffers.cc"

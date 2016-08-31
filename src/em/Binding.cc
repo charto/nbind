@@ -20,9 +20,9 @@ extern "C" {
 	extern void _nbind_register_destructor( TYPEID classType, funcPtr func);
 	extern void _nbind_register_constructor(TYPEID classType, const char **policies, const TYPEID *types, unsigned int typeCount, funcPtr func, funcPtr ptrValue);
 	extern void _nbind_register_function(   TYPEID classType, const char **policies, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
-		unsigned int num, funcPtr direct);
+		unsigned int num, unsigned int flags, funcPtr direct);
 	extern void _nbind_register_method(     TYPEID classType, const char **policies, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
-		unsigned int num, unsigned int methodType
+		unsigned int num, unsigned int flags, unsigned int methodType
 	);
 }
 
@@ -178,6 +178,7 @@ static void initModule() {
 			signature->getCaller(),
 			func.getName(),
 			func.getNum(),
+			static_cast<unsigned int>(func.getFlags()),
 			func.getPtr()
 		);
 	}
@@ -212,6 +213,7 @@ static void initModule() {
 						signature->getCaller(),
 						func.getName(),
 						func.getNum(),
+						static_cast<unsigned int>(func.getFlags()),
 						static_cast<unsigned int>(signature->getType())
 					);
 
@@ -227,6 +229,7 @@ static void initModule() {
 						signature->getCaller(),
 						func.getName(),
 						func.getNum(),
+						static_cast<unsigned int>(func.getFlags()),
 						func.getPtr()
 					);
 

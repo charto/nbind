@@ -227,7 +227,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			proto,
 			'__nbindConstructor',
-			_nbind.makeCaller(null, 0, ptr, typeList, policyTbl),
+			_nbind.makeCaller(null, 0, 0, ptr, typeList, policyTbl),
 			typeCount - 1
 		);
 
@@ -239,7 +239,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			proto,
 			'__nbindValueConstructor',
-			_nbind.makeCaller(null, 0, ptrValue, typeList, policyTbl),
+			_nbind.makeCaller(null, 0, 0, ptrValue, typeList, policyTbl),
 			typeCount
 		);
 	}
@@ -249,7 +249,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _class.BindClass).proto.prototype,
 			'free',
-			_nbind.makeMethodCaller(ptr, 0, typeID, ['void'], null),
+			_nbind.makeMethodCaller(ptr, 0, 0, typeID, ['void'], null),
 			0
 		);
 	}
@@ -263,6 +263,7 @@ class nbind { // tslint:disable-line:class-name
 		ptr: number,
 		namePtr: number,
 		num: number,
+		flags: number,
 		direct: number
 	) {
 		const name = _nbind.readAsciiString(namePtr);
@@ -279,7 +280,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			target,
 			name,
-			_nbind.makeCaller(ptr, num, direct, typeList, policyTbl),
+			_nbind.makeCaller(ptr, num, flags, direct, typeList, policyTbl),
 			typeCount - 1
 		);
 	}
@@ -293,6 +294,7 @@ class nbind { // tslint:disable-line:class-name
 		ptr: number,
 		namePtr: number,
 		num: number,
+		flags: number,
 		signatureType: _SignatureType
 	) {
 		let name = _nbind.readAsciiString(namePtr);
@@ -304,7 +306,7 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.addMethod(
 				proto,
 				name,
-				_nbind.makeMethodCaller(ptr, num, typeID, typeList, policyTbl),
+				_nbind.makeMethodCaller(ptr, num, flags, typeID, typeList, policyTbl),
 				typeCount - 1
 			);
 
@@ -319,12 +321,12 @@ class nbind { // tslint:disable-line:class-name
 			// temporarily store an invoker in the property.
 			// The getter definition then binds it properly.
 
-			proto[name] = _nbind.makeMethodCaller(ptr, num, typeID, typeList, policyTbl);
+			proto[name] = _nbind.makeMethodCaller(ptr, num, flags, typeID, typeList, policyTbl);
 		} else {
 			Object.defineProperty(proto, name, {
 				configurable: true,
 				enumerable: true,
-				get: _nbind.makeMethodCaller(ptr, num, typeID, typeList, policyTbl),
+				get: _nbind.makeMethodCaller(ptr, num, flags, typeID, typeList, policyTbl),
 				set: proto[name]
 			});
 		}

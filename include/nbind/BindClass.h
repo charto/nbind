@@ -56,7 +56,7 @@ public:
 
 #		endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
 
-		methodList.emplace_front(nullptr, nullptr, 0, signature);
+		addMethod(nullptr, signature);
 
 	}
 
@@ -70,11 +70,12 @@ public:
 
 	void addMethod(
 		const char *name,
+		BaseSignature *signature = nullptr,
 		funcPtr ptr = nullptr,
 		unsigned int num = 0,
-		BaseSignature *signature = nullptr
+		WrapperFlags flags = WrapperFlags::none
 	) {
-		methodList.emplace_front(name, ptr, num, signature);
+		methodList.emplace_front(name, ptr, num, signature, flags);
 	}
 
 	std::forward_list<MethodDef> &getMethodList() { return(methodList); }

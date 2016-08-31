@@ -13,13 +13,19 @@ class MethodDef {
 
 public:
 
-	MethodDef(const char *name, funcPtr ptr, unsigned int num, BaseSignature *signature) :
-		name(name), ptr(ptr), num(num), signature(signature) {}
+	MethodDef(
+		const char *name,
+		funcPtr ptr,
+		unsigned int num,
+		BaseSignature *signature,
+		WrapperFlags flags
+	) : name(name), ptr(ptr), num(num), signature(signature), flags(flags) {}
 
 	const char *getName() const { return(name); }
 	funcPtr getPtr() const { return(ptr); }
 	unsigned int getNum() const { return(num); }
 	const BaseSignature *getSignature() const { return(signature); }
+	WrapperFlags getFlags() const { return(flags); }
 
 private:
 
@@ -36,6 +42,8 @@ private:
 	// Signature represents return and argument types.
 
 	const BaseSignature *signature;
+
+	const WrapperFlags flags;
 
 };
 

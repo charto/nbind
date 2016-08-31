@@ -7,6 +7,7 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _class} from './BindClass';
 import {_nbind as _external} from './External';
 import {_nbind as _resource} from './Resource';
 
@@ -22,6 +23,8 @@ export namespace _nbind {
 
 	export var getTypes: typeof _globals.getTypes;
 	export var getDynCall: typeof _globals.getDynCall;
+
+	export var Wrapper: typeof _class.Wrapper;
 
 	export var externalList: _external.External<any>[];
 
@@ -116,7 +119,9 @@ export namespace _nbind {
 		needsWireWrite: boolean,
 		prefix: string,
 		returnType: _type.BindType,
-		argTypeList: _type.BindType[]
+		argTypeList: _type.BindType[],
+		mask?: number,
+		err?: () => void
 	) {
 		const argList = makeArgList(argTypeList.length);
 		/** List of arbitrary data for type converters.
@@ -147,6 +152,7 @@ export namespace _nbind {
 
 		const sourceCode = (
 			'function(' + argList.join(',') + '){' +
+				(mask ? 'this.__nbindFlags&mask&&err();' : '') +
 				resourceSet.makeOpen() +
 				'var r=' + callExpression + ';' +
 				resourceSet.makeClose() +
@@ -253,6 +259,7 @@ export namespace _nbind {
 	export function makeMethodCaller(
 		ptr: number,
 		num: number,
+		flags: number,
 		boundID: number,
 		idList: TypeIdList,
 		policyTbl: PolicyTbl
@@ -273,18 +280,28 @@ export namespace _nbind {
 
 		const dynCall = getDynCall(typeList);
 
+		const mask = ~flags & Wrapper.constant;
+
+		function err() {
+			throw(new Error('Calling a non-const method on a const object'));
+		}
+
 		if(!needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
 			switch(argCount) {
-				case 0: return(function() {return(
+				case 0: return(function() {
+					return(this.__nbindFlags & mask ? err() :
 				        dynCall(ptr, num, this.__nbindPtr)); });
-				case 1: return(function(                   a1: any) {return(
+				case 1: return(function(                   a1: any) {
+					return(this.__nbindFlags & mask ? err() :
 				        dynCall(ptr, num, this.__nbindPtr, a1    )); });
-				case 2: return(function(                   a1: any, a2: any) {return(
+				case 2: return(function(                   a1: any, a2: any) {
+					return(this.__nbindFlags & mask ? err() :
 				        dynCall(ptr, num, this.__nbindPtr, a1,      a2    )); });
-				case 3: return(function(                   a1: any, a2: any, a3: any) {return(
+				case 3: return(function(                   a1: any, a2: any, a3: any) {
+					return(this.__nbindFlags & mask ? err() :
 				        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3    )); });
 				default:
 					// Function takes over 3 arguments or needs type conversion.
@@ -301,7 +318,9 @@ export namespace _nbind {
 			needsWireWrite,
 			'ptr,num,this.__nbindPtr',
 			returnType,
-			argTypeList
+			argTypeList,
+			mask,
+			err
 		));
 	}
 
@@ -310,6 +329,7 @@ export namespace _nbind {
 	export function makeCaller(
 		ptr: number,
 		num: number,
+		flags: number,
 		direct: number,
 		idList: TypeIdList,
 		policyTbl: PolicyTbl

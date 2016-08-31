@@ -108,9 +108,10 @@ void nbind :: registerFunction(
 	const char *name,
 	funcPtr ptr,
 	unsigned int num,
-	BaseSignature *signature
+	BaseSignature *signature,
+	WrapperFlags flags
 ) {
-	getFunctionList().emplace_front(name, ptr, num, signature);
+	getFunctionList().emplace_front(name, ptr, num, signature, flags);
 }
 
 #include "nbind/nbind.h"

@@ -27,7 +27,8 @@ public:
 			executeNamePolicy(name, policies...),
 			Signature::getDirect(func),
 			Signature::addMethod(func, WrapperFlags::none),
-			&Signature::getInstance()
+			&Signature::getInstance(),
+			WrapperFlags::none
 		);
 	}
 };

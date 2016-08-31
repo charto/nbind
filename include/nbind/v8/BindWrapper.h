@@ -18,19 +18,6 @@
 
 namespace nbind {
 
-enum class WrapperFlags : uint32_t {
-	none = 0,
-	constant = 1
-};
-
-inline WrapperFlags operator& (WrapperFlags a, WrapperFlags b) {
-	return(static_cast<WrapperFlags>(
-		static_cast<uint32_t>(a) & static_cast<uint32_t>(b)
-	));
-}
-
-inline bool operator! (WrapperFlags f) { return(f == WrapperFlags::none); }
-
 template <typename A, typename B>
 class HashablePair : public std::pair<A, B> {
 

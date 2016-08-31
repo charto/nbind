@@ -1,44 +1,58 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
-
-#include <cstdio>
-
-#include "nbind/api.h"
-#include "Coord.h"
 
 class Reference {
 
 public:
 
-	static Coord *getCoord() {
-		return(new Coord(60, 25));
-	}
+	Reference() {}
 
-	static Coord *getNull() {
-		return(nullptr);
-	}
+	void read() const {}
+	void write() {}
 
-	static void foo(Coord *coord) {
-		printf("%p\n", coord);
-	}
+	static Reference getValue() { return(ref); }
 
-	static void bar(Coord *coord) {
-		printf("%p\n", coord);
-	}
+	static Reference *getPtr() { return(&ref); }
+	static Reference &getRef() { return(ref); }
+
+	static const Reference *getConstPtr() { return(&ref); }
+	static const Reference &getConstRef() { return(ref); }
+
+	static void readPtr(const Reference *ref) {}
+	static void readRef(const Reference &ref) {}
+
+	static void writePtr(Reference *ref) {}
+	static void writeRef(Reference *ref) {}
+
+	static Reference ref;
 
 };
+
+Reference Reference::ref;
 
 #include "nbind/nbind.h"
 
 #ifdef NBIND_CLASS
 
-NBIND_CLASS(Coord) {}
-
 NBIND_CLASS(Reference) {
-	method(getCoord);
-	method(getNull);
-	method(foo);
-	method(bar, "bar", nbind::Nullable());
+	construct<>();
+
+	method(read);
+	method(write);
+
+//	method(getValue);
+
+	method(getPtr);
+	method(getRef);
+
+	method(getConstPtr);
+	method(getConstRef);
+
+	method(readPtr);
+	method(readRef);
+
+	method(writePtr);
+	method(writeRef);
 }
 
 #endif

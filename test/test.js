@@ -183,16 +183,51 @@ test('Value objects', function(t) {
 	t.end();
 });
 
-test('Passing by reference', function(t) {
+test('Pointers and references', function(t) {
 	var Type = testModule.Reference;
 
-	Type.foo(Type.getCoord());
-	t.strictEqual(Type.getNull(), null);
-	t.throws(function() {
-		Type.foo(null);
-	}, {message: 'Type mismatch'});
+	var own = new Type();
+	var ptr = Type.getPtr();
+	var ref = Type.getRef();
+	var constPtr = Type.getConstPtr();
+	var constRef = Type.getConstRef();
 
-	Type.bar(null);
+	var types = [ own, ptr, ref, constPtr, constRef ];
+
+	for(var i = 0; i < types.length; ++i) {
+		t.type(Type.readPtr(types[i]), 'undefined');
+		t.type(Type.readRef(types[i]), 'undefined');
+
+		if(types[i] == constPtr || types[i] == constRef) {
+			t.throws(function() {
+				Type.writePtr(types[i]);
+			}, {message: 'Passing a const value as a non-const argument'});
+
+			t.throws(function() {
+				Type.writeRef(types[i]);
+			}, {message: 'Passing a const value as a non-const argument'});
+		} else {
+			t.type(Type.writePtr(types[i]), 'undefined');
+			t.type(Type.writeRef(types[i]), 'undefined');
+		}
+	}
+
+	t.type(ptr.read(), 'undefined');
+	t.type(ref.read(), 'undefined');
+
+	t.type(ptr.write(), 'undefined');
+	t.type(ref.write(), 'undefined');
+
+	t.type(constPtr.read(), 'undefined');
+	t.type(constRef.read(), 'undefined');
+
+	t.throws(function() {
+		constPtr.write();
+	}, {message: 'Calling a non-const method on a const object'});
+
+	t.throws(function() {
+		constRef.write();
+	}, {message: 'Calling a non-const method on a const object'});
 
 	t.end();
 });
@@ -226,6 +261,20 @@ test('Arrays', function(t) {
 		t.strictDeepEqual(a, arr);
 		return(arr);
 	}, arr), arr);
+
+	t.end();
+});
+
+test('Nullable', function(t) {
+	var Type = testModule.Nullable;
+
+	Type.foo(Type.getCoord());
+	t.strictEqual(Type.getNull(), null);
+	t.throws(function() {
+		Type.foo(null);
+	}, {message: 'Type mismatch'});
+
+	Type.bar(null);
 
 	t.end();
 });
