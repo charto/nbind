@@ -31,6 +31,21 @@ public:
 			WrapperFlags::none
 		);
 	}
+
+	template <typename... Args>
+	struct Overloaded {
+
+		template <typename ReturnType, typename... Policies>
+		Overloaded(
+			const char* name,
+			ReturnType(*func)(Args...),
+			Policies... policies
+		) {
+			FunctionDefiner definer(name, func, policies...);
+			(void)definer; // Silence compiler warning about unused variable.
+		}
+
+	};
 };
 
 } // namespace

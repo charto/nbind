@@ -164,6 +164,8 @@ public:
 		return(*this);
 	}
 
+	// Static method.
+
 	template <typename ReturnType, typename... Args, typename... Policies>
 	BindDefiner &method(
 		const char* name,
@@ -184,49 +186,58 @@ public:
 		return(*this);
 	}
 
-	template <typename ReturnType, typename... Args, typename... Policies>
-	BindDefiner &method(
-		const char* name,
-		ReturnType(*func)(Args...),
-		Overloaded<ReturnType(Args...)>,
-		Policies... policies
-	) {
-		addMethod<
-			FunctionSignature<
-				decltype(func),
-				std::nullptr_t,
-				typename SkipNamePolicy<PolicyListType<Policies...>>::Type,
-				ReturnType,
-				Args...
-			>,
-			decltype(func)
-		>(executeNamePolicy(name, policies...), func);
-
-		return(*this);
-	}
-
-	template <typename MethodType, typename... Policies>
-	BindDefiner &method(
-		const char* name,
-		MethodType method,
-		Policies... policies
-	) {
-		addMethodMaybeConst<MethodSignature>(name, method, policies...);
-
-		return(*this);
-	}
+	// Dynamic method.
 
 	template <typename MethodType, typename... Policies>
 	BindDefiner &method(
 		const char* name,
 		MethodType (Bound::*method),
-		Overloaded<MethodType>,
 		Policies... policies
 	) {
 		addMethodMaybeConst<MethodSignature>(name, method, policies...);
 
 		return(*this);
 	}
+
+	template <typename... Args>
+	struct Overloaded {
+
+		// Overloaded static method.
+
+		template <typename ReturnType, typename... Policies>
+		static void multimethod(
+			BindDefiner &definer,
+			const char* name,
+			ReturnType(*func)(Args...),
+			Policies... policies
+		) {
+			definer.method(name, func, policies...);
+		}
+
+		// Overloaded dynamic non-const method.
+
+		template <typename ReturnType, typename... Policies>
+		static void multimethod(
+			BindDefiner &definer,
+			const char* name,
+			ReturnType (Bound::*method)(Args...),
+			Policies... policies
+		) {
+			definer.method(name, method, policies...);
+		}
+
+		// Overloaded dynamic const method.
+
+		template <typename ReturnType, typename... Policies>
+		static void multimethod(
+			BindDefiner &definer,
+			const char* name,
+			ReturnType (Bound::*method)(Args...) const,
+			Policies... policies
+		) {
+			definer.method(name, method, policies...);
+		}
+	};
 
 	template <typename GetterType, typename... Policies>
 	BindDefiner &property(

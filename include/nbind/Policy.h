@@ -106,7 +106,4 @@ struct ExecutePolicies<PolicyListType<Policy, Remaining...>> {
 	};
 };
 
-template <typename Signature>
-struct Overloaded {};
-
 } // namespace

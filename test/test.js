@@ -357,6 +357,25 @@ test('64-bit integers', function(t) {
 	t.end();
 });
 
+test('Overloaded functions', function(t) {
+	var Type = testModule.Overload;
+	var obj = new Type();
+
+	t.strictEqual(obj.test(0), 1);
+	t.strictEqual(obj.test2(0, 0), 2);
+
+	t.strictEqual(obj.testConst(0), 1);
+	t.strictEqual(obj.testConst2(0, 0), 2);
+
+	t.strictEqual(Type.testStatic(0), 1);
+	t.strictEqual(Type.testStatic2(0, 0), 2);
+
+	t.strictEqual(testModule.multiTest(0), 1);
+	t.strictEqual(testModule.multiTest2(0, 0), 2);
+
+	t.end();
+});
+
 test('Buffers', function(t) {
 	var Type = testModule.Buffer;
 	var buf;
