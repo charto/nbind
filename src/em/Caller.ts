@@ -16,6 +16,8 @@ setEvil((code: string) => eval(code));
 
 export namespace _nbind {
 
+	type BindType = _type.BindType;
+
 	type Func = _globals.Func;
 	type FuncList = _globals.FuncList;
 	type TypeIdList = _globals.TypeIdList;
@@ -45,9 +47,9 @@ export namespace _nbind {
 	/** Check if any type on the list requires conversion writing to C++.
 	  * Mainly numbers can be passed as-is between Asm.js and JavaScript. */
 
-	function anyNeedsWireWrite(typeList: _type.BindType[], policyTbl: PolicyTbl) {
+	function anyNeedsWireWrite(typeList: BindType[], policyTbl: PolicyTbl) {
 		return(typeList.reduce(
-			(result: boolean, type: _type.BindType) =>
+			(result: boolean, type: BindType) =>
 				(result || type.needsWireWrite(policyTbl)),
 			false
 		));
@@ -56,9 +58,9 @@ export namespace _nbind {
 	/** Check if any type on the list requires conversion reading from C++.
 	  * Mainly numbers can be passed as-is between Asm.js and JavaScript. */
 
-	function anyNeedsWireRead(typeList: _type.BindType[], policyTbl: PolicyTbl) {
+	function anyNeedsWireRead(typeList: BindType[], policyTbl: PolicyTbl) {
 		return(typeList.reduce(
-			(result: boolean, type: _type.BindType) =>
+			(result: boolean, type: BindType) =>
 				(result || !!type.needsWireRead(policyTbl)),
 			false
 		));
@@ -67,7 +69,7 @@ export namespace _nbind {
 	function makeWireRead(
 		convertParamList: any[],
 		policyTbl: PolicyTbl,
-		type: _type.BindType,
+		type: BindType,
 		expr: string
 	) {
 		/** Next free slot number in type converter data list. */
@@ -84,7 +86,7 @@ export namespace _nbind {
 	function makeWireWrite(
 		convertParamList: any[],
 		policyTbl: PolicyTbl,
-		type: _type.BindType,
+		type: BindType,
 		expr: string
 	) {
 		let wireWrite: any;
@@ -118,8 +120,8 @@ export namespace _nbind {
 		policyTbl: PolicyTbl,
 		needsWireWrite: boolean,
 		prefix: string,
-		returnType: _type.BindType,
-		argTypeList: _type.BindType[],
+		returnType: BindType,
+		argTypeList: BindType[],
 		mask?: number,
 		err?: () => void
 	) {
@@ -172,8 +174,8 @@ export namespace _nbind {
 		* - Restore stack pointer if necessary. */
 
 	export function buildJSCallerFunction(
-		returnType: _type.BindType,
-		argTypeList: _type.BindType[]
+		returnType: BindType,
+		argTypeList: BindType[]
 	) {
 		const argList = makeArgList(argTypeList.length);
 		/** List of arbitrary data for type converters.

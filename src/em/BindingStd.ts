@@ -19,7 +19,7 @@ export namespace _nbind {
 
 export namespace _nbind {
 
-	export type PolicyTbl = _globals.PolicyTbl;
+	type PolicyTbl = _globals.PolicyTbl;
 
 	export var resources: typeof _resource.resources;
 

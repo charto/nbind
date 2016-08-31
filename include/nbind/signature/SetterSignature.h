@@ -61,7 +61,6 @@ public:
 		return(Caller<PolicyList, ReturnType, Args...>::callMethod(*target, method, args...));
 	}
 
-
 #endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
 
 };

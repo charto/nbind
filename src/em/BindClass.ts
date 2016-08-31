@@ -15,7 +15,7 @@ export namespace _nbind {
 
 export namespace _nbind {
 
-	export type PolicyTbl = _globals.PolicyTbl;
+	type PolicyTbl = _globals.PolicyTbl;
 
 	export var pushValue: typeof _value.pushValue;
 	export var popValue: typeof _value.popValue;
