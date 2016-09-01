@@ -20,6 +20,7 @@
 #	include "v8/Overloader.h" // Needs ArgStorage
 #	include "BindClass.h"     // Needs Overloader and BaseSignature
 #	include "v8/ValueObj.h"   // Needs BindClass
+#	include "v8/Int64.h"
 #	include "v8/Creator.h"    // Needs ArgStorage
 
 #elif defined(EMSCRIPTEN)
@@ -28,6 +29,7 @@
 #	include "signature/BaseSignature.h"
 #	include "BindClass.h"
 #	include "em/ValueObj.h"
+#	include "em/Int64.h"
 #	include "em/Creator.h"    // Needs ArgStorage
 
 #endif
