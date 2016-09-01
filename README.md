@@ -523,6 +523,10 @@ The `NBIND_CLASS(className)` macro takes the name of your C++ class as an argume
 It's followed by a curly brace enclosed block of method exports,
 as if it was a function definition.
 
+The class can be renamed on the JavaScript side by passing a string as a
+second argument. This is especially useful for binding a template class
+specialization with a more reasonable name: `NBIND_CLASS(Data<int>, "IntData")`
+
 Constructors are exported with a macro call `construct<types...>();` where `types` is a comma-separated list of arguments to the constructor, such as `int, int`. Calling `construct` multiple times allows overloading it, but **each overload must have a different number of arguments**.
 
 Constructor arguments are the only types that `nbind` cannot detect automatically.
@@ -980,10 +984,10 @@ are automatically converted between equivalent types:
 | string     | `std::string`                               |
 | Array      | `std::vector<type>`                         |
 | Array      | `std::array<type, size>`                    |
-| nbind-wrapped<br>pointer | Pointer or reference to<br>an instance of any bound class |
-| Function   | `nbind::cbFunction`<br>(only as a parameter)<br>See [callbacks](#callbacks) |
-| Instance of any prototype<br>(with a fromJS method) | Instance of any bound class<br>(with a toJS method)<br>See [using objects](#using-objects) |
-| ArrayBuffer(View), Int*Array<br>or Buffer | `nbind::Buffer` struct<br>(data pointer and length)<br>See [buffers](#buffers) |
+| Function   | `nbind::cbFunction`<br>(only as a parameter)<br>See [Callbacks](#callbacks) |
+| nbind-wrapped pointer | Pointer or reference to an<br>instance of any bound class<br>See [Using objects](#using-objects) |
+| Instance of any prototype<br>(with a fromJS method) | Instance of any bound class<br>(with a toJS method)<br>See [Using objects](#using-objects) |
+| ArrayBuffer(View), Int*Array<br>or Buffer | `nbind::Buffer` struct<br>(data pointer and length)<br>See [Buffers](#buffers) |
 
 Type conversion is customizable by passing policies as additional arguments
 to `construct`, `function` or `method` inside an `NBIND_CLASS` or `NBIND_GLOBAL` block.
