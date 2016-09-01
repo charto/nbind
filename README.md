@@ -233,7 +233,7 @@ User guide
 - [Passing data structures](#passing-data-structures)
 - [Callbacks](#callbacks)
 - [Using objects](#using-objects)
-- [Type conversion](#type-conversion) <sup>updated in 0.3.1</sup>
+- [Type conversion](#type-conversion) <sup>updated in 0.3.2</sup>
 - [Buffers](#buffers) <sup>new in 0.3.1</sup>
 - [64-bit integers](#64-bit-integers) <sup>new in 0.3.0</sup>
 - [Error handling](#error-handling)
@@ -480,9 +480,8 @@ The C++ function gets exported to JavaScript with the same name,
 or it can be renamed by adding a second argument (with quotation marks):
 `function(cppFunctionName, "jsExportedName");`
 
-If the C++ function is overloaded, an `nbind::Overloaded<>()` policy is needed
-as the second argument (so any rename string will come third).
-See [overloaded functions](#overloaded-functions).
+If the C++ function is overloaded, `multifunction` macro must be used
+instead. See [overloaded functions](#overloaded-functions).
 
 Note: you cannot put several `function(...);` calls on the same line!
 Otherwise you'll get an error about redefining a symbol.
@@ -589,8 +588,8 @@ Methods are exported inside an `NBIND_CLASS` block with a macro call `method(met
 which takes the name of the method as an argument (without any quotation marks).
 The C++ method gets exported to JavaScript with the same name.
 
-Also see the [functions](#functions) section about renaming and overloading
-methods, which works identically to functions.
+If the C++ method is overloaded, `multimethod` macro must be used instead.
+See [overloaded functions](#overloaded-functions).
 
 Properties should be accessed through [getter and setter functions](#getters-and-setters).
 
@@ -681,33 +680,32 @@ Overloaded functions
 
 The `function()` and `method()` macroes cannot distinguish between several
 overloaded versions of the same function or method, causing an error.
-In this case the `nbind::Overloaded<>()` policy can be used to select the
-intended version. Unlike other policies, it must be listed first, even before
-any renaming.
+In this case the `multifunction()` and `multimethod()` macroes must be used.
+
+Their second parameter is a list of argument types wrapped in an
+`args()` macro to select a single overloaded version.
 
 For example consider an overloaded method:
 
 ```C++
-unsigned int test(unsigned int x) const;
-unsigned int test(unsigned char *x);
+void test(unsigned int x) const;
+void test(unsigned int x, unsigned int y) const;
 ```
 
 In bindings, one of the versions needs to be explicitly selected.
-The first of the two would be referenced like:
+The second of the two would be referenced like:
 
 ```C++
-method(test, nbind::Overloaded<unsigned int(unsigned int) const>());
+multimethod(test, args(unsigned int, unsigned int));
 ```
 
 If it needs to be renamed, the call would be:
 
 ```C++
-method(
-  test,
-  nbind::Overloaded<unsigned int(unsigned int) const>(),
-  "myTest"
-);
+multimethod(test, args(unsigned int, unsigned int), "test2");
 ```
+
+As always, the return type and method constness are autodetected.
 
 Getters and setters
 -------------------
@@ -805,20 +803,28 @@ you need to copy the argument to a new `nbind::cbFunction` and store it somewher
 Using objects
 -------------
 
-C++ objects can be passed to and from JavaScript *by reference* using pointers
-or *by value* using objects as parameters and return values in C++ code.
+C++ objects can be passed to and from JavaScript using different
+parameter and return types in C++ code:
+
+- *by reference* using pointers or references (optionally `const`)
+- *by value*
 
 Note: currently passing objects by pointer on Node.js requires the class
 to have a "copy constructor" initializing itself from a pointer.
 This will probably be fixed later.
 
-Using pointers is particularly:
+Returned pointers and references can be `const`, in which case calling their
+non-const methods or passing them as non-const parameters will throw an error.
+This prevents causing undefined behaviour corresponding to C++ code that
+wouldn't even compile.
+
+Using pointers and references is particularly:
 
 - **dangerous** because the pointer may become invalid
   without JavaScript noticing it.
 - **annoying** in asm.js because browsers give no access to the garbage collector,
   so memory may leak when pointers become garbage without C++ noticing it.
-  Smart pointers are not supported until a workaround for this comes up.
+  Smart pointers are not supported until a workaround for this is implemented.
 
 Passing data by value using *value objects* solves both issues.
 They're based on a `toJS` function on the C++ side
@@ -974,8 +980,9 @@ are automatically converted between equivalent types:
 | string     | `std::string`                               |
 | Array      | `std::vector<type>`                         |
 | Array      | `std::array<type, size>`                    |
+| nbind-wrapped<br>pointer | Pointer or reference to<br>an instance of any bound class |
 | Function   | `nbind::cbFunction`<br>(only as a parameter)<br>See [callbacks](#callbacks) |
-| Instance of any prototype<br>(with a fromJS method) | Instance of any class<br>(with a toJS method)<br>See [using objects](#using-objects) |
+| Instance of any prototype<br>(with a fromJS method) | Instance of any bound class<br>(with a toJS method)<br>See [using objects](#using-objects) |
 | ArrayBuffer(View), Int*Array<br>or Buffer | `nbind::Buffer` struct<br>(data pointer and length)<br>See [buffers](#buffers) |
 
 Type conversion is customizable by passing policies as additional arguments
