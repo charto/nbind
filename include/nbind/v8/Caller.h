@@ -90,8 +90,7 @@ struct Caller<ReturnType, TypeList<Args...>> {
 
 		// Note that Args().get may throw.
 		return(convertToWire<ReturnType>(
-			(*func)(Args(args).get(args)...),
-			0.0
+			(*func)(Args(args).get(args)...)
 		));
 	}
 

@@ -149,9 +149,11 @@ test('Callbacks', function(t) {
 test('Value objects', function(t) {
 	var Type = testModule.Value;
 
-	t.throws(function() {
-		Type.getCoord()
-	}, {message: 'Value type JavaScript class is missing or not registered'});
+//	t.throws(function() {
+//		Type.getCoord()
+//	}, {message: 'Value type JavaScript class is missing or not registered'});
+
+	t.type(Type.getCoord(), 'object');
 
 	function Coord(x, y) {
 		this.x = x;

@@ -18,6 +18,8 @@ inline WrapperFlags operator& (WrapperFlags a, WrapperFlags b) {
 
 inline bool operator! (WrapperFlags f) { return(f == WrapperFlags::none); }
 
+// Nullable policy
+
 template <typename ArgType>
 struct NullableType {};
 
@@ -37,6 +39,8 @@ struct Nullable {
 		return(name);
 	}
 };
+
+// Strict policy
 
 #define DEFINE_STRICT_BINDING_TYPE(ArgType) \
 template<typename Transformed>              \
@@ -81,8 +85,57 @@ struct Strict {
 	}
 };
 
+// Policy list
+
 template <typename...>
 struct PolicyListType {};
+
+template <typename ArgType>
+ArgType detectPolicies(ArgType, int);
+
+// Value object policy (autodetected)
+
+template<typename ArgType>
+struct ValueType {};
+
+class cbOutput;
+
+template <typename ArgType, typename = decltype(std::declval<ArgType>().toJS(std::declval<cbOutput>()))>
+ValueType<ArgType> detectPolicies(ArgType, double);
+
+// Policy autodetection
+
+template <typename ArgType>
+struct DetectPolicies {
+	typedef decltype(detectPolicies(std::declval<ArgType>(), 0.0)) Type;
+};
+
+template <typename ArgType>
+struct DetectPolicies<ArgType &> {
+	typedef decltype(detectPolicies(std::declval<ArgType>(), 0.0)) &Type;
+};
+
+template <typename ArgType>
+struct DetectPolicies<ArgType &&> {
+	typedef decltype(detectPolicies(std::declval<ArgType>(), 0.0)) &&Type;
+};
+
+template <typename ArgType>
+struct DetectPolicies<const ArgType &> {
+	typedef const decltype(detectPolicies(std::declval<ArgType>(), 0.0)) &Type;
+};
+
+template <typename ArgType>
+struct DetectPolicies<const ArgType &&> {
+	typedef const decltype(detectPolicies(std::declval<ArgType>(), 0.0)) &&Type;
+};
+
+template<>
+struct DetectPolicies<void> {
+	typedef void Type;
+};
+
+// Policy execution
 
 template<typename... Policies>
 struct ExecutePolicies;

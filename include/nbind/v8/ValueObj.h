@@ -61,7 +61,7 @@ template <> struct BindingType<v8::Local<v8::Function>> {
 };
 
 template <typename ArgType>
-inline ArgType convertFromWire(WireType arg) noexcept(false) {
+inline ArgType BindingType<ValueType<ArgType>>::fromWireType(WireType arg) noexcept(false){
 	auto target = arg->ToObject();
 	auto fromJS = target->Get(Nan::New<v8::String>("fromJS").ToLocalChecked());
 

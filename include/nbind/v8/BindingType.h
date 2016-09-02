@@ -26,8 +26,8 @@ template <typename ArgType> struct BindingType {
 		return(*BindingType<ArgType *>::fromWireType(arg));
 	}
 
-	static inline WireType toWireType(ArgType arg) {
-		return(BindingType<ArgType *>::toWireType(new ArgType(arg)));
+	static inline WireType toWireType(ArgType &&arg) {
+		return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
 	}
 
 };
@@ -119,6 +119,17 @@ struct BindingType<NullableType<ArgType>> {
 		if(arg == nullptr) return(Nan::Null());
 		return(BindingType<ArgType>::toWireType(arg));
 	}
+
+};
+
+template <typename ArgType>
+struct BindingType<ValueType<ArgType>> {
+
+	typedef ArgType Type;
+
+	static inline Type fromWireType(WireType arg) noexcept(false);
+
+	static inline WireType toWireType(Type &&arg);
 
 };
 

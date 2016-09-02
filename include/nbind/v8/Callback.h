@@ -30,9 +30,9 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::Type call(Args... args) {
+	typename BindingType<ReturnType>::Type call(Args&&... args) {
 		v8::Local<v8::Value> argv[] = {
-			(convertToWire(std::move(args), 0.0))...,
+			(convertToWire(std::move(args)))...,
 			// Avoid error C2466: cannot allocate an array of constant size 0.
 			Nan::Null()
 		};
@@ -40,9 +40,9 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::Type callMethod(v8::Local<v8::Object> target, Args... args) {
+	typename BindingType<ReturnType>::Type callMethod(v8::Local<v8::Object> target, Args&&... args) {
 		v8::Local<v8::Value> argv[] = {
-			(convertToWire(std::move(args), 0.0))...,
+			(convertToWire(std::move(args)))...,
 			// Avoid error C2466: cannot allocate an array of constant size 0.
 			Nan::Null()
 		};
@@ -102,7 +102,7 @@ struct ArgFromWire<PolicyList, Index, cbFunction &> {
 template <typename ReturnType, typename... Args>
 void cbOutput :: call(Args... args) {
 	v8::Local<v8::Value> argv[] = {
-		(BindingType<Args>::toWireType(args))...
+		(BindingType<Args>::toWireType(std::forward<Args>(args)))...
 	};
 
 	*output = jsConstructor.getJsFunction()->NewInstance(sizeof...(Args), argv);

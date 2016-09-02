@@ -16,7 +16,7 @@ namespace nbind {
 template<typename PolicyList, size_t Index, typename ArgType>
 struct ArgFromWire {
 
-	typedef typename ExecutePolicies<PolicyList>::template Transformed<ArgType>::Type TransformedType;
+	typedef typename ExecutePolicies<PolicyList>::template Transformed<typename DetectPolicies<ArgType>::Type>::Type TransformedType;
 
 	template <typename NanArgs>
 	ArgFromWire(const NanArgs &args) {}
@@ -25,7 +25,7 @@ struct ArgFromWire {
 
 	template <typename NanArgs>
 	inline ArgType get(const NanArgs &args) noexcept(false) {
-		return(convertFromWire<TransformedType>(args[Index], 0.0));
+		return(BindingType<TransformedType>::fromWireType(args[Index]));
 	}
 
 };

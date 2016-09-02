@@ -12,53 +12,35 @@ namespace nbind {
 template <class Bound>
 cbFunction *getValueConstructorJS();
 
-class cbOutput;
-
-template <typename ArgType>
-inline ArgType convertFromWire(WireType arg) noexcept(false);
-
 template <typename ArgType>
 inline typename BindingType<ArgType>::Type convertFromWire(WireType arg, int dummy) {
-	return(BindingType<ArgType>::fromWireType(arg));
+	return(BindingType<typename DetectPolicies<ArgType>::Type>::fromWireType(arg));
 }
+
+// Convert any C++ type to the corresponding JavaScript type.
+// Call correct type converter using perfect forwarding (moving doesn't work).
+
+template <typename ReturnType>
+inline WireType convertToWire(ReturnType result) {
+	return(BindingType<typename DetectPolicies<ReturnType>::Type>::toWireType(std::forward<ReturnType>(result)));
+}
+
+// Send value object to JavaScript using toJS method of its C++ class.
+// It was received by value, so it can be moved.
 
 template <typename ArgType>
-inline auto convertFromWire(WireType arg, double dummy) -> typename std::remove_reference<decltype(
-	// SFINAE, use this template only if ArgType::toJS(cbOutput) exists
-	// (and is const if necessary).
-	std::declval<ArgType>().toJS(*(cbOutput *)nullptr),
-	// Actual return type of this function: ArgType
-	*(ArgType *)nullptr
-)>::type {
-	return(convertFromWire<ArgType>(arg));
-}
-
-template <typename ReturnType>
-inline WireType convertToWire(ReturnType result, int dummy) {
-	// std::move doesn't work with non-const references.
-	return(BindingType<ReturnType>::toWireType(std::forward<ReturnType>(result)));
-}
-
-template <typename ReturnType>
-inline auto convertToWire(ReturnType result, double dummy) -> typename std::remove_reference<decltype(
-	// SFINAE, use this template only if ReturnType::toJS(cbOutput) exists.
-	result.toJS(*(cbOutput *)nullptr),
-	// Actual return type of this function: WireType (decltype adds a reference, which is removed).
-	*(WireType *)nullptr
-)>::type {
+inline WireType BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) {
 	v8::Local<v8::Value> output = Nan::Undefined();
 	cbFunction *jsConstructor = getValueConstructorJS<
-		typename std::remove_const<
-			typename std::remove_reference<ReturnType>::type
-		>::type
+		typename std::remove_const<ArgType>::type
 	>();
 
 	if(jsConstructor != nullptr) {
 		cbOutput construct(*jsConstructor, &output);
 
-		result.toJS(construct);
+		arg.toJS(construct);
 	} else {
-		throw(std::runtime_error("Value type JavaScript class is missing or not registered"));
+		return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
 	}
 
 	return(output);
@@ -92,17 +74,18 @@ template<typename ReturnType> struct MethodResultConverter {
 
 			target.toJS(std::move(result), construct);
 		} else {
-			// Throw error here?
+			return(BindingType<ReturnType *>::toWireType(new ReturnType(std::move(result))));
 		}
 
 		return(output);
 	}
 
-	// If Bound::toJS(ReturnType, cbOutput) is missing, fall back to ReturnType::toJS(cbOutput).
+	// If Bound::toJS(ReturnType, cbOutput) is missing
+	// (bound may not even be a class), fall back to ReturnType::toJS(cbOutput).
 
 	template <typename Bound>
 	static inline WireType toWireType(ReturnType &&result, Bound &target, double dummy) {
-		return(convertToWire<ReturnType>(result, 0.0));
+		return(convertToWire(std::forward<ReturnType>(result)));
 	}
 
 };
