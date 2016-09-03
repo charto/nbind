@@ -74,17 +74,6 @@ private:
 
 };
 
-template <typename PolicyList>
-struct PolicyLister {};
-
-template <typename... Policies>
-struct PolicyLister<PolicyListType<Policies...>> {
-	static const char **getNameList() {
-		static const char *nameList[] = { Policies::getName()..., nullptr };
-		return(nameList);
-	}
-};
-
 // Templated static class for each different function call signature exposed by the
 // Node.js plugin. Used to pass arguments and return values between C++ and Node.js.
 // Everything must be static because the V8 JavaScript engine wants a single

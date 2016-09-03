@@ -227,18 +227,4 @@ template <> struct BindingType<void> {
 
 };
 
-// CheckWire verifies if the type of a JavaScript handle corresponds to a C++ type.
-
-template<typename PolicyList, size_t Index, typename ArgType>
-struct CheckWire {
-
-	typedef typename ExecutePolicies<PolicyList>::template Transformed<ArgType>::Type TransformedType;
-
-	template <typename NanArgs>
-	static inline bool check(const NanArgs &args) {
-		return(BindingType<TransformedType>::checkType(args[Index]));
-	}
-
-};
-
 } // namespace

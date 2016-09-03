@@ -40,6 +40,7 @@ inline WireType BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) {
 
 		arg.toJS(construct);
 	} else {
+		// Value type JavaScript class is missing or not registered.
 		return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
 	}
 

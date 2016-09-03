@@ -43,15 +43,15 @@ namespace nbind {
 template <typename ArgType> struct BindingType {
 
 	typedef ArgType Type;
+	typedef ArgType *WireType;
 
-	// Offset to a list of constructed objects on the JavaScript side
-	// (for fromWireType) or dummy value (for toWireType).
+	static inline Type fromWireType(WireType arg) {
+		return(*BindingType<ArgType *>::fromWireType(arg));
+	}
 
-	typedef int WireType;
-
-	static inline Type fromWireType(WireType arg);
-
-	static inline WireType toWireType(Type arg);
+	static inline WireType toWireType(ArgType arg) {
+		return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
+	}
 
 };
 
@@ -60,14 +60,14 @@ template <typename ArgType> struct BindingType {
 template <typename ArgType>
 struct BindingType<ArgType *> {
 
-	typedef ArgType *type;
+	typedef ArgType *Type;
 	typedef ArgType *WireType;
 
 	// checkType is not called on Emscripten target.
 	// static inline bool checkType(WireType arg) { return(arg != nullptr); }
 
-	static inline type fromWireType(WireType arg) { return(arg); }
-	static inline WireType toWireType(type arg) { return(arg); }
+	static inline Type fromWireType(WireType arg) { return(arg); }
+	static inline WireType toWireType(Type arg) { return(arg); }
 
 };
 
@@ -76,11 +76,11 @@ struct BindingType<ArgType *> {
 template <typename ArgType>
 struct BindingType<ArgType &> {
 
-	typedef ArgType &type;
+	typedef ArgType &Type;
 	typedef ArgType &WireType;
 
-	static inline type fromWireType(WireType arg) { return(arg); }
-	static inline WireType toWireType(type arg) { return(arg); }
+	static inline Type fromWireType(WireType arg) { return(arg); }
+	static inline WireType toWireType(Type arg) { return(arg); }
 
 };
 
@@ -90,11 +90,26 @@ struct BindingType<ArgType &> {
 template <typename ArgType>
 struct BindingType<NullableType<ArgType>> {
 
-	typedef typename BindingType<ArgType>::type type;
+	typedef typename BindingType<ArgType>::Type Type;
 	typedef typename BindingType<ArgType>::WireType WireType;
 
-	static inline type fromWireType(WireType arg) { return(arg); }
-	static inline WireType toWireType(type arg) { return(arg); }
+	static inline Type fromWireType(WireType arg) { return(arg); }
+	static inline WireType toWireType(Type arg) { return(arg); }
+
+};
+
+template <typename ArgType>
+struct BindingType<ValueType<ArgType>> {
+
+	typedef ArgType Type;
+
+	// Offset to a list of constructed objects on the JavaScript side
+	// (for fromWireType) or dummy value (for toWireType).
+
+	typedef int WireType;
+
+	static inline Type fromWireType(WireType arg);
+	static inline WireType toWireType(Type &&arg);
 
 };
 
@@ -148,30 +163,6 @@ template<> struct BindingType<void> {
 
 	template <typename... Args>
 	static inline WireType toWireType(Args...) { }
-
-};
-
-template<typename PolicyList, typename ArgType>
-struct ArgFromWire {
-
-	typedef typename ExecutePolicies<PolicyList>::template Transformed<ArgType>::Type TransformedType;
-
-	explicit ArgFromWire(typename BindingType<ArgType>::WireType arg) {}
-
-	// TODO: maybe return type should be like TransformedType::Type
-
-	inline ArgType get(typename BindingType<ArgType>::WireType arg) const {
-		return(BindingType<TransformedType>::fromWireType(arg));
-	}
-
-};
-
-template<typename PolicyList>
-struct ArgFromWire<PolicyList, void> {
-
-	explicit ArgFromWire() {}
-
-	inline void get() const {}
 
 };
 

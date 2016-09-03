@@ -90,44 +90,68 @@ struct Strict {
 template <typename...>
 struct PolicyListType {};
 
+template <typename PolicyList>
+struct PolicyLister {};
+
+template <typename... Policies>
+struct PolicyLister<PolicyListType<Policies...>> {
+	static const char **getNameList() {
+		static const char *nameList[] = { Policies::getName()..., nullptr };
+		return(nameList);
+	}
+};
+
+// Policy autodetection part 1
+
+struct NoPolicy {
+	template <typename ArgType, typename Transformed>
+	struct Transform {
+		typedef Transformed Type;
+	};
+
+	static const char *getName() {
+		return(nullptr);
+	}
+};
+
 template <typename ArgType>
-ArgType detectPolicies(ArgType, int);
+NoPolicy detectPolicies(ArgType, int);
 
 // Value object policy (autodetected)
 
 template<typename ArgType>
 struct ValueType {};
 
+struct ValuePolicy {
+	template <typename ArgType, typename Transformed>
+	struct Transform {
+		typedef ValueType<Transformed> Type;
+	};
+
+	static const char *getName() {
+		static const char *name = "Value";
+		return(name);
+	}
+};
+
 class cbOutput;
 
-template <typename ArgType, typename = decltype(std::declval<ArgType>().toJS(std::declval<cbOutput>()))>
-ValueType<ArgType> detectPolicies(ArgType, double);
+// SFINAE test if the class has a toJS method with cbOutput parameter.
 
-// Policy autodetection
+template <typename ArgType, typename = decltype(std::declval<ArgType>().toJS(std::declval<cbOutput>()))>
+ValuePolicy detectPolicies(ArgType, double);
+
+// Policy autodetection part 2
 
 template <typename ArgType>
 struct DetectPolicies {
-	typedef decltype(detectPolicies(std::declval<ArgType>(), 0.0)) Type;
-};
+	typedef decltype(detectPolicies(std::declval<ArgType>(), 0.0)) Policy;
 
-template <typename ArgType>
-struct DetectPolicies<ArgType &> {
-	typedef decltype(detectPolicies(std::declval<ArgType>(), 0.0)) &Type;
-};
+	typedef typename Policy::template Transform<ArgType, ArgType>::Type Type;
 
-template <typename ArgType>
-struct DetectPolicies<ArgType &&> {
-	typedef decltype(detectPolicies(std::declval<ArgType>(), 0.0)) &&Type;
-};
-
-template <typename ArgType>
-struct DetectPolicies<const ArgType &> {
-	typedef const decltype(detectPolicies(std::declval<ArgType>(), 0.0)) &Type;
-};
-
-template <typename ArgType>
-struct DetectPolicies<const ArgType &&> {
-	typedef const decltype(detectPolicies(std::declval<ArgType>(), 0.0)) &&Type;
+	static const char **getPolicies() {
+		return(PolicyLister<PolicyListType<Policy>>::getNameList());
+	}
 };
 
 template<>

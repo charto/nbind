@@ -149,8 +149,13 @@ class nbind { // tslint:disable-line:class-name
 	}
 
 	@dep('_nbind', '__extends')
-	static _nbind_register_class(idListPtr: number, namePtr: number) {
+	static _nbind_register_class(
+		idListPtr: number,
+		policyListPtr: number,
+		namePtr: number
+	) {
 		const name = _nbind.readAsciiString(namePtr);
+		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 5);
 
 		class Bound extends _nbind.Wrapper {
@@ -190,6 +195,10 @@ class nbind { // tslint:disable-line:class-name
 			@_defineHidden()
 			// tslint:disable-next-line:variable-name
 			__nbindValueConstructor: _nbind.Func;
+
+			@_defineHidden(policyTbl)
+			// tslint:disable-next-line:variable-name
+			__nbindPolicies: { [name: string]: boolean };
 		}
 
 		/* tslint:disable:no-unused-expression */

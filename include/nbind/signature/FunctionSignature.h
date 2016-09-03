@@ -47,9 +47,9 @@ public:
 
 #elif defined(EMSCRIPTEN)
 
-	static typename BindingType<ReturnType>::WireType call(
+	static typename TypeTransformer<ReturnType, PolicyList>::Binding::WireType call(
 		uint32_t num,
-		typename BindingType<Args>::WireType... args
+		typename TypeTransformer<Args, PolicyList>::Binding::WireType... args
 	) {
 		auto func = Parent::getMethod(num).func;
 

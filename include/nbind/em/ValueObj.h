@@ -21,7 +21,7 @@ template<> struct BindingType<cbOutput::CreateValue> {
 };
 
 template <typename ArgType>
-inline int BindingType<ArgType>::toWireType(ArgType arg) {
+inline int BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) {
 	cbFunction *jsConstructor = BindClass<ArgType>::getInstance().getValueConstructorJS();
 
 	if(jsConstructor != nullptr) {
@@ -32,12 +32,13 @@ inline int BindingType<ArgType>::toWireType(ArgType arg) {
 		return(construct.getSlot());
 	} else {
 		// Value type JavaScript class is missing or not registered.
+		//return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
 		return(0);
 	}
 }
 
 template <typename ArgType>
-ArgType BindingType<ArgType>::fromWireType(int index) {
+inline ArgType BindingType<ValueType<ArgType>>::fromWireType(int index) {
 	// Constructor argument is an unused dummy value.
 	TemplatedArgStorage<ArgType> storage(0);
 

@@ -9,22 +9,22 @@ template<typename PolicyList, typename ReturnType, typename... Args>
 struct Caller {
 
 	template<typename MethodType, class Bound>
-	static typename BindingType<ReturnType>::WireType callMethod(
+	static typename TypeTransformer<ReturnType, PolicyList>::Binding::WireType callMethod(
 		Bound &target,
 		MethodType method,
-		typename BindingType<Args>::WireType... args
+		typename TypeTransformer<Args, PolicyList>::Binding::WireType... args
 	) {
-		return(BindingType<ReturnType>::toWireType(
+		return(TypeTransformer<ReturnType, PolicyList>::Binding::toWireType(
 			(target.*method)(ArgFromWire<PolicyList, Args>(args).get(args)...)
 		));
 	}
 
 	template<typename FunctionType>
-	static typename BindingType<ReturnType>::WireType callFunction(
+	static typename TypeTransformer<ReturnType, PolicyList>::Binding::WireType callFunction(
 		FunctionType func,
-		typename BindingType<Args>::WireType... args
+		typename TypeTransformer<Args, PolicyList>::Binding::WireType... args
 	) {
-		return(BindingType<ReturnType>::toWireType(
+		return(TypeTransformer<ReturnType, PolicyList>::Binding::toWireType(
 			(*func)(ArgFromWire<PolicyList, Args>(args).get(args)...)
 		));
 	}
@@ -41,7 +41,7 @@ struct Caller<PolicyList, void, Args...> {
 	static void callMethod(
 		Bound &target,
 		MethodType method,
-		typename BindingType<Args>::WireType... args
+		typename TypeTransformer<Args, PolicyList>::Binding::WireType... args
 	) {
 		(target.*method)(ArgFromWire<PolicyList, Args>(args).get(args)...);
 	}
@@ -49,7 +49,7 @@ struct Caller<PolicyList, void, Args...> {
 	template<typename FunctionType>
 	static void callFunction(
 		FunctionType func,
-		typename BindingType<Args>::WireType... args
+		typename TypeTransformer<Args, PolicyList>::Binding::WireType... args
 	) {
 		(*func)(ArgFromWire<PolicyList, Args>(args).get(args)...);
 	}

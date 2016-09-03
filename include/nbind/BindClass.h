@@ -31,6 +31,8 @@ public:
 
 	const TYPEID *getTypes() const { return(idList); }
 
+	const char **getPolicies() const { return(policyNameList); }
+
 	const char *getName() const { return(name); }
 
 	// The explicit nonzero test silences a compiler warning in Visual Studio.
@@ -115,6 +117,8 @@ protected:
 
 	int readyState = 0;
 
+	const char **policyNameList;
+
 	const char *name;
 
 	std::forward_list<MethodDef> methodList;
@@ -149,6 +153,7 @@ public:
 		idList[4] = Typer<const Bound &>::makeID();
 
 		this->name = name;
+		this->policyNameList = DetectPolicies<Bound>::getPolicies();
 		this->deleter = reinterpret_cast<jsMethod *>(&BindClass::destroy);
 	}
 

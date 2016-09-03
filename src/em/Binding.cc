@@ -16,7 +16,7 @@ extern "C" {
 	extern void _nbind_register_method_getter_setter_id(unsigned int methodID, unsigned int getterID, unsigned int setterID);
 	extern void _nbind_register_primitive(  TYPEID typeID, unsigned int size, unsigned char flag);
 	extern void _nbind_register_type(       TYPEID typeID,    const char *name);
-	extern void _nbind_register_class(const TYPEID *typeList, const char *name);
+	extern void _nbind_register_class(const TYPEID *typeList, const char **policies, const char *name);
 	extern void _nbind_register_destructor( TYPEID classType, funcPtr func);
 	extern void _nbind_register_constructor(TYPEID classType, const char **policies, const TYPEID *types, unsigned int typeCount, funcPtr func, funcPtr ptrValue);
 	extern void _nbind_register_function(   TYPEID classType, const char **policies, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
@@ -162,7 +162,11 @@ static void initModule() {
 
 		bindClass->init();
 
-		_nbind_register_class(bindClass->getTypes(), bindClass->getName());
+		_nbind_register_class(
+			bindClass->getTypes(),
+			bindClass->getPolicies(),
+			bindClass->getName()
+		);
 	}
 
 	// Register all functions.

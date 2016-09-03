@@ -70,6 +70,7 @@ private:
 
 #	include "v8/BindWrapper.h"
 #	include "v8/BindingType.h"
+#	include "TypeTransformer.h"
 #	include "v8/NBind.h"
 #	include "v8/Output.h"
 #	include "v8/Convert.h"
@@ -83,6 +84,8 @@ private:
 #elif defined(EMSCRIPTEN)
 
 #	include "em/BindingType.h"
+#	include "TypeTransformer.h"
+#	include "em/ArgFromWire.h"
 #	include "signature/CallbackSignature.h"
 #	include "em/NBind.h"
 #	include "em/Pool.h"

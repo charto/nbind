@@ -34,6 +34,20 @@ v8::Local<v8::Value> makeTypeError(
 	return(err);
 }
 
+// CheckWire verifies if the type of a JavaScript handle corresponds to a C++ type.
+
+template<typename PolicyList, size_t Index, typename ArgType>
+struct CheckWire {
+
+	typedef TypeTransformer<ArgType, PolicyList> Transformed;
+
+	template <typename NanArgs>
+	static inline bool check(const NanArgs &args) {
+		return(Transformed::Binding::checkType(args[Index]));
+	}
+
+};
+
 template<typename ArgList> struct Checker;
 
 template<typename... Args>
