@@ -21,10 +21,8 @@ struct ArgFromWire {
 	template <typename NanArgs>
 	ArgFromWire(const NanArgs &args) {}
 
-	// TODO: maybe return type should be like TransformedType::Type
-
 	template <typename NanArgs>
-	inline ArgType get(const NanArgs &args) noexcept(false) {
+	inline typename BindingType<TransformedType>::Type get(const NanArgs &args) noexcept(false) {
 		return(BindingType<TransformedType>::fromWireType(args[Index]));
 	}
 

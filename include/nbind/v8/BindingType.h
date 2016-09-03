@@ -127,6 +127,10 @@ struct BindingType<ValueType<ArgType>> {
 
 	typedef ArgType Type;
 
+	static inline bool checkType(WireType arg) {
+		return(BindingType<ArgType *>::checkType(arg));
+	}
+
 	static inline Type fromWireType(WireType arg) noexcept(false);
 
 	static inline WireType toWireType(Type &&arg);
@@ -228,7 +232,6 @@ template <> struct BindingType<void> {
 template<typename PolicyList, size_t Index, typename ArgType>
 struct CheckWire {
 
-	typedef ArgType Type;
 	typedef typename ExecutePolicies<PolicyList>::template Transformed<ArgType>::Type TransformedType;
 
 	template <typename NanArgs>
