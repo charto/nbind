@@ -113,7 +113,7 @@ public:
 
 protected:
 
-	TYPEID idList[5];
+	TYPEID idList[6];
 
 	int readyState = 0;
 
@@ -151,6 +151,7 @@ public:
 		idList[2] = Typer<const Bound *>::makeID();
 		idList[3] = Typer<Bound &>::makeID();
 		idList[4] = Typer<const Bound &>::makeID();
+		idList[5] = Typer<Bound &&>::makeID();
 
 		this->name = name;
 		this->policyNameList = DetectPolicies<Bound>::getPolicies();

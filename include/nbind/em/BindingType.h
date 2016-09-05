@@ -84,6 +84,19 @@ struct BindingType<ArgType &> {
 
 };
 
+// Object rvalue reference.
+
+template <typename ArgType>
+struct BindingType<ArgType &&> {
+
+	typedef ArgType &&Type;
+	typedef ArgType &&WireType;
+
+	static inline Type fromWireType(WireType arg) { return(arg); }
+	static inline WireType toWireType(Type arg) { return(arg); }
+
+};
+
 // Nullable type, just calls the non-nullable version.
 // Functional differences are on JS side.
 

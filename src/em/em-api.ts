@@ -156,7 +156,7 @@ class nbind { // tslint:disable-line:class-name
 	) {
 		const name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
-		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 5);
+		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 6);
 
 		class Bound extends _nbind.Wrapper {
 			constructor(marker: {}, ptr: number, flags: number) {
@@ -207,6 +207,7 @@ class nbind { // tslint:disable-line:class-name
 		new _nbind.BindClassPtr(idList[2], 'const ' + name + ' *', Bound, _nbind.Wrapper.constant);
 		new _nbind.BindClassPtr(idList[3], name + ' &', Bound);
 		new _nbind.BindClassPtr(idList[4], 'const ' + name + ' &', Bound, _nbind.Wrapper.constant);
+		new _nbind.BindClassPtr(idList[5], name + ' &&', Bound);
 		new _nbind.BindClass(idList[0], name, Bound, ptrType);
 
 		/* tslint:enable:no-unused-expression */
