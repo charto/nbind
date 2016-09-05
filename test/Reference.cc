@@ -40,7 +40,7 @@ NBIND_CLASS(Reference) {
 	method(read);
 	method(write);
 
-//	method(getValue);
+	method(getValue);
 
 	method(getPtr);
 	method(getRef);

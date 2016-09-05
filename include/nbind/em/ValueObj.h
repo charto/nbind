@@ -21,7 +21,7 @@ template<> struct BindingType<cbOutput::CreateValue> {
 };
 
 template <typename ArgType>
-inline int BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) {
+inline ArgType *BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) {
 	cbFunction *jsConstructor = BindClass<ArgType>::getInstance().getValueConstructorJS();
 
 	if(jsConstructor != nullptr) {
@@ -29,22 +29,24 @@ inline int BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) {
 
 		arg.toJS(construct);
 
-		return(construct.getSlot());
+		return(reinterpret_cast<ArgType *>(construct.getSlot()));
 	} else {
 		// Value type JavaScript class is missing or not registered.
-		//return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
-		return(0);
+		return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
 	}
 }
 
 template <typename ArgType>
-inline ArgType BindingType<ValueType<ArgType>>::fromWireType(int index) {
-	// Constructor argument is an unused dummy value.
-	TemplatedArgStorage<ArgType> storage(0);
+inline ArgType BindingType<ValueType<ArgType>>::fromWireType(ArgType *ptr) {
+	uintptr_t index = reinterpret_cast<int>(ptr);
+	if(index & 1) {
+		// Constructor argument is an unused dummy value.
+		TemplatedArgStorage<ArgType> storage(0);
 
-	_nbind_get_value_object(index, &storage);
+		_nbind_get_value_object(index, &storage);
 
-	return(storage.getBound());
+		return(storage.getBound());
+	} else return(*ptr);
 }
 
 } // namespace

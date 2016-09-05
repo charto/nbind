@@ -25,7 +25,7 @@ public:
 		// Restore linear allocator state in RAII style when done.
 		PoolRestore restore;
 
-		return(Caller<ReturnType>::call(handle.getNum(), args...));
+		return(Caller<ReturnType>::call(handle.getNum(), std::forward<Args>(args)...));
 	}
 
 private:
@@ -34,6 +34,8 @@ private:
 	// since function template partial specialization is forbidden.
 	template <typename ReturnType>
 	struct Caller {
+		typedef typename TypeTransformer<ReturnType, PolicyListType<>>::Binding ReturnBindingType;
+
 		template <typename... Args>
 		static ReturnType call(unsigned int num, Args... args);
 	};
@@ -85,18 +87,18 @@ double cbFunction::callDouble(unsigned int num, Args... args) {
 		{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 		CallbackSignature<double, Args...>::getInstance().getNum(),
 		num,
-		BindingType<Args>::toWireType(args)...
+		TypeTransformer<Args, PolicyListType<>>::Binding::toWireType(std::forward<Args>(args))...
 	));
 }
 
 template <typename ReturnType> template <typename... Args>
 ReturnType cbFunction::Caller<ReturnType>::call(unsigned int num, Args... args) {
-	return(BindingType<ReturnType>::fromWireType(reinterpret_cast<typename BindingType<ReturnType>::WireType>(
+	return(ReturnBindingType::fromWireType(reinterpret_cast<typename ReturnBindingType::WireType>(
 		EM_ASM_INT(
 			{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 			CallbackSignature<ReturnType, Args...>::getInstance().getNum(),
 			num,
-			BindingType<Args>::toWireType(args)...
+			TypeTransformer<Args, PolicyListType<>>::Binding::toWireType(std::forward<Args>(args))...
 		)
 	)));
 }
@@ -109,7 +111,7 @@ template<> struct cbFunction::Caller<void> {
 			{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 			CallbackSignature<void, Args...>::getInstance().getNum(),
 			num,
-			BindingType<Args>::toWireType(args)...
+			TypeTransformer<Args, PolicyListType<>>::Binding::toWireType(std::forward<Args>(args))...
 		);
 	}
 
@@ -140,7 +142,7 @@ template<> struct cbFunction::Caller<cbOutput::CreateValue> {
 		return(EM_ASM_ARGS({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 			CallbackSignature<cbOutput::CreateValue, Args...>::getInstance().getNum(),
 			num,
-			BindingType<Args>::toWireType(args)...
+			TypeTransformer<Args, PolicyListType<>>::Binding::toWireType(std::forward<Args>(args))...
 		));
 	}
 

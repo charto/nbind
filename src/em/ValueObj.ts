@@ -28,6 +28,9 @@ export namespace _nbind {
 
 export namespace _nbind {
 
+	export var popPointer: typeof _class.popPointer;
+	type BindClassPtr = _class.BindClassPtr;
+
 	export var throwError: typeof _globals.throwError;
 	export var typeTbl: typeof _globals.typeTbl;
 	export var bigEndian: typeof _globals.bigEndian;
@@ -40,7 +43,7 @@ export namespace _nbind {
 	}
 
 	/** Storage for value objects. Slot 0 is reserved to represent errors. */
-	const valueList: (ValueObject | number)[] = [ null ];
+	export const valueList: (ValueObject | number)[] = [ null ];
 
 	/** Value object storage slot free list head. */
 	let firstFreeValue = 0;
@@ -53,18 +56,21 @@ export namespace _nbind {
 		} else num = valueList.length;
 
 		valueList[num] = value;
-		return(num);
+		return(num * 2 + 1);
 	}
 
-	export function popValue(num: number) {
+	export function popValue(num: number, type?: BindClassPtr): ValueObject | _class.Wrapper {
 		if(!num) throwError('Value type JavaScript class is missing or not registered');
 
-		const obj = valueList[num] as ValueObject;
+		if(num & 1) {
+			num >>= 1;
+			const obj = valueList[num] as ValueObject;
 
-		valueList[num] = firstFreeValue;
-		firstFreeValue = num;
+			valueList[num] = firstFreeValue;
+			firstFreeValue = num;
 
-		return(obj);
+			return(obj);
+		} else return(popPointer(num, type));
 	}
 
 	// 2^64, first integer not representable with uint64_t.
@@ -108,9 +114,11 @@ export namespace _nbind {
 @exportLibrary
 class nbind { // tslint:disable-line:class-name
 
+	// Initialize a C++ object based on a JavaScript object's contents.
+
 	@dep('_nbind')
 	static _nbind_get_value_object(num: number, ptr: number) {
-		const obj = _nbind.popValue(num);
+		const obj = _nbind.popValue(num) as _nbind.ValueObject;
 
 		obj.fromJS(function() {
 			obj.__nbindValueConstructor.apply(
@@ -122,7 +130,7 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_get_int_64(num: number, ptr: number) {
-		const obj = _nbind.popValue(num);
+		const obj = _nbind.popValue(num) as _nbind.ValueObject;
 
 		obj.fromJS(function(lo: number, hi: number, sign: boolean) {
 			if(sign) {

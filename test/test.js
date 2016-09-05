@@ -172,7 +172,7 @@ test('Value objects', function(t) {
 	t.strictEqual(xy.y, 25);
 
 	xy.fromJS(function() {});
-	Type.callWithCoord(function(a, b) {
+	xy = Type.callWithCoord(function(a, b) {
 		t.strictEqual(a.x, xy.x);
 		t.strictEqual(a.y, xy.y);
 		t.strictEqual(b.x, 123);
@@ -182,6 +182,9 @@ test('Value objects', function(t) {
 		return(a);
 	}, xy, new Coord(123, 456));
 
+	t.strictEqual(xy.x, 60);
+	t.strictEqual(xy.y, 25);
+
 	t.end();
 });
 
@@ -189,12 +192,13 @@ test('Pointers and references', function(t) {
 	var Type = testModule.Reference;
 
 	var own = new Type();
+	var value = Type.getValue();
 	var ptr = Type.getPtr();
 	var ref = Type.getRef();
 	var constPtr = Type.getConstPtr();
 	var constRef = Type.getConstRef();
 
-	var types = [ own, ptr, ref, constPtr, constRef ];
+	var types = [ own, value, ptr, ref, constPtr, constRef ];
 
 	for(var i = 0; i < types.length; ++i) {
 		t.type(Type.readPtr(types[i]), 'undefined');

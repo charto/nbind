@@ -103,10 +103,10 @@ struct BindingType<ValueType<ArgType>> {
 
 	typedef ArgType Type;
 
-	// Offset to a list of constructed objects on the JavaScript side
-	// (for fromWireType) or dummy value (for toWireType).
+	// Pointer or offset (times 2 plus 1 to distinguish from pointers)
+	// to a list of constructed objects on the JavaScript side.
 
-	typedef int WireType;
+	typedef ArgType *WireType;
 
 	static inline Type fromWireType(WireType arg);
 	static inline WireType toWireType(Type &&arg);

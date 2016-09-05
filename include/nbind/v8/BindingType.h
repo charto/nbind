@@ -117,7 +117,7 @@ struct BindingType<NullableType<ArgType>> {
 
 	static inline WireType toWireType(Type arg) {
 		if(arg == nullptr) return(Nan::Null());
-		return(BindingType<ArgType>::toWireType(arg));
+		return(BindingType<ArgType>::toWireType(std::forward<Type>(arg)));
 	}
 
 };

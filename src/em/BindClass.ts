@@ -23,6 +23,8 @@ export namespace _nbind {
 	// Base class for wrapped instances of bound C++ classes.
 
 	export class Wrapper {
+		persist() { this.__nbindFlags |= Wrapper.persistent; }
+
 		free: () => void;
 
 		/* tslint:disable:variable-name */
@@ -40,6 +42,8 @@ export namespace _nbind {
 		/* tslint:enable:variable-name */
 
 		static constant = 1;
+		static persistent = 2;
+		static originJS = 4;
 	}
 
 	// Any subtype (not instance but type) of Wrapper.
@@ -53,13 +57,14 @@ export namespace _nbind {
 	// also inheriting from a generic type definition.
 
 	export class BindClass extends BindType {
-		constructor(id: number, name: string, proto: WrapperClass) {
+		constructor(id: number, name: string, proto: WrapperClass, ptrType: BindClassPtr) {
 			super(id, name);
 
 			this.proto = proto;
+			this.ptrType = ptrType;
 		}
 
-		wireRead = popValue;
+		wireRead = (arg: number) => popValue(arg, this.ptrType);
 		wireWrite = pushValue;
 
 		// Optional type conversion code
@@ -69,6 +74,7 @@ export namespace _nbind {
 		// of this C++ class.
 
 		proto: WrapperClass;
+		ptrType: BindClassPtr;
 	}
 
 	export var ptrMarker = {};

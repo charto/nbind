@@ -203,11 +203,11 @@ class nbind { // tslint:disable-line:class-name
 
 		/* tslint:disable:no-unused-expression */
 
-		new _nbind.BindClass(idList[0], name, Bound);
-		new _nbind.BindClassPtr(idList[1], name + ' *', Bound);
+		const ptrType = new _nbind.BindClassPtr(idList[1], name + ' *', Bound);
 		new _nbind.BindClassPtr(idList[2], 'const ' + name + ' *', Bound, _nbind.Wrapper.constant);
 		new _nbind.BindClassPtr(idList[3], name + ' &', Bound);
 		new _nbind.BindClassPtr(idList[4], 'const ' + name + ' &', Bound, _nbind.Wrapper.constant);
+		new _nbind.BindClass(idList[0], name, Bound, ptrType);
 
 		/* tslint:enable:no-unused-expression */
 
