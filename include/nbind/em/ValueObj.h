@@ -46,7 +46,7 @@ inline ArgType BindingType<ValueType<ArgType>>::fromWireType(ArgType *ptr) {
 		_nbind_get_value_object(index, &storage);
 
 		return(storage.getBound());
-	} else return(*ptr);
+	} else return(std::move(*ptr));
 }
 
 } // namespace

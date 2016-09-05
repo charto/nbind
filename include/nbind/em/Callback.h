@@ -21,7 +21,7 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::Type call(Args... args) {
+	typename BindingType<ReturnType>::Type call(Args&&... args) {
 		// Restore linear allocator state in RAII style when done.
 		PoolRestore restore;
 

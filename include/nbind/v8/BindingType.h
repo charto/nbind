@@ -78,7 +78,9 @@ struct BindingType<ArgType &> {
 		return(*BindingType<ArgType *>::fromWireType(arg));
 	}
 
-	static inline WireType toWireType(Type arg);
+	static inline WireType toWireType(Type arg) {
+		return(BindingType<ArgType *>::toWireType(&arg));
+	}
 
 };
 
