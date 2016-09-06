@@ -77,10 +77,10 @@ template <typename ArgType>
 struct BindingType<ArgType &> {
 
 	typedef ArgType &Type;
-	typedef ArgType &WireType;
+	typedef ArgType *WireType;
 
-	static inline Type fromWireType(WireType arg) { return(arg); }
-	static inline WireType toWireType(Type arg) { return(arg); }
+	static inline Type fromWireType(WireType arg) { return(*arg); }
+	static inline WireType toWireType(Type arg) { return(&arg); }
 
 };
 
@@ -90,10 +90,10 @@ template <typename ArgType>
 struct BindingType<ArgType &&> {
 
 	typedef ArgType &&Type;
-	typedef ArgType &&WireType;
+	typedef ArgType *WireType;
 
-	static inline Type fromWireType(WireType arg) { return(arg); }
-	static inline WireType toWireType(Type arg) { return(arg); }
+	static inline Type fromWireType(WireType arg) { return(*arg); }
+	static inline WireType toWireType(Type arg) { return(&arg); }
 
 };
 
@@ -115,11 +115,12 @@ template <typename ArgType>
 struct BindingType<ValueType<ArgType>> {
 
 	typedef ArgType Type;
+	typedef typename std::remove_reference<ArgType>::type ObjType;
 
 	// Pointer or offset (times 2 plus 1 to distinguish from pointers)
 	// to a list of constructed objects on the JavaScript side.
 
-	typedef ArgType *WireType;
+	typedef ObjType *WireType;
 
 	static inline Type fromWireType(WireType arg);
 	static inline WireType toWireType(Type &&arg);

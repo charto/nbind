@@ -42,8 +42,9 @@ export namespace _nbind {
 		/* tslint:enable:variable-name */
 
 		static constant = 1;
-		static persistent = 2;
-		static originJS = 4;
+		static reference = 2;
+		static persistent = 4;
+		static originJS = 8;
 	}
 
 	// Any subtype (not instance but type) of Wrapper.
@@ -110,6 +111,7 @@ export namespace _nbind {
 			this.flags = flags || 0;
 
 			const push = flags & Wrapper.constant ? pushPointer : pushNonConstPointer;
+			const pop = flags & Wrapper.reference ? popValue : popPointer;
 
 			this.makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
 				policyTbl['Nullable'] ?
@@ -118,7 +120,7 @@ export namespace _nbind {
 					(arg: any) => push(arg, this)
 			);
 
-			this.wireRead = (arg: number) => popPointer(arg, this);
+			this.wireRead = (arg: number) => pop(arg, this);
 			this.wireWrite = (arg: any) => push(arg, this);
 		}
 

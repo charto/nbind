@@ -21,23 +21,25 @@ template<> struct BindingType<cbOutput::CreateValue> {
 };
 
 template <typename ArgType>
-inline ArgType *BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) {
-	cbFunction *jsConstructor = BindClass<ArgType>::getInstance().getValueConstructorJS();
+inline auto BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) -> WireType {
+	cbFunction *jsConstructor = BindClass<
+		typename std::remove_const<ObjType>::type
+	>::getInstance().getValueConstructorJS();
 
 	if(jsConstructor != nullptr) {
 		cbOutput construct(*jsConstructor);
 
 		arg.toJS(construct);
 
-		return(reinterpret_cast<ArgType *>(construct.getSlot()));
+		return(reinterpret_cast<WireType>(construct.getSlot()));
 	} else {
 		// Value type JavaScript class is missing or not registered.
-		return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
+		return(BindingType<ArgType>::toWireType(std::move(arg)));
 	}
 }
 
 template <typename ArgType>
-inline ArgType BindingType<ValueType<ArgType>>::fromWireType(ArgType *ptr) {
+inline ArgType BindingType<ValueType<ArgType>>::fromWireType(WireType ptr) {
 	uintptr_t index = reinterpret_cast<int>(ptr);
 	if(index & 1) {
 		// Constructor argument is an unused dummy value.
