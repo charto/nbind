@@ -203,19 +203,24 @@ class nbind { // tslint:disable-line:class-name
 
 		/* tslint:disable:no-unused-expression */
 
-		const ptrType = new _nbind.BindClassPtr(idList[1], name + ' *', Bound);
+		let flags = policyTbl['Value'] ? _nbind.Wrapper.valueObject : 0;
+
+		const ptrType = new _nbind.BindClassPtr(idList[1], name + ' *',
+			Bound, flags);
 
 		new _nbind.BindClassPtr(idList[2], 'const ' + name + ' *',
-			Bound, _nbind.Wrapper.constant);
+			Bound, flags | _nbind.Wrapper.constant);
+
+		flags |= _nbind.Wrapper.reference;
 
 		new _nbind.BindClassPtr(idList[3], name + ' &',
-			Bound, _nbind.Wrapper.reference);
-
-		new _nbind.BindClassPtr(idList[4], 'const ' + name + ' &',
-			Bound, _nbind.Wrapper.constant | _nbind.Wrapper.reference);
+			Bound, flags);
 
 		new _nbind.BindClassPtr(idList[5], name + ' &&',
-			Bound, _nbind.Wrapper.reference);
+			Bound, flags);
+
+		new _nbind.BindClassPtr(idList[4], 'const ' + name + ' &',
+			Bound, flags | _nbind.Wrapper.constant);
 
 		new _nbind.BindClass(idList[0], name, Bound, ptrType);
 

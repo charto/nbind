@@ -12,6 +12,8 @@ for arg; do
 	case "$arg" in
 		-arch) skip=1 ;;
 		-mmacosx-version-min=*) ;;
+		-fno-tree-sink) ;;
+		-fno-tree-vrp) ;;
 		*) set -- "$@" "$arg" ;;
 	esac
 done

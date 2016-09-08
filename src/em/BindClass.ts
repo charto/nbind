@@ -43,8 +43,9 @@ export namespace _nbind {
 
 		static constant = 1;
 		static reference = 2;
-		static persistent = 4;
-		static originJS = 8;
+		static valueObject = 4;
+		static persistent = 8;
+		static originJS = 16;
 	}
 
 	// Any subtype (not instance but type) of Wrapper.
@@ -111,7 +112,10 @@ export namespace _nbind {
 			this.flags = flags || 0;
 
 			const push = flags & Wrapper.constant ? pushPointer : pushNonConstPointer;
-			const pop = flags & Wrapper.reference ? popValue : popPointer;
+			const pop = (
+				flags & Wrapper.reference && flags & Wrapper.valueObject ?
+				popValue : popPointer
+			);
 
 			this.makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
 				policyTbl['Nullable'] ?
