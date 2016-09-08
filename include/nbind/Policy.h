@@ -5,9 +5,12 @@
 
 namespace nbind {
 
+// These must match BindClass.ts.
+
 enum class WrapperFlags : uint32_t {
 	none = 0,
-	constant = 1
+	constant = 1,
+	shared = 2
 };
 
 inline WrapperFlags operator& (WrapperFlags a, WrapperFlags b) {
@@ -15,8 +18,19 @@ inline WrapperFlags operator& (WrapperFlags a, WrapperFlags b) {
 		static_cast<uint32_t>(a) & static_cast<uint32_t>(b)
 	));
 }
+inline WrapperFlags operator| (WrapperFlags a, WrapperFlags b) {
+	return(static_cast<WrapperFlags>(
+		static_cast<uint32_t>(a) | static_cast<uint32_t>(b)
+	));
+}
 
 inline bool operator! (WrapperFlags f) { return(f == WrapperFlags::none); }
+
+inline WrapperFlags operator~ (WrapperFlags f) {
+	return(static_cast<WrapperFlags>(
+		~static_cast<uint32_t>(f)
+	));
+}
 
 // Nullable policy
 

@@ -10,13 +10,9 @@
 
 namespace nbind {
 
-template <typename ArgType>
-inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
-	if(arg == nullptr) return(Nan::Null());
-
-	WrapperFlags flags = std::is_const<ArgType>::value ?
-		WrapperFlags::constant :
-		WrapperFlags::none;
+template <typename BaseType, typename ArgType>
+static inline WireType makeExternal(ArgType *arg, WrapperFlags flags) {
+	if(std::is_const<ArgType>::value) flags = flags | WrapperFlags::constant;
 
 #ifndef DUPLICATE_POINTERS
 
@@ -35,7 +31,10 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 
 	const unsigned int argc = 2;
 	v8::Local<v8::Value> argv[] = {
-		Nan::New<v8::External>(const_cast<BaseType *>(arg)),
+		(!(flags & WrapperFlags::shared) ?
+			Nan::New<v8::External>(const_cast<BaseType *>(arg)) :
+			Nan::New<v8::External>(new std::shared_ptr<ArgType>(arg))
+		),
 		Nan::New<v8::Uint32>(static_cast<uint32_t>(flags))
 	};
 
@@ -43,6 +42,22 @@ inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 	// needs to detect the argument is a v8::External and just wrap it instead.
 
 	return(constructor->NewInstance(argc, argv));
+}
+
+template <typename ArgType>
+inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
+	if(arg == nullptr) return(Nan::Null());
+
+	return(makeExternal<BaseType>(arg, WrapperFlags::none));
+}
+
+template <typename ArgType>
+inline WireType BindingType<std::shared_ptr<ArgType>>::toWireType(
+	std::shared_ptr<ArgType> arg
+) {
+	if(arg == nullptr || !arg.use_count()) return(Nan::Null());
+
+	return(makeExternal<BaseType>(arg.get(), WrapperFlags::shared));
 }
 
 template <> struct BindingType<v8::Local<v8::Function>> {

@@ -41,11 +41,13 @@ export namespace _nbind {
 
 		/* tslint:enable:variable-name */
 
+		// These must match Policy.h.
+
 		static constant = 1;
-		static reference = 2;
-		static valueObject = 4;
-		static persistent = 8;
-		static originJS = 16;
+		static shared = 2;
+		static reference = 4;
+		static valueObject = 8;
+		static persistent = 16;
 	}
 
 	// Any subtype (not instance but type) of Wrapper.

@@ -63,7 +63,13 @@ class BindWrapper : public node::ObjectWrap {
 
 public:
 
-	BindWrapper(Bound *bound, WrapperFlags flags) : bound(bound), flags(flags) {}
+	// WrapperFlags::shared must be unset in flags!
+	BindWrapper(Bound *bound, WrapperFlags flags) :
+		boundUnsafe(bound), flags(flags) {}
+
+	// WrapperFlags::shared must be set in flags!
+	BindWrapper(std::shared_ptr<Bound> bound, WrapperFlags flags) :
+		boundShared(bound), flags(flags) {}
 
 	// This destructor is called automatically by the JavaScript garbage collector.
 
@@ -73,33 +79,76 @@ public:
 
 	// Pass any constructor arguments to wrapped class.
 	template<typename... Args>
-	static BindWrapper *createObj(Args&&... args) {
-		return(new BindWrapper(new Bound(args...), WrapperFlags::none));
+	static void createObj(
+		const Nan::FunctionCallbackInfo<v8::Value> &nanArgs,
+		Args&&... args
+	) {
+		(new BindWrapper(
+			std::make_shared<Bound>(args...),
+			WrapperFlags::shared
+		))->wrapThis(nanArgs);
 	}
 
-	static void wrapPtr(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		Bound *ptr = static_cast<Bound *>(v8::Handle<v8::External>::Cast(args[0])->Value());
+	static void wrapPtr(const Nan::FunctionCallbackInfo<v8::Value> &nanArgs) {
+		auto flags = static_cast<WrapperFlags>(nanArgs[1]->Uint32Value());
+		void *ptr = v8::Handle<v8::External>::Cast(nanArgs[0])->Value();
 
-		(new BindWrapper(
-			ptr,
-			static_cast<WrapperFlags>(args[1]->Uint32Value())
-		))->wrapThis(args);
+		if(!(flags & WrapperFlags::shared)) {
+			auto *ptrUnsafe = static_cast<Bound *>(ptr);
+
+			(new BindWrapper(ptrUnsafe, flags))->wrapThis(nanArgs);
+		} else {
+			auto *ptrShared = static_cast<std::shared_ptr<Bound> *>(ptr);
+
+			(new BindWrapper(*ptrShared, flags))->wrapThis(nanArgs);
+
+			// Delete temporary shared pointer after re-referencing target object.
+			delete ptrShared;
+		}
 	}
 
 	void destroy() {
-		if(bound) {
-			// Note: for thread safety, this block should be a critical section.
 
-#			if !defined(DUPLICATE_POINTERS)
+		// Delete the bound object if C++ side isn't holding onto it.
+		if(boundShared.use_count()) boundShared.reset();
 
-				removeInstance();
+#		if !defined(DUPLICATE_POINTERS)
 
-#			endif // DUPLICATE_POINTERS
+			// JavaScript side no longer holds any references to the object,
+			// so remove our weak pointer to the wrapper.
 
-			// This deletes the bound object if necessary.
-			bound.reset();
-		}
+			removeInstance();
+
+#		endif // DUPLICATE_POINTERS
+
 	}
+
+	// TODO: this should throw or never get called if bound is not shared!
+
+	inline std::shared_ptr<Bound> getShared() { return(boundShared); }
+
+	inline WrapperFlags getFlags() const { return(flags); }
+
+	inline Bound *getBound(WrapperFlags argFlags) {
+		if(!!(flags & WrapperFlags::constant) && !(argFlags & WrapperFlags::constant)) {
+			throw(std::runtime_error("Passing a const value as a non-const argument"));
+		}
+
+		return(!(flags & WrapperFlags::shared) ? boundUnsafe : boundShared.get());
+	}
+
+#if !defined(DUPLICATE_POINTERS)
+
+	static Nan::Persistent<v8::Object> *findInstance(const Bound *ptr, WrapperFlags flags) {
+		// This will insert a null pointer (to a non-existent wrapper)
+		// in the map if the object pointer is not found yet.
+
+		return(&getInstanceTbl()[HashablePair<const Bound *, WrapperFlags>(ptr, flags)]);
+	}
+
+#endif // DUPLICATE_POINTERS
+
+private:
 
 	void wrapThis(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 
@@ -110,18 +159,6 @@ public:
 #		endif // DUPLICATE_POINTERS
 
 		this->Wrap(args.This());
-	}
-
-	inline std::shared_ptr<Bound> getShared() { return(bound); }
-
-	inline WrapperFlags getFlags() const { return(flags); }
-
-	inline Bound *getBound(WrapperFlags argFlags) {
-		if(!!(flags & WrapperFlags::constant) && !(argFlags & WrapperFlags::constant)) {
-			throw(std::runtime_error("Passing a const value as a non-const argument"));
-		}
-
-		return(bound.get());
 	}
 
 #if !defined(DUPLICATE_POINTERS)
@@ -138,7 +175,10 @@ public:
 
 	void addInstance(v8::Local<v8::Object> obj) {
 		Nan::Persistent<v8::Object> *ref = &getInstanceTbl()[
-			HashablePair<const Bound *, WrapperFlags>(bound.get(), flags)
+			HashablePair<const Bound *, WrapperFlags>(
+				!(flags & WrapperFlags::shared) ? boundUnsafe : boundShared.get(),
+				flags
+			)
 		];
 
 		ref->Reset(obj);
@@ -158,22 +198,12 @@ public:
 		// (*iter).second.Reset();
 
 		getInstanceTbl().erase(
-			HashablePair<const Bound *, WrapperFlags>(bound.get(), flags)
+			HashablePair<const Bound *, WrapperFlags>(
+				!(flags & WrapperFlags::shared) ? boundUnsafe : boundShared.get(),
+				flags
+			)
 		);
 	}
-
-	static Nan::Persistent<v8::Object> *findInstance(const Bound *ptr, WrapperFlags flags) {
-		// This will insert a null pointer (to a non-existent wrapper)
-		// in the map if the object pointer is not found yet.
-
-		return(&getInstanceTbl()[HashablePair<const Bound *, WrapperFlags>(ptr, flags)]);
-	}
-
-#endif // DUPLICATE_POINTERS
-
-private:
-
-#if !defined(DUPLICATE_POINTERS)
 
 	// This is effectively a map from C++ instance pointers
 	// to weak references to JavaScript objects wrapping them.
@@ -192,7 +222,8 @@ private:
 
 #endif // DUPLICATE_POINTERS
 
-	std::shared_ptr<Bound> bound;
+	std::shared_ptr<Bound> boundShared;
+	Bound *boundUnsafe;
 	WrapperFlags flags;
 };
 

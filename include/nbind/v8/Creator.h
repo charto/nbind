@@ -14,7 +14,7 @@ public:
 
 	static void create(const Nan::FunctionCallbackInfo<v8::Value> &args) noexcept(false) {
 		// Note that Args().get may throw.
-		BindWrapper<Bound>::createObj(Args(args).get(args)...)->wrapThis(args);
+		BindWrapper<Bound>::createObj(args, Args(args).get(args)...);
 	}
 
 	static void createValue(ArgStorage &storage, const Nan::FunctionCallbackInfo<v8::Value> &args) {

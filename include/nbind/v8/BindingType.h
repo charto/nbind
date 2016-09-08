@@ -27,7 +27,9 @@ template <typename ArgType> struct BindingType {
 	}
 
 	static inline WireType toWireType(ArgType &&arg) {
-		return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
+		return(BindingType<std::shared_ptr<ArgType>>::toWireType(
+			std::make_shared<ArgType>(std::move(arg))
+		));
 	}
 
 };
@@ -88,6 +90,7 @@ template <typename ArgType>
 struct BindingType<std::shared_ptr<ArgType>> {
 
 	typedef std::shared_ptr<ArgType> Type;
+	typedef typename std::remove_const<ArgType>::type BaseType;
 
 	static inline bool checkType(WireType arg) {
 		// TODO: Also check type of object!
@@ -100,6 +103,22 @@ struct BindingType<std::shared_ptr<ArgType>> {
 	}
 
 	static inline WireType toWireType(Type arg);
+
+};
+
+template <typename ArgType>
+struct BindingType<std::unique_ptr<ArgType>> {
+
+	typedef std::unique_ptr<ArgType> Type;
+
+	// checkType and fromWireType not supported! C++ objects are wrapped in
+	// shared_ptr which would become invalid if passed back as unique_ptr.
+
+	static inline WireType toWireType(Type arg) {
+		return(BindingType<std::shared_ptr<ArgType>>::toWireType(
+			std::make_shared<ArgType>(std::move(arg))
+		));
+	}
 
 };
 
