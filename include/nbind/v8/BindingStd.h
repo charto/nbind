@@ -51,11 +51,11 @@ struct BindingType<std::array<ArgType, size>> {
 		return(val);
 	}
 
-	static inline WireType toWireType(Type arg) {
+	static inline WireType toWireType(Type &&arg) {
 		v8::Local<v8::Array> arr = Nan::New<v8::Array>(size);
 
 		for(uint32_t num = 0; num < size; ++num) {
-			arr->Set(num, convertToWire(arg[num]));
+			arr->Set(num, convertToWire(std::forward<ArgType>(arg[num])));
 		}
 
 		return(arr);
@@ -101,12 +101,12 @@ struct BindingType<std::vector<ArgType>> {
 		return(val);
 	}
 
-	static inline WireType toWireType(Type arg) {
+	static inline WireType toWireType(Type &&arg) {
 		uint32_t count = arg.size();
 		v8::Local<v8::Array> arr = Nan::New<v8::Array>(count);
 
 		for(uint32_t num = 0; num < count; ++num) {
-			arr->Set(num, convertToWire(arg[num]));
+			arr->Set(num, convertToWire(std::forward<ArgType>(arg[num])));
 		}
 
 		return(arr);

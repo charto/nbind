@@ -49,7 +49,7 @@ template <typename ArgType> struct BindingType {
 		return(*BindingType<ArgType *>::fromWireType(arg));
 	}
 
-	static inline WireType toWireType(ArgType arg) {
+	static inline WireType toWireType(ArgType &&arg) {
 		return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
 	}
 

@@ -42,7 +42,7 @@ struct BindingType<std::array<MemberType, size>> {
 		return(val);
 	}
 
-	static inline WireType toWireType(Type arg) {
+	static inline WireType toWireType(Type &&arg) {
 		/** Allocate space for wire type (which includes 1 array member) and
 		  * the other size-1 members, in temporary lalloc "stack frame". */
 		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val) + (size - 1) * sizeof(*val->data)));
@@ -50,7 +50,7 @@ struct BindingType<std::array<MemberType, size>> {
 		val->length = size;
 
 		for(uint32_t num = 0; num < size; ++num) {
-			val->data[num] = BindingType<MemberType>::toWireType(arg[num]);
+			val->data[num] = BindingType<MemberType>::toWireType(std::forward<MemberType>(arg[num]));
 		}
 
 		return(val);
@@ -88,7 +88,7 @@ struct BindingType<std::vector<MemberType>> {
 		return(val);
 	}
 
-	static inline WireType toWireType(Type arg) {
+	static inline WireType toWireType(Type &&arg) {
 		size_t size = arg.size();
 		/** Allocate space for wire type (which includes 1 vector member) and
 		  * the other size-1 members, in temporary lalloc "stack frame". */
@@ -97,7 +97,7 @@ struct BindingType<std::vector<MemberType>> {
 		val->length = size;
 
 		for(uint32_t num = 0; num < size; ++num) {
-			val->data[num] = BindingType<MemberType>::toWireType(arg[num]);
+			val->data[num] = BindingType<MemberType>::toWireType(std::forward<MemberType>(arg[num]));
 		}
 
 		return(val);
