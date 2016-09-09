@@ -15,9 +15,18 @@ export enum SignatureType {
 
 export enum StructureType {
 	raw = 0,
+	constant,
+	pointer,
 	vector,
 	array
 }
+
+export var structureNameList = [
+	'const X',
+	'X *',
+	'std::vector<X>',
+	'std::array<X, Y>'
+];
 
 export function removeAccessorPrefix(name: string) {
 	// The C++ side gives the same name to getters and setters.

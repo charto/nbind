@@ -16,6 +16,8 @@ setEvil((code: string) => eval(code));
 
 const _StructureType = common.StructureType;
 
+const _structureNameList = common.structureNameList;
+
 // Namespace that will be made available inside Emscripten compiled module.
 
 export namespace _nbind {
@@ -28,6 +30,9 @@ export namespace _nbind {
 	export type Invoker = (ptr: number, ...args: any[]) => any;
 	export type TypeIdList = (number | string)[];
 	export type PolicyTbl = { [name: string]: boolean };
+
+	export var PrimitiveType: typeof _type.PrimitiveType;
+	export var CStringType: typeof _type.CStringType;
 
 	export var ArrayType: typeof _std.ArrayType;
 
@@ -81,27 +86,54 @@ export namespace _nbind {
 		static pagePtr: number;
 	}
 
-	function getComplexType(id: number) {
+	function getComplexType(id: number, place: string, kind: string) {
 		const placeholderFlag = HEAPU8[id as number];
 
-		if(placeholderFlag == 0) throw(new Error('Unbound type ' + id));
+		if(placeholderFlag == 0) {
+			throw(new Error(
+				'Unbound ' +
+				kind.replace('X', 'type') + ' ' + id +
+				' in ' + place
+			));
+		}
 
-		const memberId = HEAPU32[((id as number) >> 2) + 1];
-		const memberType = _nbind.typeList[memberId as number];
+		const subId = HEAPU32[((id as number) >> 2) + 1];
+		const subType = (
+			_nbind.typeList[subId as number] ||
+			getComplexType(
+				subId as number,
+				place,
+				_structureNameList[placeholderFlag - 1].replace('X', kind)
+			)
+		);
 		let type: _type.BindType;
-
-		if(!memberType) throw(new Error('Unbound member type ' + memberId));
+		const name = kind.replace('X', subType.name);
 
 		switch(placeholderFlag) {
+			case _StructureType.constant:
+				type = subType;
+				break;
+			case _StructureType.pointer:
+				if(subType instanceof _nbind.PrimitiveType && subType.ptrSize == 1) {
+					type = new _nbind.CStringType(id, name);
+				} else {
+					throw(new Error('Unsupported type ' + name + ' in ' + place));
+				}
+				break;
 			case _StructureType.vector:
-				type = new _nbind.ArrayType(id, memberType);
+				type = new _nbind.ArrayType(id, name, subType);
 				break;
 			case _StructureType.array:
 				const size = HEAPU32[((id as number) >> 2) + 2];
-				type = new _nbind.ArrayType(id, memberType, size);
+				type = new _nbind.ArrayType(
+					id,
+					name.replace('Y', '' + size),
+					subType,
+					size
+				);
 				break;
 			default:
-				throw(new Error('Corrupt type ' + id + ' with flag ' + placeholderFlag));
+				throw(new Error('Corrupt type ' + id + ' with flag ' + placeholderFlag + place));
 		}
 
 		_nbind.typeList[id] = type;
@@ -110,11 +142,13 @@ export namespace _nbind {
 
 	// Look up a list of type objects based on their numeric typeID or name.
 
-	export function getTypes(idList: TypeIdList) {
+	export function getTypes(idList: TypeIdList, place: string) {
 		return(idList.map((id: number | string) => {
 			if(typeof(id) == 'number') {
-				const type = _nbind.typeList[id as number];
-				return(type || getComplexType(id as number));
+				return(
+					_nbind.typeList[id as number] ||
+					getComplexType(id as number, place, 'X')
+				);
 			} else return(_nbind.typeTbl[id as string]);
 		}));
 	}
@@ -222,6 +256,6 @@ export namespace _nbind {
 	// The dummy class is needed because unfortunately namespaces can't have decorators.
 	// Everything after it inside the namespace will be discarded.
 
-	@prepareNamespace('_nbind', '_StructureType')
+	@prepareNamespace('_nbind', '_StructureType', '_structureNameList')
 	export class _ {} // tslint:disable-line:class-name
 }

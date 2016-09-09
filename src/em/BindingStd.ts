@@ -82,14 +82,8 @@ export namespace _nbind {
 	}
 
 	export class ArrayType extends BindType {
-		constructor(id: number, memberType: _type.BindType, size?: number) {
-			super(
-				id,
-				((size || size === 0) ?
-					'std::array<' + memberType.name + ', ' + size + '>' :
-					'std::vector<' + memberType.name + '>'
-				)
-			);
+		constructor(id: number, name: string, memberType: _type.BindType, size?: number) {
+			super(id, name);
 
 			this.memberType = memberType;
 			if(size) this.size = size;

@@ -5,10 +5,12 @@
 
 namespace nbind {
 
-// These must match JavaScript enum StructureType in enums.ts
+// These must match JavaScript enum StructureType in common.ts
 
 enum class StructureType : unsigned char {
 	raw = 0,
+	constant,
+	pointer,
 	vector,
 	array
 };
@@ -38,16 +40,48 @@ const typename Typer<ArgType>::SpecType Typer<ArgType>::spec = {
 	StructureType :: raw
 };
 
-// Type description helpers.
+// Const types
 
-template <typename ArgType>
-struct isChar {
-	static constexpr bool value = false;
+typedef struct {
+	const StructureType placeholderFlag;
+	const TYPEID target;
+} ConstStructure;
+
+template<typename ArgType>
+struct Typer<const ArgType> {
+	static const ConstStructure spec;
+
+	static NBIND_CONSTEXPR TYPEID makeID() {
+		return(&spec.placeholderFlag);
+	}
 };
 
-template <>
-struct isChar<char> {
-	static constexpr bool value = true;
+template<typename ArgType>
+const ConstStructure Typer<const ArgType>::spec = {
+	StructureType :: constant,
+	Typer<ArgType>::makeID()
+};
+
+// Pointers
+
+typedef struct {
+	const StructureType placeholderFlag;
+	const TYPEID target;
+} PointerStructure;
+
+template<typename TargetType>
+struct Typer<TargetType *> {
+	static const PointerStructure spec;
+
+	static NBIND_CONSTEXPR TYPEID makeID() {
+		return(&spec.placeholderFlag);
+	}
+};
+
+template<typename TargetType>
+const PointerStructure Typer<TargetType *>::spec = {
+	StructureType :: pointer,
+	Typer<TargetType>::makeID()
 };
 
 // Convert a list of types in the template argument into an array of type IDs.

@@ -22,6 +22,18 @@ void NBind :: bind_value(const char *name, cbFunction &func) {
 	}
 }
 
+// Type description helpers.
+
+template <typename ArgType>
+struct isSignless {
+	static constexpr bool value = false;
+};
+
+template <>
+struct isSignless<char> {
+	static constexpr bool value = true;
+};
+
 // This function takes a list of primitive types as the template argument.
 // It defines 3 arrays with information about them: type IDs, sizes and properties of the types.
 // For example uint32_t, float64_t and const char * can be distinguished by their size and the property flags
@@ -31,15 +43,13 @@ void NBind :: bind_value(const char *name, cbFunction &func) {
 template <typename... Args>
 static const void **definePrimitiveTypes() {
 	static TYPEID typeList[] = { Typer<Args>::makeID()..., nullptr };
-	static const uint32_t sizeList[] = { sizeof(typename std::remove_pointer<Args>::type)... };
+	static const uint32_t sizeList[] = { sizeof(Args)... };
 	static const uint8_t flagList[] = { (
-		isChar<typename std::remove_pointer<Args>::type>::value * 16 |
-		std::is_const<typename std::remove_pointer<Args>::type>::value * 8 |
-		std::is_pointer<Args>::value * 4 |
+		isSignless<Args>::value * 4 |
 		// Type is floating point?
-		((typename std::remove_pointer<Args>::type)1/2 != 0) * 2 |
+		(static_cast<Args>(1/2) != 0) * 2 |
 		// Type is unsigned?
-		((typename std::remove_pointer<Args>::type)-1 >= 0)
+		(static_cast<Args>(-1) >= 0)
 	)... };
 
 	static const void *data[] = {
@@ -75,11 +85,7 @@ const void **nbind :: getPrimitiveList() {
 		unsigned long,  signed long,
 		unsigned long long, signed long long,
 
-		float, double,
-
-		unsigned char *, const unsigned char *,
-		signed   char *, const signed   char *,
-		         char *, const          char *
+		float, double
 	>();
 
 	return(primitiveList);

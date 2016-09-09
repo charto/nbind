@@ -44,16 +44,16 @@ export class BindPrimitive extends BindType {
 	/** Partially duplicates _nbind_register_primitive. */
 
 	constructor(id: number, size: number, flag: number) {
-		const isSignless = flag & 16;
+		const isSignless = flag & 4;
 		const isFloat    = flag & 2;
 		const isUnsigned = flag & 1;
 
-		let name = '';
+		let name: string;
 
 		if(isSignless) {
-			name += 'char';
+			name = 'char';
 		} else {
-			name += (
+			name = (
 				(isUnsigned ? 'u' : '') +
 				(isFloat ? 'float' : 'int') +
 				(size * 8 + '_t')

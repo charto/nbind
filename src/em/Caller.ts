@@ -227,7 +227,7 @@ export namespace _nbind {
 	export function makeJSCaller(idList: TypeIdList) {
 		const argCount = idList.length - 1;
 
-		const typeList = getTypes(idList);
+		const typeList = getTypes(idList, 'callback');
 		const returnType = typeList[0];
 		const argTypeList = typeList.slice(1);
 		const needsWireRead = anyNeedsWireRead(argTypeList, null);
@@ -262,6 +262,7 @@ export namespace _nbind {
 		ptr: number,
 		num: number,
 		flags: number,
+		name: string,
 		boundID: number,
 		idList: TypeIdList,
 		policyTbl: PolicyTbl
@@ -274,7 +275,7 @@ export namespace _nbind {
 
 		idList.splice(1, 0, 'uint32_t', boundID);
 
-		const typeList = getTypes(idList);
+		const typeList = getTypes(idList, name);
 		const returnType = typeList[0];
 		const argTypeList = typeList.slice(3);
 		const needsWireRead = returnType.needsWireRead(policyTbl);
@@ -332,13 +333,14 @@ export namespace _nbind {
 		ptr: number,
 		num: number,
 		flags: number,
+		name: string,
 		direct: number,
 		idList: TypeIdList,
 		policyTbl: PolicyTbl
 	) {
 		const argCount = idList.length - 1;
 
-		const typeList = getTypes(idList);
+		const typeList = getTypes(idList, name);
 		const returnType = typeList[0];
 		const argTypeList = typeList.slice(1);
 		const needsWireRead = returnType.needsWireRead(policyTbl);
@@ -382,7 +384,8 @@ export namespace _nbind {
 			prefix = 'ptr';
 		}
 
-		const dynCall = getDynCall(getTypes(idList));
+		// Type ID list was changed.
+		const dynCall = getDynCall(getTypes(idList, name));
 
 		return(buildCallerFunction(
 			dynCall,

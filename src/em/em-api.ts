@@ -115,31 +115,23 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_register_primitive(id: number, size: number, flag: number) {
-		const isSignless = flag & 16;
-		const isConst    = flag & 8;
-		const isPointer  = flag & 4;
+		const isSignless = flag & 4;
 		const isFloat    = flag & 2;
 		const isUnsigned = flag & 1;
 
-		let name = isConst ? 'const ' : '';
+		let name: string;
 
 		if(isSignless) {
-			name += 'char';
-		} else if(isPointer) {
-			if(isUnsigned) name += 'un';
-			name += 'signed char';
+			name = 'char';
 		} else {
-			name += (
+			name = (
 				(isUnsigned ? 'u' : '') +
 				(isFloat ? 'float' : 'int') +
 				(size * 8 + '_t')
 			);
 		}
 
-		if(isPointer) {
-			// tslint:disable-next-line:no-unused-expression
-			new _nbind.CStringType(id, name + ' *');
-		} else if(size == 8 && !isFloat) {
+		if(size == 8 && !isFloat) {
 			// tslint:disable-next-line:no-unused-expression
 			new _nbind.Int64Type(id, name);
 		} else {
@@ -241,7 +233,8 @@ class nbind { // tslint:disable-line:class-name
 	) {
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		const proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
+		const bindClass = _nbind.typeList[typeID] as _class.BindClass;
+		const proto = bindClass.proto.prototype;
 
 		// The constructor returns a pointer to the new object.
 		// It fits in uint32_t.
@@ -251,7 +244,15 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			proto,
 			'__nbindConstructor',
-			_nbind.makeCaller(null, 0, 0, ptr, typeList, policyTbl),
+			_nbind.makeCaller(
+				null,
+				0, // num
+				0, // flags
+				bindClass.name + 'constructor',
+				ptr,
+				typeList,
+				policyTbl
+			),
 			typeCount - 1
 		);
 
@@ -263,7 +264,15 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			proto,
 			'__nbindValueConstructor',
-			_nbind.makeCaller(null, 0, 0, ptrValue, typeList, policyTbl),
+			_nbind.makeCaller(
+				null,
+				0, // num
+				0, // flags
+				bindClass.name + 'value constructor',
+				ptrValue,
+				typeList,
+				policyTbl
+			),
 			typeCount
 		);
 	}
@@ -273,7 +282,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			(_nbind.typeList[typeID] as _class.BindClass).proto.prototype,
 			'free',
-			_nbind.makeMethodCaller(ptr, 0, 0, typeID, ['void'], null),
+			_nbind.makeMethodCaller(ptr, 0, 0, 'free', typeID, ['void'], null),
 			0
 		);
 	}
@@ -304,7 +313,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			target,
 			name,
-			_nbind.makeCaller(ptr, num, flags, direct, typeList, policyTbl),
+			_nbind.makeCaller(ptr, num, flags, name, direct, typeList, policyTbl),
 			typeCount - 1
 		);
 	}
@@ -330,7 +339,7 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.addMethod(
 				proto,
 				name,
-				_nbind.makeMethodCaller(ptr, num, flags, typeID, typeList, policyTbl),
+				_nbind.makeMethodCaller(ptr, num, flags, name, typeID, typeList, policyTbl),
 				typeCount - 1
 			);
 
@@ -345,12 +354,28 @@ class nbind { // tslint:disable-line:class-name
 			// temporarily store an invoker in the property.
 			// The getter definition then binds it properly.
 
-			proto[name] = _nbind.makeMethodCaller(ptr, num, flags, typeID, typeList, policyTbl);
+			proto[name] = _nbind.makeMethodCaller(
+				ptr,
+				num,
+				flags,
+				'set ' + name,
+				typeID,
+				typeList,
+				policyTbl
+			);
 		} else {
 			Object.defineProperty(proto, name, {
 				configurable: true,
 				enumerable: true,
-				get: _nbind.makeMethodCaller(ptr, num, flags, typeID, typeList, policyTbl),
+				get: _nbind.makeMethodCaller(
+					ptr,
+					num,
+					flags,
+					'get ' + name,
+					typeID,
+					typeList,
+					policyTbl
+				),
 				set: proto[name]
 			});
 		}
