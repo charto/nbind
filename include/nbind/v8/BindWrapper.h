@@ -109,8 +109,8 @@ public:
 
 	void destroy() {
 
-		// Delete the bound object if C++ side isn't holding onto it.
-		if(boundShared.use_count()) boundShared.reset();
+		// Avoid freeing the object twice.
+		if(!boundShared) return;
 
 #		if !defined(DUPLICATE_POINTERS)
 
@@ -120,6 +120,12 @@ public:
 			removeInstance();
 
 #		endif // DUPLICATE_POINTERS
+
+		// Delete the bound object if the C++ side isn't holding onto it.
+		// The weak pointer must be removed first,
+		// because resetting changes the hash key.
+
+		boundShared.reset();
 
 	}
 
