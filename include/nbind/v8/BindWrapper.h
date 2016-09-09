@@ -69,7 +69,7 @@ public:
 
 	// WrapperFlags::shared must be set in flags!
 	BindWrapper(std::shared_ptr<Bound> bound, WrapperFlags flags) :
-		boundShared(bound), flags(flags) {}
+		boundUnsafe(nullptr), boundShared(bound), flags(flags) {}
 
 	// This destructor is called automatically by the JavaScript garbage collector.
 
@@ -110,7 +110,7 @@ public:
 	void destroy() {
 
 		// Avoid freeing the object twice.
-		if(!boundShared) return;
+		if(!boundUnsafe && !boundShared) return;
 
 #		if !defined(DUPLICATE_POINTERS)
 
@@ -125,7 +125,8 @@ public:
 		// The weak pointer must be removed first,
 		// because resetting changes the hash key.
 
-		boundShared.reset();
+		if(boundUnsafe) boundUnsafe = nullptr;
+		else boundShared.reset();
 
 	}
 
@@ -140,7 +141,7 @@ public:
 			throw(std::runtime_error("Passing a const value as a non-const argument"));
 		}
 
-		return(!(flags & WrapperFlags::shared) ? boundUnsafe : boundShared.get());
+		return(boundUnsafe ? boundUnsafe : boundShared.get());
 	}
 
 #if !defined(DUPLICATE_POINTERS)
@@ -182,7 +183,7 @@ private:
 	void addInstance(v8::Local<v8::Object> obj) {
 		Nan::Persistent<v8::Object> *ref = &getInstanceTbl()[
 			HashablePair<const Bound *, WrapperFlags>(
-				!(flags & WrapperFlags::shared) ? boundUnsafe : boundShared.get(),
+				boundUnsafe ? boundUnsafe : boundShared.get(),
 				flags
 			)
 		];
@@ -205,7 +206,7 @@ private:
 
 		getInstanceTbl().erase(
 			HashablePair<const Bound *, WrapperFlags>(
-				!(flags & WrapperFlags::shared) ? boundUnsafe : boundShared.get(),
+				boundUnsafe ? boundUnsafe : boundShared.get(),
 				flags
 			)
 		);
@@ -228,8 +229,8 @@ private:
 
 #endif // DUPLICATE_POINTERS
 
-	std::shared_ptr<Bound> boundShared;
 	Bound *boundUnsafe;
+	std::shared_ptr<Bound> boundShared;
 	WrapperFlags flags;
 };
 
