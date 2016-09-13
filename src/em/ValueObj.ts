@@ -95,7 +95,9 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		makeWireWrite = (expr: string) => '(_nbind.pushValue(new ' + expr + '))';
+		makeWireWrite(expr: string) {
+			return('(_nbind.pushValue(new ' + expr + '))');
+		}
 	}
 
 	export class Int64Type extends BindType {

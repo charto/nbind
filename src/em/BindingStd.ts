@@ -8,6 +8,7 @@ import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _resource} from './Resource';
+import {PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -18,8 +19,6 @@ export namespace _nbind {
 }
 
 export namespace _nbind {
-
-	type PolicyTbl = _globals.PolicyTbl;
 
 	export var resources: typeof _resource.resources;
 
@@ -148,9 +147,10 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
-			(arg: any) => pushString(arg, policyTbl)
-		);
+		makeWireWrite(expr: string, policyTbl: PolicyTbl) {
+			return((arg: any) => pushString(arg, policyTbl));
+		}
+
 		wireRead = popString;
 		wireWrite = pushString;
 

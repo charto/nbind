@@ -23,6 +23,7 @@ import { _nbind as _caller } from './Caller';     export { _caller };
 import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
 import * as common from '../common';
+import {typeModule} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -31,6 +32,9 @@ const _defineHidden = defineHidden;
 const _SignatureType = common.SignatureType;
 type _SignatureType = common.SignatureType;
 const _removeAccessorPrefix = common.removeAccessorPrefix;
+
+// tslint:disable-next-line:no-unused-variable
+const _typeModule = typeModule;
 
 export namespace _nbind {
 	export var Pool = _globals.Pool;
@@ -94,7 +98,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.Pool.pagePtr = pagePtr / 4;
 	}
 
-	@dep('_nbind')
+	@dep('_nbind', '_typeModule')
 	static _nbind_register_type(id: number, namePtr: number) {
 		const name = _nbind.readAsciiString(namePtr);
 		type TypeConstructor = { new(id: number, name: string): _type.BindType };

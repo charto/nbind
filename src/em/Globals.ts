@@ -9,12 +9,11 @@ import {_nbind as _class} from './BindClass';
 import {_nbind as _std} from './BindingStd';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
+import {PolicyTbl, StructureType} from '../Type';
 import * as common from '../common';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
-
-const _StructureType = common.StructureType;
 
 const _structureNameList = common.structureNameList;
 
@@ -29,7 +28,6 @@ export namespace _nbind {
 	export type FuncList = { (...args: any[]): any }[];
 	export type Invoker = (ptr: number, ...args: any[]) => any;
 	export type TypeIdList = (number | string)[];
-	export type PolicyTbl = { [name: string]: boolean };
 
 	export var PrimitiveType: typeof _type.PrimitiveType;
 	export var CStringType: typeof _type.CStringType;
@@ -110,20 +108,20 @@ export namespace _nbind {
 		const name = kind.replace('X', subType.name);
 
 		switch(placeholderFlag) {
-			case _StructureType.constant:
+			case StructureType.constant:
 				type = subType;
 				break;
-			case _StructureType.pointer:
+			case StructureType.pointer:
 				if(subType instanceof _nbind.PrimitiveType && subType.ptrSize == 1) {
 					type = new _nbind.CStringType(id, name);
 				} else {
 					throw(new Error('Unsupported type ' + name + ' in ' + place));
 				}
 				break;
-			case _StructureType.vector:
+			case StructureType.vector:
 				type = new _nbind.ArrayType(id, name, subType);
 				break;
-			case _StructureType.array:
+			case StructureType.array:
 				const size = HEAPU32[((id as number) >> 2) + 2];
 				type = new _nbind.ArrayType(
 					id,
@@ -256,6 +254,6 @@ export namespace _nbind {
 	// The dummy class is needed because unfortunately namespaces can't have decorators.
 	// Everything after it inside the namespace will be discarded.
 
-	@prepareNamespace('_nbind', '_StructureType', '_structureNameList')
+	@prepareNamespace('_nbind', '_structureNameList')
 	export class _ {} // tslint:disable-line:class-name
 }

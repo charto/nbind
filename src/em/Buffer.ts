@@ -6,6 +6,7 @@ import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _external} from './External';
 import {_nbind as _resource} from './Resource';
+import {PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -17,8 +18,6 @@ export namespace _nbind {
 }
 
 export namespace _nbind {
-
-	type PolicyTbl = _globals.PolicyTbl;
 
 	export var externalList: typeof _external.externalList;
 
@@ -79,9 +78,10 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
-			(arg: any) => pushBuffer(arg, policyTbl)
-		);
+		makeWireWrite(expr: string, policyTbl: PolicyTbl) {
+			return((arg: any) => pushBuffer(arg, policyTbl));
+		}
+
 		wireWrite = pushBuffer;
 
 		readResources = [ resources.pool ];

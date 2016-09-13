@@ -2,7 +2,8 @@
 // Released under the MIT license, see LICENSE.
 
 import {Binding} from './nbind';
-import {SignatureType, StructureType, removeAccessorPrefix} from './common';
+import {SignatureType, removeAccessorPrefix} from './common';
+import {StructureType} from './Type';
 
 class NBindType {
 	constructor(id: number) {

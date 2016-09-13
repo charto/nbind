@@ -9,6 +9,9 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _resource} from './Resource';
+import {PolicyTbl, typeModule} from '../Type';
+
+const _typeModule = typeModule;
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -19,7 +22,7 @@ export namespace _nbind {
 
 export namespace _nbind {
 
-	type PolicyTbl = _globals.PolicyTbl;
+	export const { Type } = _typeModule(_typeModule);
 
 	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
@@ -28,10 +31,13 @@ export namespace _nbind {
 
 	// A type definition, which registers itself upon construction.
 
-	export class BindType {
+	export class BindType extends Type {
 		constructor(id: number, name: string) {
-			this.id = id;
-			this.name = name;
+			super({
+				flags: 0,
+				id: id,
+				name: name
+			});
 
 			typeTbl[name] = this;
 			typeList[id] = this;
@@ -45,22 +51,8 @@ export namespace _nbind {
 			return(!!this.wireWrite || !!this.makeWireWrite);
 		}
 
-		wireRead: (arg: number) => any;
-		wireWrite: (arg: any) => number;
-
-		makeWireRead: (expr: string, convertParamList?: any[], num?: number) => string;
-		makeWireWrite: (
-			expr: string,
-			policyTbl?: PolicyTbl,
-			convertParamList?: any[],
-			num?: number
-		) => string | ((arg: any) => number);
-
 		readResources: _resource.Resource[];
 		writeResources: _resource.Resource[];
-
-		id: number;
-		name: string;
 
 		heap: any = HEAPU32;
 		ptrSize = 4;
@@ -99,14 +91,15 @@ export namespace _nbind {
 			return(!!policyTbl && !!policyTbl['Strict']);
 		}
 
-		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
-			policyTbl && policyTbl['Strict'] ?
-			(arg: any) => {
-				if(typeof(arg) == 'number') return(arg);
-				throw(new Error('Type mismatch'));
-			} :
-			null
-		);
+		makeWireWrite(expr: string, policyTbl: PolicyTbl) {
+			return(
+				policyTbl && policyTbl['Strict'] && (
+				(arg: any) => {
+					if(typeof(arg) == 'number') return(arg);
+					throw(new Error('Type mismatch'));
+				})
+			);
+		}
 	}
 
 	// Push a string to the C++ stack, zero-terminated and UTF-8 encoded.
@@ -146,9 +139,10 @@ export namespace _nbind {
 			super(id, name);
 		}
 
-		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
-			(arg: any) => pushCString(arg, policyTbl)
-		);
+		makeWireWrite(expr: string, policyTbl: PolicyTbl) {
+			return((arg: any) => pushCString(arg, policyTbl));
+		}
+
 		wireRead = popCString;
 		wireWrite = pushCString;
 
@@ -168,15 +162,17 @@ export namespace _nbind {
 			return(!!policyTbl && !!policyTbl['Strict']);
 		}
 
-		makeWireRead = (expr: string) => '!!(' + expr + ')';
-		makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
-			policyTbl && policyTbl['Strict'] ?
-			(arg: any) => {
-				if(typeof(arg) == 'boolean') return(arg);
-				throw(new Error('Type mismatch'));
-			} :
-			null
-		);
+		makeWireRead(expr: string) { return('!!(' + expr + ')'); }
+
+		makeWireWrite(expr: string, policyTbl: PolicyTbl) {
+			return(
+				policyTbl && policyTbl['Strict'] && (
+				(arg: any) => {
+					if(typeof(arg) == 'boolean') return(arg);
+					throw(new Error('Type mismatch'));
+				})
+			);
+		}
 
 		wireRead = (arg: number) => !!arg;
 	}

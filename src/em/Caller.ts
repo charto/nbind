@@ -10,6 +10,7 @@ import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
 import {_nbind as _external} from './External';
 import {_nbind as _resource} from './Resource';
+import {PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -21,7 +22,6 @@ export namespace _nbind {
 	type Func = _globals.Func;
 	type FuncList = _globals.FuncList;
 	type TypeIdList = _globals.TypeIdList;
-	type PolicyTbl = _globals.PolicyTbl;
 
 	export var getTypes: typeof _globals.getTypes;
 	export var getDynCall: typeof _globals.getDynCall;

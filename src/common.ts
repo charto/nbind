@@ -11,16 +11,6 @@ export enum SignatureType {
 	construct
 }
 
-// These must match C++ enum StructureType in TypeID.h
-
-export enum StructureType {
-	raw = 0,
-	constant,
-	pointer,
-	vector,
-	array
-}
-
 export var structureNameList = [
 	'const X',
 	'X *',

@@ -5,6 +5,7 @@ import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _value} from './ValueObj';
+import {PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -14,8 +15,6 @@ export namespace _nbind {
 }
 
 export namespace _nbind {
-
-	type PolicyTbl = _globals.PolicyTbl;
 
 	export var pushValue: typeof _value.pushValue;
 	export var popValue: typeof _value.popValue;
