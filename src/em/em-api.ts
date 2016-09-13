@@ -23,7 +23,7 @@ import { _nbind as _caller } from './Caller';     export { _caller };
 import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
 import * as common from '../common';
-import {typeModule} from '../Type';
+import {typeModule, TypeFlags, TypeFlagBase, TypeSpec, TypeClass} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -51,6 +51,7 @@ export namespace _nbind {
 	export var readAsciiString: typeof _globals.readAsciiString;
 	export var readPolicyList: typeof _globals.readPolicyList;
 
+	export var makeType: typeof _type.makeType;
 	export var BindType: typeof _type.BindType;
 	export var PrimitiveType: typeof _type.PrimitiveType;
 	export var BooleanType: typeof _type.BooleanType;
@@ -101,7 +102,7 @@ class nbind { // tslint:disable-line:class-name
 	@dep('_nbind', '_typeModule')
 	static _nbind_register_type(id: number, namePtr: number) {
 		const name = _nbind.readAsciiString(namePtr);
-		type TypeConstructor = { new(id: number, name: string): _type.BindType };
+		type TypeConstructor = { new(spec: TypeSpec): _type.BindType };
 		const constructorTbl: { [name: string]: TypeConstructor } = {
 			'bool': _nbind.BooleanType,
 			'cbFunction &': _nbind.CallbackType,
@@ -114,34 +115,23 @@ class nbind { // tslint:disable-line:class-name
 		const constructor = constructorTbl[name] || _nbind.BindType;
 
 		// tslint:disable-next-line:no-unused-expression
-		new constructor(id, name);
+		new constructor({flags: 0, id: id, name: name});
 	}
 
 	@dep('_nbind')
 	static _nbind_register_primitive(id: number, size: number, flag: number) {
-		const isSignless = flag & 4;
-		const isFloat    = flag & 2;
-		const isUnsigned = flag & 1;
+		const spec = {
+			flags: TypeFlags.isPrimitive | flag * TypeFlagBase.num,
+			id: id,
+			ptrSize: size
+		};
 
-		let name: string;
+		const tbl: { [flags: number]: { new(spec: TypeSpec): TypeClass } } = {
+			[TypeFlags.isPrimitive]: _nbind.PrimitiveType,
+			[TypeFlags.isPrimitive | TypeFlags.isBig]: _nbind.Int64Type
+		};
 
-		if(isSignless) {
-			name = 'char';
-		} else {
-			name = (
-				(isUnsigned ? 'u' : '') +
-				(isFloat ? 'float' : 'int') +
-				(size * 8 + '_t')
-			);
-		}
-
-		if(size == 8 && !isFloat) {
-			// tslint:disable-next-line:no-unused-expression
-			new _nbind.Int64Type(id, name);
-		} else {
-			// tslint:disable-next-line:no-unused-expression
-			new _nbind.PrimitiveType(id, name, size, !!isUnsigned, !!isFloat);
-		}
+		_nbind.makeType(tbl, spec);
 	}
 
 	@dep('_nbind', '__extends')

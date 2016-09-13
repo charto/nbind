@@ -61,7 +61,7 @@ export namespace _nbind {
 
 	export class BindClass extends BindType {
 		constructor(id: number, name: string, proto: WrapperClass, ptrType: BindClassPtr) {
-			super(id, name);
+			super({flags: 0, id: id, name: name});
 
 			this.proto = proto;
 			this.ptrType = ptrType;
@@ -107,7 +107,7 @@ export namespace _nbind {
 
 	export class BindClassPtr extends BindType {
 		constructor(id: number, name: string, proto: WrapperClass, flags?: number) {
-			super(id, name);
+			super({flags: 0, id: id, name: name});
 
 			this.proto = proto;
 			this.flags = flags || 0;

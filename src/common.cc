@@ -44,12 +44,14 @@ template <typename... Args>
 static const void **definePrimitiveTypes() {
 	static TYPEID typeList[] = { Typer<Args>::makeID()..., nullptr };
 	static const uint32_t sizeList[] = { sizeof(Args)... };
+	// TODO: use TypeFlags enum for these bits.
 	static const uint8_t flagList[] = { (
-		isSignless<Args>::value * 4 |
-		// Type is floating point?
-		(static_cast<Args>(1/2) != 0) * 2 |
 		// Type is unsigned?
-		(static_cast<Args>(-1) >= 0)
+		(static_cast<Args>(-1) >= 0) |
+		// Type is signless (char)?
+		isSignless<Args>::value * 2 |
+		// Type is floating point?
+		(static_cast<Args>(1/2) != 0) * 4
 	)... };
 
 	static const void *data[] = {

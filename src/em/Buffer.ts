@@ -74,10 +74,6 @@ export namespace _nbind {
 	}
 
 	export class BufferType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
 		makeWireWrite(expr: string, policyTbl: PolicyTbl) {
 			return((arg: any) => pushBuffer(arg, policyTbl));
 		}

@@ -91,20 +91,12 @@ export namespace _nbind {
 	// Special type that constructs a new object.
 
 	export class CreateValueType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
 		makeWireWrite(expr: string) {
 			return('(_nbind.pushValue(new ' + expr + '))');
 		}
 	}
 
 	export class Int64Type extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
 		wireWrite = push64;
 		wireRead = pop64;
 	}

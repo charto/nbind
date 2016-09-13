@@ -37,10 +37,6 @@ export namespace _nbind {
 	export var callbackSignatureList: _globals.Func[] = [];
 
 	export class CallbackType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
 		wireWrite = (func: _globals.Func) => {
 			if(typeof(func) != 'function') _nbind.throwError('Type mismatch');
 

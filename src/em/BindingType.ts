@@ -9,7 +9,7 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _resource} from './Resource';
-import {PolicyTbl, typeModule} from '../Type';
+import {typeModule, TypeFlags, TypeSpec, PolicyTbl} from '../Type';
 
 const _typeModule = typeModule;
 
@@ -22,7 +22,7 @@ export namespace _nbind {
 
 export namespace _nbind {
 
-	export const { Type } = _typeModule(_typeModule);
+	export const { Type, makeType } = _typeModule(_typeModule);
 
 	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
@@ -32,15 +32,10 @@ export namespace _nbind {
 	// A type definition, which registers itself upon construction.
 
 	export class BindType extends Type {
-		constructor(id: number, name: string) {
-			super({
-				flags: 0,
-				id: id,
-				name: name
-			});
-
-			typeTbl[name] = this;
-			typeList[id] = this;
+		constructor(spec: TypeSpec) {
+			super(spec);
+			typeTbl[spec.name] = this;
+			typeList[spec.id] = this;
 		}
 
 		needsWireRead(policyTbl: PolicyTbl) {
@@ -59,20 +54,14 @@ export namespace _nbind {
 	}
 
 	export class PrimitiveType extends BindType {
-		constructor(
-			id: number,
-			name: string,
-			size: number,
-			isUnsigned: boolean,
-			isFloat: boolean
-		) {
-			super(id, name);
+		constructor(spec: TypeSpec) {
+			super(spec);
 
 			const heapTbl: { [bits: number]: any } = (
-				isFloat ? {
+				spec.flags & TypeFlags.isFloat ? {
 					32: HEAPF32,
 					64: HEAPF64
-				} : isUnsigned ? {
+				} : spec.flags & TypeFlags.isUnsigned ? {
 					8: HEAPU8,
 					16: HEAPU16,
 					32: HEAPU32
@@ -83,8 +72,8 @@ export namespace _nbind {
 				}
 			);
 
-			this.heap = heapTbl[size * 8];
-			this.ptrSize = size;
+			this.heap = heapTbl[spec.ptrSize * 8];
+			this.ptrSize = spec.ptrSize;
 		}
 
 		needsWireWrite(policyTbl: PolicyTbl) {
@@ -136,7 +125,7 @@ export namespace _nbind {
 
 	export class CStringType extends BindType {
 		constructor(id: number, name: string) {
-			super(id, name);
+			super({flags: 0, id: id, name: name});
 		}
 
 		makeWireWrite(expr: string, policyTbl: PolicyTbl) {
@@ -154,10 +143,6 @@ export namespace _nbind {
 	// Prefixing with !! converts them to JavaScript booleans.
 
 	export class BooleanType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
 		needsWireWrite(policyTbl: PolicyTbl) {
 			return(!!policyTbl && !!policyTbl['Strict']);
 		}

@@ -9,7 +9,7 @@ export type PolicyTbl = { [name: string]: boolean };
 
 export interface TypeSpec {
 	id: number;
-	name: string;
+	name?: string;
 	flags: TypeFlags;
 
 	ptrSize?: number;
@@ -49,6 +49,8 @@ const enum Base {
 	num = 128
 }
 
+export {Base as TypeFlagBase};
+
 export const enum TypeFlags {
 	isConst = 1,
 
@@ -66,10 +68,11 @@ export const enum TypeFlags {
 	isArray = Base.kind * 4,
 	isOther = Base.kind * 5,
 
-	numMask = Base.num * 3,
+	numMask = Base.num * 15,
 	isUnsigned = Base.num * 1,
 	isSignless = Base.num * 2,
-	isFloat = Base.num * 3
+	isFloat = Base.num * 4,
+	isBig = Base.num * 8
 }
 
 /* tslint:disable:no-shadowed-variable */
@@ -85,8 +88,31 @@ export function typeModule(self: any) {
 		'std::array<X, Y>'
 	];
 
-	function makeType(spec: TypeSpec) {
-		// const kind = spec.flags & TypeFlags.kindMask;
+	function makeType(tbl: any, spec: TypeSpec) {
+		const flags = spec.flags;
+		const refKind = flags & TypeFlags.refMask;
+		let kind = flags & TypeFlags.kindMask;
+
+		if(refKind) {
+			// ...
+		}
+
+		if(kind == TypeFlags.isPrimitive) {
+			if(flags & TypeFlags.isSignless) {
+				spec.name = 'char';
+			} else {
+				spec.name = (
+					(flags & TypeFlags.isUnsigned ? 'u' : '') +
+					(flags & TypeFlags.isFloat ? 'float' : 'int') +
+					(spec.ptrSize * 8 + '_t')
+				);
+			}
+
+			if(spec.ptrSize == 8 && !(flags & TypeFlags.isFloat)) kind |= TypeFlags.isBig;
+		}
+
+		// tslint:disable-next-line:unused-expression
+		new tbl[kind](spec);
 	}
 
 	class Type implements TypeClass {

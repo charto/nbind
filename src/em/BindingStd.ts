@@ -82,7 +82,7 @@ export namespace _nbind {
 
 	export class ArrayType extends BindType {
 		constructor(id: number, name: string, memberType: _type.BindType, size?: number) {
-			super(id, name);
+			super({flags: 0, id: id, name: name});
 
 			this.memberType = memberType;
 			if(size) this.size = size;
@@ -143,10 +143,6 @@ export namespace _nbind {
 	}
 
 	export class StringType extends BindType {
-		constructor(id: number, name: string) {
-			super(id, name);
-		}
-
 		makeWireWrite(expr: string, policyTbl: PolicyTbl) {
 			return((arg: any) => pushString(arg, policyTbl));
 		}

@@ -188,7 +188,7 @@ export namespace _nbind {
 	// with slightly mangled type signatures appended to their names.
 
 	// tslint:disable-next-line:no-shadowed-variable
-	export function getDynCall(typeList: _type.BindType[]) {
+	export function getDynCall(typeList: _type.BindType[], name: string) {
 		const mangleMap: { [name: string]: string; } = {
 			float32_t: 'f',
 			float64_t: 'd',
@@ -205,9 +205,9 @@ export namespace _nbind {
 
 		if(!dynCall) {
 			throw(new Error(
-				'dynCall_' + signature + ' not found for ' + (
+				'dynCall_' + signature + ' not found for ' + name + '(' + (
 					typeList.map((type: _type.BindType) => type.name)
-				).join(', ')
+				).join(', ') + ')'
 			));
 		}
 

@@ -281,7 +281,7 @@ export namespace _nbind {
 		const needsWireRead = returnType.needsWireRead(policyTbl);
 		const needsWireWrite = anyNeedsWireWrite(argTypeList, policyTbl);
 
-		const dynCall = getDynCall(typeList);
+		const dynCall = getDynCall(typeList, name);
 
 		const mask = ~flags & Wrapper.constant;
 
@@ -350,7 +350,7 @@ export namespace _nbind {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
-			const dynCall = getDynCall(typeList);
+			const dynCall = getDynCall(typeList, name);
 
 			switch(argCount) {
 				case 0: return(() =>
@@ -385,7 +385,7 @@ export namespace _nbind {
 		}
 
 		// Type ID list was changed.
-		const dynCall = getDynCall(getTypes(idList, name));
+		const dynCall = getDynCall(getTypes(idList, name), name);
 
 		return(buildCallerFunction(
 			dynCall,
