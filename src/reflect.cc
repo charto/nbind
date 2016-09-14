@@ -100,17 +100,17 @@ void NBind :: queryType(
 	NBindType id,
 	cbFunction &outTypeDetail
 ) {
-	const VectorStructure *vectorSpec;
+	const ParamStructure *paramSpec;
 	const ArrayStructure *arraySpec;
 
 	StructureType placeholderFlag = id.getStructureType();
 
 	switch(placeholderFlag) {
 		case StructureType :: vector:
-			vectorSpec = static_cast<const VectorStructure *>(id.getStructure());
+			paramSpec = static_cast<const ParamStructure *>(id.getStructure());
 			outTypeDetail(
 				static_cast<unsigned char>(placeholderFlag),
-				NBindType(vectorSpec->member)
+				NBindType(paramSpec->target)
 			);
 
 			break;

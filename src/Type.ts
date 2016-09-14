@@ -2,7 +2,7 @@
 // Released under the MIT license, see LICENSE.
 
 export var {
-	Type, makeType, structureNameList
+	Type, makeType, structureList
 } = typeModule(typeModule);
 
 export type PolicyTbl = { [name: string]: boolean };
@@ -31,16 +31,6 @@ export interface TypeClass extends TypeSpec {
 	wireWrite?: (arg: any) => number;
 
 	spec?: TypeSpec;
-}
-
-// These must match C++ enum StructureType in TypeID.h
-
-export const enum StructureType {
-	raw = 0,
-	constant,
-	pointer,
-	vector,
-	array
 }
 
 const enum Base {
@@ -75,21 +65,179 @@ export const enum TypeFlags {
 	isBig = Base.num * 8
 }
 
+// These must match C++ enum StructureType in TypeID.h
+
+export const enum StructureType {
+	raw = 0,
+	constant,
+	pointer,
+	reference,
+	rvalue,
+	vector,
+	array,
+	max
+}
+
 /* tslint:disable:no-shadowed-variable */
 export function typeModule(self: any) {
 
 	// Printable name of each StructureType.
 
-	const structureNameList = [
-		'',
-		'const X',
-		'X *',
-		'std::vector<X>',
-		'std::array<X, Y>'
+	type Structure = [TypeFlags, string];
+	const structureList: Structure[] = [
+		[0, 'X'],
+		[TypeFlags.isConst, 'const X'],
+		[TypeFlags.isPointer, 'X *'],
+		[TypeFlags.isReference, 'X &'],
+		[TypeFlags.isRvalueRef, 'X &&'],
+		[TypeFlags.isVector, 'std::vector<X>'],
+		[TypeFlags.isArray, 'std::array<X, Y>']
 	];
 
-	function makeType(tbl: any, spec: TypeSpec) {
-		const flags = spec.flags;
+	function applyStructure(
+		outerName: string,
+		outerFlags: TypeFlags,
+		innerName: string,
+		innerFlags: TypeFlags,
+		flip?: boolean
+	) {
+		if(outerFlags == TypeFlags.isConst) {
+			const ref = innerFlags & TypeFlags.refMask;
+			if(
+				ref == TypeFlags.isPointer ||
+				ref == TypeFlags.isReference ||
+				ref == TypeFlags.isRvalueRef
+			) outerName = 'X const';
+		}
+
+		let name: string;
+
+		if(flip) {
+			name = innerName.replace('X', outerName);
+		} else {
+			name = outerName.replace('X', innerName);
+		}
+
+		// Remove spaces between consecutive * and & characters.
+		return(name.replace(/([*&]) (?=[*&])/g, '$1'));
+	}
+
+	function getComplexType(
+		id: number,
+		place: string,
+		kind: string,
+		prevStructure: Structure,
+		getType: (id: number) => TypeClass,
+		queryType: (id: number) => {
+			placeholderFlag: number,
+			paramList: number[]
+		},
+
+		BindType: any,
+		PrimitiveType: any,
+		CStringType: any,
+		ArrayType: any,
+
+		depth: number = 1 // tslint:disable-line
+	) {
+		const result = queryType(id);
+		const structureType: StructureType = result.placeholderFlag;
+
+		let structure = structureList[structureType];
+
+		if(prevStructure && structure) {
+			kind = applyStructure(
+				prevStructure[1], prevStructure[0],
+				kind, structure[0],
+				true
+			);
+		}
+
+		let problem: string;
+
+		if(structureType == 0) problem = 'Unbound';
+		if(structureType >= StructureType.max) problem = 'Corrupt';
+		if(depth > 20) problem = 'Deeply nested';
+
+		if(problem) {
+			throw(new Error(
+				problem + ' type ' +
+				kind.replace('X', id + '?') +
+				(structureType ? ' with flag ' + structureType : '') +
+				' in ' + place
+			));
+		}
+
+		const subId = result.paramList[0];
+		const subType = getType(subId) || getComplexType(
+			subId,
+			place,
+			kind,
+			structure,
+			getType,
+			queryType,
+
+			BindType,
+			PrimitiveType,
+			CStringType,
+			ArrayType,
+
+			depth + 1
+		);
+
+		let type: TypeClass;
+		const name = applyStructure(
+			structure[1], structure[0],
+			subType.name, subType.flags
+		);
+
+		console.log(new Array(depth).join(' ') + name + ' contains ' + subType.name + ' kind ' + kind); // tslint:disable-line
+
+		switch(result.placeholderFlag) {
+			case StructureType.constant:
+console.log('CONSTANT ' + subType + ' ' + id + ' ' + subId); // tslint:disable-line
+// TODO: call makeType instead!
+// type = new BindType({flags: TypeFlags.isConst, id: id, name: name});
+type = subType;
+				break;
+			case StructureType.pointer:
+console.log('POINTER ' + subType + ' ' + id + ' ' + subId); // tslint:disable-line
+				if(subType instanceof PrimitiveType && subType.ptrSize == 1) {
+					// TODO: call makeType instead!
+					type = new CStringType(id, name);
+				} else {
+					type = new BindType({flags: TypeFlags.isPointer, id: id, name: name});
+					// throw(new Error('Unsupported type ' + name + ' in ' + place));
+				}
+				break;
+			case StructureType.reference:
+console.log('REFERENCE ' + subType + ' ' + id + ' ' + subId); // tslint:disable-line
+type = new BindType({flags: TypeFlags.isReference, id: id, name: name});
+				// type = subType;
+				break;
+			case StructureType.vector:
+			// TODO: call makeType instead!
+				type = new ArrayType(id, name, subType);
+				break;
+			case StructureType.array:
+				const size = result.paramList[1];
+				// TODO: call makeType instead!
+				type = new ArrayType(
+					id,
+					name.replace('Y', '' + size),
+					subType,
+					size
+				);
+				break;
+			default:
+				break;
+		}
+
+		return(type);
+	}
+
+	function makeType(tbl: any, spec: TypeSpec, addFlags?: TypeFlags) {
+		const flags = spec.flags | addFlags;
 		const refKind = flags & TypeFlags.refMask;
 		let kind = flags & TypeFlags.kindMask;
 
@@ -108,7 +256,7 @@ export function typeModule(self: any) {
 				);
 			}
 
-			if(spec.ptrSize == 8 && !(flags & TypeFlags.isFloat)) kind |= TypeFlags.isBig;
+			if(spec.ptrSize == 8 && !(flags & TypeFlags.isFloat)) kind = TypeFlags.isBig;
 		}
 
 		// tslint:disable-next-line:unused-expression
@@ -135,8 +283,9 @@ export function typeModule(self: any) {
 
 	const output = {
 		Type: Type as { new(spec: TypeSpec): TypeClass },
+		getComplexType: getComplexType,
 		makeType: makeType,
-		structureNameList: structureNameList
+		structureList: structureList
 	};
 
 	self.output = output;

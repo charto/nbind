@@ -17,13 +17,10 @@ const _typeModule = typeModule;
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
-	export var Pool = _globals.Pool;
-}
 
-export namespace _nbind {
+	export const { Type, makeType, getComplexType } = _typeModule(_typeModule);
 
-	export const { Type, makeType } = _typeModule(_typeModule);
-
+	export var Pool: typeof _globals.Pool;
 	export var typeTbl: typeof _globals.typeTbl;
 	export var typeList: typeof _globals.typeList;
 

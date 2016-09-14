@@ -37,12 +37,9 @@ const _removeAccessorPrefix = common.removeAccessorPrefix;
 const _typeModule = typeModule;
 
 export namespace _nbind {
-	export var Pool = _globals.Pool;
-}
-
-export namespace _nbind {
 	export type Func = _globals.Func;
 
+	export var Pool: typeof _globals.Pool;
 	export var typeList: typeof _globals.typeList;
 	export var bigEndian: typeof _globals.bigEndian;
 
@@ -128,7 +125,7 @@ class nbind { // tslint:disable-line:class-name
 
 		const tbl: { [flags: number]: { new(spec: TypeSpec): TypeClass } } = {
 			[TypeFlags.isPrimitive]: _nbind.PrimitiveType,
-			[TypeFlags.isPrimitive | TypeFlags.isBig]: _nbind.Int64Type
+			[TypeFlags.isBig]: _nbind.Int64Type
 		};
 
 		_nbind.makeType(tbl, spec);
@@ -242,7 +239,7 @@ class nbind { // tslint:disable-line:class-name
 				null,
 				0, // num
 				0, // flags
-				bindClass.name + 'constructor',
+				bindClass.name + ' constructor',
 				ptr,
 				typeList,
 				policyTbl
@@ -262,7 +259,7 @@ class nbind { // tslint:disable-line:class-name
 				null,
 				0, // num
 				0, // flags
-				bindClass.name + 'value constructor',
+				bindClass.name + ' value constructor',
 				ptrValue,
 				typeList,
 				policyTbl
@@ -273,10 +270,11 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_register_destructor(typeID: number, ptr: number) {
+		const bindClass = _nbind.typeList[typeID] as _class.BindClass;
 		_nbind.addMethod(
-			(_nbind.typeList[typeID] as _class.BindClass).proto.prototype,
+			bindClass.proto.prototype,
 			'free',
-			_nbind.makeMethodCaller(ptr, 0, 0, 'free', typeID, ['void'], null),
+			_nbind.makeMethodCaller(ptr, 0, 0, bindClass.name + '.free', typeID, ['void'], null),
 			0
 		);
 	}
@@ -296,10 +294,12 @@ class nbind { // tslint:disable-line:class-name
 		const name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
+		let bindClass: _class.BindClass;
 		let target: any;
 
 		if(typeID) {
-			target = (_nbind.typeList[typeID] as _class.BindClass).proto;
+			bindClass = _nbind.typeList[typeID] as _class.BindClass;
+			target = bindClass.proto;
 		} else {
 			target = Module;
 		}
@@ -307,7 +307,15 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			target,
 			name,
-			_nbind.makeCaller(ptr, num, flags, name, direct, typeList, policyTbl),
+			_nbind.makeCaller(
+				ptr,
+				num,
+				flags,
+				(bindClass ? bindClass.name + '.' : '') + name,
+				direct,
+				typeList,
+				policyTbl
+			),
 			typeCount - 1
 		);
 	}
@@ -327,13 +335,22 @@ class nbind { // tslint:disable-line:class-name
 		let name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		const proto = (_nbind.typeList[typeID] as _class.BindClass).proto.prototype;
+		const bindClass = _nbind.typeList[typeID] as _class.BindClass;
+		const proto = bindClass.proto.prototype;
 
 		if(signatureType == _SignatureType.method) {
 			_nbind.addMethod(
 				proto,
 				name,
-				_nbind.makeMethodCaller(ptr, num, flags, name, typeID, typeList, policyTbl),
+				_nbind.makeMethodCaller(
+					ptr,
+					num,
+					flags,
+					bindClass.name + '.' + name,
+					typeID,
+					typeList,
+					policyTbl
+				),
 				typeCount - 1
 			);
 
@@ -352,7 +369,7 @@ class nbind { // tslint:disable-line:class-name
 				ptr,
 				num,
 				flags,
-				'set ' + name,
+				bindClass.name + '.' + 'set ' + name,
 				typeID,
 				typeList,
 				policyTbl
@@ -365,7 +382,7 @@ class nbind { // tslint:disable-line:class-name
 					ptr,
 					num,
 					flags,
-					'get ' + name,
+					bindClass.name + '.' + 'get ' + name,
 					typeID,
 					typeList,
 					policyTbl

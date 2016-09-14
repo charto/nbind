@@ -11,6 +11,8 @@ enum class StructureType : unsigned char {
 	raw = 0,
 	constant,
 	pointer,
+	reference,
+	rvalue,
 	vector,
 	array
 };
@@ -40,16 +42,18 @@ const typename Typer<ArgType>::SpecType Typer<ArgType>::spec = {
 	StructureType :: raw
 };
 
-// Const types
+// Parameterized types
 
 typedef struct {
 	const StructureType placeholderFlag;
 	const TYPEID target;
-} ConstStructure;
+} ParamStructure;
+
+// Const types
 
 template<typename ArgType>
 struct Typer<const ArgType> {
-	static const ConstStructure spec;
+	static const ParamStructure spec;
 
 	static NBIND_CONSTEXPR TYPEID makeID() {
 		return(&spec.placeholderFlag);
@@ -57,21 +61,16 @@ struct Typer<const ArgType> {
 };
 
 template<typename ArgType>
-const ConstStructure Typer<const ArgType>::spec = {
+const ParamStructure Typer<const ArgType>::spec = {
 	StructureType :: constant,
 	Typer<ArgType>::makeID()
 };
 
 // Pointers
 
-typedef struct {
-	const StructureType placeholderFlag;
-	const TYPEID target;
-} PointerStructure;
-
 template<typename TargetType>
 struct Typer<TargetType *> {
-	static const PointerStructure spec;
+	static const ParamStructure spec;
 
 	static NBIND_CONSTEXPR TYPEID makeID() {
 		return(&spec.placeholderFlag);
@@ -79,8 +78,25 @@ struct Typer<TargetType *> {
 };
 
 template<typename TargetType>
-const PointerStructure Typer<TargetType *>::spec = {
+const ParamStructure Typer<TargetType *>::spec = {
 	StructureType :: pointer,
+	Typer<TargetType>::makeID()
+};
+
+// References
+
+template<typename TargetType>
+struct Typer<TargetType &> {
+	static const ParamStructure spec;
+
+	static NBIND_CONSTEXPR TYPEID makeID() {
+		return(&spec.placeholderFlag);
+	}
+};
+
+template<typename TargetType>
+const ParamStructure Typer<TargetType &>::spec = {
+	StructureType :: reference,
 	Typer<TargetType>::makeID()
 };
 

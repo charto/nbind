@@ -12,17 +12,12 @@ namespace nbind {
 	typedef struct {
 		const StructureType placeholderFlag;
 		const TYPEID member;
-	} VectorStructure;
-
-	typedef struct {
-		const StructureType placeholderFlag;
-		const TYPEID member;
 		const size_t length;
 	} ArrayStructure;
 
 	template<typename MemberType>
 	struct Typer<std::vector<MemberType>> {
-		static const VectorStructure spec;
+		static const ParamStructure spec;
 
 		static NBIND_CONSTEXPR TYPEID makeID() {
 			return(&spec.placeholderFlag);
@@ -30,7 +25,7 @@ namespace nbind {
 	};
 
 	template<typename MemberType>
-	const VectorStructure Typer<std::vector<MemberType>>::spec = {
+	const ParamStructure Typer<std::vector<MemberType>>::spec = {
 		StructureType :: vector,
 		Typer<MemberType>::makeID()
 	};
