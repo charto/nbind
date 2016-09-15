@@ -1,15 +1,14 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-// This file contains some random functions.
+// This file contains some assorted functions.
 
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
-import {_nbind as _std} from './BindingStd';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
-import {PolicyTbl} from '../Type';
+import {MakeTypeTbl, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -26,13 +25,7 @@ export namespace _nbind {
 	export type Invoker = (ptr: number, ...args: any[]) => any;
 	export type TypeIdList = (number | string)[];
 
-	// TODO: Remove next line!
-	export var BindType: typeof _type.BindType;
-	export var PrimitiveType: typeof _type.PrimitiveType;
-	export var CStringType: typeof _type.CStringType;
 	export var getComplexType: typeof _type.getComplexType;
-
-	export var ArrayType: typeof _std.ArrayType;
 
 	export var resources: typeof _resource.resources;
 	export var listResources: typeof _resource.listResources;
@@ -43,8 +36,6 @@ export namespace _nbind {
 
 	export var typeTbl: { [name: string]: _type.BindType } = {};
 	export var typeList: _type.BindType[] = [];
-
-	export var value: any;
 
 	export class Pool {
 		static lalloc(size: number) {
@@ -101,6 +92,8 @@ export namespace _nbind {
 		});
 	}
 
+	export var makeTypeTbl: MakeTypeTbl;
+
 	// Look up a list of type objects based on their numeric typeID or name.
 
 	export function getTypes(idList: TypeIdList, place: string) {
@@ -111,7 +104,7 @@ export namespace _nbind {
 					getComplexType(id as number, place, 'X', null,
 						getType,
 						queryType,
-						BindType, PrimitiveType, CStringType, ArrayType
+						makeTypeTbl
 					) as _type.BindType
 				);
 			} else return(_nbind.typeTbl[id as string]);

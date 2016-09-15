@@ -23,7 +23,7 @@ import { _nbind as _caller } from './Caller';     export { _caller };
 import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
 import * as common from '../common';
-import {typeModule, TypeFlags, TypeFlagBase, TypeSpec, TypeClass} from '../Type';
+import {typeModule, TypeFlags, TypeFlagBase, TypeSpec} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -47,6 +47,7 @@ export namespace _nbind {
 	export var readTypeIdList: typeof _globals.readTypeIdList;
 	export var readAsciiString: typeof _globals.readAsciiString;
 	export var readPolicyList: typeof _globals.readPolicyList;
+	export var makeTypeTbl: typeof _globals.makeTypeTbl;
 
 	export var makeType: typeof _type.makeType;
 	export var BindType: typeof _type.BindType;
@@ -65,6 +66,7 @@ export namespace _nbind {
 	export var Int64Type: typeof _value.Int64Type;
 	export var popValue: typeof _value.popValue;
 
+	export var ArrayType: typeof _std.ArrayType;
 	export var StringType: typeof _std.StringType;
 
 	export var makeCaller: typeof _caller.makeCaller;
@@ -123,12 +125,18 @@ class nbind { // tslint:disable-line:class-name
 			ptrSize: size
 		};
 
-		const tbl: { [flags: number]: { new(spec: TypeSpec): TypeClass } } = {
-			[TypeFlags.isPrimitive]: _nbind.PrimitiveType,
-			[TypeFlags.isBig]: _nbind.Int64Type
-		};
+		if(!_nbind.makeTypeTbl) {
+			_nbind.makeTypeTbl = {
+				[TypeFlags.isPrimitive]: _nbind.PrimitiveType,
+				[TypeFlags.isBig]: _nbind.Int64Type,
+				[TypeFlags.isVector]: _nbind.ArrayType,
+				[TypeFlags.isArray]: _nbind.ArrayType,
+				[TypeFlags.isCString]: _nbind.CStringType,
+				[TypeFlags.isOther]: _nbind.BindType
+			};
+		}
 
-		_nbind.makeType(tbl, spec);
+		_nbind.makeType(_nbind.makeTypeTbl, spec);
 	}
 
 	@dep('_nbind', '__extends')

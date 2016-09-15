@@ -121,10 +121,6 @@ export namespace _nbind {
 	// Zero-terminated 'const char *' style string, passed through the C++ stack.
 
 	export class CStringType extends BindType {
-		constructor(id: number, name: string) {
-			super({flags: 0, id: id, name: name});
-		}
-
 		makeWireWrite(expr: string, policyTbl: PolicyTbl) {
 			return((arg: any) => pushCString(arg, policyTbl));
 		}
