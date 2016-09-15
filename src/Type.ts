@@ -146,16 +146,16 @@ export function typeModule(self: any) {
 	function getComplexType(
 		id: number,
 		place: string,
+		// C++ type name string built top-down, for printing helpful errors.
 		kind: string,
+		// Outer type, used only for updating kind.
 		prevStructure: Structure,
 		getType: (id: number) => TypeClass,
 		queryType: (id: number) => {
 			placeholderFlag: number,
 			paramList: number[]
 		},
-
-		tbl: MakeTypeTbl,
-
+		makeTypeTbl: MakeTypeTbl,
 		depth: number = 1 // tslint:disable-line
 	) {
 		const result = queryType(id);
@@ -187,21 +187,22 @@ export function typeModule(self: any) {
 			structure,
 			getType,
 			queryType,
-
-			tbl,
-
+			makeTypeTbl,
 			depth + 1
 		);
 
-		let type: TypeClass;
 		const name = applyStructure(
 			structure[1], structure[0],
 			subType.name, subType.flags
 		);
 
-		console.log(new Array(depth).join(' ') + name + ' contains ' + subType.name + ' kind ' + kind); // tslint:disable-line
+		// Note: at every recursion depth the full type name is:
+		// applyStructure(kind, 0, name, 0)
+		// (combining top-down and bottom-up parts).
 
-		let addFlags: TypeFlags;
+		console.log(applyStructure(kind, 0, name, 0) + ' - ' + name); // tslint:disable-line
+
+		let srcSpec: TypeSpec;
 		let spec: TypeSpec = {
 			flags: TypeFlags.isOther,
 			id: id,
@@ -211,19 +212,21 @@ export function typeModule(self: any) {
 
 		switch(result.placeholderFlag) {
 			case StructureType.constant:
-				spec = subType.spec;
-				addFlags = TypeFlags.isConst;
+				spec.flags = TypeFlags.isConst;
+				srcSpec = subType.spec;
 				break;
 
 			case StructureType.pointer:
 				if((subType.flags & TypeFlags.kindMask) == TypeFlags.isPrimitive && subType.ptrSize == 1) {
 					spec.flags = TypeFlags.isCString;
 				} else {
+					spec.flags |= TypeFlags.isPointer;
 					// reportProblem('Unsupported', id, kind, structureType, place);
 				}
 				break;
 
 			case StructureType.reference:
+				spec.flags |= TypeFlags.isReference;
 				// reportProblem('Unsupported', id, kind, structureType, place);
 				break;
 
@@ -240,26 +243,23 @@ export function typeModule(self: any) {
 				break;
 		}
 
-		type = makeType(tbl, spec, addFlags);
+		if(srcSpec) {
+			for(let key of Object.keys(srcSpec)) {
+				spec[key] = spec[key] || srcSpec[key];
+			}
 
-		return(type);
+			spec.flags |= srcSpec.flags;
+		}
+
+		return(makeType(makeTypeTbl, spec));
 	}
 
-	function makeType(tbl: MakeTypeTbl, spec: TypeSpec, addFlags?: TypeFlags) {
+	function makeType(tbl: MakeTypeTbl, spec: TypeSpec) {
 		const flags = spec.flags;
 		// const refKind = flags & TypeFlags.refMask;
 		let kind = flags & TypeFlags.kindMask;
 
-		if(addFlags) {
-			const newSpec: TypeSpec = {} as TypeSpec;
-
-			for(let key of Object.keys(spec)) newSpec[key] = spec[key];
-
-			spec = newSpec;
-			spec.flags |= addFlags;
-		}
-
-		if(kind == TypeFlags.isPrimitive) {
+		if(!spec.name && kind == TypeFlags.isPrimitive) {
 			if(flags & TypeFlags.isSignless) {
 				spec.name = 'char';
 			} else {

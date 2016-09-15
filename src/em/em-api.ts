@@ -196,6 +196,9 @@ class nbind { // tslint:disable-line:class-name
 
 		let flags = policyTbl['Value'] ? _nbind.Wrapper.valueObject : 0;
 
+		// TODO: remove pointer registration from here and move it to
+		// getComplexType.
+
 		const ptrType = new _nbind.BindClassPtr(idList[1], name + ' *',
 			Bound, flags);
 
