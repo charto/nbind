@@ -148,7 +148,7 @@ export namespace _nbind {
 				(arg: any) => {
 					if(typeof(arg) == 'boolean') return(arg);
 					throw(new Error('Type mismatch'));
-				})
+				}) || expr
 			);
 		}
 

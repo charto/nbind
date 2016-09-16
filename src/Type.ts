@@ -27,7 +27,7 @@ export interface TypeClass extends TypeSpec {
 		policyTbl?: PolicyTbl,
 		convertParamList?: any[],
 		num?: number
-	): string | ((arg: any) => number);
+	): string | ((arg: any) => number | boolean);
 
 	wireRead?: (arg: number) => any;
 	wireWrite?: (arg: any) => number;
