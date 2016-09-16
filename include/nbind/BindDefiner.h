@@ -94,7 +94,7 @@ public:
 	> void addMethod(
 		const char *name,
 		MethodType method,
-		WrapperFlags flags = WrapperFlags::none
+		TypeFlags flags = TypeFlags::none
 	) {
 		bindClass.addMethod(
 			name,
@@ -149,7 +149,7 @@ public:
 		>(
 			executeNamePolicy(name, policies...),
 			method,
-			WrapperFlags::constant
+			TypeFlags::isConst
 		);
 	}
 

@@ -7,7 +7,6 @@
 import {
 	setEvil,
 	publishNamespace,
-	defineHidden,
 	exportLibrary,
 	dep
 } from 'emscripten-library-decorator';
@@ -22,23 +21,18 @@ import { _nbind as _std } from './BindingStd';    export { _std };
 import { _nbind as _caller } from './Caller';     export { _caller };
 import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
-import * as common from '../common';
+import {SignatureType, removeAccessorPrefix} from '../common';
 import {typeModule, TypeFlags, TypeFlagBase, TypeSpec} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
 
-const _defineHidden = defineHidden;
-const _SignatureType = common.SignatureType;
-type _SignatureType = common.SignatureType;
-const _removeAccessorPrefix = common.removeAccessorPrefix;
+const _removeAccessorPrefix = removeAccessorPrefix;
 
 // tslint:disable-next-line:no-unused-variable
 const _typeModule = typeModule;
 
 export namespace _nbind {
-	export type Func = _globals.Func;
-
 	export var Pool: typeof _globals.Pool;
 	export var typeList: typeof _globals.typeList;
 	export var bigEndian: typeof _globals.bigEndian;
@@ -48,17 +42,19 @@ export namespace _nbind {
 	export var readAsciiString: typeof _globals.readAsciiString;
 	export var readPolicyList: typeof _globals.readPolicyList;
 	export var makeTypeTbl: typeof _globals.makeTypeTbl;
+	export var getType: typeof _globals.getType;
+	export var queryType: typeof _globals.queryType;
 
 	export var makeType: typeof _type.makeType;
+	export var getComplexType: typeof _type.getComplexType;
 	export var BindType: typeof _type.BindType;
 	export var PrimitiveType: typeof _type.PrimitiveType;
 	export var BooleanType: typeof _type.BooleanType;
 	export var CStringType: typeof _type.CStringType;
 
-	export var Wrapper: typeof _class.Wrapper;
 	export var BindClass: typeof _class.BindClass;
 	export var BindClassPtr: typeof _class.BindClassPtr;
-	export var ptrMarker: typeof _class.ptrMarker;
+	export var makeBound: typeof _class.makeBound;
 
 	export var CallbackType: typeof _callback.CallbackType;
 
@@ -76,6 +72,9 @@ export namespace _nbind {
 }
 
 publishNamespace('_nbind');
+
+// Ensure the __extends function gets defined.
+class Dummy extends Boolean {}
 
 @exportLibrary
 class nbind { // tslint:disable-line:class-name
@@ -114,7 +113,7 @@ class nbind { // tslint:disable-line:class-name
 		const constructor = constructorTbl[name] || _nbind.BindType;
 
 		// tslint:disable-next-line:no-unused-expression
-		new constructor({flags: 0, id: id, name: name});
+		new constructor({flags: TypeFlags.none, id: id, name: name});
 	}
 
 	@dep('_nbind')
@@ -129,6 +128,8 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.makeTypeTbl = {
 				[TypeFlags.isPrimitive]: _nbind.PrimitiveType,
 				[TypeFlags.isBig]: _nbind.Int64Type,
+				[TypeFlags.isClass]: _nbind.BindClass,
+				[TypeFlags.isClassPtr]: _nbind.BindClassPtr,
 				[TypeFlags.isVector]: _nbind.ArrayType,
 				[TypeFlags.isArray]: _nbind.ArrayType,
 				[TypeFlags.isCString]: _nbind.CStringType,
@@ -147,78 +148,26 @@ class nbind { // tslint:disable-line:class-name
 	) {
 		const name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
-		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 6);
+		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 2);
 
-		class Bound extends _nbind.Wrapper {
-			constructor(marker: {}, ptr: number, flags: number) {
-				// super() never gets called here but TypeScript 1.8 requires it.
-				if((false && super()) || !(this instanceof Bound)) {
+		const Bound = _nbind.makeBound(policyTbl);
+		const flags = TypeFlags.isClass | (policyTbl['Value'] ? TypeFlags.isValueObject : 0);
 
-					// Constructor called without new operator.
-					// Make correct call with given arguments.
-					// Few ways to do this work. This one should. See:
-					// http://stackoverflow.com/questions/1606797
-					// /use-of-apply-with-new-operator-is-this-possible
+		const bindClass = new _nbind.BindClass(
+			{
+				flags: flags,
+				id: idList[0],
+				name: name
+			},
+			Bound
+		);
 
-					return(new (Function.prototype.bind.apply(
-						Bound, // arguments.callee
-						Array.prototype.concat.apply([null], arguments)
-					))());
-				}
-
-				super();
-
-				let bits = flags;
-
-				if(marker !== _nbind.ptrMarker) {
-					ptr = this.__nbindConstructor.apply(this, arguments);
-					bits = 0;
-				}
-
-				_defineHidden(bits)(this, '__nbindFlags');
-				_defineHidden(ptr)(this, '__nbindPtr');
-			}
-
-			@_defineHidden()
-			// tslint:disable-next-line:variable-name
-			__nbindConstructor: (...args: any[]) => number;
-
-			@_defineHidden()
-			// tslint:disable-next-line:variable-name
-			__nbindValueConstructor: _nbind.Func;
-
-			@_defineHidden(policyTbl)
-			// tslint:disable-next-line:variable-name
-			__nbindPolicies: { [name: string]: boolean };
-		}
-
-		/* tslint:disable:no-unused-expression */
-
-		let flags = policyTbl['Value'] ? _nbind.Wrapper.valueObject : 0;
-
-		// TODO: remove pointer registration from here and move it to
-		// getComplexType.
-
-		const ptrType = new _nbind.BindClassPtr(idList[1], name + ' *',
-			Bound, flags);
-
-		new _nbind.BindClassPtr(idList[2], 'const ' + name + ' *',
-			Bound, flags | _nbind.Wrapper.constant);
-
-		flags |= _nbind.Wrapper.reference;
-
-		new _nbind.BindClassPtr(idList[3], name + ' &',
-			Bound, flags);
-
-		new _nbind.BindClassPtr(idList[5], name + ' &&',
-			Bound, flags);
-
-		new _nbind.BindClassPtr(idList[4], 'const ' + name + ' &',
-			Bound, flags | _nbind.Wrapper.constant);
-
-		new _nbind.BindClass(idList[0], name, Bound, ptrType);
-
-		/* tslint:enable:no-unused-expression */
+		bindClass.ptrType = _nbind.getComplexType(
+			idList[1],
+			_nbind.makeTypeTbl,
+			_nbind.getType,
+			_nbind.queryType
+		) as _class.BindClassPtr;
 
 		// Export the class.
 		Module[name] = Bound;
@@ -249,7 +198,7 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.makeCaller(
 				null,
 				0, // num
-				0, // flags
+				TypeFlags.none,
 				bindClass.name + ' constructor',
 				ptr,
 				typeList,
@@ -269,7 +218,7 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.makeCaller(
 				null,
 				0, // num
-				0, // flags
+				TypeFlags.none,
 				bindClass.name + ' value constructor',
 				ptrValue,
 				typeList,
@@ -299,7 +248,7 @@ class nbind { // tslint:disable-line:class-name
 		ptr: number,
 		namePtr: number,
 		num: number,
-		flags: number,
+		flags: TypeFlags,
 		direct: number
 	) {
 		const name = _nbind.readAsciiString(namePtr);
@@ -331,7 +280,7 @@ class nbind { // tslint:disable-line:class-name
 		);
 	}
 
-	@dep('_nbind', '_SignatureType', '_removeAccessorPrefix')
+	@dep('_nbind', '_removeAccessorPrefix')
 	static _nbind_register_method(
 		typeID: number,
 		policyListPtr: number,
@@ -340,8 +289,8 @@ class nbind { // tslint:disable-line:class-name
 		ptr: number,
 		namePtr: number,
 		num: number,
-		flags: number,
-		signatureType: _SignatureType
+		flags: TypeFlags,
+		signatureType: SignatureType
 	) {
 		let name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
@@ -349,7 +298,7 @@ class nbind { // tslint:disable-line:class-name
 		const bindClass = _nbind.typeList[typeID] as _class.BindClass;
 		const proto = bindClass.proto.prototype;
 
-		if(signatureType == _SignatureType.method) {
+		if(signatureType == SignatureType.method) {
 			_nbind.addMethod(
 				proto,
 				name,
@@ -370,7 +319,7 @@ class nbind { // tslint:disable-line:class-name
 
 		name = _removeAccessorPrefix(name);
 
-		if(signatureType == _SignatureType.setter) {
+		if(signatureType == SignatureType.setter) {
 
 			// A setter is always followed by a getter, so we can just
 			// temporarily store an invoker in the property.

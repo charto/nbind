@@ -31,7 +31,7 @@ public:
 
 namespace std {
 
-// Add hash functions for HashablePair and WrapperFlags so they can be used
+// Add hash functions for HashablePair and TypeFlags so they can be used
 // as keys in std::unordered_map.
 
 template<typename A, typename B> struct hash<nbind::HashablePair<A, B>> {
@@ -46,8 +46,8 @@ template<typename A, typename B> struct hash<nbind::HashablePair<A, B>> {
 };
 
 template<>
-struct hash<nbind::WrapperFlags> {
-	inline size_t operator()(nbind::WrapperFlags flags) const {
+struct hash<nbind::TypeFlags> {
+	inline size_t operator()(nbind::TypeFlags flags) const {
 		return(hash<uint32_t>()(static_cast<uint32_t>(flags)));
 	}
 };
@@ -63,12 +63,10 @@ class BindWrapper : public node::ObjectWrap {
 
 public:
 
-	// WrapperFlags::shared must be unset in flags!
-	BindWrapper(Bound *bound, WrapperFlags flags) :
+	BindWrapper(Bound *bound, TypeFlags flags) :
 		boundUnsafe(bound), flags(flags) {}
 
-	// WrapperFlags::shared must be set in flags!
-	BindWrapper(std::shared_ptr<Bound> bound, WrapperFlags flags) :
+	BindWrapper(std::shared_ptr<Bound> bound, TypeFlags flags) :
 		boundUnsafe(nullptr), boundShared(bound), flags(flags) {}
 
 	// This destructor is called automatically by the JavaScript garbage collector.
@@ -85,25 +83,25 @@ public:
 	) {
 		(new BindWrapper(
 			std::make_shared<Bound>(args...),
-			WrapperFlags::shared
+			TypeFlags::isSharedPtr
 		))->wrapThis(nanArgs);
 	}
 
 	static void wrapPtr(const Nan::FunctionCallbackInfo<v8::Value> &nanArgs) {
-		auto flags = static_cast<WrapperFlags>(nanArgs[1]->Uint32Value());
+		auto flags = static_cast<TypeFlags>(nanArgs[1]->Uint32Value());
 		void *ptr = v8::Handle<v8::External>::Cast(nanArgs[0])->Value();
 
-		if(!(flags & WrapperFlags::shared)) {
-			auto *ptrUnsafe = static_cast<Bound *>(ptr);
-
-			(new BindWrapper(ptrUnsafe, flags))->wrapThis(nanArgs);
-		} else {
+		if((flags & TypeFlags::refMask) == TypeFlags::isSharedPtr) {
 			auto *ptrShared = static_cast<std::shared_ptr<Bound> *>(ptr);
 
 			(new BindWrapper(*ptrShared, flags))->wrapThis(nanArgs);
 
 			// Delete temporary shared pointer after re-referencing target object.
 			delete ptrShared;
+		} else {
+			auto *ptrUnsafe = static_cast<Bound *>(ptr);
+
+			(new BindWrapper(ptrUnsafe, flags))->wrapThis(nanArgs);
 		}
 	}
 
@@ -134,10 +132,10 @@ public:
 
 	inline std::shared_ptr<Bound> getShared() { return(boundShared); }
 
-	inline WrapperFlags getFlags() const { return(flags); }
+	inline TypeFlags getFlags() const { return(flags); }
 
-	inline Bound *getBound(WrapperFlags argFlags) {
-		if(!!(flags & WrapperFlags::constant) && !(argFlags & WrapperFlags::constant)) {
+	inline Bound *getBound(TypeFlags argFlags) {
+		if(!!(flags & TypeFlags::isConst) && !(argFlags & TypeFlags::isConst)) {
 			throw(std::runtime_error("Passing a const value as a non-const argument"));
 		}
 
@@ -146,11 +144,11 @@ public:
 
 #if !defined(DUPLICATE_POINTERS)
 
-	static Nan::Persistent<v8::Object> *findInstance(const Bound *ptr, WrapperFlags flags) {
+	static Nan::Persistent<v8::Object> *findInstance(const Bound *ptr, TypeFlags flags) {
 		// This will insert a null pointer (to a non-existent wrapper)
 		// in the map if the object pointer is not found yet.
 
-		return(&getInstanceTbl()[HashablePair<const Bound *, WrapperFlags>(ptr, flags)]);
+		return(&getInstanceTbl()[HashablePair<const Bound *, TypeFlags>(ptr, flags)]);
 	}
 
 #endif // DUPLICATE_POINTERS
@@ -182,7 +180,7 @@ private:
 
 	void addInstance(v8::Local<v8::Object> obj) {
 		Nan::Persistent<v8::Object> *ref = &getInstanceTbl()[
-			HashablePair<const Bound *, WrapperFlags>(
+			HashablePair<const Bound *, TypeFlags>(
 				boundUnsafe ? boundUnsafe : boundShared.get(),
 				flags
 			)
@@ -205,7 +203,7 @@ private:
 		// (*iter).second.Reset();
 
 		getInstanceTbl().erase(
-			HashablePair<const Bound *, WrapperFlags>(
+			HashablePair<const Bound *, TypeFlags>(
 				boundUnsafe ? boundUnsafe : boundShared.get(),
 				flags
 			)
@@ -216,11 +214,11 @@ private:
 	// to weak references to JavaScript objects wrapping them.
 
 	static std::unordered_map<
-		HashablePair<const Bound *, WrapperFlags>,
+		HashablePair<const Bound *, TypeFlags>,
 		Nan::Persistent<v8::Object>
 	> &getInstanceTbl() {
 		static std::unordered_map<
-			HashablePair<const Bound *, WrapperFlags>,
+			HashablePair<const Bound *, TypeFlags>,
 			Nan::Persistent<v8::Object>
 		> instanceTbl;
 
@@ -231,7 +229,7 @@ private:
 
 	Bound *boundUnsafe;
 	std::shared_ptr<Bound> boundShared;
-	WrapperFlags flags;
+	TypeFlags flags;
 };
 
 } // namespace

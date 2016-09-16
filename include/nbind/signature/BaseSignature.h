@@ -109,10 +109,10 @@ public:
 
 		typedef typename Signature::MethodType MethodType;
 
-		MethodInfo(MethodType func, WrapperFlags flags) : func(func), flags(flags) {}
+		MethodInfo(MethodType func, TypeFlags flags) : func(func), flags(flags) {}
 
 		const MethodType func;
-		const WrapperFlags flags;
+		const TypeFlags flags;
 
 	};
 
@@ -121,7 +121,7 @@ public:
 	}
 
 	template <typename MethodType>
-	static unsigned int addMethod(MethodType func, WrapperFlags flags) {
+	static unsigned int addMethod(MethodType func, TypeFlags flags) {
 		auto &funcVect = getInstance().funcVect;
 
 #		if defined(BUILDING_NODE_EXTENSION)
@@ -185,13 +185,13 @@ public:
 	static bool getTargetSafely(
 		NanArgs &nanArgs,
 		Bound **targetOut,
-		WrapperFlags flags
+		TypeFlags flags
 	) {
 		BindWrapper<Bound> *wrapper = node::ObjectWrap::Unwrap<
 			BindWrapper<Bound>
 		>(nanArgs.This());
 
-		if(!!(wrapper->getFlags() & WrapperFlags::constant) && !(flags & WrapperFlags::constant)) {
+		if(!!(wrapper->getFlags() & TypeFlags::isConst) && !(flags & TypeFlags::isConst)) {
 			Nan::ThrowError("Calling a non-const method on a const object");
 			return(false);
 		}
@@ -212,7 +212,7 @@ public:
 	static bool getTargetSafely(
 		NanArgs &nanArgs,
 		void **targetOut,
-		WrapperFlags flags
+		TypeFlags flags
 	) {
 		return(true);
 	}

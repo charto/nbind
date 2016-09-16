@@ -49,9 +49,9 @@ struct BindingType<ArgType *> {
 
 	static inline Type fromWireType(WireType arg) {
 		v8::Local<v8::Object> argWrapped = arg->ToObject();
-		WrapperFlags flags = std::is_const<ArgType>::value ?
-			WrapperFlags::constant :
-			WrapperFlags::none;
+		TypeFlags flags = std::is_const<ArgType>::value ?
+			TypeFlags::isConst :
+			TypeFlags::none;
 
 		return(
 			node::ObjectWrap::Unwrap<

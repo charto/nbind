@@ -1,14 +1,21 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
+import {
+	setEvil,
+	defineHidden,
+	prepareNamespace
+} from 'emscripten-library-decorator';
+
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _value} from './ValueObj';
-import {PolicyTbl} from '../Type';
+import {TypeFlags, TypeSpec, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
+
+const _defineHidden = defineHidden;
 
 export namespace _nbind {
 	export var BindType = _type.BindType;
@@ -22,13 +29,14 @@ export namespace _nbind {
 	// Base class for wrapped instances of bound C++ classes.
 
 	export class Wrapper {
-		persist() { this.__nbindFlags |= Wrapper.persistent; }
+		// TODO
+		// persist() { this.__nbindFlags |= TypeFlags.isPersistent; }
 
 		free: () => void;
 
 		/* tslint:disable:variable-name */
 
-		__nbindFlags: number;
+		__nbindFlags: TypeFlags;
 
 		/** Dynamically set by _nbind_register_constructor.
 		  * Calls the C++ constructor and returns a numeric heap pointer. */
@@ -39,14 +47,6 @@ export namespace _nbind {
 		__nbindPtr: number;
 
 		/* tslint:enable:variable-name */
-
-		// These must match Policy.h.
-
-		static constant = 1;
-		static shared = 2;
-		static reference = 4;
-		static valueObject = 8;
-		static persistent = 16;
 	}
 
 	// Any subtype (not instance but type) of Wrapper.
@@ -56,15 +56,63 @@ export namespace _nbind {
 		new(...args: any[]): Wrapper;
 	}
 
+	const ptrMarker = {};
+
+	export function makeBound(policyTbl: PolicyTbl) {
+		class Bound extends Wrapper {
+			constructor(marker: {}, ptr: number, flags: number) {
+				// super() never gets called here but TypeScript 1.8 requires it.
+				if((false && super()) || !(this instanceof Bound)) {
+
+					// Constructor called without new operator.
+					// Make correct call with given arguments.
+					// Few ways to do this work. This one should. See:
+					// http://stackoverflow.com/questions/1606797
+					// /use-of-apply-with-new-operator-is-this-possible
+
+					return(new (Function.prototype.bind.apply(
+						Bound, // arguments.callee
+						Array.prototype.concat.apply([null], arguments)
+					))());
+				}
+
+				super();
+
+				let bits = flags;
+
+				if(marker !== ptrMarker) {
+					ptr = this.__nbindConstructor.apply(this, arguments);
+					bits = 0;
+				}
+
+				_defineHidden(bits)(this, '__nbindFlags');
+				_defineHidden(ptr)(this, '__nbindPtr');
+			}
+
+			@_defineHidden()
+			// tslint:disable-next-line:variable-name
+			__nbindConstructor: (...args: any[]) => number;
+
+			@_defineHidden()
+			// tslint:disable-next-line:variable-name
+			__nbindValueConstructor: _globals.Func;
+
+			@_defineHidden(policyTbl)
+			// tslint:disable-next-line:variable-name
+			__nbindPolicies: { [name: string]: boolean };
+		}
+
+		return(Bound);
+	}
+
 	// Base class for all bound C++ classes (not their instances),
 	// also inheriting from a generic type definition.
 
 	export class BindClass extends BindType {
-		constructor(id: number, name: string, proto: WrapperClass, ptrType: BindClassPtr) {
-			super({flags: 0, id: id, name: name});
+		constructor(spec: TypeSpec, proto?: WrapperClass) {
+			super(spec);
 
-			this.proto = proto;
-			this.ptrType = ptrType;
+			this.proto = proto || (spec.paramList[0] as BindClass).proto;
 		}
 
 		wireRead = (arg: number) => popValue(arg, this.ptrType);
@@ -79,8 +127,6 @@ export namespace _nbind {
 		proto: WrapperClass;
 		ptrType: BindClassPtr;
 	}
-
-	export var ptrMarker = {};
 
 	export function popPointer(ptr: number, type: BindClassPtr) {
 		if(ptr === 0) return(null);
@@ -98,7 +144,7 @@ export namespace _nbind {
 	export function pushNonConstPointer(obj: any, type: BindClassPtr) {
 		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
 
-		if(obj.__nbindFlags & Wrapper.constant) {
+		if(obj.__nbindFlags & TypeFlags.isConst) {
 			throw(new Error('Passing a const value as a non-const argument'));
 		}
 
@@ -106,17 +152,18 @@ export namespace _nbind {
 	}
 
 	export class BindClassPtr extends BindType {
-		constructor(id: number, name: string, proto: WrapperClass, flags?: number) {
-			super({flags: 0, id: id, name: name});
+		constructor(spec: TypeSpec) {
+			super(spec);
 
-			this.proto = proto;
-			this.flags = flags || 0;
+			this.proto = (spec.paramList[0] as BindClass).proto;
 
-			const push = flags & Wrapper.constant ? pushPointer : pushNonConstPointer;
-			const pop = (
-				flags & Wrapper.reference && flags & Wrapper.valueObject ?
-				popValue : popPointer
+			const isValue = (
+				(this.flags & TypeFlags.refMask) == TypeFlags.isReference &&
+				(this.flags & TypeFlags.isValueObject)
 			);
+
+			const push = spec.flags & TypeFlags.isConst ? pushPointer : pushNonConstPointer;
+			const pop = isValue ? popValue : popPointer;
 
 			this.makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
 				policyTbl['Nullable'] ?

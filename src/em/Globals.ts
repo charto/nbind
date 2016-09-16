@@ -75,11 +75,11 @@ export namespace _nbind {
 		static pagePtr: number;
 	}
 
-	function getType(id: number) {
+	export function getType(id: number) {
 		return(_nbind.typeList[id]);
 	}
 
-	function queryType(id: number) {
+	export function queryType(id: number) {
 		const placeholderFlag = HEAPU8[id as number];
 
 		return({
@@ -101,10 +101,12 @@ export namespace _nbind {
 			if(typeof(id) == 'number') {
 				return(
 					getType(id as number) ||
-					getComplexType(id as number, place, 'X', null,
+					getComplexType(
+						id as number,
+						makeTypeTbl,
 						getType,
 						queryType,
-						makeTypeTbl
+						place
 					) as _type.BindType
 				);
 			} else return(_nbind.typeTbl[id as string]);

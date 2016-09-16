@@ -35,38 +35,44 @@ export interface TypeClass extends TypeSpec {
 	spec?: TypeSpec;
 }
 
-const enum Base {
-	ref = 2,
-	kind = 16,
-	num = 128
+export const enum TypeFlagBase {
+	flag = 1,
+	ref = flag * 4,
+	kind = ref * 8,
+	num = kind * 16
 }
 
-export {Base as TypeFlagBase};
+// These must match Policy.h.
 
 export const enum TypeFlags {
-	isConst = 1,
+	none = 0,
 
-	refMask = Base.ref * 7,
-	isPointer = Base.ref * 1,
-	isReference = Base.ref * 2,
-	isRvalueRef = Base.ref * 3,
-	isSharedPtr = Base.ref * 4,
-	isUniquePtr = Base.ref * 5,
+	flagMask = TypeFlagBase.flag * 3,
+	isConst = TypeFlagBase.flag * 1,
+	isValueObject = TypeFlagBase.flag * 2,
 
-	kindMask = Base.kind * 7,
-	isPrimitive = Base.kind * 1,
-	isClass = Base.kind * 2,
-	isVector = Base.kind * 3,
-	isArray = Base.kind * 4,
-	isCString = Base.kind * 5,
-	isString = Base.kind * 6,
-	isOther = Base.kind * 7,
+	refMask = TypeFlagBase.ref * 7,
+	isPointer = TypeFlagBase.ref * 1,
+	isReference = TypeFlagBase.ref * 2,
+	isRvalueRef = TypeFlagBase.ref * 3,
+	isSharedPtr = TypeFlagBase.ref * 4,
+	isUniquePtr = TypeFlagBase.ref * 5,
 
-	numMask = Base.num * 15,
-	isUnsigned = Base.num * 1,
-	isSignless = Base.num * 2,
-	isFloat = Base.num * 4,
-	isBig = Base.num * 8
+	kindMask = TypeFlagBase.kind * 15,
+	isPrimitive = TypeFlagBase.kind * 1,
+	isClass = TypeFlagBase.kind * 2,
+	isClassPtr = TypeFlagBase.kind * 3,
+	isVector = TypeFlagBase.kind * 4,
+	isArray = TypeFlagBase.kind * 5,
+	isCString = TypeFlagBase.kind * 6,
+	isString = TypeFlagBase.kind * 7,
+	isOther = TypeFlagBase.kind * 8,
+
+	numMask = TypeFlagBase.num * 15,
+	isUnsigned = TypeFlagBase.num * 1,
+	isSignless = TypeFlagBase.num * 2,
+	isFloat = TypeFlagBase.num * 4,
+	isBig = TypeFlagBase.num * 8
 }
 
 // These must match C++ enum StructureType in TypeID.h
@@ -145,17 +151,17 @@ export function typeModule(self: any) {
 
 	function getComplexType(
 		id: number,
-		place: string,
-		// C++ type name string built top-down, for printing helpful errors.
-		kind: string,
-		// Outer type, used only for updating kind.
-		prevStructure: Structure,
+		makeTypeTbl: MakeTypeTbl,
 		getType: (id: number) => TypeClass,
 		queryType: (id: number) => {
 			placeholderFlag: number,
 			paramList: number[]
 		},
-		makeTypeTbl: MakeTypeTbl,
+		place?: string,
+		// C++ type name string built top-down, for printing helpful errors.
+		kind = 'X', // tslint:disable-line
+		// Outer type, used only for updating kind.
+		prevStructure: Structure = null, // tslint:disable-line
 		depth: number = 1 // tslint:disable-line
 	) {
 		const result = queryType(id);
@@ -182,12 +188,12 @@ export function typeModule(self: any) {
 		const subId = result.paramList[0];
 		const subType = getType(subId) || getComplexType(
 			subId,
+			makeTypeTbl,
+			getType,
+			queryType,
 			place,
 			kind,
 			structure,
-			getType,
-			queryType,
-			makeTypeTbl,
 			depth + 1
 		);
 
@@ -200,7 +206,7 @@ export function typeModule(self: any) {
 		// applyStructure(kind, 0, name, 0)
 		// (combining top-down and bottom-up parts).
 
-		console.log(applyStructure(kind, 0, name, 0) + ' - ' + name); // tslint:disable-line
+		// console.log(applyStructure(kind, 0, name, 0) + ' - ' + name); // tslint:disable-line
 
 		let srcSpec: TypeSpec;
 		let spec: TypeSpec = {
@@ -219,15 +225,19 @@ export function typeModule(self: any) {
 			case StructureType.pointer:
 				if((subType.flags & TypeFlags.kindMask) == TypeFlags.isPrimitive && subType.ptrSize == 1) {
 					spec.flags = TypeFlags.isCString;
-				} else {
-					spec.flags |= TypeFlags.isPointer;
+					break;
+				}
+
+				spec.flags = TypeFlags.isPointer; // TODO: or isReference!
+
+				// tslint:disable-next-line:no-switch-case-fall-through
+			case StructureType.reference:
+				if(spec.flags != TypeFlags.isPointer) spec.flags = TypeFlags.isReference;
+				srcSpec = subType.spec;
+
+				if((subType.flags & TypeFlags.kindMask) != TypeFlags.isClass) {
 					// reportProblem('Unsupported', id, kind, structureType, place);
 				}
-				break;
-
-			case StructureType.reference:
-				spec.flags |= TypeFlags.isReference;
-				// reportProblem('Unsupported', id, kind, structureType, place);
 				break;
 
 			case StructureType.vector:
@@ -254,9 +264,9 @@ export function typeModule(self: any) {
 		return(makeType(makeTypeTbl, spec));
 	}
 
-	function makeType(tbl: MakeTypeTbl, spec: TypeSpec) {
+	function makeType(makeTypeTbl: MakeTypeTbl, spec: TypeSpec) {
 		const flags = spec.flags;
-		// const refKind = flags & TypeFlags.refMask;
+		const refKind = flags & TypeFlags.refMask;
 		let kind = flags & TypeFlags.kindMask;
 
 		if(!spec.name && kind == TypeFlags.isPrimitive) {
@@ -269,11 +279,18 @@ export function typeModule(self: any) {
 					(spec.ptrSize * 8 + '_t')
 				);
 			}
-
-			if(spec.ptrSize == 8 && !(flags & TypeFlags.isFloat)) kind = TypeFlags.isBig;
 		}
 
-		return(new tbl[kind](spec));
+		if(spec.ptrSize == 8 && !(flags & TypeFlags.isFloat)) kind = TypeFlags.isBig;
+		if(kind == TypeFlags.isClass && refKind) kind = TypeFlags.isClassPtr;
+
+		if(!makeTypeTbl[kind]) {
+			console.log(makeTypeTbl); // tslint:disable-line
+			console.log(kind); // tslint:disable-line
+			console.log(flags); // tslint:disable-line
+		}
+
+		return(new makeTypeTbl[kind](spec));
 	}
 
 	class Type implements TypeClass {

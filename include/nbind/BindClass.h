@@ -75,7 +75,7 @@ public:
 		BaseSignature *signature = nullptr,
 		funcPtr ptr = nullptr,
 		unsigned int num = 0,
-		WrapperFlags flags = WrapperFlags::none
+		TypeFlags flags = TypeFlags::none
 	) {
 		methodList.emplace_front(name, ptr, num, signature, flags);
 	}
@@ -113,7 +113,7 @@ public:
 
 protected:
 
-	TYPEID idList[6];
+	TYPEID idList[2];
 
 	int readyState = 0;
 
@@ -148,10 +148,6 @@ public:
 	void init(const char *name) {
 		idList[0] = Typer<Bound>::makeID();
 		idList[1] = Typer<Bound *>::makeID();
-		idList[2] = Typer<const Bound *>::makeID();
-		idList[3] = Typer<Bound &>::makeID();
-		idList[4] = Typer<const Bound &>::makeID();
-		idList[5] = Typer<Bound &&>::makeID();
 
 		this->name = name;
 		this->policyNameList = DetectPolicies<Bound>::getPolicies();

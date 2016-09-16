@@ -7,10 +7,9 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
-import {_nbind as _class} from './BindClass';
 import {_nbind as _external} from './External';
 import {_nbind as _resource} from './Resource';
-import {PolicyTbl} from '../Type';
+import {TypeFlags, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -25,8 +24,6 @@ export namespace _nbind {
 
 	export var getTypes: typeof _globals.getTypes;
 	export var getDynCall: typeof _globals.getDynCall;
-
-	export var Wrapper: typeof _class.Wrapper;
 
 	export var externalList: _external.External<any>[];
 
@@ -261,7 +258,7 @@ export namespace _nbind {
 	export function makeMethodCaller(
 		ptr: number,
 		num: number,
-		flags: number,
+		flags: TypeFlags,
 		name: string,
 		boundID: number,
 		idList: TypeIdList,
@@ -283,7 +280,7 @@ export namespace _nbind {
 
 		const dynCall = getDynCall(typeList, name);
 
-		const mask = ~flags & Wrapper.constant;
+		const mask = ~flags & TypeFlags.isConst;
 
 		function err() {
 			throw(new Error('Calling a non-const method on a const object'));
@@ -332,7 +329,7 @@ export namespace _nbind {
 	export function makeCaller(
 		ptr: number,
 		num: number,
-		flags: number,
+		flags: TypeFlags,
 		name: string,
 		direct: number,
 		idList: TypeIdList,

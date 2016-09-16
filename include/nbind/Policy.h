@@ -5,29 +5,78 @@
 
 namespace nbind {
 
-// These must match BindClass.ts.
+// This is effectively an enum with members accessible using dot notation.
+// It allows copy-pasting the later TypeFlags definition between
+// C++ and TypeScript using identical syntax.
 
-enum class WrapperFlags : uint32_t {
-	none = 0,
-	constant = 1,
-	shared = 2
+struct TypeFlagBaseType {
+	constexpr TypeFlagBaseType() {}
+
+	// GCC bug workaround.
+	struct inner {
+		static constexpr uint32_t flag = 1;
+		static constexpr uint32_t ref = flag * 4;
+		static constexpr uint32_t kind = ref * 8;
+		static constexpr uint32_t num = kind * 16;
+	};
+
+	uint32_t flag = inner::flag;
+	uint32_t ref = inner::ref;
+	uint32_t kind = inner::kind;
+	uint32_t num = inner::num;
 };
 
-inline WrapperFlags operator& (WrapperFlags a, WrapperFlags b) {
-	return(static_cast<WrapperFlags>(
+// Visual Studio bug workaround.
+constexpr struct TypeFlagBaseType TypeFlagBase;
+
+// These must match Type.ts.
+
+enum class TypeFlags : uint32_t {
+	none = 0,
+
+	flagMask = TypeFlagBase.flag * 3,
+	isConst = TypeFlagBase.flag * 1,
+	isValueObject = TypeFlagBase.flag * 2,
+
+	refMask = TypeFlagBase.ref * 7,
+	isPointer = TypeFlagBase.ref * 1,
+	isReference = TypeFlagBase.ref * 2,
+	isRvalueRef = TypeFlagBase.ref * 3,
+	isSharedPtr = TypeFlagBase.ref * 4,
+	isUniquePtr = TypeFlagBase.ref * 5,
+
+	kindMask = TypeFlagBase.kind * 15,
+	isPrimitive = TypeFlagBase.kind * 1,
+	isClass = TypeFlagBase.kind * 2,
+	isClassPtr = TypeFlagBase.kind * 3,
+	isVector = TypeFlagBase.kind * 4,
+	isArray = TypeFlagBase.kind * 5,
+	isCString = TypeFlagBase.kind * 6,
+	isString = TypeFlagBase.kind * 7,
+	isOther = TypeFlagBase.kind * 8,
+
+	numMask = TypeFlagBase.num * 15,
+	isUnsigned = TypeFlagBase.num * 1,
+	isSignless = TypeFlagBase.num * 2,
+	isFloat = TypeFlagBase.num * 4,
+	isBig = TypeFlagBase.num * 8
+};
+
+inline TypeFlags operator& (TypeFlags a, TypeFlags b) {
+	return(static_cast<TypeFlags>(
 		static_cast<uint32_t>(a) & static_cast<uint32_t>(b)
 	));
 }
-inline WrapperFlags operator| (WrapperFlags a, WrapperFlags b) {
-	return(static_cast<WrapperFlags>(
+inline TypeFlags operator| (TypeFlags a, TypeFlags b) {
+	return(static_cast<TypeFlags>(
 		static_cast<uint32_t>(a) | static_cast<uint32_t>(b)
 	));
 }
 
-inline bool operator! (WrapperFlags f) { return(f == WrapperFlags::none); }
+inline bool operator! (TypeFlags f) { return(f == TypeFlags::none); }
 
-inline WrapperFlags operator~ (WrapperFlags f) {
-	return(static_cast<WrapperFlags>(
+inline TypeFlags operator~ (TypeFlags f) {
+	return(static_cast<TypeFlags>(
 		~static_cast<uint32_t>(f)
 	));
 }

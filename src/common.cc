@@ -117,7 +117,7 @@ void nbind :: registerFunction(
 	funcPtr ptr,
 	unsigned int num,
 	BaseSignature *signature,
-	WrapperFlags flags
+	TypeFlags flags
 ) {
 	getFunctionList().emplace_front(name, ptr, num, signature, flags);
 }

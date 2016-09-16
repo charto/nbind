@@ -3,20 +3,13 @@
 
 // These must match C++ enum SignatureType in BaseSignature.h
 
-export enum SignatureType {
+export const enum SignatureType {
 	func = 0,
 	method,
 	getter,
 	setter,
 	construct
 }
-
-export var structureNameList = [
-	'const X',
-	'X *',
-	'std::vector<X>',
-	'std::array<X, Y>'
-];
 
 export function removeAccessorPrefix(name: string) {
 	// The C++ side gives the same name to getters and setters.
