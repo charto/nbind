@@ -34,7 +34,7 @@ inline auto BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) -> WireTy
 		return(reinterpret_cast<WireType>(construct.getSlot()));
 	} else {
 		// Value type JavaScript class is missing or not registered.
-		return(BindingType<ArgType>::toWireType(std::move(arg)));
+		return(BindingType<ArgType>::toWireType(std::forward<ArgType>(arg)));
 	}
 }
 

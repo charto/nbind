@@ -31,7 +31,6 @@
 				"-O3",
 				"-std=c++11",
 				"-fno-exceptions",
-				"-Wno-warn-absolute-paths",
 				"--pre-js", "<(_prejs_path)",
 				"--post-js", "<(_postjs_path)",
 				"--js-library", "<(_jslib_path)",

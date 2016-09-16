@@ -13,6 +13,8 @@ struct TypeFlagBaseType {
 	constexpr TypeFlagBaseType() {}
 
 	// GCC bug workaround.
+	// Constexpr struct instance members cannot refer to each other.
+
 	struct inner {
 		static constexpr uint32_t flag = 1;
 		static constexpr uint32_t ref = flag * 4;
@@ -26,7 +28,8 @@ struct TypeFlagBaseType {
 	uint32_t num = inner::num;
 };
 
-// Visual Studio bug workaround.
+// Visual Studio bug workaround. The struct must be defined separately.
+
 constexpr struct TypeFlagBaseType TypeFlagBase;
 
 // These must match Type.ts.

@@ -78,11 +78,13 @@ export const enum TypeFlags {
 // These must match C++ enum StructureType in TypeID.h
 
 export const enum StructureType {
-	raw = 0,
+	none = 0,
 	constant,
 	pointer,
 	reference,
 	rvalue,
+	shared,
+	unique,
 	vector,
 	array,
 	max
@@ -102,6 +104,8 @@ export function typeModule(self: any) {
 		[TypeFlags.isPointer, 'X *'],
 		[TypeFlags.isReference, 'X &'],
 		[TypeFlags.isRvalueRef, 'X &&'],
+		[TypeFlags.isSharedPtr, 'std::shared_ptr<X>'],
+		[TypeFlags.isUniquePtr, 'std::unique_ptr<X>'],
 		[TypeFlags.isVector, 'std::vector<X>'],
 		[TypeFlags.isArray, 'std::array<X, Y>']
 	];

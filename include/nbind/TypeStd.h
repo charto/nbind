@@ -3,32 +3,22 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <array>
 
 namespace nbind {
 
+	NBIND_TYPER_PARAM(std::shared_ptr<ArgType>, shared);
+	NBIND_TYPER_PARAM(std::unique_ptr<ArgType>, unique);
+	NBIND_TYPER_PARAM(std::vector<ArgType>, vector);
+
 	typedef struct {
 		const StructureType placeholderFlag;
 		const TYPEID member;
 		const size_t length;
 	} ArrayStructure;
-
-	template<typename MemberType>
-	struct Typer<std::vector<MemberType>> {
-		static const ParamStructure spec;
-
-		static NBIND_CONSTEXPR TYPEID makeID() {
-			return(&spec.placeholderFlag);
-		}
-	};
-
-	template<typename MemberType>
-	const ParamStructure Typer<std::vector<MemberType>>::spec = {
-		StructureType :: vector,
-		Typer<MemberType>::makeID()
-	};
 
 	template<typename MemberType, size_t size>
 	struct Typer<std::array<MemberType, size>> {

@@ -5,16 +5,19 @@
 
 namespace nbind {
 
-// These must match JavaScript enum StructureType in common.ts
+// These must match JavaScript enum StructureType in Type.ts
 
 enum class StructureType : unsigned char {
-	raw = 0,
+	none = 0,
 	constant,
 	pointer,
 	reference,
 	rvalue,
+	shared,
+	unique,
 	vector,
-	array
+	array,
+	max
 };
 
 // Type ID system, based on Embind.
@@ -39,7 +42,7 @@ struct Typer {
 // Linkage for placeholder bytes representing types.
 template<typename ArgType>
 const typename Typer<ArgType>::SpecType Typer<ArgType>::spec = {
-	StructureType :: raw
+	StructureType :: none
 };
 
 // Parameterized types
@@ -49,56 +52,25 @@ typedef struct {
 	const TYPEID target;
 } ParamStructure;
 
-// Const types
+#define NBIND_TYPER_PARAM(Type, flag)           \
+template<typename ArgType>                      \
+struct Typer<Type> {                            \
+	static const ParamStructure spec;           \
+	                                            \
+	static NBIND_CONSTEXPR TYPEID makeID() {    \
+		return(&spec.placeholderFlag);          \
+	}                                           \
+};                                              \
+                                                \
+template<typename ArgType>                      \
+const ParamStructure Typer<Type>::spec = {      \
+	StructureType :: flag,                      \
+	Typer<ArgType>::makeID()                    \
+}
 
-template<typename ArgType>
-struct Typer<const ArgType> {
-	static const ParamStructure spec;
-
-	static NBIND_CONSTEXPR TYPEID makeID() {
-		return(&spec.placeholderFlag);
-	}
-};
-
-template<typename ArgType>
-const ParamStructure Typer<const ArgType>::spec = {
-	StructureType :: constant,
-	Typer<ArgType>::makeID()
-};
-
-// Pointers
-
-template<typename TargetType>
-struct Typer<TargetType *> {
-	static const ParamStructure spec;
-
-	static NBIND_CONSTEXPR TYPEID makeID() {
-		return(&spec.placeholderFlag);
-	}
-};
-
-template<typename TargetType>
-const ParamStructure Typer<TargetType *>::spec = {
-	StructureType :: pointer,
-	Typer<TargetType>::makeID()
-};
-
-// References
-
-template<typename TargetType>
-struct Typer<TargetType &> {
-	static const ParamStructure spec;
-
-	static NBIND_CONSTEXPR TYPEID makeID() {
-		return(&spec.placeholderFlag);
-	}
-};
-
-template<typename TargetType>
-const ParamStructure Typer<TargetType &>::spec = {
-	StructureType :: reference,
-	Typer<TargetType>::makeID()
-};
+NBIND_TYPER_PARAM(const ArgType, constant);
+NBIND_TYPER_PARAM(ArgType *, pointer);
+NBIND_TYPER_PARAM(ArgType &, reference);
 
 // Convert a list of types in the template argument into an array of type IDs.
 
