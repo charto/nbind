@@ -6,11 +6,41 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 #include <array>
 
 namespace nbind {
+
+// Shared pointer.
+
+template <typename ArgType>
+struct BindingType<std::shared_ptr<ArgType>> {
+
+	typedef std::shared_ptr<ArgType> Type;
+	typedef struct {
+		std::shared_ptr<ArgType> *boundShared;
+		ArgType *boundUnsafe;
+	} *WireType;
+
+	static inline Type fromWireType(WireType arg) {
+		// Hack: JS side sends Type * instead of WireType, since C++ side can
+		// easily unwrap the shared_ptr anyway.
+
+		return(*reinterpret_cast<Type *>(arg));
+	}
+
+	static inline WireType toWireType(Type arg) {
+		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val)));
+
+		val->boundShared = new Type(arg);
+		val->boundUnsafe = arg.get();
+
+		return(val);
+	}
+
+};
 
 // Array.
 

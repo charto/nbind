@@ -54,6 +54,7 @@ export namespace _nbind {
 
 	export var BindClass: typeof _class.BindClass;
 	export var BindClassPtr: typeof _class.BindClassPtr;
+	export var SharedClassPtr: typeof _class.BindClassPtr;
 	export var makeBound: typeof _class.makeBound;
 
 	export var CallbackType: typeof _callback.CallbackType;
@@ -130,6 +131,7 @@ class nbind { // tslint:disable-line:class-name
 				[TypeFlags.isBig]: _nbind.Int64Type,
 				[TypeFlags.isClass]: _nbind.BindClass,
 				[TypeFlags.isClassPtr]: _nbind.BindClassPtr,
+				[TypeFlags.isSharedClassPtr]: _nbind.SharedClassPtr,
 				[TypeFlags.isVector]: _nbind.ArrayType,
 				[TypeFlags.isArray]: _nbind.ArrayType,
 				[TypeFlags.isCString]: _nbind.CStringType,
@@ -144,7 +146,8 @@ class nbind { // tslint:disable-line:class-name
 	static _nbind_register_class(
 		idListPtr: number,
 		policyListPtr: number,
-		namePtr: number
+		namePtr: number,
+		destructorPtr: number
 	) {
 		const name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
@@ -152,11 +155,12 @@ class nbind { // tslint:disable-line:class-name
 
 		const Bound = _nbind.makeBound(policyTbl);
 		const flags = TypeFlags.isClass | (policyTbl['Value'] ? TypeFlags.isValueObject : 0);
+		const id = idList[0];
 
 		const bindClass = new _nbind.BindClass(
 			{
 				flags: flags,
-				id: idList[0],
+				id: id,
 				name: name
 			},
 			Bound
@@ -168,6 +172,24 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.getType,
 			_nbind.queryType
 		) as _class.BindClassPtr;
+
+		const destroy = _nbind.makeMethodCaller(
+			destructorPtr,
+			0, // num
+			TypeFlags.none,
+			bindClass.name + '.free',
+			id,
+			// void destroy(uint32_t, void *ptr, void *shared, TypeFlags flags)
+			['void', 'uint32_t', 'uint32_t'],
+			null
+		);
+
+		_nbind.addMethod(
+			bindClass.proto.prototype,
+			'free',
+			function() { destroy.call(this, this.__nbindShared, this.__nbindFlags); } ,
+			0
+		);
 
 		// Export the class.
 		Module[name] = Bound;
@@ -225,17 +247,6 @@ class nbind { // tslint:disable-line:class-name
 				policyTbl
 			),
 			typeCount
-		);
-	}
-
-	@dep('_nbind')
-	static _nbind_register_destructor(typeID: number, ptr: number) {
-		const bindClass = _nbind.typeList[typeID] as _class.BindClass;
-		_nbind.addMethod(
-			bindClass.proto.prototype,
-			'free',
-			_nbind.makeMethodCaller(ptr, 0, 0, bindClass.name + '.free', typeID, ['void'], null),
-			0
 		);
 	}
 
@@ -346,7 +357,7 @@ class nbind { // tslint:disable-line:class-name
 					typeID,
 					typeList,
 					policyTbl
-				),
+				) as () => any,
 				set: proto[name]
 			});
 		}

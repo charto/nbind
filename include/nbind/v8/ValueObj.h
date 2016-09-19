@@ -11,12 +11,29 @@
 namespace nbind {
 
 template <typename BaseType, typename ArgType>
-static inline WireType makeExternal(ArgType *arg, TypeFlags flags) {
-	if(std::is_const<ArgType>::value) flags = flags | TypeFlags::isConst;
+struct ExternalPtr;
+
+template <typename BaseType, typename ArgType>
+struct ExternalPtr<BaseType, ArgType *> {
+	static void *make(ArgType *arg) {
+		return(const_cast<BaseType *>(arg));
+	}
+};
+
+template <typename BaseType, typename ArgType>
+struct ExternalPtr<BaseType, std::shared_ptr<ArgType>> {
+	static void *make(std::shared_ptr<ArgType> &&ptr) {
+		return(new std::shared_ptr<ArgType>(std::move(ptr)));
+	}
+};
+
+template <typename BaseType, typename TargetType, typename ArgType>
+static inline WireType makeExternal(TypeFlags flags, TargetType *ptr, ArgType &&arg) {
+	if(std::is_const<TargetType>::value) flags = flags | TypeFlags::isConst;
 
 #ifndef DUPLICATE_POINTERS
 
-	auto ref = BindWrapper<BaseType>::findInstance(arg, flags);
+	auto ref = BindWrapper<BaseType>::findInstance(ptr, flags);
 
 	if(!ref->IsEmpty()) {
 		return(Nan::New<v8::Object>(*ref));
@@ -31,10 +48,7 @@ static inline WireType makeExternal(ArgType *arg, TypeFlags flags) {
 
 	const unsigned int argc = 2;
 	v8::Local<v8::Value> argv[] = {
-		((flags & TypeFlags::refMask) == TypeFlags::isSharedPtr ?
-			Nan::New<v8::External>(new std::shared_ptr<ArgType>(arg)) :
-			Nan::New<v8::External>(const_cast<BaseType *>(arg))
-		),
+		Nan::New<v8::External>(ExternalPtr<BaseType, ArgType>::make(std::move(arg))),
 		Nan::New<v8::Uint32>(static_cast<uint32_t>(flags))
 	};
 
@@ -48,16 +62,16 @@ template <typename ArgType>
 inline WireType BindingType<ArgType *>::toWireType(ArgType *arg) {
 	if(arg == nullptr) return(Nan::Null());
 
-	return(makeExternal<BaseType>(arg, TypeFlags::none));
+	return(makeExternal<BaseType>(TypeFlags::none, arg, std::move(arg)));
 }
 
 template <typename ArgType>
 inline WireType BindingType<std::shared_ptr<ArgType>>::toWireType(
-	std::shared_ptr<ArgType> arg
+	std::shared_ptr<ArgType> &&arg
 ) {
 	if(arg == nullptr || !arg.use_count()) return(Nan::Null());
 
-	return(makeExternal<BaseType>(arg.get(), TypeFlags::isSharedPtr));
+	return(makeExternal<BaseType>(TypeFlags::isSharedPtr, arg.get(), std::move(arg)));
 }
 
 template <> struct BindingType<v8::Local<v8::Function>> {

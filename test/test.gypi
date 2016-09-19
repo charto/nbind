@@ -10,6 +10,7 @@
 		"Nullable.cc",
 		"Strict.cc",
 		"Overload.cc",
+		"Smart.cc",
 		"Buffers.cc"
 	]
 }

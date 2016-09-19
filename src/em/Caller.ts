@@ -161,7 +161,7 @@ export namespace _nbind {
 
 		// Use eval to allow JIT compiling the function.
 
-		return(eval('(' + sourceCode + ')'));
+		return(eval('(' + sourceCode + ')') as (...args: any[]) => any);
 	}
 
 	/** Dynamically build a function that calls a JavaScript callback invoker
@@ -214,7 +214,7 @@ export namespace _nbind {
 
 		// Use eval to allow JIT compiling the function.
 
-		return(eval('(' + sourceCode + ')'));
+		return(eval('(' + sourceCode + ')') as (...args: any[]) => any);
 	}
 
 	/* tslint:disable:indent */

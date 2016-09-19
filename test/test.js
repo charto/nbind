@@ -382,6 +382,21 @@ test('Overloaded functions', function(t) {
 	t.end();
 });
 
+test('Smart pointers', function(t) {
+	var Type = testModule.Smart;
+
+	var obj = Type.make(31337);
+
+	obj.test();
+	Type.testStatic(obj);
+	Type.testShared(obj);
+
+	obj.free();
+	// obj.free();
+
+	t.end();
+});
+
 test('Buffers', function(t) {
 	var Type = testModule.Buffer;
 	var buf;

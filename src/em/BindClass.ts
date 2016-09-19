@@ -10,6 +10,7 @@ import {
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _value} from './ValueObj';
+import {_nbind as _resource} from './Resource';
 import {TypeFlags, TypeSpec, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
@@ -25,6 +26,8 @@ export namespace _nbind {
 
 	export var pushValue: typeof _value.pushValue;
 	export var popValue: typeof _value.popValue;
+
+	export var resources: typeof _resource.resources;
 
 	// Base class for wrapped instances of bound C++ classes.
 
@@ -43,8 +46,8 @@ export namespace _nbind {
 		__nbindConstructor: (...args: any[]) => number;
 		__nbindValueConstructor: _globals.Func;
 
-		/** __nbindConstructor return value. */
 		__nbindPtr: number;
+		__nbindShared: number;
 
 		/* tslint:enable:variable-name */
 	}
@@ -53,14 +56,14 @@ export namespace _nbind {
 	// Declared as anything that constructs something compatible with Wrapper.
 
 	interface WrapperClass {
-		new(...args: any[]): Wrapper;
+		new(marker: {}, flags: number, ptr: number, shared?: number): Wrapper;
 	}
 
 	const ptrMarker = {};
 
 	export function makeBound(policyTbl: PolicyTbl) {
 		class Bound extends Wrapper {
-			constructor(marker: {}, ptr: number, flags: number) {
+			constructor(marker: {}, flags: number, ptr: number, shared?: number) {
 				// super() never gets called here but TypeScript 1.8 requires it.
 				if((false && super()) || !(this instanceof Bound)) {
 
@@ -78,15 +81,20 @@ export namespace _nbind {
 
 				super();
 
-				let bits = flags;
+				let nbindFlags = flags;
+				let nbindPtr = ptr;
+				let nbindShared = shared;
 
 				if(marker !== ptrMarker) {
-					ptr = this.__nbindConstructor.apply(this, arguments);
-					bits = 0;
+					nbindFlags = TypeFlags.isClass | TypeFlags.isPointer;
+					nbindPtr = this.__nbindConstructor.apply(this, arguments);
+					nbindShared = 0;
 				}
 
-				_defineHidden(bits)(this, '__nbindFlags');
-				_defineHidden(ptr)(this, '__nbindPtr');
+				_defineHidden(nbindFlags)(this, '__nbindFlags');
+				_defineHidden(nbindPtr)(this, '__nbindPtr');
+
+				if(nbindShared) _defineHidden(nbindShared)(this, '__nbindShared');
 			}
 
 			@_defineHidden()
@@ -129,19 +137,15 @@ export namespace _nbind {
 	}
 
 	export function popPointer(ptr: number, type: BindClassPtr) {
-		if(ptr === 0) return(null);
-
-		const obj = new type.proto(ptrMarker, ptr, type.flags);
-
-		return(obj);
+		return(ptr ? new type.proto(ptrMarker, type.flags, ptr) : null);
 	}
 
-	export function pushPointer(obj: any, type: BindClassPtr) {
+	function pushPointer(obj: Wrapper, type: BindClassPtr) {
 		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
 		return(obj.__nbindPtr);
 	}
 
-	export function pushNonConstPointer(obj: any, type: BindClassPtr) {
+	function pushMutablePointer(obj: Wrapper, type: BindClassPtr) {
 		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
 
 		if(obj.__nbindFlags & TypeFlags.isConst) {
@@ -157,12 +161,13 @@ export namespace _nbind {
 
 			this.proto = (spec.paramList[0] as BindClass).proto;
 
+			const isConst = spec.flags & TypeFlags.isConst;
 			const isValue = (
 				(this.flags & TypeFlags.refMask) == TypeFlags.isReference &&
-				(this.flags & TypeFlags.isValueObject)
+				(spec.flags & TypeFlags.isValueObject)
 			);
 
-			const push = spec.flags & TypeFlags.isConst ? pushPointer : pushNonConstPointer;
+			const push = isConst ? pushPointer : pushMutablePointer;
 			const pop = isValue ? popValue : popPointer;
 
 			this.makeWireWrite = (expr: string, policyTbl: PolicyTbl) => (
@@ -177,7 +182,47 @@ export namespace _nbind {
 		}
 
 		proto: WrapperClass;
-		flags: number;
+	}
+
+	function popShared(ptr: number, type: BindClassPtr) {
+		const shared = HEAPU32[ptr / 4];
+		const unsafe = HEAPU32[ptr / 4 + 1];
+
+		return(unsafe ? new type.proto(ptrMarker, type.flags, unsafe, shared) : null);
+	}
+
+	function pushShared(obj: Wrapper, type: BindClassPtr) {
+		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
+
+		return(obj.__nbindShared);
+	}
+
+	function pushMutableShared(obj: Wrapper, type: BindClassPtr) {
+		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
+
+		if(obj.__nbindFlags & TypeFlags.isConst) {
+			throw(new Error('Passing a const value as a non-const argument'));
+		}
+
+		return(obj.__nbindShared);
+	}
+
+	export class SharedClassPtr extends BindType {
+		constructor(spec: TypeSpec) {
+			super(spec);
+
+			this.proto = (spec.paramList[0] as BindClass).proto;
+
+			const isConst = spec.flags & TypeFlags.isConst;
+			const push = isConst ? pushShared : pushMutableShared;
+
+			this.wireRead = (arg: number) => popShared(arg, this);
+			this.wireWrite = (arg: any) => push(arg, this);
+		}
+
+		readResources = [ resources.pool ];
+
+		proto: WrapperClass;
 	}
 
 	@prepareNamespace('_nbind')

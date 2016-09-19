@@ -174,8 +174,12 @@ public:
 
 #elif defined(EMSCRIPTEN)
 
-	static void destroy(uint32_t, Bound *obj) {
-		delete(obj);
+	static void destroy(uint32_t, void *ptr, void *shared, TypeFlags flags) {
+		if((flags & TypeFlags::refMask) == TypeFlags::isSharedPtr) {
+			delete(static_cast<std::shared_ptr<Bound> *>(shared));
+		} else {
+			delete(static_cast<Bound *>(ptr));
+		}
 	}
 
 #endif

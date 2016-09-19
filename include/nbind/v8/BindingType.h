@@ -102,7 +102,7 @@ struct BindingType<std::shared_ptr<ArgType>> {
 		return(node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getShared());
 	}
 
-	static inline WireType toWireType(Type arg);
+	static inline WireType toWireType(Type &&arg);
 
 };
 

@@ -62,11 +62,12 @@ export const enum TypeFlags {
 	isPrimitive = TypeFlagBase.kind * 1,
 	isClass = TypeFlagBase.kind * 2,
 	isClassPtr = TypeFlagBase.kind * 3,
-	isVector = TypeFlagBase.kind * 4,
-	isArray = TypeFlagBase.kind * 5,
-	isCString = TypeFlagBase.kind * 6,
-	isString = TypeFlagBase.kind * 7,
-	isOther = TypeFlagBase.kind * 8,
+	isSharedClassPtr = TypeFlagBase.kind * 4,
+	isVector = TypeFlagBase.kind * 5,
+	isArray = TypeFlagBase.kind * 6,
+	isCString = TypeFlagBase.kind * 7,
+	isString = TypeFlagBase.kind * 8,
+	isOther = TypeFlagBase.kind * 9,
 
 	numMask = TypeFlagBase.num * 15,
 	isUnsigned = TypeFlagBase.num * 1,
@@ -214,7 +215,7 @@ export function typeModule(self: any) {
 
 		let srcSpec: TypeSpec;
 		let spec: TypeSpec = {
-			flags: TypeFlags.isOther,
+			flags: structure[0],
 			id: id,
 			name: name,
 			paramList: [subType]
@@ -222,7 +223,6 @@ export function typeModule(self: any) {
 
 		switch(result.placeholderFlag) {
 			case StructureType.constant:
-				spec.flags = TypeFlags.isConst;
 				srcSpec = subType.spec;
 				break;
 
@@ -232,11 +232,10 @@ export function typeModule(self: any) {
 					break;
 				}
 
-				spec.flags = TypeFlags.isPointer; // TODO: or isReference!
-
-				// tslint:disable-next-line:no-switch-case-fall-through
+			// tslint:disable-next-line:no-switch-case-fall-through
 			case StructureType.reference:
-				if(spec.flags != TypeFlags.isPointer) spec.flags = TypeFlags.isReference;
+			// tslint:disable-next-line:no-switch-case-fall-through
+			case StructureType.shared:
 				srcSpec = subType.spec;
 
 				if((subType.flags & TypeFlags.kindMask) != TypeFlags.isClass) {
@@ -244,12 +243,7 @@ export function typeModule(self: any) {
 				}
 				break;
 
-			case StructureType.vector:
-				spec.flags = TypeFlags.isVector;
-				break;
-
 			case StructureType.array:
-				spec.flags = TypeFlags.isArray;
 				spec.paramList.push(result.paramList[1]);
 				break;
 
@@ -286,7 +280,11 @@ export function typeModule(self: any) {
 		}
 
 		if(spec.ptrSize == 8 && !(flags & TypeFlags.isFloat)) kind = TypeFlags.isBig;
-		if(kind == TypeFlags.isClass && refKind) kind = TypeFlags.isClassPtr;
+		if(kind == TypeFlags.isClass) {
+			if(refKind == TypeFlags.isSharedPtr) {
+				kind = TypeFlags.isSharedClassPtr;
+			} else if(refKind) kind = TypeFlags.isClassPtr;
+		}
 
 		if(!makeTypeTbl[kind]) {
 			console.log(makeTypeTbl); // tslint:disable-line
