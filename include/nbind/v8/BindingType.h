@@ -116,7 +116,7 @@ struct BindingType<std::unique_ptr<ArgType>> {
 
 	static inline WireType toWireType(Type arg) {
 		return(BindingType<std::shared_ptr<ArgType>>::toWireType(
-			std::make_shared<ArgType>(std::move(arg))
+			std::move(std::shared_ptr<ArgType>(std::move(arg)))
 		));
 	}
 

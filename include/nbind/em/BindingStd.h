@@ -31,13 +31,28 @@ struct BindingType<std::shared_ptr<ArgType>> {
 		return(*reinterpret_cast<Type *>(arg));
 	}
 
-	static inline WireType toWireType(Type arg) {
+	template <typename SmartType>
+	static inline WireType toWireType(SmartType &&arg) {
 		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val)));
 
-		val->boundShared = new Type(arg);
 		val->boundUnsafe = arg.get();
+		val->boundShared = new std::shared_ptr<ArgType>(std::move(arg));
 
 		return(val);
+	}
+
+};
+
+// Unique pointer.
+
+template <typename ArgType>
+struct BindingType<std::unique_ptr<ArgType>> {
+
+	typedef std::unique_ptr<ArgType> Type;
+	typedef typename BindingType<std::shared_ptr<ArgType>>::WireType WireType;
+
+	static inline WireType toWireType(Type &&arg) {
+		return(BindingType<std::shared_ptr<ArgType>>::toWireType(std::move(arg)));
 	}
 
 };

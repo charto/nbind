@@ -235,6 +235,8 @@ export function typeModule(self: any) {
 			// tslint:disable-next-line:no-switch-case-fall-through
 			case StructureType.reference:
 			// tslint:disable-next-line:no-switch-case-fall-through
+			case StructureType.unique:
+			// tslint:disable-next-line:no-switch-case-fall-through
 			case StructureType.shared:
 				srcSpec = subType.spec;
 
@@ -281,7 +283,7 @@ export function typeModule(self: any) {
 
 		if(spec.ptrSize == 8 && !(flags & TypeFlags.isFloat)) kind = TypeFlags.isBig;
 		if(kind == TypeFlags.isClass) {
-			if(refKind == TypeFlags.isSharedPtr) {
+			if(refKind == TypeFlags.isSharedPtr || refKind == TypeFlags.isUniquePtr) {
 				kind = TypeFlags.isSharedClassPtr;
 			} else if(refKind) kind = TypeFlags.isClassPtr;
 		}
