@@ -11,6 +11,7 @@ import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _value} from './ValueObj';
 import {_nbind as _resource} from './Resource';
+import {_nbind as _gc} from './GC';
 import {TypeFlags, TypeSpec, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
@@ -29,11 +30,12 @@ export namespace _nbind {
 
 	export var resources: typeof _resource.resources;
 
+	export var mark: typeof _gc.mark;
+
 	// Base class for wrapped instances of bound C++ classes.
 
 	export class Wrapper {
-		// TODO
-		// persist() { this.__nbindFlags |= TypeFlags.isPersistent; }
+		persist() { this.__nbindFlags |= TypeFlags.isPersistent; }
 
 		free: () => void;
 
@@ -93,10 +95,27 @@ export namespace _nbind {
 					nbindPtr = HEAPU32[wirePtr / 4 + 1];
 				}
 
-				_defineHidden(nbindFlags)(this, '__nbindFlags');
-				_defineHidden(nbindPtr)(this, '__nbindPtr');
+				const spec = {
+					configurable: true,
+					enumerable: false,
+					value: null as any,
+					writable: false
+				};
 
-				if(nbindShared) _defineHidden(nbindShared)(this, '__nbindShared');
+				const propTbl: { [key: string]: any } = {
+					'__nbindFlags': nbindFlags,
+					'__nbindPtr': nbindPtr
+				};
+
+				if(nbindShared) {
+					propTbl['__nbindShared'] = nbindShared;
+					mark(this);
+				}
+
+				for(let key of Object.keys(propTbl)) {
+					spec.value = propTbl[key];
+					Object.defineProperty(this, key, spec);
+				}
 			}
 
 			@_defineHidden()
@@ -225,6 +244,17 @@ export namespace _nbind {
 		readResources = [ resources.pool ];
 
 		proto: WrapperClass;
+	}
+
+	export function disableMember(obj: Wrapper, name: string) {
+		function die() { throw(new Error('Accessing deleted object')); }
+
+		Object.defineProperty(obj, name, {
+			configurable: false,
+			enumerable: false,
+			get: die,
+			set: die
+		});
 	}
 
 	@prepareNamespace('_nbind')

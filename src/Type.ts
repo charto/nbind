@@ -37,7 +37,7 @@ export interface TypeClass extends TypeSpec {
 
 export const enum TypeFlagBase {
 	flag = 1,
-	ref = flag * 4,
+	ref = flag * 16,
 	kind = ref * 8,
 	num = kind * 16
 }
@@ -47,9 +47,11 @@ export const enum TypeFlagBase {
 export const enum TypeFlags {
 	none = 0,
 
-	flagMask = TypeFlagBase.flag * 3,
+	flagMask = TypeFlagBase.flag * 15,
 	isConst = TypeFlagBase.flag * 1,
 	isValueObject = TypeFlagBase.flag * 2,
+	isPersistent = TypeFlagBase.flag * 4,
+	isDeleted = TypeFlagBase.flag * 8,
 
 	refMask = TypeFlagBase.ref * 7,
 	isPointer = TypeFlagBase.ref * 1,

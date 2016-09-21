@@ -21,6 +21,7 @@ import { _nbind as _std } from './BindingStd';    export { _std };
 import { _nbind as _caller } from './Caller';     export { _caller };
 import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
+import { _nbind as _gc } from './GC';             export { _gc };
 import {SignatureType, removeAccessorPrefix} from '../common';
 import {typeModule, TypeFlags, TypeFlagBase, TypeSpec} from '../Type';
 
@@ -56,6 +57,7 @@ export namespace _nbind {
 	export var BindClassPtr: typeof _class.BindClassPtr;
 	export var SharedClassPtr: typeof _class.BindClassPtr;
 	export var makeBound: typeof _class.makeBound;
+	export var disableMember: typeof _class.disableMember;
 
 	export var CallbackType: typeof _callback.CallbackType;
 
@@ -70,6 +72,9 @@ export namespace _nbind {
 	export var makeMethodCaller: typeof _caller.makeMethodCaller;
 
 	export var BufferType: typeof _buffer.BufferType;
+
+	export var enableLightGC: typeof _gc.enableLightGC;
+	export var disableLightGC: typeof _gc.disableLightGC;
 }
 
 publishNamespace('_nbind');
@@ -187,7 +192,14 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			bindClass.proto.prototype,
 			'free',
-			function() { destroy.call(this, this.__nbindShared, this.__nbindFlags); } ,
+			function() {
+				destroy.call(this, this.__nbindShared, this.__nbindFlags);
+
+				this.__nbindFlags |= TypeFlags.isDeleted;
+
+				_nbind.disableMember(this, '__nbindShared');
+				_nbind.disableMember(this, '__nbindPtr');
+			},
 			0
 		);
 
@@ -365,5 +377,11 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static nbind_debug() { debugger; }
+
+	@dep('_nbind')
+	static nbind_enable_gc() { _nbind.enableLightGC(); }
+
+	@dep('_nbind')
+	static nbind_disable_gc() { _nbind.disableLightGC(); }
 
 }

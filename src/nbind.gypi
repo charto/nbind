@@ -35,8 +35,8 @@
 				"--post-js", "<(_postjs_path)",
 				"--js-library", "<(_jslib_path)",
 				"-s", "NO_FILESYSTEM=1",
-				"-s", "EXPORTED_FUNCTIONS=[\"_nbind_init\",\"_nbind_value\",\"_nbind_debug\"]",
-				"-s", "DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\"nbind_value\",\"nbind_debug\",\"\\$$Browser\"]"
+				"-s", "EXPORTED_FUNCTIONS=[\"_nbind_init\",\"_nbind_value\",\"_nbind_enable_gc\",\"_nbind_disable_gc\",\"_nbind_debug\"]",
+				"-s", "DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\"nbind_value\",\"nbind_enable_gc\",\"nbind_disable_gc\",\"nbind_debug\",\"\\$$Browser\"]"
 			],
 
 			"xcode_settings": {

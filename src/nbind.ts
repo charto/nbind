@@ -91,6 +91,9 @@ export class Binding<ExportType extends DefaultExportType> {
 		outTypeDetail: (kind: number, ...args: any[]) => void
 	) => void;
 
+	enableLightGC: () => void;
+	disableLightGC: () => void;
+
 	binary: ModuleSpec;
 	/** Exported API of a C++ library compiled for nbind. */
 	lib: ExportType;
@@ -292,6 +295,8 @@ function initAsm<ExportType extends DefaultExportType>(
 			binding.bind = parts.bind;
 			binding.reflect = parts.reflect;
 			binding.queryType = parts.queryType;
+			binding.enableLightGC = parts.enableLightGC;
+			binding.disableLightGC = parts.disableLightGC;
 		}
 
 		callback(err, binding);
@@ -315,6 +320,8 @@ function initNode<ExportType extends DefaultExportType>(
 	binding.bind = lib.NBind.bind_value;
 	binding.reflect = lib.NBind.reflect;
 	binding.queryType = lib.NBind.queryType;
+	binding.enableLightGC = function() {}; // tslint:disable-line:no-empty
+	binding.disableLightGC = function() {}; // tslint:disable-line:no-empty
 
 	Object.keys(lib).forEach(function(key: string) {
 		binding.lib[key] = lib[key];

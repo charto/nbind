@@ -39,6 +39,8 @@
 				bind: Module._nbind_value,
 				reflect: Module.NBind.reflect,
 				queryType: Module.NBind.queryType,
+				enableLightGC: Module._nbind_enable_gc,
+				disableLightGC: Module._nbind_disable_gc,
 				lib: Module
 			});
 		});
