@@ -33,6 +33,7 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -43,14 +44,34 @@ namespace nbind {
 template <typename ArgType> struct BindingType {
 
 	typedef ArgType Type;
-	typedef ArgType *WireType;
+	typedef struct {
+		std::shared_ptr<ArgType> *boundShared;
+		ArgType *boundUnsafe;
+	} *WireType;
 
 	static inline Type fromWireType(WireType arg) {
-		return(*BindingType<ArgType *>::fromWireType(arg));
+		// Hack: JS side sends Type * instead of WireType, since C++ side can
+		// easily unwrap the shared_ptr anyway.
+
+		return(*reinterpret_cast<Type *>(arg));
 	}
 
 	static inline WireType toWireType(ArgType &&arg) {
-		return(BindingType<ArgType *>::toWireType(new ArgType(std::move(arg))));
+		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val)));
+
+		val->boundUnsafe = new ArgType(std::move(arg));
+		val->boundShared = new std::shared_ptr<ArgType>(val->boundUnsafe);
+
+		return(val);
+	}
+
+	static inline WireType toWireType(const ArgType &arg) {
+		WireType val = reinterpret_cast<WireType>(NBind::lalloc(sizeof(*val)));
+
+		val->boundUnsafe = new ArgType(arg);
+		val->boundShared = new std::shared_ptr<ArgType>(val->boundUnsafe);
+
+		return(val);
 	}
 
 };
@@ -120,7 +141,7 @@ struct BindingType<ValueType<ArgType>> {
 	// Pointer or offset (times 2 plus 1 to distinguish from pointers)
 	// to a list of constructed objects on the JavaScript side.
 
-	typedef ObjType *WireType;
+	typedef typename BindingType<ObjType>::WireType WireType;
 
 	static inline Type fromWireType(WireType arg);
 	static inline WireType toWireType(Type &&arg);

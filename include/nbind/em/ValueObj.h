@@ -34,13 +34,13 @@ inline auto BindingType<ValueType<ArgType>>::toWireType(ArgType &&arg) -> WireTy
 		return(reinterpret_cast<WireType>(construct.getSlot()));
 	} else {
 		// Value type JavaScript class is missing or not registered.
-		return(BindingType<ArgType>::toWireType(std::forward<ArgType>(arg)));
+		return(BindingType<ObjType>::toWireType(std::forward<ArgType>(arg)));
 	}
 }
 
 template <typename ArgType>
-inline ArgType BindingType<ValueType<ArgType>>::fromWireType(WireType ptr) {
-	uintptr_t index = reinterpret_cast<int>(ptr);
+inline ArgType BindingType<ValueType<ArgType>>::fromWireType(WireType arg) {
+	uintptr_t index = reinterpret_cast<int>(arg);
 	if(index & 1) {
 		// Constructor argument is an unused dummy value.
 		TemplatedArgStorage<ArgType> storage(0);
@@ -48,7 +48,7 @@ inline ArgType BindingType<ValueType<ArgType>>::fromWireType(WireType ptr) {
 		_nbind_get_value_object(index, &storage);
 
 		return(storage.getBound());
-	} else return(std::move(*ptr));
+	} else return(*reinterpret_cast<Type *>(arg));
 }
 
 } // namespace

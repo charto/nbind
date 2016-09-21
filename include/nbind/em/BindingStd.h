@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
 #include <vector>
 #include <array>
@@ -19,10 +18,7 @@ template <typename ArgType>
 struct BindingType<std::shared_ptr<ArgType>> {
 
 	typedef std::shared_ptr<ArgType> Type;
-	typedef struct {
-		std::shared_ptr<ArgType> *boundShared;
-		ArgType *boundUnsafe;
-	} *WireType;
+	typedef typename BindingType<ArgType>::WireType WireType;
 
 	static inline Type fromWireType(WireType arg) {
 		// Hack: JS side sends Type * instead of WireType, since C++ side can
@@ -49,7 +45,7 @@ template <typename ArgType>
 struct BindingType<std::unique_ptr<ArgType>> {
 
 	typedef std::unique_ptr<ArgType> Type;
-	typedef typename BindingType<std::shared_ptr<ArgType>>::WireType WireType;
+	typedef typename BindingType<ArgType>::WireType WireType;
 
 	static inline WireType toWireType(Type &&arg) {
 		return(BindingType<std::shared_ptr<ArgType>>::toWireType(std::move(arg)));

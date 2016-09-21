@@ -28,7 +28,7 @@ export namespace _nbind {
 
 export namespace _nbind {
 
-	export var popPointer: typeof _class.popPointer;
+	export var popShared: typeof _class.popShared;
 	type BindClassPtr = _class.BindClassPtr;
 
 	export var throwError: typeof _globals.throwError;
@@ -70,7 +70,7 @@ export namespace _nbind {
 			firstFreeValue = num;
 
 			return(obj);
-		} else return(popPointer(num, type));
+		} else return(popShared(num, type));
 	}
 
 	// 2^64, first integer not representable with uint64_t.

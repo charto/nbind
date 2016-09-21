@@ -86,9 +86,11 @@ export namespace _nbind {
 				let nbindShared = shared;
 
 				if(marker !== ptrMarker) {
-					nbindFlags = TypeFlags.isClass | TypeFlags.isPointer;
-					nbindPtr = this.__nbindConstructor.apply(this, arguments);
-					nbindShared = 0;
+					let wirePtr = this.__nbindConstructor.apply(this, arguments);
+
+					nbindFlags = TypeFlags.isSharedClassPtr | TypeFlags.isSharedPtr;
+					nbindShared = HEAPU32[wirePtr / 4];
+					nbindPtr = HEAPU32[wirePtr / 4 + 1];
 				}
 
 				_defineHidden(nbindFlags)(this, '__nbindFlags');
@@ -184,7 +186,7 @@ export namespace _nbind {
 		proto: WrapperClass;
 	}
 
-	function popShared(ptr: number, type: BindClassPtr) {
+	export function popShared(ptr: number, type: BindClassPtr) {
 		const shared = HEAPU32[ptr / 4];
 		const unsafe = HEAPU32[ptr / 4 + 1];
 

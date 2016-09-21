@@ -83,11 +83,11 @@ private:
 
 #elif defined(EMSCRIPTEN)
 
+#	include "em/NBind.h"
 #	include "em/BindingType.h"
 #	include "TypeTransformer.h"
 #	include "em/ArgFromWire.h"
 #	include "signature/CallbackSignature.h"
-#	include "em/NBind.h"
 #	include "em/Pool.h"
 #	include "em/External.h"
 #	include "em/Callback.h"
