@@ -27,6 +27,13 @@ struct ExternalPtr<BaseType, std::shared_ptr<ArgType>> {
 	}
 };
 
+template <typename BaseType, typename ArgType>
+struct ExternalPtr<BaseType, std::unique_ptr<ArgType>> {
+	static void *make(std::shared_ptr<ArgType> &&ptr) {
+		return(new std::shared_ptr<ArgType>(std::move(ptr)));
+	}
+};
+
 template <typename BaseType, typename TargetType, typename ArgType>
 static inline WireType makeExternal(TypeFlags flags, TargetType *ptr, ArgType &&arg) {
 	if(std::is_const<TargetType>::value) flags = flags | TypeFlags::isConst;
@@ -70,6 +77,15 @@ inline WireType BindingType<std::shared_ptr<ArgType>>::toWireType(
 	std::shared_ptr<ArgType> &&arg
 ) {
 	if(arg == nullptr || !arg.use_count()) return(Nan::Null());
+
+	return(makeExternal<BaseType>(TypeFlags::isSharedPtr, arg.get(), std::move(arg)));
+}
+
+template <typename ArgType>
+inline WireType BindingType<std::unique_ptr<ArgType>>::toWireType(
+	std::unique_ptr<ArgType> &&arg
+) {
+	if(arg == nullptr) return(Nan::Null());
 
 	return(makeExternal<BaseType>(TypeFlags::isSharedPtr, arg.get(), std::move(arg)));
 }
