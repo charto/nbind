@@ -37,9 +37,9 @@ export interface TypeClass extends TypeSpec {
 
 export const enum TypeFlagBase {
 	flag = 1,
-	ref = flag * 4,
-	kind = ref * 8,
-	num = kind * 16
+	num = flag * 4,
+	ref = num * 16,
+	kind = ref * 8
 }
 
 // These must match Policy.h.
@@ -50,6 +50,12 @@ export const enum TypeFlags {
 	flagMask = TypeFlagBase.flag * 3,
 	isConst = TypeFlagBase.flag * 1,
 	isValueObject = TypeFlagBase.flag * 2,
+
+	numMask = TypeFlagBase.num * 15,
+	isUnsigned = TypeFlagBase.num * 1,
+	isSignless = TypeFlagBase.num * 2,
+	isFloat = TypeFlagBase.num * 4,
+	isBig = TypeFlagBase.num * 8,
 
 	refMask = TypeFlagBase.ref * 7,
 	isPointer = TypeFlagBase.ref * 1,
@@ -67,13 +73,7 @@ export const enum TypeFlags {
 	isArray = TypeFlagBase.kind * 6,
 	isCString = TypeFlagBase.kind * 7,
 	isString = TypeFlagBase.kind * 8,
-	isOther = TypeFlagBase.kind * 9,
-
-	numMask = TypeFlagBase.num * 15,
-	isUnsigned = TypeFlagBase.num * 1,
-	isSignless = TypeFlagBase.num * 2,
-	isFloat = TypeFlagBase.num * 4,
-	isBig = TypeFlagBase.num * 8
+	isOther = TypeFlagBase.kind * 9
 }
 
 export const enum StateFlags {

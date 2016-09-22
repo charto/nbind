@@ -17,9 +17,9 @@ struct TypeFlagBaseType {
 
 	struct inner {
 		static constexpr uint32_t flag = 1;
-		static constexpr uint32_t ref = flag * 4;
+		static constexpr uint32_t num = flag * 4;
+		static constexpr uint32_t ref = num * 16;
 		static constexpr uint32_t kind = ref * 8;
-		static constexpr uint32_t num = kind * 16;
 	};
 
 	uint32_t flag = inner::flag;
@@ -41,6 +41,12 @@ enum class TypeFlags : uint32_t {
 	isConst = TypeFlagBase.flag * 1,
 	isValueObject = TypeFlagBase.flag * 2,
 
+	numMask = TypeFlagBase.num * 15,
+	isUnsigned = TypeFlagBase.num * 1,
+	isSignless = TypeFlagBase.num * 2,
+	isFloat = TypeFlagBase.num * 4,
+	isBig = TypeFlagBase.num * 8,
+
 	refMask = TypeFlagBase.ref * 7,
 	isPointer = TypeFlagBase.ref * 1,
 	isReference = TypeFlagBase.ref * 2,
@@ -57,13 +63,7 @@ enum class TypeFlags : uint32_t {
 	isArray = TypeFlagBase.kind * 6,
 	isCString = TypeFlagBase.kind * 7,
 	isString = TypeFlagBase.kind * 8,
-	isOther = TypeFlagBase.kind * 9,
-
-	numMask = TypeFlagBase.num * 15,
-	isUnsigned = TypeFlagBase.num * 1,
-	isSignless = TypeFlagBase.num * 2,
-	isFloat = TypeFlagBase.num * 4,
-	isBig = TypeFlagBase.num * 8
+	isOther = TypeFlagBase.kind * 9
 };
 
 inline TypeFlags operator& (TypeFlags a, TypeFlags b) {
