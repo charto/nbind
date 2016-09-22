@@ -11,9 +11,7 @@
 using namespace nbind;
 
 extern "C" {
-	extern void _nbind_register_endian(unsigned char byte);
 	extern void _nbind_register_pool(unsigned int pageSize, unsigned int *usedPtr, unsigned char *rootPtr, unsigned char **pagePtr);
-	extern void _nbind_register_method_getter_setter_id(unsigned int methodID, unsigned int getterID, unsigned int setterID);
 	extern void _nbind_register_primitive(  TYPEID typeID, unsigned int size, unsigned char flag);
 	extern void _nbind_register_type(       TYPEID typeID,    const char *name);
 	extern void _nbind_register_class(const TYPEID *typeList, const char **policies, const char *name, funcPtr destructor);
@@ -122,10 +120,6 @@ PoolRestore :: ~PoolRestore() {
 typedef BaseSignature :: SignatureType SignatureType;
 
 static void initModule() {
-	uint32_t endianTest = 0x01020304;
-
-	_nbind_register_endian(*(uint8_t *)&endianTest);
-
 	_nbind_register_pool(Pool::pageSize, &Pool::used, Pool::rootPage, &Pool::page);
 
 	const void **primitiveData = getPrimitiveList();

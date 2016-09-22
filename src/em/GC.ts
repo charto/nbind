@@ -33,21 +33,17 @@ export namespace _nbind {
 	// tslint:disable-next-line:no-empty
 	export var mark = (obj: Wrapper) => {};
 
-	export function enableLightGC() {
-		mark = (obj: Wrapper) => {
-			console.error('test'); // tslint:disable-line
+	export function toggleLightGC(enable: boolean) {
+		if(enable) {
+			mark = (obj: Wrapper) => {
+				dirtyList.push(obj);
 
-			dirtyList.push(obj);
-
-			if(!gcTimer) {
-				gcTimer = setTimeout(sweep, 0);
-			}
-		};
-	}
-
-	export function disableLightGC() {
-		// tslint:disable-next-line:no-empty
-		mark = (obj: Wrapper) => {};
+				if(!gcTimer) gcTimer = setTimeout(sweep, 0);
+			};
+		} else {
+			// tslint:disable-next-line:no-empty
+			mark = (obj: Wrapper) => {};
+		}
 	}
 
 	@prepareNamespace('_nbind')

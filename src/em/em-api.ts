@@ -73,8 +73,7 @@ export namespace _nbind {
 
 	export var BufferType: typeof _buffer.BufferType;
 
-	export var enableLightGC: typeof _gc.enableLightGC;
-	export var disableLightGC: typeof _gc.disableLightGC;
+	export var toggleLightGC: typeof _gc.toggleLightGC;
 }
 
 publishNamespace('_nbind');
@@ -84,11 +83,6 @@ class Dummy extends Boolean {}
 
 @exportLibrary
 class nbind { // tslint:disable-line:class-name
-
-	@dep('_nbind')
-	static _nbind_register_endian(byte: number) {
-		if(byte == 1) _nbind.bigEndian = true;
-	}
 
 	@dep('_nbind')
 	static _nbind_register_pool(
@@ -101,6 +95,24 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.Pool.usedPtr = usedPtr / 4;
 		_nbind.Pool.rootPtr = rootPtr;
 		_nbind.Pool.pagePtr = pagePtr / 4;
+
+		HEAP32[usedPtr / 4] = 0x01020304;
+		if(HEAP8[usedPtr] == 1) _nbind.bigEndian = true;
+		HEAP32[usedPtr / 4] = 0;
+
+		_nbind.makeTypeTbl = {
+			[TypeFlags.isPrimitive]: _nbind.PrimitiveType,
+			[TypeFlags.isBig]: _nbind.Int64Type,
+			[TypeFlags.isClass]: _nbind.BindClass,
+			[TypeFlags.isClassPtr]: _nbind.BindClassPtr,
+			[TypeFlags.isSharedClassPtr]: _nbind.SharedClassPtr,
+			[TypeFlags.isVector]: _nbind.ArrayType,
+			[TypeFlags.isArray]: _nbind.ArrayType,
+			[TypeFlags.isCString]: _nbind.CStringType,
+			[TypeFlags.isOther]: _nbind.BindType
+		};
+
+		Module['toggleLightGC'] = _nbind.toggleLightGC;
 	}
 
 	@dep('_nbind', '_typeModule')
@@ -129,20 +141,6 @@ class nbind { // tslint:disable-line:class-name
 			id: id,
 			ptrSize: size
 		};
-
-		if(!_nbind.makeTypeTbl) {
-			_nbind.makeTypeTbl = {
-				[TypeFlags.isPrimitive]: _nbind.PrimitiveType,
-				[TypeFlags.isBig]: _nbind.Int64Type,
-				[TypeFlags.isClass]: _nbind.BindClass,
-				[TypeFlags.isClassPtr]: _nbind.BindClassPtr,
-				[TypeFlags.isSharedClassPtr]: _nbind.SharedClassPtr,
-				[TypeFlags.isVector]: _nbind.ArrayType,
-				[TypeFlags.isArray]: _nbind.ArrayType,
-				[TypeFlags.isCString]: _nbind.CStringType,
-				[TypeFlags.isOther]: _nbind.BindType
-			};
-		}
 
 		_nbind.makeType(_nbind.makeTypeTbl, spec);
 	}
@@ -377,11 +375,5 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static nbind_debug() { debugger; }
-
-	@dep('_nbind')
-	static nbind_enable_gc() { _nbind.enableLightGC(); }
-
-	@dep('_nbind')
-	static nbind_disable_gc() { _nbind.disableLightGC(); }
 
 }

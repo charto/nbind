@@ -64,6 +64,8 @@ export interface DefaultExportType {
 }
 
 export class Binding<ExportType extends DefaultExportType> {
+	[ key: string ]: any;
+
 	/** Bind a value type (class with a fromJS method) to an equivalent C++ type. */
 
 	bind: (name: string, proto: ClassType ) => void;
@@ -91,8 +93,7 @@ export class Binding<ExportType extends DefaultExportType> {
 		outTypeDetail: (kind: number, ...args: any[]) => void
 	) => void;
 
-	enableLightGC: () => void;
-	disableLightGC: () => void;
+	toggleLightGC: (enable: boolean) => void;
 
 	binary: ModuleSpec;
 	/** Exported API of a C++ library compiled for nbind. */
@@ -292,11 +293,7 @@ function initAsm<ExportType extends DefaultExportType>(
 	// Load the Asm.js module.
 	require(binding.binary.path)(lib, (err: any, parts: Binding<ExportType>) => {
 		if(!err) {
-			binding.bind = parts.bind;
-			binding.reflect = parts.reflect;
-			binding.queryType = parts.queryType;
-			binding.enableLightGC = parts.enableLightGC;
-			binding.disableLightGC = parts.disableLightGC;
+			for(let key of Object.keys(parts)) binding[key] = parts[key];
 		}
 
 		callback(err, binding);
@@ -320,8 +317,7 @@ function initNode<ExportType extends DefaultExportType>(
 	binding.bind = lib.NBind.bind_value;
 	binding.reflect = lib.NBind.reflect;
 	binding.queryType = lib.NBind.queryType;
-	binding.enableLightGC = function() {}; // tslint:disable-line:no-empty
-	binding.disableLightGC = function() {}; // tslint:disable-line:no-empty
+	binding.toggleLightGC = function(enable: boolean) {}; // tslint:disable-line:no-empty
 
 	Object.keys(lib).forEach(function(key: string) {
 		binding.lib[key] = lib[key];

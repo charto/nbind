@@ -23,6 +23,8 @@ if(typeof(gc) == 'function') {
 	}
 }
 
+binding.toggleLightGC(true);
+
 test('Methods and primitive types', function(t) {
 	var Type = testModule.PrimitiveMethods;
 
