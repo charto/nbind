@@ -37,7 +37,7 @@ export interface TypeClass extends TypeSpec {
 
 export const enum TypeFlagBase {
 	flag = 1,
-	ref = flag * 16,
+	ref = flag * 4,
 	kind = ref * 8,
 	num = kind * 16
 }
@@ -47,11 +47,9 @@ export const enum TypeFlagBase {
 export const enum TypeFlags {
 	none = 0,
 
-	flagMask = TypeFlagBase.flag * 15,
+	flagMask = TypeFlagBase.flag * 3,
 	isConst = TypeFlagBase.flag * 1,
 	isValueObject = TypeFlagBase.flag * 2,
-	isPersistent = TypeFlagBase.flag * 4,
-	isDeleted = TypeFlagBase.flag * 8,
 
 	refMask = TypeFlagBase.ref * 7,
 	isPointer = TypeFlagBase.ref * 1,
@@ -76,6 +74,13 @@ export const enum TypeFlags {
 	isSignless = TypeFlagBase.num * 2,
 	isFloat = TypeFlagBase.num * 4,
 	isBig = TypeFlagBase.num * 8
+}
+
+export const enum StateFlags {
+	none = 0,
+
+	isPersistent = 1,
+	isDeleted = 2,
 }
 
 // These must match C++ enum StructureType in TypeID.h

@@ -23,7 +23,7 @@ import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
 import { _nbind as _gc } from './GC';             export { _gc };
 import {SignatureType, removeAccessorPrefix} from '../common';
-import {typeModule, TypeFlags, TypeFlagBase, TypeSpec} from '../Type';
+import {typeModule, StateFlags, TypeFlags, TypeFlagBase, TypeSpec} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -193,7 +193,7 @@ class nbind { // tslint:disable-line:class-name
 			function() {
 				destroy.call(this, this.__nbindShared, this.__nbindFlags);
 
-				this.__nbindFlags |= TypeFlags.isDeleted;
+				this.__nbindState |= StateFlags.isDeleted;
 
 				_nbind.disableMember(this, '__nbindShared');
 				_nbind.disableMember(this, '__nbindPtr');

@@ -17,7 +17,7 @@ struct TypeFlagBaseType {
 
 	struct inner {
 		static constexpr uint32_t flag = 1;
-		static constexpr uint32_t ref = flag * 16;
+		static constexpr uint32_t ref = flag * 4;
 		static constexpr uint32_t kind = ref * 8;
 		static constexpr uint32_t num = kind * 16;
 	};
@@ -37,11 +37,9 @@ constexpr struct TypeFlagBaseType TypeFlagBase;
 enum class TypeFlags : uint32_t {
 	none = 0,
 
-	flagMask = TypeFlagBase.flag * 15,
+	flagMask = TypeFlagBase.flag * 3,
 	isConst = TypeFlagBase.flag * 1,
 	isValueObject = TypeFlagBase.flag * 2,
-	isPersistent = TypeFlagBase.flag * 4,
-	isDeleted = TypeFlagBase.flag * 8,
 
 	refMask = TypeFlagBase.ref * 7,
 	isPointer = TypeFlagBase.ref * 1,

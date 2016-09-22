@@ -12,7 +12,7 @@ import {_nbind as _type} from './BindingType';
 import {_nbind as _value} from './ValueObj';
 import {_nbind as _resource} from './Resource';
 import {_nbind as _gc} from './GC';
-import {TypeFlags, TypeSpec, PolicyTbl} from '../Type';
+import {StateFlags, TypeFlags, TypeSpec, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -35,13 +35,14 @@ export namespace _nbind {
 	// Base class for wrapped instances of bound C++ classes.
 
 	export class Wrapper {
-		persist() { this.__nbindFlags |= TypeFlags.isPersistent; }
+		persist() { this.__nbindState |= StateFlags.isPersistent; }
 
 		free: () => void;
 
 		/* tslint:disable:variable-name */
 
 		__nbindFlags: TypeFlags;
+		__nbindState: StateFlags;
 
 		/** Dynamically set by _nbind_register_constructor.
 		  * Calls the C++ constructor and returns a numeric heap pointer. */
@@ -116,6 +117,8 @@ export namespace _nbind {
 					spec.value = propTbl[key];
 					Object.defineProperty(this, key, spec);
 				}
+
+				_defineHidden(StateFlags.none)(this, '__nbindState');
 			}
 
 			@_defineHidden()
