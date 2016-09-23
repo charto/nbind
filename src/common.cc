@@ -43,14 +43,14 @@ struct isSignless<char> {
 template <typename... Args>
 static const void **definePrimitiveTypes() {
 	static TYPEID typeList[] = { Typer<Args>::makeID()..., nullptr };
-	static const uint32_t sizeList[] = { sizeof(Args)... };
+	static const uint8_t sizeList[] = { sizeof(Args)... };
 	static const uint8_t flagList[] = { static_cast<uint8_t>(
 		// Type is unsigned?
 		(static_cast<Args>(-1) >= 0 ? TypeFlags::isUnsigned : TypeFlags::none) |
 		// Type is signless (char)?
 		(isSignless<Args>::value ? TypeFlags::isSignless : TypeFlags::none) |
 		// Type is floating point?
-		(static_cast<Args>(1/2) != 0 ? TypeFlags::isFloat : TypeFlags::none)
+		(static_cast<Args>(0.5) != 0 ? TypeFlags::isFloat : TypeFlags::none)
 	)... };
 
 	static const void *data[] = {

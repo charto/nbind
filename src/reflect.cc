@@ -52,7 +52,7 @@ void NBind :: reflect(
 ) {
 
 	const void **primitiveData = getPrimitiveList();
-	const uint32_t *sizePtr = static_cast<const uint32_t *>(primitiveData[1]);
+	const uint8_t *sizePtr = static_cast<const uint8_t *>(primitiveData[1]);
 	const uint8_t *flagPtr = static_cast<const uint8_t *>(primitiveData[2]);
 
 	for(const TYPEID *type = static_cast<const TYPEID *>(primitiveData[0]); *type; ++type) {
