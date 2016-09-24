@@ -3,9 +3,20 @@
 
 import {Binding} from './nbind';
 import {SignatureType, removeAccessorPrefix} from './common';
-import {StructureType} from './Type';
+import {
+	typeModule,
+	TypeFlags,
+	TypeSpec,
+	TypeClass,
+	MakeTypeTbl
+} from './Type';
 
-class NBindType {
+const { Type, makeType, getComplexType } = typeModule(typeModule);
+
+export type TypeBase = TypeClass;
+export const TypeBase = Type as { new(spec: TypeSpec): TypeClass };
+
+class NBindID {
 	constructor(id: number) {
 		this.id = id;
 	}
@@ -21,103 +32,19 @@ class NBindType {
 	id: number;
 }
 
-export class BindType {
-	constructor(id: number, name: string) {
-		this.id = id;
-		this.name = name;
+const typeIdTbl: { [id: number]: BindType } = {};
+const typeNameTbl: { [name: string]: BindType } = {};
+
+export class BindType extends TypeBase {
+	constructor(spec: TypeSpec) {
+		super(spec);
+
+		typeIdTbl[spec.id] = this;
+		typeNameTbl[spec.name] = this;
 	}
-
-	toString() {
-		return(this.name);
-	}
-
-	id: number;
-	name: string;
-
-	isPointer = false;
-	isClass = false;
-
-	target: BindType;
-}
-
-export class BindPrimitive extends BindType {
-
-	/** Partially duplicates _nbind_register_primitive. */
-
-	constructor(id: number, size: number, flag: number) {
-		const isSignless = flag & 4;
-		const isFloat    = flag & 2;
-		const isUnsigned = flag & 1;
-
-		let name: string;
-
-		if(isSignless) {
-			name = 'char';
-		} else {
-			name = (
-				(isUnsigned ? 'u' : '') +
-				(isFloat ? 'float' : 'int') +
-				(size * 8 + '_t')
-			);
-		}
-
-		super(id, name);
-
-		this.isSignless = !!isSignless;
-		this.isFloat = !!isFloat;
-		this.isUnsigned = !!isUnsigned;
-	}
-
-	isSignless: boolean;
-	isFloat: boolean;
-	isUnsigned: boolean;
-}
-
-export class BindVector extends BindType {
-	constructor(id: number, target: BindType) {
-		super(id, 'std::vector<' + target.name + '>');
-
-		this.target = target;
-	}
-
-	isVector = true;
-
-	target: BindType;
-}
-
-export class BindArray extends BindType {
-	constructor(id: number, target: BindType, length: number) {
-		super(id, 'std::array<' + target.name + ', ' + length + '>');
-
-		this.target = target;
-		this.length = length;
-	}
-
-	isVector = true;
-
-	target: BindType;
-	length: number;
-}
-
-export class BindPointer extends BindType {
-	constructor(id: number, target: BindType, isConst?: boolean) {
-		super(id, (isConst ? 'const ' : '') + target.name.replace(/([^*])$/, '$1 ') + '*');
-
-		this.isConst = !!isConst;
-		this.target = target;
-	}
-
-	isPointer = true;
-	isConst: boolean;
-
-	target: BindType;
 }
 
 export class BindClass extends BindType {
-	constructor(id: number, name: string) {
-		super(id, name);
-	}
-
 	addMethod(name: string, kind: SignatureType, typeList: BindType[], policyList: string[]) {
 		const bindMethod = new BindMethod(
 			this,
@@ -145,13 +72,13 @@ export class BindClass extends BindType {
 		}
 
 		if(kind == SignatureType.getter) {
+			// Property type is getter's return type.
 			bindProperty.makeReadable(typeList[0]);
 		} else {
+			// Property type is type of setter's first argument.
 			bindProperty.makeWritable(typeList[1]);
 		}
 	}
-
-	isClass = true;
 
 	methodTbl: { [name: string]: BindMethod } = {};
 	methodList: BindMethod[] = [];
@@ -175,6 +102,17 @@ export class BindMethod {
 		this.argTypeList = argTypeList;
 		this.policyList = policyList;
 		this.isStatic = isStatic;
+	}
+
+	toString() {
+		return(
+			(
+				this.name ?
+				this.returnType + ' ' + this.name :
+				this.bindClass.name
+			) +
+			'(' + this.argTypeList.join(', ') + ')'
+		);
 	}
 
 	bindClass: BindClass;
@@ -207,6 +145,10 @@ export class BindProperty {
 		this.isWritable = true;
 	}
 
+	toString() {
+		return(this.bindType + ' ' + this.name);
+	}
+
 	bindClass: BindClass;
 	name: string;
 	bindType: BindType;
@@ -215,11 +157,29 @@ export class BindProperty {
 	isWritable = false;
 }
 
+const makeTypeTbl: MakeTypeTbl = {
+	[TypeFlags.isPrimitive]: BindType,
+	[TypeFlags.isBig]: BindType,
+	[TypeFlags.isClass]: BindClass,
+	[TypeFlags.isClassPtr]: BindType,
+	[TypeFlags.isSharedClassPtr]: BindType,
+	[TypeFlags.isVector]: BindType,
+	[TypeFlags.isArray]: BindType,
+	[TypeFlags.isCString]: BindType,
+	[TypeFlags.isOther]: BindType
+};
+
+function getType(id: number) {
+	return(typeIdTbl[id]);
+}
+
 export class Reflect {
 	constructor(binding: Binding<any>) {
 		this.binding = binding;
 
-		binding.bind('NBindType', NBindType);
+		// Bind value type on Emscripten target
+		// (equivalent Node.js type has no toJS method).
+		binding.bind('NBindID', NBindID);
 
 		binding.reflect(
 			this.readPrimitive.bind(this),
@@ -229,71 +189,45 @@ export class Reflect {
 		);
 	}
 
-	private registerType(bindType: BindType) {
-		this.typeIdTbl[bindType.id] = bindType;
-		this.typeNameTbl[bindType.name] = bindType;
+	private queryType(id: number) {
+		let result: {placeholderFlag: number, paramList: number[]};
 
-		this.typeList.push(bindType);
-	}
+		// TODO: just wrap the call in return() and remove the
+		// result variable. Requires support for passing any
+		// JavaScript type through C++.
 
-	private getType(id: number) {
-		let bindType = this.typeIdTbl[id];
-
-		if(bindType) return(bindType);
-
-		this.binding.queryType(id, (kind: number, ...args: any[]) => {
-			switch(kind) {
-				case StructureType.vector:
-					bindType = new BindVector(id, this.getType(args[0]));
-					break;
-
-				case StructureType.array:
-					bindType = new BindArray(id, this.getType(args[0]), args[1]);
-					break;
-
-				default:
-					// throw(new Error('Undefined type ' + id));
-					console.error('Undefined type ' + id); // tslint:disable-line
-			}
+		this.binding.queryType(id, (kind: number, target: number, param: number) => {
+			result = {
+				paramList: [target, param],
+				placeholderFlag: kind
+			};
 		});
 
-		return(bindType);
+		return(result);
 	}
 
-	private readPrimitive(id: number, size: number, flag: number) {
-		const isConst = flag & 8;
-		const isPointer = flag & 4;
-		let bindType: BindPrimitive;
-
-		if(isPointer) {
-			bindType = this.primitiveTbl[size + '/' + (flag & ~12)];
-
-			this.registerType(new BindPointer(id, bindType, !!isConst));
-		} else {
-			bindType = new BindPrimitive(id, size, flag);
-
-			this.primitiveTbl[size + '/' + flag] = bindType;
-			this.registerType(bindType);
-		}
+	private readPrimitive(id: number, size: number, flags: number) {
+		makeType(makeTypeTbl, {
+			flags: TypeFlags.isPrimitive | flags,
+			id: id,
+			ptrSize: size
+		});
 	}
 
 	private readType(id: number, name: string) {
-		this.registerType(new BindType(id, name));
+		makeType(makeTypeTbl, {
+			flags: TypeFlags.isOther,
+			id: id,
+			name: name
+		});
 	}
 
-	private readClass(
-		id: number,
-		ptrId: number,
-		constPtrId: number,
-		name: string
-	) {
-		const bindClass = new BindClass(id, name);
-
-		this.registerType(bindClass);
-		this.classList.push(bindClass);
-
-		this.registerType(new BindPointer(ptrId, bindClass));
-		this.registerType(new BindPointer(constPtrId, bindClass, true));
+	private readClass(id: number, name: string) {
+		this.classList.push(makeType(makeTypeTbl, {
+			flags: TypeFlags.isClass,
+			id: id,
+			name: name
+		}) as BindClass);
 	}
 
 	private readMethod(
@@ -303,19 +237,22 @@ export class Reflect {
 		typeIdList: number[],
 		policyList: string[]
 	) {
-		const bindClass = this.typeIdTbl[classId] as BindClass;
+		const bindClass = typeIdTbl[classId] as BindClass;
 
 		if(!bindClass) {
 			if(!this.globalScope) {
-				this.globalScope = new BindClass(classId, 'global');
-
-				this.registerType(this.globalScope);
-				this.classList.push(this.globalScope);
+				this.globalScope = new BindClass({flags: TypeFlags.none, id: classId, name: 'global'});
 			} else {
 				throw(new Error('Unknown class ID ' + classId + ' for method ' + name));
 			}
 		} else {
-			const typeList = typeIdList.map((id: number) => this.getType(id));
+			const typeList = typeIdList.map((id: number) => getComplexType(
+				id,
+				makeTypeTbl,
+				getType,
+				this.queryType.bind(this),
+				'reflect ' + bindClass.name + '.' + name
+			));
 
 			switch(kind) {
 				case SignatureType.construct:
@@ -335,17 +272,22 @@ export class Reflect {
 		}
 	}
 
-	/* tslint:disable */
-
 	dumpPseudo() {
-		const lineList: string[] = [];
+		const classCodeList: string[] = [];
 		let indent: string;
 		let staticPrefix: string;
 		let nameReturn: string;
 
-		for(let bindClass of this.classList.reverse()) {
-			if(bindClass.id) {
-				console.log('class ' + bindClass.name + ' {');
+		const skipNameTbl: { [key: string]: boolean } = {
+			'Int64': true,
+			'NBind': true,
+			'NBindID': true
+		};
+
+		for(let bindClass of this.classList.reverse().concat([this.globalScope])) {
+			if(skipNameTbl[bindClass.name]) continue;
+
+			if((bindClass.flags & TypeFlags.kindMask) == TypeFlags.isClass) {
 				indent = '\t';
 				staticPrefix = 'static ';
 			} else {
@@ -353,61 +295,47 @@ export class Reflect {
 				staticPrefix = '';
 			}
 
-			for(let method of bindClass.methodList.reverse()) {
-				if(method.name) {
-					nameReturn = (
-						(method.isStatic ? staticPrefix : '') +
-						method.returnType + ' ' +
-						method.name
-					);
-				} else {
-					nameReturn = bindClass.name;
-				}
+			const methodCode = bindClass.methodList.reverse().map((method: BindMethod) => (
+				indent +
+				(method.name && method.isStatic ? staticPrefix : '') +
+				method + ';' +
+				(
+					method.policyList.length ?
+					' // ' + method.policyList.join(', ') :
+					''
+				)
+			)).join('\n');
 
-				console.log(
-					indent +
-					nameReturn +
-					'(' + method.argTypeList.join(', ') + ')' +
-					';' +
-					(
-						method.policyList.length ?
-						' // ' + method.policyList.join(', ') :
-						''
-					)
+			const propertyCode = bindClass.propertyList.reverse().map((property: BindProperty) => (
+				indent + property + ';' +
+				(
+					!(property.isReadable && property.isWritable) ?
+					' // ' + (property.isReadable ? 'Read-only' : 'Write-only') :
+					''
+				)
+			)).join('\n');
+
+			let classCode = (
+				methodCode +
+				(methodCode && propertyCode ? '\n\n' : '') +
+				propertyCode
+			);
+
+			if(indent) {
+				classCode = (
+					'class ' + bindClass.name + ' {' +
+					(classCode ? '\n' + classCode + '\n' : '') +
+					'};'
 				);
 			}
 
-			console.log('');
-
-			for(let property of bindClass.propertyList.reverse()) {
-				console.log(
-					indent +
-					property.bindType + ' ' +
-					property.name +
-					';' +
-					(
-						!(property.isReadable && property.isWritable) ?
-						' // ' + (property.isReadable ? 'Read-only' : 'Write-only') :
-						''
-					)
-				);
-			}
-
-			if(indent) console.log('};');
-			console.log('');
+			classCodeList.push(classCode);
 		}
 
-		return(lineList.join('\n'));
+		return(classCodeList.join('\n\n'));
 	}
 
-	/* tslint:enable */
-
 	binding: Binding<any>;
-
-	typeIdTbl: { [id: number]: BindType } = {};
-	typeNameTbl: { [name: string]: BindType } = {};
-
-	primitiveTbl: { [key: string]: BindPrimitive } = {};
 
 	globalScope: BindClass;
 	typeList: BindType[] = [];

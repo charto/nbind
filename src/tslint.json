@@ -17,17 +17,17 @@
 		"member-ordering": [ true, { "order": [
 			"constructor",
 
-			"public-static-method",
 			"private-static-method",
+			"public-static-method",
 
-			"public-instance-method",
 			"private-instance-method",
+			"public-instance-method",
 
-			"public-instance-field",
 			"private-instance-field",
+			"public-instance-field",
 
-			"public-static-field",
-			"private-static-field"
+			"private-static-field",
+			"public-static-field"
 		] } ],
 		"new-parens": true,
 		"no-angle-bracket-type-assertion": true,
