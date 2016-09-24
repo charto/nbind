@@ -5,17 +5,17 @@
 
 namespace nbind {
 
-class NBindType {
+class NBindID {
 
 public:
 
-	explicit NBindType(TYPEID id);
-	NBindType (const NBindType &other);
-	NBindType (NBindType &&other);
-	~NBindType();
+	explicit NBindID(TYPEID id);
+	NBindID (const NBindID &other);
+	NBindID (NBindID &&other);
+	~NBindID();
 
-	NBindType &operator=(const NBindType &) = delete;
-	NBindType &operator=(NBindType &&) = delete;
+	NBindID &operator=(const NBindID &) = delete;
+	NBindID &operator=(NBindID &&) = delete;
 
 	const void *getStructure() const;
 	StructureType getStructureType() const;
@@ -48,7 +48,7 @@ public:
 		cbFunction &outMethod
 	);
 
-	static void queryType(NBindType type, cbFunction &outTypeDetail);
+	static void queryType(NBindID type, cbFunction &outTypeDetail);
 
 };
 

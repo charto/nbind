@@ -176,8 +176,11 @@ export function typeModule(self: any) {
 		prevStructure: Structure = null, // tslint:disable-line
 		depth: number = 1 // tslint:disable-line
 	) {
-		const result = queryType(id);
-		const structureType: StructureType = result.placeholderFlag;
+		const result = getType(id);
+		if(result) return(result);
+
+		const query = queryType(id);
+		const structureType: StructureType = query.placeholderFlag;
 
 		let structure = structureList[structureType];
 
@@ -197,8 +200,8 @@ export function typeModule(self: any) {
 
 		if(problem) reportProblem(problem, id, kind, structureType, place);
 
-		const subId = result.paramList[0];
-		const subType = getType(subId) || getComplexType(
+		const subId = query.paramList[0];
+		const subType = getComplexType(
 			subId,
 			makeTypeTbl,
 			getType,
@@ -228,7 +231,7 @@ export function typeModule(self: any) {
 			paramList: [subType]
 		};
 
-		switch(result.placeholderFlag) {
+		switch(query.placeholderFlag) {
 			case StructureType.constant:
 				srcSpec = subType.spec;
 				break;
@@ -253,7 +256,7 @@ export function typeModule(self: any) {
 				break;
 
 			case StructureType.array:
-				spec.paramList.push(result.paramList[1]);
+				spec.paramList.push(query.paramList[1]);
 				break;
 
 			default:

@@ -92,18 +92,18 @@ void NBind :: lreset(unsigned int used, uintptr_t page) {
 	Pool::used = used;
 }
 
-NBindType :: NBindType(TYPEID id) : id(id) {}
-NBindType :: NBindType(uintptr_t ptr) : id(reinterpret_cast<TYPEID>(ptr)) {}
+NBindID :: NBindID(TYPEID id) : id(id) {}
+NBindID :: NBindID(uintptr_t ptr) : id(reinterpret_cast<TYPEID>(ptr)) {}
 
-const void *NBindType :: getStructure() const {
+const void *NBindID :: getStructure() const {
 	return(structure);
 }
 
-StructureType NBindType :: getStructureType() const {
+StructureType NBindID :: getStructureType() const {
 	return(*structureType);
 }
 
-void NBindType :: toJS(cbOutput output) const {
+void NBindID :: toJS(cbOutput output) const {
 	output(reinterpret_cast<uintptr_t>(id));
 }
 
@@ -267,7 +267,7 @@ NBIND_CLASS(NBind) {
 	method(lreset);
 }
 
-NBIND_CLASS(NBindType) {
+NBIND_CLASS(NBindID) {
 	construct<uintptr_t>();
 }
 

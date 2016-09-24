@@ -131,7 +131,7 @@ class nbind { // tslint:disable-line:class-name
 		const constructor = constructorTbl[name] || _nbind.BindType;
 
 		// tslint:disable-next-line:no-unused-expression
-		new constructor({flags: TypeFlags.none, id: id, name: name});
+		new constructor({flags: TypeFlags.isOther, id: id, name: name});
 	}
 
 	@dep('_nbind')

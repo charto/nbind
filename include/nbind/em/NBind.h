@@ -7,12 +7,12 @@ namespace nbind {
 
 class cbOutput;
 
-class NBindType {
+class NBindID {
 
 public:
 
-	explicit NBindType(TYPEID id);
-	explicit NBindType(uintptr_t ptr);
+	explicit NBindID(TYPEID id);
+	explicit NBindID(uintptr_t ptr);
 
 	const void *getStructure() const;
 	StructureType getStructureType() const;
@@ -43,7 +43,7 @@ public:
 		cbFunction &outMethod
 	);
 
-	static void queryType(NBindType type, cbFunction &outTypeDetail);
+	static void queryType(NBindID type, cbFunction &outTypeDetail);
 
 	static uintptr_t lalloc(size_t size);
 	static void lreset(unsigned int used, uintptr_t page);

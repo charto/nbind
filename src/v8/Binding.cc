@@ -51,29 +51,29 @@ const char *stripGetterPrefix(const char *name, char *&nameBuf) {
 	return(name);
 }
 
-NBindType :: NBindType(TYPEID id) : id(id), name(nullptr) {}
+NBindID :: NBindID(TYPEID id) : id(id), name(nullptr) {}
 
-NBindType :: NBindType(const NBindType &other) :
+NBindID :: NBindID(const NBindID &other) :
 	id(other.id), name(other.name ? strdup(other.name) : nullptr) {}
 
-NBindType :: NBindType(NBindType &&other) : id(other.id), name(other.name) {
+NBindID :: NBindID(NBindID &&other) : id(other.id), name(other.name) {
 	other.name = nullptr;
 }
 
-NBindType :: ~NBindType() {
+NBindID :: ~NBindID() {
 	if(name) delete(name);
 	name = nullptr;
 }
 
-const void *NBindType :: getStructure() const {
+const void *NBindID :: getStructure() const {
 	return(structure);
 }
 
-StructureType NBindType :: getStructureType() const {
+StructureType NBindID :: getStructureType() const {
 	return(*structureType);
 }
 
-const char *NBindType :: toString() {
+const char *NBindID :: toString() {
 	if(!name) {
 		static const char *alphabet = "0123456789abcdef";
 
@@ -256,7 +256,7 @@ NBIND_CLASS(NBind) {
 	method(queryType);
 }
 
-NBIND_CLASS(NBindType) {
+NBIND_CLASS(NBindID) {
 	method(toString);
 }
 

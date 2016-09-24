@@ -97,20 +97,17 @@ export namespace _nbind {
 	// Look up a list of type objects based on their numeric typeID or name.
 
 	export function getTypes(idList: TypeIdList, place: string) {
-		return(idList.map((id: number | string) => {
-			if(typeof(id) == 'number') {
-				return(
-					getType(id as number) ||
-					getComplexType(
-						id as number,
-						makeTypeTbl,
-						getType,
-						queryType,
-						place
-					) as _type.BindType
-				);
-			} else return(_nbind.typeTbl[id as string]);
-		}));
+		return(idList.map((id: number | string) => (
+			typeof(id) == 'number' ?
+			getComplexType(
+				id as number,
+				makeTypeTbl,
+				getType,
+				queryType,
+				place
+			) as _type.BindType :
+			_nbind.typeTbl[id as string]
+		)));
 	}
 
 	export function readTypeIdList(typeListPtr: number, typeCount: number) {

@@ -7,7 +7,7 @@ using namespace nbind;
 
 typedef BaseSignature :: SignatureType SignatureType;
 
-void listMethods(NBindType classType, std::forward_list<MethodDef> &methodList, cbFunction &outMethod) {
+void listMethods(NBindID classType, std::forward_list<MethodDef> &methodList, cbFunction &outMethod) {
 	for(auto &func : methodList) {
 		const BaseSignature *signature = func.getSignature();
 
@@ -16,13 +16,13 @@ void listMethods(NBindType classType, std::forward_list<MethodDef> &methodList, 
 		}
 
 		auto rawTypePtr = signature->getTypeList();
-		std::vector<NBindType> typeIdList;
+		std::vector<NBindID> typeIdList;
 
 		unsigned int arity = signature->getArity() + 1;
 		typeIdList.reserve(arity);
 
 		while(arity--) {
-			typeIdList.push_back(NBindType(*rawTypePtr));
+			typeIdList.push_back(NBindID(*rawTypePtr));
 			++rawTypePtr;
 		}
 
@@ -57,7 +57,7 @@ void NBind :: reflect(
 
 	for(const TYPEID *type = static_cast<const TYPEID *>(primitiveData[0]); *type; ++type) {
 		outPrimitive(
-			NBindType(*type),
+			NBindID(*type),
 			*(sizePtr++),
 			*(flagPtr++)
 		);
@@ -65,7 +65,7 @@ void NBind :: reflect(
 
 	for(const void **type = getNamedTypeList(); *type; type += 2) {
 		outType(
-			NBindType(type[0]),
+			NBindID(type[0]),
 			static_cast<const char *>(type[1])
 		);
 	}
@@ -76,20 +76,18 @@ void NBind :: reflect(
 		const TYPEID *classTypes = bindClass->getTypes();
 
 		outClass(
-			NBindType(classTypes[0]),
-			NBindType(classTypes[1]),
-			NBindType(classTypes[2]),
+			NBindID(classTypes[0]),
 			bindClass->getName()
 		);
 	}
 
-	listMethods(NBindType(nullptr), getFunctionList(), outMethod);
+	listMethods(NBindID(nullptr), getFunctionList(), outMethod);
 
 	for(auto *bindClass : getClassList()) {
 		if(!bindClass) continue;
 
 		listMethods(
-			NBindType(bindClass->getTypes()[0]),
+			NBindID(bindClass->getTypes()[0]),
 			bindClass->getMethodList(),
 			outMethod
 		);
@@ -97,7 +95,7 @@ void NBind :: reflect(
 }
 
 void NBind :: queryType(
-	NBindType id,
+	NBindID id,
 	cbFunction &outTypeDetail
 ) {
 	const ParamStructure *paramSpec;
@@ -106,26 +104,29 @@ void NBind :: queryType(
 	StructureType placeholderFlag = id.getStructureType();
 
 	switch(placeholderFlag) {
-		case StructureType :: vector:
-			paramSpec = static_cast<const ParamStructure *>(id.getStructure());
-			outTypeDetail(
-				static_cast<unsigned char>(placeholderFlag),
-				NBindType(paramSpec->target)
-			);
-
+		case StructureType :: none:
+			outTypeDetail(static_cast<unsigned char>(placeholderFlag));
 			break;
 
 		case StructureType :: array:
 			arraySpec = static_cast<const ArrayStructure *>(id.getStructure());
+
 			outTypeDetail(
 				static_cast<unsigned char>(placeholderFlag),
-				NBindType(arraySpec->member),
+				NBindID(arraySpec->member),
 				arraySpec->length
 			);
 
 			break;
 
 		default:
-			outTypeDetail(static_cast<unsigned char>(placeholderFlag));
+			paramSpec = static_cast<const ParamStructure *>(id.getStructure());
+
+			outTypeDetail(
+				static_cast<unsigned char>(placeholderFlag),
+				NBindID(paramSpec->target)
+			);
+
+			break;
 	}
 }
