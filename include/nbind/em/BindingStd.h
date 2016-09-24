@@ -58,6 +58,8 @@ struct BindingType<std::unique_ptr<ArgType>> {
 template <typename MemberType, size_t size>
 struct BindingType<std::array<MemberType, size>> {
 
+	typedef typename TypeTransformer<MemberType, PolicyListType<>>::Binding MemberBinding;
+
 	typedef std::array<MemberType, size> Type;
 
 	/** Temporary in-memory serialization format for the array,
@@ -70,14 +72,14 @@ struct BindingType<std::array<MemberType, size>> {
 		uint32_t length;
 		/** The contents continue past the struct. Use "struct hack"
 		  * because C++ doesn't have flexible array members like C. */
-		typename BindingType<MemberType>::WireType data[1];
+		typename MemberBinding::WireType data[1];
 	} *WireType;
 
 	static inline Type fromWireType(WireType arg) {
 		Type val;
 
 		for(uint32_t num = 0; num < size; ++num) {
-			val[num] = BindingType<MemberType>::fromWireType(arg->data[num]);
+			val[num] = MemberBinding::fromWireType(arg->data[num]);
 		}
 
 		return(val);
@@ -91,7 +93,7 @@ struct BindingType<std::array<MemberType, size>> {
 		val->length = size;
 
 		for(uint32_t num = 0; num < size; ++num) {
-			val->data[num] = BindingType<MemberType>::toWireType(std::forward<MemberType>(arg[num]));
+			val->data[num] = MemberBinding::toWireType(std::forward<MemberType>(arg[num]));
 		}
 
 		return(val);
@@ -104,6 +106,8 @@ struct BindingType<std::array<MemberType, size>> {
 template <typename MemberType>
 struct BindingType<std::vector<MemberType>> {
 
+	typedef typename TypeTransformer<MemberType, PolicyListType<>>::Binding MemberBinding;
+
 	typedef std::vector<MemberType> Type;
 
 	/** Temporary in-memory serialization format for the vector,
@@ -113,7 +117,7 @@ struct BindingType<std::vector<MemberType>> {
 		uint32_t length;
 		/** The contents continue past the struct. Use "struct hack"
 		  * because C++ doesn't have flexible array members like C. */
-		typename BindingType<MemberType>::WireType data[1];
+		typename MemberBinding::WireType data[1];
 	} *WireType;
 
 	static inline Type fromWireType(WireType arg) {
@@ -123,7 +127,7 @@ struct BindingType<std::vector<MemberType>> {
 		val.reserve(size);
 
 		for(uint32_t num = 0; num < size; ++num) {
-			val.push_back(BindingType<MemberType>::fromWireType(arg->data[num]));
+			val.push_back(MemberBinding::fromWireType(arg->data[num]));
 		}
 
 		return(val);
@@ -138,7 +142,7 @@ struct BindingType<std::vector<MemberType>> {
 		val->length = size;
 
 		for(uint32_t num = 0; num < size; ++num) {
-			val->data[num] = BindingType<MemberType>::toWireType(std::forward<MemberType>(arg[num]));
+			val->data[num] = MemberBinding::toWireType(std::forward<MemberType>(arg[num]));
 		}
 
 		return(val);
