@@ -92,6 +92,8 @@ inline WireType BindingType<std::unique_ptr<ArgType>>::toWireType(
 
 template <> struct BindingType<v8::Local<v8::Function>> {
 
+	typedef v8::Local<v8::Function> Type;
+
 	static inline WireType toWireType(v8::Local<v8::Function> arg) {
 		return(arg);
 	}

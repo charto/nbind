@@ -12,19 +12,6 @@ namespace nbind {
 template <class Bound>
 cbFunction *getValueConstructorJS();
 
-template <typename ArgType>
-inline typename BindingType<ArgType>::Type convertFromWire(WireType arg, int dummy) {
-	return(BindingType<typename DetectPolicies<ArgType>::Type>::fromWireType(arg));
-}
-
-// Convert any C++ type to the corresponding JavaScript type.
-// Call correct type converter using perfect forwarding (moving doesn't work).
-
-template <typename ReturnType>
-inline WireType convertToWire(ReturnType result) {
-	return(BindingType<typename DetectPolicies<ReturnType>::Type>::toWireType(std::forward<ReturnType>(result)));
-}
-
 // Send value object to JavaScript using toJS method of its C++ class.
 // It was received by value, so it can be moved.
 

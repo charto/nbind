@@ -58,7 +58,7 @@ struct BindingType<std::unique_ptr<ArgType>> {
 template <typename MemberType, size_t size>
 struct BindingType<std::array<MemberType, size>> {
 
-	typedef typename TypeTransformer<MemberType, PolicyListType<>>::Binding MemberBinding;
+	typedef typename TypeTransformer<MemberType>::Binding MemberBinding;
 
 	typedef std::array<MemberType, size> Type;
 
@@ -106,7 +106,7 @@ struct BindingType<std::array<MemberType, size>> {
 template <typename MemberType>
 struct BindingType<std::vector<MemberType>> {
 
-	typedef typename TypeTransformer<MemberType, PolicyListType<>>::Binding MemberBinding;
+	typedef typename TypeTransformer<MemberType>::Binding MemberBinding;
 
 	typedef std::vector<MemberType> Type;
 

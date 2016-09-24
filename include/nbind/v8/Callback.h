@@ -30,23 +30,28 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::Type call(Args&&... args) {
+	typename TypeTransformer<ReturnType>::Type call(Args&&... args) {
 		v8::Local<v8::Value> argv[] = {
 			(convertToWire(std::move(args)))...,
 			// Avoid error C2466: cannot allocate an array of constant size 0.
 			Nan::Null()
 		};
-		return(convertFromWire<ReturnType>(func.Call(sizeof...(Args), argv), 0.0));
+
+		return(convertFromWire<ReturnType>(func.Call(sizeof...(Args), argv)));
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::Type callMethod(v8::Local<v8::Object> target, Args&&... args) {
+	typename TypeTransformer<ReturnType>::Type callMethod(
+		v8::Local<v8::Object> target,
+		Args&&... args
+	) {
 		v8::Local<v8::Value> argv[] = {
 			(convertToWire(std::move(args)))...,
 			// Avoid error C2466: cannot allocate an array of constant size 0.
 			Nan::Null()
 		};
-		return(convertFromWire<ReturnType>(func.Call(target, sizeof...(Args), argv), 0.0));
+
+		return(convertFromWire<ReturnType>(func.Call(target, sizeof...(Args), argv)));
 	}
 
 	v8::Local<v8::Function> getJsFunction() const { return(func.GetFunction()); }

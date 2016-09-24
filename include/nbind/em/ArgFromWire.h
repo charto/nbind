@@ -9,7 +9,7 @@ template<typename PolicyList, typename ArgType>
 struct ArgFromWire {
 
 	typedef TypeTransformer<ArgType, PolicyList> Transformed;
-	typedef typename Transformed::Binding::WireType WireType;
+	typedef typename Transformed::WireType WireType;
 
 	explicit ArgFromWire(WireType arg) {}
 

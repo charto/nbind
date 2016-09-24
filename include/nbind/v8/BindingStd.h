@@ -42,7 +42,7 @@ struct BindingType<std::array<ArgType, size>> {
 				Nan::Get(arr, num).ToLocal(&item) &&
 				BindingType<ArgType>::checkType(item)
 			) {
-				val[num] = convertFromWire<ArgType>(item, 0.0);
+				val[num] = convertFromWire<ArgType>(item);
 			} else {
 				throw(std::runtime_error("Error converting array element"));
 			}
@@ -92,7 +92,7 @@ struct BindingType<std::vector<ArgType>> {
 				Nan::Get(arr, num).ToLocal(&item) &&
 				BindingType<ArgType>::checkType(item)
 			) {
-				val.push_back(convertFromWire<ArgType>(item, 0.0));
+				val.push_back(convertFromWire<ArgType>(item));
 			} else {
 				throw(std::runtime_error("Error converting array element"));
 			}

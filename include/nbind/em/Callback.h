@@ -34,7 +34,7 @@ private:
 	// since function template partial specialization is forbidden.
 	template <typename ReturnType>
 	struct Caller {
-		typedef typename TypeTransformer<ReturnType, PolicyListType<>>::Binding ReturnBindingType;
+		typedef typename TypeTransformer<ReturnType>::Binding ReturnBindingType;
 
 		template <typename... Args>
 		static ReturnType call(unsigned int num, Args... args);
@@ -87,7 +87,7 @@ double cbFunction::callDouble(unsigned int num, Args... args) {
 		{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 		CallbackSignature<double, Args...>::getInstance().getNum(),
 		num,
-		TypeTransformer<Args, PolicyListType<>>::Binding::toWireType(std::forward<Args>(args))...
+		convertToWire(std::forward<Args>(args))...
 	));
 }
 
@@ -98,7 +98,7 @@ ReturnType cbFunction::Caller<ReturnType>::call(unsigned int num, Args... args) 
 			{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 			CallbackSignature<ReturnType, Args...>::getInstance().getNum(),
 			num,
-			TypeTransformer<Args, PolicyListType<>>::Binding::toWireType(std::forward<Args>(args))...
+			convertToWire(std::forward<Args>(args))...
 		)
 	)));
 }
@@ -111,7 +111,7 @@ template<> struct cbFunction::Caller<void> {
 			{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 			CallbackSignature<void, Args...>::getInstance().getNum(),
 			num,
-			TypeTransformer<Args, PolicyListType<>>::Binding::toWireType(std::forward<Args>(args))...
+			convertToWire(std::forward<Args>(args))...
 		);
 	}
 
@@ -142,7 +142,7 @@ template<> struct cbFunction::Caller<cbOutput::CreateValue> {
 		return(EM_ASM_ARGS({return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 			CallbackSignature<cbOutput::CreateValue, Args...>::getInstance().getNum(),
 			num,
-			TypeTransformer<Args, PolicyListType<>>::Binding::toWireType(std::forward<Args>(args))...
+			convertToWire(std::forward<Args>(args))...
 		));
 	}
 
