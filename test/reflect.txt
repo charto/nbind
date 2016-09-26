@@ -1,0 +1,149 @@
+class PrimitiveMethods {
+	PrimitiveMethods();
+	PrimitiveMethods(int32_t);
+	PrimitiveMethods(int32_t, std::string);
+	static bool negateStatic(bool);
+	bool negate(bool);
+	static int32_t incrementIntStatic(int32_t);
+	int32_t incrementInt(int32_t);
+	static void incrementStateStatic();
+	void incrementState();
+	static int32_t getStateStatic();
+	int32_t getState();
+	std::string getString();
+	static std::string getStringStatic();
+	static int32_t strLengthStatic(const char *);
+	int32_t strLength(const uint8_t *);
+	static char * catenateStatic(const char *, const char *);
+	uint8_t * catenate(const uint8_t *, const uint8_t *);
+	static int64_t ftol(float64_t);
+	static uint64_t ftoul(float64_t);
+	static int64_t ftoll(float64_t);
+	static uint64_t ftoull(float64_t);
+	static float64_t ltof(int64_t);
+	static float64_t ultof(uint64_t);
+	static float64_t lltof(int64_t);
+	static float64_t ulltof(uint64_t);
+};
+
+class GetterSetter {
+	GetterSetter();
+
+	int32_t x; // Read-only
+	int32_t y;
+	int32_t z;
+	const char * t;
+	int32_t XYZ; // Read-only
+};
+
+class Callback {
+	Callback();
+	static void callVoidFunc(cbFunction &);
+	static bool callNegate(cbFunction &, bool);
+	static int32_t callIncrementInt(cbFunction &, int32_t);
+	static float64_t callIncrementDouble(cbFunction &, float64_t);
+	static std::string callCatenate(cbFunction &, const char *, const char *);
+	static void callCStrings(cbFunction &);
+};
+
+class Value {
+	Value();
+	static Coord getCoord();
+	static Coord callWithCoord(cbFunction &, Coord, Coord);
+};
+
+class Reference {
+	Reference();
+	void read();
+	void write();
+	static Reference getValue();
+	static Reference * getPtr();
+	static Reference & getRef();
+	static const Reference * getConstPtr();
+	static const Reference & getConstRef();
+	static void readPtr(const Reference *);
+	static void readRef(const Reference &);
+	static void writePtr(Reference *);
+	static void writeRef(Reference *);
+};
+
+class Array {
+	Array();
+	static std::array<int32_t, Y> getInts();
+	static std::array<int32_t, Y> callWithInts(cbFunction &, std::array<int32_t, Y>);
+};
+
+class Vector {
+	Vector();
+	static std::vector<int32_t> getInts();
+	static std::vector<int32_t> callWithInts(cbFunction &, std::vector<int32_t>);
+	static std::vector<std::string> callWithStrings(cbFunction &, std::vector<std::string>);
+};
+
+class Coord {
+	Coord(uint32_t, uint32_t);
+};
+
+class Nullable {
+	static Coord * getCoord();
+	static Coord * getNull();
+	static void foo(Coord *);
+	static void bar(Coord *); // Nullable
+};
+
+class Strict {
+	Strict();
+	int32_t testInt(int32_t);
+	bool testBool(bool);
+	std::string testString(std::string);
+	const char * testCString(const char *);
+	int32_t strictInt(int32_t); // Strict
+	bool strictBool(bool); // Strict
+	std::string strictString(std::string); // Strict
+	const char * strictCString(const char *); // Strict
+};
+
+class StrictStatic {
+	static int32_t testInt(int32_t);
+	static bool testBool(bool);
+	static std::string testString(std::string);
+	static const char * testCString(const char *);
+	static int32_t strictInt(int32_t); // Strict
+	static bool strictBool(bool); // Strict
+	static std::string strictString(std::string); // Strict
+	static const char * strictCString(const char *); // Strict
+};
+
+class Overload {
+	Overload();
+	uint32_t test(uint32_t);
+	uint32_t test2(uint32_t, uint32_t);
+	uint32_t testConst(uint32_t);
+	uint32_t testConst2(uint32_t, uint32_t);
+	static uint32_t testStatic(uint32_t);
+	static uint32_t testStatic2(uint32_t, uint32_t);
+};
+
+class Smart {
+	static std::shared_ptr<Smart> make(int32_t);
+	void test();
+	static void testStatic(Smart *);
+	static void testShared(std::shared_ptr<Smart>);
+};
+
+class Buffer {
+	static uint32_t sum(Buffer);
+	static void mul2(Buffer);
+};
+
+int32_t incrementInt(int32_t);
+int32_t decrementInt(int32_t);
+int32_t testInt(int32_t);
+bool testBool(bool);
+std::string testString(std::string);
+const char * testCString(const char *);
+int32_t strictInt(int32_t); // Strict
+bool strictBool(bool); // Strict
+std::string strictString(std::string); // Strict
+const char * strictCString(const char *); // Strict
+uint32_t multiTest(uint32_t);

@@ -437,3 +437,16 @@ test('Buffers', function(t) {
 
 	t.end();
 });
+
+test('Reflection', function(t) {
+	var fs = require('fs');
+	var path = require('path').resolve(__dirname, 'reflect.txt');
+	var reflect = new (require('../dist/reflect.js').Reflect)(binding);
+
+	t.strictEqual(
+		reflect.dumpPseudo().replace(/int64/g, 'int32'),
+		fs.readFileSync(path, 'utf-8').replace(/int64/g, 'int32')
+	);
+
+	t.end();
+});

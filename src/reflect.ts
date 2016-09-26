@@ -276,7 +276,6 @@ export class Reflect {
 		const classCodeList: string[] = [];
 		let indent: string;
 		let staticPrefix: string;
-		let nameReturn: string;
 
 		const skipNameTbl: { [key: string]: boolean } = {
 			'Int64': true,
@@ -332,7 +331,7 @@ export class Reflect {
 			classCodeList.push(classCode);
 		}
 
-		return(classCodeList.join('\n\n'));
+		return(classCodeList.join('\n\n') + '\n');
 	}
 
 	binding: Binding<any>;
