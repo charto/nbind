@@ -261,8 +261,8 @@ public:
 		SetterType setter,
 		Policies... policies
 	) {
-		addMethodMaybeConst<GetterSignature>(name, getter, policies...);
 		addMethodMaybeConst<SetterSignature>(name, setter, policies...);
+		addMethodMaybeConst<GetterSignature>(name, getter, policies...);
 
 		return(*this);
 	}

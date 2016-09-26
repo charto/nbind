@@ -77,7 +77,8 @@ public:
 		unsigned int num = 0,
 		TypeFlags flags = TypeFlags::none
 	) {
-		methodList.emplace_front(name, ptr, num, signature, flags);
+		methodList.emplace_after(methodLast, name, ptr, num, signature, flags);
+		++methodLast;
 	}
 
 	std::forward_list<MethodDef> &getMethodList() { return(methodList); }
@@ -122,6 +123,7 @@ protected:
 	const char *name;
 
 	std::forward_list<MethodDef> methodList;
+	decltype(methodList.before_begin()) methodLast = methodList.before_begin();
 
 	jsMethod *deleter;
 

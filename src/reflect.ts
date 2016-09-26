@@ -190,6 +190,13 @@ export class Reflect {
 			this.readClass.bind(this),
 			this.readMethod.bind(this)
 		);
+
+		function compareName({ name: a }: {name: string}, { name: b }: {name: string}) {
+			return(~~(a > b) - ~~(a < b));
+		}
+
+		this.classList.sort(compareName);
+		this.globalScope.methodList.sort(compareName);
 	}
 
 	private queryType(id: number) {
@@ -287,7 +294,7 @@ export class Reflect {
 			'NBindID': true
 		};
 
-		for(let bindClass of this.classList.reverse().concat([this.globalScope])) {
+		for(let bindClass of this.classList.concat([this.globalScope])) {
 			if(skipNameTbl[bindClass.name]) continue;
 
 			if((bindClass.flags & TypeFlags.kindMask) == TypeFlags.isClass) {
@@ -298,7 +305,7 @@ export class Reflect {
 				staticPrefix = '';
 			}
 
-			const methodCode = bindClass.methodList.reverse().map((method: BindMethod) => (
+			const methodCode = bindClass.methodList.map((method: BindMethod) => (
 				indent +
 				(method.name && method.isStatic ? staticPrefix : '') +
 				method + ';' +
@@ -309,7 +316,7 @@ export class Reflect {
 				)
 			)).join('\n');
 
-			const propertyCode = bindClass.propertyList.reverse().map((property: BindProperty) => (
+			const propertyCode = bindClass.propertyList.map((property: BindProperty) => (
 				indent + property + ';' +
 				(
 					!(property.isReadable && property.isWritable) ?
