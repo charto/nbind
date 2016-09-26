@@ -147,3 +147,4 @@ bool strictBool(bool); // Strict
 std::string strictString(std::string); // Strict
 const char * strictCString(const char *); // Strict
 uint32_t multiTest(uint32_t);
+uint32_t multiTest2(uint32_t, uint32_t);

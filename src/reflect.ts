@@ -240,38 +240,39 @@ export class Reflect {
 		typeIdList: number[],
 		policyList: string[]
 	) {
-		const bindClass = typeIdTbl[classId] as BindClass;
+		let bindClass = typeIdTbl[classId] as BindClass;
 
 		if(!bindClass) {
 			if(!this.globalScope) {
-				this.globalScope = new BindClass({flags: TypeFlags.none, id: classId, name: 'global'});
+				bindClass = new BindClass({flags: TypeFlags.none, id: classId, name: 'global'});
+				this.globalScope = bindClass;
 			} else {
 				throw(new Error('Unknown class ID ' + classId + ' for method ' + name));
 			}
-		} else {
-			const typeList = typeIdList.map((id: number) => getComplexType(
-				id,
-				makeTypeTbl,
-				getType,
-				this.queryType.bind(this),
-				'reflect ' + bindClass.name + '.' + name
-			));
+		}
 
-			switch(kind) {
-				case SignatureType.construct:
-				case SignatureType.func:
-				case SignatureType.method:
-					bindClass.addMethod(name, kind, typeList, policyList);
-					break;
+		const typeList = typeIdList.map((id: number) => getComplexType(
+			id,
+			makeTypeTbl,
+			getType,
+			this.queryType.bind(this),
+			'reflect ' + bindClass.name + '.' + name
+		));
 
-				case SignatureType.getter:
-				case SignatureType.setter:
-					bindClass.addProperty(name, kind, typeList, policyList);
-					break;
+		switch(kind) {
+			case SignatureType.construct:
+			case SignatureType.func:
+			case SignatureType.method:
+				bindClass.addMethod(name, kind, typeList, policyList);
+				break;
 
-				default:
-					break;
-			}
+			case SignatureType.getter:
+			case SignatureType.setter:
+				bindClass.addProperty(name, kind, typeList, policyList);
+				break;
+
+			default:
+				break;
 		}
 	}
 
