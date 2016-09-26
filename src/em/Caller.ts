@@ -7,6 +7,7 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
+import {_nbind as _class} from './BindClass';
 import {_nbind as _external} from './External';
 import {_nbind as _resource} from './Resource';
 import {TypeFlags, PolicyTbl} from '../Type';
@@ -17,6 +18,8 @@ setEvil((code: string) => eval(code));
 export namespace _nbind {
 
 	type BindType = _type.BindType;
+
+	type Wrapper = _class.Wrapper;
 
 	type Func = _globals.Func;
 	type FuncList = _globals.FuncList;
@@ -291,16 +294,16 @@ export namespace _nbind {
 			// build a simple invoker function without using eval.
 
 			switch(argCount) {
-				case 0: return(function() {
+				case 0: return(function(this: Wrapper) {
 					return(this.__nbindFlags & mask ? err() :
 				        dynCall(ptr, num, this.__nbindPtr)); });
-				case 1: return(function(                   a1: any) {
+				case 1: return(function(this: Wrapper,     a1: any) {
 					return(this.__nbindFlags & mask ? err() :
 				        dynCall(ptr, num, this.__nbindPtr, a1    )); });
-				case 2: return(function(                   a1: any, a2: any) {
+				case 2: return(function(this: Wrapper,     a1: any, a2: any) {
 					return(this.__nbindFlags & mask ? err() :
 				        dynCall(ptr, num, this.__nbindPtr, a1,      a2    )); });
-				case 3: return(function(                   a1: any, a2: any, a3: any) {
+				case 3: return(function(this: Wrapper,     a1: any, a2: any, a3: any) {
 					return(this.__nbindFlags & mask ? err() :
 				        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3    )); });
 				default:
@@ -404,7 +407,7 @@ export namespace _nbind {
 	export function makeOverloader(func: Func, arity: number) {
 		const callerList: FuncList = [];
 
-		function call() {
+		function call(this: any) {
 			return(callerList[arguments.length].apply(this, arguments));
 		}
 

@@ -51,14 +51,11 @@ export namespace _nbind {
 		// Called by C++ side destructor through unregisterExternal
 		// to free any related JavaScript resources.
 
-		free() {} // tslint:disable-line:no-empty
+		free?(): void
 
 		refCount = 1;
 		data: any;
 	}
-
-	// Remove empty free method, still allowing child classes to override it.
-	External.prototype.free = null as any;
 
 	export function unregisterExternal(num: number) {
 		const external = externalList[num] as External<any>;

@@ -5,6 +5,7 @@
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"noImplicitAny": true,
+		"noImplicitThis": true,
 		"noImplicitUseStrict": true,
 		"outDir": "../../dist/bundle",
 		"strictNullChecks": true,

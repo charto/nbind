@@ -190,7 +190,7 @@ class nbind { // tslint:disable-line:class-name
 		_nbind.addMethod(
 			bindClass.proto.prototype,
 			'free',
-			function() {
+			function(this: _class.Wrapper) {
 				destroy.call(this, this.__nbindShared, this.__nbindFlags);
 
 				this.__nbindState |= StateFlags.isDeleted;

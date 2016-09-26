@@ -4,6 +4,7 @@
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"noImplicitAny": true,
+		"noImplicitThis": true,
 		"outDir": "../dist",
 		"removeComments": false,
 		"strictNullChecks": true,

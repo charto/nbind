@@ -124,7 +124,7 @@ class nbind { // tslint:disable-line:class-name
 			throw(new Error('Object ' + obj + ' has no fromJS function'));
 		}
 
-		obj.fromJS(function() {
+		obj.fromJS(function(this: _nbind.ValueObject) {
 			obj.__nbindValueConstructor.apply(
 				this,
 				Array.prototype.concat.apply([ptr], arguments)
