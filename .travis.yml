@@ -5,7 +5,7 @@ os:
   - osx
 
 node_js:
-  - "6.4"
+  - "6.6"
   - "4.5"
   - "0.12"
   - "0.10"
@@ -43,6 +43,8 @@ matrix:
       env: CC=clang CXX=clang
     - os: osx
       env: CC=gcc-4.8 CXX=g++-4.8
+  allow_failures:
+    - nodejs_version: 0.10
 #    - os: osx
 #      env: CC=clang-3.8 CXX=clang++-3.8 npm_config_clang=1
 
