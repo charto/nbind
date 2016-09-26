@@ -38,11 +38,15 @@ declare var process: {
 
 /** Compiled C++ binary type and path. */
 
-export interface ModuleSpec {
+export interface FindModuleSpec {
 	type: 'node' | 'emcc';
 	ext: string;
 	name: string;
 	path?: string;
+}
+
+export interface ModuleSpec extends FindModuleSpec {
+	path: string;
 }
 
 /** Any class constructor. */
@@ -146,7 +150,7 @@ export type FindCallback = (err: any, result?: ModuleSpec) => any;
 
 function findCompiledModule<ResultType>(
 	basePath: string,
-	specList: ModuleSpec[],
+	specList: FindModuleSpec[],
 	callback: FindCallback
 ) {
 	const resolvedList: string[] = [];
@@ -160,7 +164,7 @@ function findCompiledModule<ResultType>(
 				spec.path = require.resolve(basePath);
 
 				// Stop if a module was found.
-				callback(null, spec);
+				callback(null, spec as ModuleSpec);
 				return(spec);
 			} catch(err) {
 				resolvedList.push(basePath);
@@ -186,7 +190,7 @@ function findCompiledModule<ResultType>(
 
 			// Stop if a module was found.
 
-			callback(null, spec);
+			callback(null, spec as ModuleSpec);
 			return(spec);
 		}
 	}

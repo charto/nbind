@@ -8,7 +8,7 @@ import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _resource} from './Resource';
-import {TypeSpec, PolicyTbl} from '../Type';
+import {TypeSpecWithParam, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -81,11 +81,11 @@ export namespace _nbind {
 	}
 
 	export class ArrayType extends BindType {
-		constructor(spec: TypeSpec) {
+		constructor(spec: TypeSpecWithParam) {
 			super(spec);
 
-			this.memberType = spec.paramList[0];
-			if(spec.paramList[1]) this.size = spec.paramList[1];
+			this.memberType = spec.paramList[0] as _type.BindType;
+			if(spec.paramList[1]) this.size = spec.paramList[1] as number;
 		}
 
 		wireRead = (arg: number) => popArray(arg, this);

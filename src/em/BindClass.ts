@@ -12,7 +12,7 @@ import {_nbind as _type} from './BindingType';
 import {_nbind as _value} from './ValueObj';
 import {_nbind as _resource} from './Resource';
 import {_nbind as _gc} from './GC';
-import {StateFlags, TypeFlags, TypeSpec, PolicyTbl} from '../Type';
+import {StateFlags, TypeFlags, TypeSpecWithName, TypeSpecWithParam, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -141,10 +141,10 @@ export namespace _nbind {
 	// also inheriting from a generic type definition.
 
 	export class BindClass extends BindType {
-		constructor(spec: TypeSpec, proto?: WrapperClass) {
+		constructor(spec: TypeSpecWithName, proto?: WrapperClass) {
 			super(spec);
 
-			this.proto = proto || (spec.paramList[0] as BindClass).proto;
+			this.proto = proto || (spec.paramList as BindClass[])[0].proto;
 		}
 
 		wireRead = (arg: number) => popValue(arg, this.ptrType);
@@ -180,7 +180,7 @@ export namespace _nbind {
 	}
 
 	export class BindClassPtr extends BindType {
-		constructor(spec: TypeSpec) {
+		constructor(spec: TypeSpecWithParam) {
 			super(spec);
 
 			this.proto = (spec.paramList[0] as BindClass).proto;
@@ -232,7 +232,7 @@ export namespace _nbind {
 	}
 
 	export class SharedClassPtr extends BindType {
-		constructor(spec: TypeSpec) {
+		constructor(spec: TypeSpecWithParam) {
 			super(spec);
 
 			this.proto = (spec.paramList[0] as BindClass).proto;

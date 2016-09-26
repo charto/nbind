@@ -15,7 +15,19 @@ export interface TypeSpec {
 	flags: TypeFlags;
 
 	ptrSize?: number;
-	paramList?: any[];
+	paramList?: (TypeClass | number)[];
+}
+
+export interface TypeSpecWithName extends TypeSpec {
+	name: string;
+}
+
+export interface TypeSpecWithParam extends TypeSpecWithName {
+	paramList: (TypeClass | number)[];
+}
+
+export interface TypeSpecWithSize extends TypeSpecWithName {
+	ptrSize: number;
 }
 
 export interface TypeClass extends TypeSpec {
@@ -24,15 +36,16 @@ export interface TypeClass extends TypeSpec {
 	makeWireRead?(expr: string, convertParamList?: any[], num?: number): string;
 	makeWireWrite?(
 		expr: string,
-		policyTbl?: PolicyTbl,
+		policyTbl: PolicyTbl | null,
 		convertParamList?: any[],
 		num?: number
-	): string | ((arg: any) => number | boolean);
+	): boolean | string | ((arg: any) => number | boolean);
 
 	wireRead?: (arg: number) => any;
 	wireWrite?: (arg: any) => number;
 
-	spec?: TypeSpec;
+	spec: TypeSpec;
+	name: string;
 }
 
 export const enum TypeFlagBase {
@@ -98,7 +111,7 @@ export const enum StructureType {
 	max
 }
 
-export type MakeTypeTbl = { [flags: number]: { new(spec: TypeSpec): TypeClass } };
+export type MakeTypeTbl = { [flags: number]: { new(spec: TypeSpecWithName): TypeClass } };
 
 /* tslint:disable:no-shadowed-variable */
 export function typeModule(self: any) {
@@ -173,7 +186,7 @@ export function typeModule(self: any) {
 		// C++ type name string built top-down, for printing helpful errors.
 		kind = 'X', // tslint:disable-line
 		// Outer type, used only for updating kind.
-		prevStructure: Structure = null, // tslint:disable-line
+		prevStructure?: Structure | undefined, // tslint:disable-line
 		depth: number = 1 // tslint:disable-line
 	) {
 		const result = getType(id);
@@ -192,13 +205,13 @@ export function typeModule(self: any) {
 			);
 		}
 
-		let problem: string;
+		let problem: string | undefined;
 
 		if(structureType == 0) problem = 'Unbound';
 		if(structureType >= StructureType.max) problem = 'Corrupt';
 		if(depth > 20) problem = 'Deeply nested';
 
-		if(problem) reportProblem(problem, id, kind, structureType, place);
+		if(problem) reportProblem(problem, id, kind, structureType, place || '?');
 
 		const subId = query.paramList[0];
 		const subType = getComplexType(
@@ -223,8 +236,8 @@ export function typeModule(self: any) {
 
 		// console.log(applyStructure(kind, 0, name, 0) + ' - ' + name); // tslint:disable-line
 
-		let srcSpec: TypeSpec;
-		let spec: TypeSpec = {
+		let srcSpec: TypeSpec | undefined;
+		let spec: TypeSpecWithParam = {
 			flags: structure[0],
 			id: id,
 			name: name,
@@ -304,11 +317,11 @@ export function typeModule(self: any) {
 			console.log(flags); // tslint:disable-line
 		}
 
-		return(new makeTypeTbl[kind](spec));
+		return(new makeTypeTbl[kind](spec as TypeSpecWithName));
 	}
 
 	class Type implements TypeClass {
-		constructor(spec: TypeSpec) {
+		constructor(spec: TypeSpecWithName) {
 			this.id = spec.id;
 			this.name = spec.name;
 			this.flags = spec.flags;

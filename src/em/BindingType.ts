@@ -9,7 +9,7 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _resource} from './Resource';
-import {typeModule, TypeFlags, TypeSpec, PolicyTbl} from '../Type';
+import {typeModule, TypeFlags, TypeSpecWithName, TypeSpecWithSize, PolicyTbl} from '../Type';
 
 const _typeModule = typeModule;
 
@@ -29,17 +29,17 @@ export namespace _nbind {
 	// A type definition, which registers itself upon construction.
 
 	export class BindType extends Type {
-		constructor(spec: TypeSpec) {
+		constructor(spec: TypeSpecWithName) {
 			super(spec);
 			typeTbl[spec.name] = this;
 			typeList[spec.id] = this;
 		}
 
-		needsWireRead(policyTbl: PolicyTbl) {
+		needsWireRead(policyTbl: PolicyTbl | null) {
 			return(!!this.wireRead || !!this.makeWireRead);
 		}
 
-		needsWireWrite(policyTbl: PolicyTbl) {
+		needsWireWrite(policyTbl: PolicyTbl | null) {
 			return(!!this.wireWrite || !!this.makeWireWrite);
 		}
 
@@ -51,7 +51,7 @@ export namespace _nbind {
 	}
 
 	export class PrimitiveType extends BindType {
-		constructor(spec: TypeSpec) {
+		constructor(spec: TypeSpecWithSize) {
 			super(spec);
 
 			const heapTbl: { [bits: number]: any } = (
@@ -73,7 +73,7 @@ export namespace _nbind {
 			this.ptrSize = spec.ptrSize;
 		}
 
-		needsWireWrite(policyTbl: PolicyTbl) {
+		needsWireWrite(policyTbl: PolicyTbl | null) {
 			return(!!policyTbl && !!policyTbl['Strict']);
 		}
 
@@ -136,7 +136,7 @@ export namespace _nbind {
 	// Prefixing with !! converts them to JavaScript booleans.
 
 	export class BooleanType extends BindType {
-		needsWireWrite(policyTbl: PolicyTbl) {
+		needsWireWrite(policyTbl: PolicyTbl | null) {
 			return(!!policyTbl && !!policyTbl['Strict']);
 		}
 

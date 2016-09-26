@@ -44,7 +44,7 @@ export namespace _nbind {
 	/** Check if any type on the list requires conversion writing to C++.
 	  * Mainly numbers can be passed as-is between Asm.js and JavaScript. */
 
-	function anyNeedsWireWrite(typeList: BindType[], policyTbl: PolicyTbl) {
+	function anyNeedsWireWrite(typeList: BindType[], policyTbl: PolicyTbl | null) {
 		return(typeList.reduce(
 			(result: boolean, type: BindType) =>
 				(result || type.needsWireWrite(policyTbl)),
@@ -55,7 +55,7 @@ export namespace _nbind {
 	/** Check if any type on the list requires conversion reading from C++.
 	  * Mainly numbers can be passed as-is between Asm.js and JavaScript. */
 
-	function anyNeedsWireRead(typeList: BindType[], policyTbl: PolicyTbl) {
+	function anyNeedsWireRead(typeList: BindType[], policyTbl: PolicyTbl | null) {
 		return(typeList.reduce(
 			(result: boolean, type: BindType) =>
 				(result || !!type.needsWireRead(policyTbl)),
@@ -65,7 +65,7 @@ export namespace _nbind {
 
 	function makeWireRead(
 		convertParamList: any[],
-		policyTbl: PolicyTbl,
+		policyTbl: PolicyTbl | null,
 		type: BindType,
 		expr: string
 	) {
@@ -82,7 +82,7 @@ export namespace _nbind {
 
 	function makeWireWrite(
 		convertParamList: any[],
-		policyTbl: PolicyTbl,
+		policyTbl: PolicyTbl | null,
 		type: BindType,
 		expr: string
 	) {
@@ -114,7 +114,7 @@ export namespace _nbind {
 		dynCall: Func,
 		ptr: number,
 		num: number,
-		policyTbl: PolicyTbl,
+		policyTbl: PolicyTbl | null,
 		needsWireWrite: boolean,
 		prefix: string,
 		returnType: BindType,
@@ -262,7 +262,7 @@ export namespace _nbind {
 		name: string,
 		boundID: number,
 		idList: TypeIdList,
-		policyTbl: PolicyTbl
+		policyTbl: PolicyTbl | null
 	) {
 		const argCount = idList.length - 1;
 
@@ -327,7 +327,7 @@ export namespace _nbind {
 	/** Dynamically create an invoker function for calling a C++ function. */
 
 	export function makeCaller(
-		ptr: number,
+		ptr: number | null,
 		num: number,
 		flags: TypeFlags,
 		name: string,

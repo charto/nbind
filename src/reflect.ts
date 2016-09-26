@@ -7,6 +7,7 @@ import {
 	typeModule,
 	TypeFlags,
 	TypeSpec,
+	TypeSpecWithName,
 	TypeClass,
 	MakeTypeTbl
 } from './Type';
@@ -36,7 +37,7 @@ const typeIdTbl: { [id: number]: BindType } = {};
 const typeNameTbl: { [name: string]: BindType } = {};
 
 export class BindType extends TypeBase {
-	constructor(spec: TypeSpec) {
+	constructor(spec: TypeSpecWithName) {
 		super(spec);
 
 		typeIdTbl[spec.id] = this;
@@ -79,6 +80,8 @@ export class BindClass extends BindType {
 			bindProperty.makeWritable(typeList[1]);
 		}
 	}
+
+	name: string;
 
 	methodTbl: { [name: string]: BindMethod } = {};
 	methodList: BindMethod[] = [];
@@ -190,7 +193,7 @@ export class Reflect {
 	}
 
 	private queryType(id: number) {
-		let result: {placeholderFlag: number, paramList: number[]};
+		let result: {placeholderFlag: number, paramList: number[]} | undefined;
 
 		// TODO: just wrap the call in return() and remove the
 		// result variable. Requires support for passing any

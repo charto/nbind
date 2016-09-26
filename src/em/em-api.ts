@@ -275,7 +275,7 @@ class nbind { // tslint:disable-line:class-name
 		const name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		let bindClass: _class.BindClass;
+		let bindClass: _class.BindClass | undefined;
 		let target: any;
 
 		if(typeID) {

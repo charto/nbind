@@ -38,12 +38,12 @@ export namespace _nbind {
 	export interface ValueObject {
 		fromJS(output: (...args: any[]) => void): void;
 
-		/** This is mandatory, but dynamically created inside nbind. */
-		__nbindValueConstructor?: _globals.Func;
+		/** This is dynamically created inside nbind. */
+		__nbindValueConstructor: _globals.Func;
 	}
 
 	/** Storage for value objects. Slot 0 is reserved to represent errors. */
-	export const valueList: (ValueObject | number)[] = [ null ];
+	export const valueList: (ValueObject | number)[] = [ 0 ];
 
 	/** Value object storage slot free list head. */
 	let firstFreeValue = 0;
@@ -59,7 +59,10 @@ export namespace _nbind {
 		return(num * 2 + 1);
 	}
 
-	export function popValue(num: number, type?: BindClassPtr): ValueObject | _class.Wrapper {
+	export function popValue(
+		num: number,
+		type?: BindClassPtr
+	): ValueObject | _class.Wrapper | null {
 		if(!num) throwError('Value type JavaScript class is missing or not registered');
 
 		if(num & 1) {
@@ -70,7 +73,10 @@ export namespace _nbind {
 			firstFreeValue = num;
 
 			return(obj);
-		} else return(popShared(num, type));
+		} else if(type) {
+			return(popShared(num, type));
+		} else throw(new Error('Invalid value slot ' + num));
+
 	}
 
 	// 2^64, first integer not representable with uint64_t.
@@ -113,6 +119,10 @@ class nbind { // tslint:disable-line:class-name
 	@dep('_nbind')
 	static _nbind_get_value_object(num: number, ptr: number) {
 		const obj = _nbind.popValue(num) as _nbind.ValueObject;
+
+		if(!obj.fromJS) {
+			throw(new Error('Object ' + obj + ' has no fromJS function'));
+		}
 
 		obj.fromJS(function() {
 			obj.__nbindValueConstructor.apply(

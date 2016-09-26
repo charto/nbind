@@ -23,7 +23,7 @@ export namespace _nbind {
 	// The first element is a dummy value just so that a valid index to
 	// the list always tests as true (useful for the free list implementation).
 
-	export var externalList: (External<any> | number)[] = [null];
+	export var externalList: (External<any> | number)[] = [0];
 
 	// Head of free list for recycling available slots in the externals list.
 	let firstFreeExternal = 0;
@@ -58,7 +58,7 @@ export namespace _nbind {
 	}
 
 	// Remove empty free method, still allowing child classes to override it.
-	External.prototype.free = null;
+	External.prototype.free = null as any;
 
 	export function unregisterExternal(num: number) {
 		const external = externalList[num] as External<any>;
