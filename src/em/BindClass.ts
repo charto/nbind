@@ -141,10 +141,14 @@ export namespace _nbind {
 	// also inheriting from a generic type definition.
 
 	export class BindClass extends BindType {
-		constructor(spec: TypeSpecWithName, proto?: WrapperClass) {
+		constructor(spec: TypeSpecWithName) {
 			super(spec);
 
-			this.proto = proto || (spec.paramList as BindClass[])[0].proto;
+			if(spec.paramList) this.proto = (spec.paramList[0] as BindClass).proto;
+		}
+
+		setBound(proto: WrapperClass) {
+			this.proto = proto;
 		}
 
 		wireRead = (arg: number) => popValue(arg, this.ptrType);

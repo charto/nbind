@@ -8,7 +8,7 @@ import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
-import {MakeTypeTbl, PolicyTbl} from '../Type';
+import {MakeTypeTbl, TypeFlags, TypeSpecWithName, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -25,6 +25,7 @@ export namespace _nbind {
 	export type Invoker = (ptr: number, ...args: any[]) => any;
 	export type TypeIdList = (number | string)[];
 
+	export var BindType: typeof _type.BindType;
 	export var getComplexType: typeof _type.getComplexType;
 
 	export var resources: typeof _resource.resources;
@@ -34,8 +35,8 @@ export namespace _nbind {
 
 	// Mapping from numeric typeIDs and type names to objects with type information.
 
-	export var typeTbl: { [name: string]: _type.BindType } = {};
-	export var typeList: _type.BindType[] = [];
+	const typeIdTbl: { [id: number]: _type.BindType } = {};
+	export const typeNameTbl: { [name: string]: _type.BindType } = {};
 
 	export class Pool {
 		static lalloc(size: number) {
@@ -46,7 +47,7 @@ export namespace _nbind {
 			const used = HEAPU32[Pool.usedPtr];
 
 			if(size > Pool.pageSize / 2 || size > Pool.pageSize - used) {
-				const NBind = (typeTbl['NBind'] as _class.BindClass).proto as any;
+				const NBind = (typeNameTbl['NBind'] as _class.BindClass).proto as any;
 				return(NBind.lalloc(size));
 			} else {
 				HEAPU32[Pool.usedPtr] = used + size;
@@ -62,7 +63,7 @@ export namespace _nbind {
 			const topPage = HEAPU32[Pool.pagePtr];
 
 			if(topPage) {
-				const NBind = (typeTbl['NBind'] as _class.BindClass).proto as any;
+				const NBind = (typeNameTbl['NBind'] as _class.BindClass).proto as any;
 				NBind.lreset(used, page);
 			} else {
 				HEAPU32[Pool.usedPtr] = used;
@@ -75,8 +76,27 @@ export namespace _nbind {
 		static pagePtr: number;
 	}
 
+	type TypeConstructor = { new(spec: TypeSpecWithName): _type.BindType };
+	export var makeTypeKindTbl: MakeTypeTbl;
+	export var makeTypeNameTbl: { [name: string]: TypeConstructor };
+
+	export function constructType(kind: TypeFlags, spec: TypeSpecWithName) {
+		const construct = (
+			kind == TypeFlags.isOther ?
+			makeTypeNameTbl[spec.name] || BindType :
+			makeTypeKindTbl[kind]
+		);
+
+		const bindType = new construct(spec as TypeSpecWithName) as _type.BindType;
+
+		typeIdTbl[spec.id] = bindType;
+		typeNameTbl[spec.name] = bindType;
+
+		return(bindType);
+	}
+
 	export function getType(id: number) {
-		return(_nbind.typeList[id]);
+		return(typeIdTbl[id]);
 	}
 
 	export function queryType(id: number) {
@@ -92,8 +112,6 @@ export namespace _nbind {
 		});
 	}
 
-	export var makeTypeTbl: MakeTypeTbl;
-
 	// Look up a list of type objects based on their numeric typeID or name.
 
 	export function getTypes(idList: TypeIdList, place: string) {
@@ -101,12 +119,12 @@ export namespace _nbind {
 			typeof(id) == 'number' ?
 			getComplexType(
 				id as number,
-				makeTypeTbl,
+				constructType,
 				getType,
 				queryType,
 				place
 			) as _type.BindType :
-			_nbind.typeTbl[id as string]
+			_nbind.typeNameTbl[id as string]
 		)));
 	}
 

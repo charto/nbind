@@ -176,7 +176,7 @@ export function typeModule(self: any) {
 
 	function getComplexType(
 		id: number,
-		makeTypeTbl: MakeTypeTbl,
+		constructType: (kind: TypeFlags, spec: TypeSpecWithName) => TypeClass,
 		getType: (id: number) => TypeClass,
 		queryType: (id: number) => {
 			placeholderFlag: number,
@@ -216,7 +216,7 @@ export function typeModule(self: any) {
 		const subId = query.paramList[0];
 		const subType = getComplexType(
 			subId,
-			makeTypeTbl,
+			constructType,
 			getType,
 			queryType,
 			place,
@@ -284,10 +284,13 @@ export function typeModule(self: any) {
 			spec.flags |= srcSpec.flags;
 		}
 
-		return(makeType(makeTypeTbl, spec));
+		return(makeType(constructType, spec));
 	}
 
-	function makeType(makeTypeTbl: MakeTypeTbl, spec: TypeSpec) {
+	function makeType(
+		constructType: (kind: TypeFlags, spec: TypeSpecWithName) => TypeClass,
+		spec: TypeSpec
+	) {
 		const flags = spec.flags;
 		const refKind = flags & TypeFlags.refMask;
 		let kind = flags & TypeFlags.kindMask;
@@ -311,13 +314,7 @@ export function typeModule(self: any) {
 			} else if(refKind) kind = TypeFlags.isClassPtr;
 		}
 
-		if(!makeTypeTbl[kind]) {
-			console.log(makeTypeTbl); // tslint:disable-line
-			console.log(kind); // tslint:disable-line
-			console.log(flags); // tslint:disable-line
-		}
-
-		return(new makeTypeTbl[kind](spec as TypeSpecWithName));
+		return(constructType(kind, spec as TypeSpecWithName));
 	}
 
 	class Type implements TypeClass {

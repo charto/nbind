@@ -9,7 +9,7 @@
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _resource} from './Resource';
-import {typeModule, TypeFlags, TypeSpecWithName, TypeSpecWithSize, PolicyTbl} from '../Type';
+import {typeModule, TypeFlags, TypeSpecWithSize, PolicyTbl} from '../Type';
 
 const _typeModule = typeModule;
 
@@ -21,20 +21,12 @@ export namespace _nbind {
 	export const { Type, makeType, getComplexType } = _typeModule(_typeModule);
 
 	export var Pool: typeof _globals.Pool;
-	export var typeTbl: typeof _globals.typeTbl;
-	export var typeList: typeof _globals.typeList;
 
 	export var resources: typeof _resource.resources;
 
 	// A type definition, which registers itself upon construction.
 
 	export class BindType extends Type {
-		constructor(spec: TypeSpecWithName) {
-			super(spec);
-			typeTbl[spec.name] = this;
-			typeList[spec.id] = this;
-		}
-
 		needsWireRead(policyTbl: PolicyTbl | null) {
 			return(!!this.wireRead || !!this.makeWireRead);
 		}

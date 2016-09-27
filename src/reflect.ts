@@ -14,8 +14,8 @@ import {
 
 const { Type, makeType, getComplexType } = typeModule(typeModule);
 
-export type TypeBase = TypeClass;
-export const TypeBase = Type as { new(spec: TypeSpec): TypeClass };
+export type BindType = TypeClass;
+export const BindType = Type as { new(spec: TypeSpec): TypeClass };
 
 class NBindID {
 	constructor(id: number) {
@@ -31,18 +31,6 @@ class NBindID {
 	}
 
 	id: number;
-}
-
-const typeIdTbl: { [id: number]: BindType } = {};
-const typeNameTbl: { [name: string]: BindType } = {};
-
-export class BindType extends TypeBase {
-	constructor(spec: TypeSpecWithName) {
-		super(spec);
-
-		typeIdTbl[spec.id] = this;
-		typeNameTbl[spec.name] = this;
-	}
 }
 
 export class BindClass extends BindType {
@@ -172,10 +160,6 @@ const makeTypeTbl: MakeTypeTbl = {
 	[TypeFlags.isOther]: BindType
 };
 
-function getType(id: number) {
-	return(typeIdTbl[id]);
-}
-
 export class Reflect {
 	constructor(binding: Binding<any>) {
 		this.binding = binding;
@@ -199,25 +183,8 @@ export class Reflect {
 		this.globalScope.methodList.sort(compareName);
 	}
 
-	private queryType(id: number) {
-		let result: {placeholderFlag: number, paramList: number[]} | undefined;
-
-		// TODO: just wrap the call in return() and remove the
-		// result variable. Requires support for passing any
-		// JavaScript type through C++.
-
-		this.binding.queryType(id, (kind: number, target: number, param: number) => {
-			result = {
-				paramList: [target, param],
-				placeholderFlag: kind
-			};
-		});
-
-		return(result);
-	}
-
 	private readPrimitive(id: number, size: number, flags: number) {
-		makeType(makeTypeTbl, {
+		makeType(this.constructType, {
 			flags: TypeFlags.isPrimitive | flags,
 			id: id,
 			ptrSize: size
@@ -225,7 +192,7 @@ export class Reflect {
 	}
 
 	private readType(id: number, name: string) {
-		makeType(makeTypeTbl, {
+		makeType(this.constructType, {
 			flags: TypeFlags.isOther,
 			id: id,
 			name: name
@@ -233,11 +200,13 @@ export class Reflect {
 	}
 
 	private readClass(id: number, name: string) {
-		this.classList.push(makeType(makeTypeTbl, {
+		const bindClass = makeType(this.constructType, {
 			flags: TypeFlags.isClass,
 			id: id,
 			name: name
-		}) as BindClass);
+		}) as BindClass;
+
+		if(!this.skipNameTbl[bindClass.name]) this.classList.push(bindClass);
 	}
 
 	private readMethod(
@@ -247,11 +216,15 @@ export class Reflect {
 		typeIdList: number[],
 		policyList: string[]
 	) {
-		let bindClass = typeIdTbl[classId] as BindClass;
+		let bindClass = this.typeIdTbl[classId] as BindClass;
 
 		if(!bindClass) {
 			if(!this.globalScope) {
-				bindClass = new BindClass({flags: TypeFlags.none, id: classId, name: 'global'});
+				bindClass = this.constructType(
+					TypeFlags.isClass,
+					{flags: TypeFlags.none, id: classId, name: 'global'}
+				);
+
 				this.globalScope = bindClass;
 			} else {
 				throw(new Error('Unknown class ID ' + classId + ' for method ' + name));
@@ -260,9 +233,9 @@ export class Reflect {
 
 		const typeList = typeIdList.map((id: number) => getComplexType(
 			id,
-			makeTypeTbl,
-			getType,
-			this.queryType.bind(this),
+			this.constructType,
+			this.getType,
+			this.queryType,
 			'reflect ' + bindClass.name + '.' + name
 		));
 
@@ -288,15 +261,7 @@ export class Reflect {
 		let indent: string;
 		let staticPrefix: string;
 
-		const skipNameTbl: { [key: string]: boolean } = {
-			'Int64': true,
-			'NBind': true,
-			'NBindID': true
-		};
-
 		for(let bindClass of this.classList.concat([this.globalScope])) {
-			if(skipNameTbl[bindClass.name]) continue;
-
 			if((bindClass.flags & TypeFlags.kindMask) == TypeFlags.isClass) {
 				indent = '\t';
 				staticPrefix = 'static ';
@@ -305,7 +270,7 @@ export class Reflect {
 				staticPrefix = '';
 			}
 
-			const methodCode = bindClass.methodList.map((method: BindMethod) => (
+			const methodBlock = bindClass.methodList.map((method: BindMethod) => (
 				indent +
 				(method.name && method.isStatic ? staticPrefix : '') +
 				method + ';' +
@@ -316,7 +281,7 @@ export class Reflect {
 				)
 			)).join('\n');
 
-			const propertyCode = bindClass.propertyList.map((property: BindProperty) => (
+			const propertyBlock = bindClass.propertyList.map((property: BindProperty) => (
 				indent + property + ';' +
 				(
 					!(property.isReadable && property.isWritable) ?
@@ -326,9 +291,9 @@ export class Reflect {
 			)).join('\n');
 
 			let classCode = (
-				methodCode +
-				(methodCode && propertyCode ? '\n\n' : '') +
-				propertyCode
+				methodBlock +
+				(methodBlock && propertyBlock ? '\n\n' : '') +
+				propertyBlock
 			);
 
 			if(indent) {
@@ -345,9 +310,45 @@ export class Reflect {
 		return(classCodeList.join('\n\n') + '\n');
 	}
 
+	private constructType = ((kind: TypeFlags, spec: TypeSpecWithName) => {
+		const bindType = new makeTypeTbl[kind](spec as TypeSpecWithName);
+
+		this.typeNameTbl[spec.name] = bindType;
+		this.typeIdTbl[spec.id] = bindType;
+
+		return(bindType);
+	}).bind(this);
+
+	private getType = ((id: number) => this.typeIdTbl[id]).bind(this);
+
+	private queryType = ((id: number) => {
+		let result: {placeholderFlag: number, paramList: number[]} | undefined;
+
+		// TODO: just wrap the call in return() and remove the
+		// result variable. Requires support for passing any
+		// JavaScript type through C++.
+
+		this.binding.queryType(id, (kind: number, target: number, param: number) => {
+			result = {
+				paramList: [target, param],
+				placeholderFlag: kind
+			};
+		});
+
+		return(result);
+	}).bind(this);
+
+	skipNameTbl: { [key: string]: boolean } = {
+		'Int64': true,
+		'NBind': true,
+		'NBindID': true
+	};
+
 	binding: Binding<any>;
 
+	typeIdTbl: { [id: number]: BindType } = {};
+	typeNameTbl: { [name: string]: BindType } = {};
+
 	globalScope: BindClass;
-	typeList: BindType[] = [];
 	classList: BindClass[] = [];
 }

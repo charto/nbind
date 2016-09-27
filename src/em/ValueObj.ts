@@ -32,7 +32,7 @@ export namespace _nbind {
 	type BindClassPtr = _class.BindClassPtr;
 
 	export var throwError: typeof _globals.throwError;
-	export var typeTbl: typeof _globals.typeTbl;
+	export var typeNameTbl: typeof _globals.typeNameTbl;
 	export var bigEndian: typeof _globals.bigEndian;
 
 	export interface ValueObject {
@@ -160,14 +160,14 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static nbind_value(name: string, proto: any) {
-		if(!_nbind.typeTbl[name]) _nbind.throwError('Unknown value type ' + name);
+		if(!_nbind.typeNameTbl[name]) _nbind.throwError('Unknown value type ' + name);
 		Module['NBind'].bind_value(name, proto);
 
 		// Copy value constructor reference from C++ wrapper prototype
 		// to equivalent JS prototype.
 
 		_defineHidden(
-			(_nbind.typeTbl[name] as _class.BindClass).proto.prototype.__nbindValueConstructor
+			(_nbind.typeNameTbl[name] as _class.BindClass).proto.prototype.__nbindValueConstructor
 		)(proto.prototype, '__nbindValueConstructor');
 	}
 

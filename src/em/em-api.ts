@@ -23,7 +23,7 @@ import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
 import { _nbind as _gc } from './GC';             export { _gc };
 import {SignatureType, removeAccessorPrefix} from '../common';
-import {typeModule, StateFlags, TypeFlags, TypeSpec} from '../Type';
+import {typeModule, StateFlags, TypeFlags} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -35,14 +35,15 @@ const _typeModule = typeModule;
 
 export namespace _nbind {
 	export var Pool: typeof _globals.Pool;
-	export var typeList: typeof _globals.typeList;
 	export var bigEndian: typeof _globals.bigEndian;
 
 	export var addMethod: typeof _globals.addMethod;
 	export var readTypeIdList: typeof _globals.readTypeIdList;
 	export var readAsciiString: typeof _globals.readAsciiString;
 	export var readPolicyList: typeof _globals.readPolicyList;
-	export var makeTypeTbl: typeof _globals.makeTypeTbl;
+	export var makeTypeKindTbl: typeof _globals.makeTypeKindTbl;
+	export var makeTypeNameTbl: typeof _globals.makeTypeNameTbl;
+	export var constructType: typeof _globals.constructType;
 	export var getType: typeof _globals.getType;
 	export var queryType: typeof _globals.queryType;
 
@@ -100,7 +101,7 @@ class nbind { // tslint:disable-line:class-name
 		if(HEAP8[usedPtr] == 1) _nbind.bigEndian = true;
 		HEAP32[usedPtr / 4] = 0;
 
-		_nbind.makeTypeTbl = {
+		_nbind.makeTypeKindTbl = {
 			[TypeFlags.isPrimitive]: _nbind.PrimitiveType,
 			[TypeFlags.isBig]: _nbind.Int64Type,
 			[TypeFlags.isClass]: _nbind.BindClass,
@@ -112,14 +113,7 @@ class nbind { // tslint:disable-line:class-name
 			[TypeFlags.isOther]: _nbind.BindType
 		};
 
-		Module['toggleLightGC'] = _nbind.toggleLightGC;
-	}
-
-	@dep('_nbind', '_typeModule')
-	static _nbind_register_type(id: number, namePtr: number) {
-		const name = _nbind.readAsciiString(namePtr);
-		type TypeConstructor = { new(spec: TypeSpec): _type.BindType };
-		const constructorTbl: { [name: string]: TypeConstructor } = {
+		_nbind.makeTypeNameTbl = {
 			'bool': _nbind.BooleanType,
 			'cbFunction &': _nbind.CallbackType,
 			'std::string': _nbind.StringType,
@@ -128,10 +122,20 @@ class nbind { // tslint:disable-line:class-name
 			'_nbind_new': _nbind.CreateValueType
 		};
 
-		const constructor = constructorTbl[name] || _nbind.BindType;
+		Module['toggleLightGC'] = _nbind.toggleLightGC;
+	}
 
-		// tslint:disable-next-line:no-unused-expression
-		new constructor({flags: TypeFlags.isOther, id: id, name: name});
+	@dep('_nbind', '_typeModule')
+	static _nbind_register_type(id: number, namePtr: number) {
+		const name = _nbind.readAsciiString(namePtr);
+
+		const spec = {
+			flags: TypeFlags.isOther,
+			id: id,
+			name: name
+		};
+
+		_nbind.makeType(_nbind.constructType, spec);
 	}
 
 	@dep('_nbind')
@@ -142,7 +146,7 @@ class nbind { // tslint:disable-line:class-name
 			ptrSize: size
 		};
 
-		_nbind.makeType(_nbind.makeTypeTbl, spec);
+		_nbind.makeType(_nbind.constructType, spec);
 	}
 
 	@dep('_nbind', '__extends')
@@ -157,21 +161,19 @@ class nbind { // tslint:disable-line:class-name
 		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 2);
 
 		const Bound = _nbind.makeBound(policyTbl);
-		const flags = TypeFlags.isClass | (policyTbl['Value'] ? TypeFlags.isValueObject : 0);
-		const id = idList[0];
+		const spec = {
+			flags: TypeFlags.isClass | (policyTbl['Value'] ? TypeFlags.isValueObject : 0),
+			id: idList[0],
+			name: name
+		};
 
-		const bindClass = new _nbind.BindClass(
-			{
-				flags: flags,
-				id: id,
-				name: name
-			},
-			Bound
-		);
+		const bindClass = _nbind.makeType(_nbind.constructType, spec) as _class.BindClass;
+
+		bindClass.setBound(Bound);
 
 		bindClass.ptrType = _nbind.getComplexType(
 			idList[1],
-			_nbind.makeTypeTbl,
+			_nbind.constructType,
 			_nbind.getType,
 			_nbind.queryType
 		) as _class.BindClassPtr;
@@ -181,7 +183,7 @@ class nbind { // tslint:disable-line:class-name
 			0, // num
 			TypeFlags.none,
 			bindClass.name + '.free',
-			id,
+			spec.id,
 			// void destroy(uint32_t, void *ptr, void *shared, TypeFlags flags)
 			['void', 'uint32_t', 'uint32_t'],
 			null
@@ -216,7 +218,7 @@ class nbind { // tslint:disable-line:class-name
 	) {
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		const bindClass = _nbind.typeList[typeID] as _class.BindClass;
+		const bindClass = _nbind.getType(typeID) as _class.BindClass;
 		const proto = bindClass.proto.prototype;
 
 		// The constructor returns a pointer to the new object.
@@ -279,7 +281,7 @@ class nbind { // tslint:disable-line:class-name
 		let target: any;
 
 		if(typeID) {
-			bindClass = _nbind.typeList[typeID] as _class.BindClass;
+			bindClass = _nbind.getType(typeID) as _class.BindClass;
 			target = bindClass.proto;
 		} else {
 			target = Module;
@@ -316,7 +318,7 @@ class nbind { // tslint:disable-line:class-name
 		let name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		const bindClass = _nbind.typeList[typeID] as _class.BindClass;
+		const bindClass = _nbind.getType(typeID) as _class.BindClass;
 		const proto = bindClass.proto.prototype;
 
 		if(signatureType == SignatureType.method) {
