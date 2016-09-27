@@ -138,6 +138,8 @@ export namespace _nbind {
 			returnType,
 			'dynCall(' +
 				[prefix].concat(argList.map(
+					// TODO: if one wireWrite throws,
+					// resources allocated by others may leak!
 					(name: string, index: number) => makeWireWrite(
 						convertParamList,
 						policyTbl,
@@ -188,6 +190,8 @@ export namespace _nbind {
 			returnType,
 			'_nbind.externalList[num].data(' +
 				argList.map(
+					// TODO: if one wireRead throws,
+					// resources held by others may leak!
 					(name: string, index: number) => makeWireRead(
 						convertParamList,
 						null,

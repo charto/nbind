@@ -46,7 +46,7 @@ export namespace _nbind {
 		} else return(buf);
 	}
 
-	export function pushBuffer(
+	function pushBuffer(
 		buf: number[] | ArrayBuffer | DataView | Uint8Array | Buffer,
 		policyTbl?: PolicyTbl
 	) {
@@ -83,6 +83,8 @@ export namespace _nbind {
 		readResources = [ resources.pool ];
 		writeResources = [ resources.pool ];
 	}
+
+	// Called from EM_ASM block in Buffer.h
 
 	export function commitBuffer(num: number, data: number, length: number) {
 		const buf = (_nbind.externalList[num] as ExternalBuffer).data;

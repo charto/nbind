@@ -83,13 +83,13 @@ export namespace _nbind {
 	// Start of range used for other flags.
 	const valueBase = 18446744073709551616.0;
 
-	export function push64(num: number | any) {
+	function push64(num: number | any) {
 		if(typeof(num) == 'number') return(num);
 
 		return(pushValue(num) * 4096 + valueBase);
 	}
 
-	export function pop64(num: number): number | any {
+	function pop64(num: number): number | any {
 		if(num < valueBase) return(num);
 		return(popValue((num - valueBase) / 4096));
 	}
