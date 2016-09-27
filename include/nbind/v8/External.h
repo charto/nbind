@@ -48,6 +48,10 @@ public:
 		new Destructor<Data>(callback, data, handle);
 	}
 
+	v8::Local<v8::Object> getHandle() {
+		return(Nan::New(handle));
+	}
+
 private:
 
 	// Destructor info attached to an object for detecting when it gets
@@ -96,6 +100,18 @@ private:
 
 	// CopyablePersistentTraits automatically resets handle in the destructor.
 	Nan::Persistent<v8::Object, Nan::CopyablePersistentTraits<v8::Object>> handle;
+};
+
+template<>
+struct BindingType<External> {
+
+	typedef External Type;
+
+	static inline bool checkType(WireType arg) { return(arg->IsObject()); }
+
+	static inline Type fromWireType(WireType arg) { return(External(arg->ToObject())); }
+	static inline WireType toWireType(Type arg) { return(arg.getHandle()); }
+
 };
 
 } // namespace

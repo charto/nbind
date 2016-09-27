@@ -28,6 +28,7 @@ private:
 
 };
 
+class External;
 class cbFunction;
 
 class NBind {
@@ -43,7 +44,7 @@ public:
 		cbFunction &outMethod
 	);
 
-	static void queryType(NBindID type, cbFunction &outTypeDetail);
+	static External queryType(NBindID type, cbFunction &outTypeDetail);
 
 	static uintptr_t lalloc(size_t size);
 	static void lreset(unsigned int used, uintptr_t page);
@@ -53,5 +54,5 @@ public:
 } // namespace
 
 extern "C" {
-    extern void nbind_debug(void);
+	extern void nbind_debug(void);
 }

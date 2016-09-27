@@ -33,6 +33,7 @@ private:
 
 };
 
+class External;
 class cbFunction;
 
 class NBind {
@@ -48,7 +49,7 @@ public:
 		cbFunction &outMethod
 	);
 
-	static void queryType(NBindID type, cbFunction &outTypeDetail);
+	static External queryType(NBindID type, cbFunction &outTypeDetail);
 
 };
 

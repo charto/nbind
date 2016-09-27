@@ -94,24 +94,28 @@ void NBind :: reflect(
 	}
 }
 
-void NBind :: queryType(
+External NBind :: queryType(
 	NBindID id,
 	cbFunction &outTypeDetail
 ) {
 	const ParamStructure *paramSpec;
 	const ArrayStructure *arraySpec;
+	External result;
 
 	StructureType placeholderFlag = id.getStructureType();
 
 	switch(placeholderFlag) {
 		case StructureType :: none:
-			outTypeDetail(static_cast<unsigned char>(placeholderFlag));
+			result = outTypeDetail.call<External>(
+				static_cast<unsigned char>(placeholderFlag)
+			);
+
 			break;
 
 		case StructureType :: array:
 			arraySpec = static_cast<const ArrayStructure *>(id.getStructure());
 
-			outTypeDetail(
+			result = outTypeDetail.call<External>(
 				static_cast<unsigned char>(placeholderFlag),
 				NBindID(arraySpec->member),
 				arraySpec->length
@@ -122,11 +126,13 @@ void NBind :: queryType(
 		default:
 			paramSpec = static_cast<const ParamStructure *>(id.getStructure());
 
-			outTypeDetail(
+			result = outTypeDetail.call<External>(
 				static_cast<unsigned char>(placeholderFlag),
 				NBindID(paramSpec->target)
 			);
 
 			break;
 	}
+
+	return(result);
 }

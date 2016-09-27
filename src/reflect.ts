@@ -321,22 +321,12 @@ export class Reflect {
 
 	private getType = ((id: number) => this.typeIdTbl[id]).bind(this);
 
-	private queryType = ((id: number) => {
-		let result: {placeholderFlag: number, paramList: number[]} | undefined;
-
-		// TODO: just wrap the call in return() and remove the
-		// result variable. Requires support for passing any
-		// JavaScript type through C++.
-
-		this.binding.queryType(id, (kind: number, target: number, param: number) => {
-			result = {
-				paramList: [target, param],
-				placeholderFlag: kind
-			};
-		});
-
-		return(result);
-	}).bind(this);
+	private queryType = ((id: number) =>
+		this.binding.queryType(id, (kind: number, target: number, param: number) => ({
+			paramList: [target, param],
+			placeholderFlag: kind
+		}))
+	).bind(this);
 
 	skipNameTbl: { [key: string]: boolean } = {
 		'Int64': true,

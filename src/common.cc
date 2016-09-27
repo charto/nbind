@@ -100,6 +100,7 @@ const void **nbind :: getNamedTypeList() {
 		NBIND_TYPE(bool),
 		NBIND_TYPE(std::string),
 		NBIND_TYPE(cbFunction &),
+		NBIND_TYPE(External),
 		NBIND_TYPE(Buffer),
 		nullptr
 	};

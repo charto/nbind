@@ -14,7 +14,7 @@ class External {
 
 public:
 
-	explicit External(unsigned int num) : num(num) {}
+	explicit External(unsigned int num = 0) : num(num) {}
 
 	External(const External &other) : num(other.num) {
 		_nbind_reference_external(num);
@@ -39,7 +39,7 @@ public:
 	}
 
 	~External() {
-		_nbind_free_external(num);
+		if(num) _nbind_free_external(num);
 	}
 
 	inline unsigned int getNum() const { return(num); }
@@ -47,6 +47,17 @@ public:
 private:
 
 	unsigned int num;
+};
+
+template<>
+struct BindingType<External> {
+
+	typedef External Type;
+	typedef int WireType;
+
+	static inline Type fromWireType(WireType arg) { return(External(arg)); }
+	static inline WireType toWireType(Type arg) { return(arg.getNum()); }
+
 };
 
 } // namespace

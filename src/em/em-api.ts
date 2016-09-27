@@ -60,6 +60,8 @@ export namespace _nbind {
 	export var makeBound: typeof _class.makeBound;
 	export var disableMember: typeof _class.disableMember;
 
+	export var ExternalType: typeof _external.ExternalType;
+
 	export var CallbackType: typeof _callback.CallbackType;
 
 	export var CreateValueType: typeof _value.CreateValueType;
@@ -117,6 +119,7 @@ class nbind { // tslint:disable-line:class-name
 			'bool': _nbind.BooleanType,
 			'cbFunction &': _nbind.CallbackType,
 			'std::string': _nbind.StringType,
+			'External': _nbind.ExternalType,
 			'Buffer': _nbind.BufferType,
 			'Int64': _nbind.Int64Type,
 			'_nbind_new': _nbind.CreateValueType

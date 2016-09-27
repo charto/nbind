@@ -11,9 +11,14 @@ import {
 	exportLibrary,
 	dep
 } from 'emscripten-library-decorator';
+import {_nbind as _type} from './BindingType';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
+
+export namespace _nbind {
+	export var BindType = _type.BindType;
+}
 
 export namespace _nbind {
 
@@ -48,6 +53,17 @@ export namespace _nbind {
 			return(num);
 		}
 
+		reference() { ++this.refCount; }
+
+		dereference(this: External<any>, num: number) {
+			if(--this.refCount == 0) {
+				if(this.free) this.free();
+
+				externalList[num] = firstFreeExternal;
+				firstFreeExternal = num;
+			}
+		}
+
 		// Called by C++ side destructor through unregisterExternal
 		// to free any related JavaScript resources.
 
@@ -57,12 +73,25 @@ export namespace _nbind {
 		data: any;
 	}
 
-	export function unregisterExternal(num: number) {
-		const external = externalList[num] as External<any>;
-		if(external.free) external.free();
+	function popExternal(num: number) {
+		const obj = externalList[num] as External<any>;
 
-		externalList[num] = firstFreeExternal;
-		firstFreeExternal = num;
+		obj.dereference(num);
+
+		return(obj.data);
+	}
+
+	function pushExternal(obj: any) {
+		const external = new External(obj);
+
+		external.reference();
+
+		return(external.register());
+	}
+
+	export class ExternalType extends BindType {
+		wireRead = popExternal;
+		wireWrite = pushExternal;
 	}
 
 	@prepareNamespace('_nbind')
@@ -74,14 +103,12 @@ class nbind { // tslint:disable-line:class-name
 
 	@dep('_nbind')
 	static _nbind_reference_external(num: number) {
-		++(_nbind.externalList[num] as _nbind.External<any>).refCount;
+		(_nbind.externalList[num] as _nbind.External<any>).reference();
 	}
 
 	@dep('_nbind')
 	static _nbind_free_external(num: number) {
-		if(--(_nbind.externalList[num] as _nbind.External<any>).refCount == 0) {
-			_nbind.unregisterExternal(num);
-		}
+		(_nbind.externalList[num] as _nbind.External<any>).dereference(num);
 	}
 
 }
