@@ -191,7 +191,7 @@ export class Reflect {
 
 	private readPrimitive(id: number, size: number, flags: number) {
 		makeType(this.constructType, {
-			flags: TypeFlags.isPrimitive | flags,
+			flags: TypeFlags.isArithmetic | flags,
 			id: id,
 			ptrSize: size
 		});

@@ -78,7 +78,7 @@ export const enum TypeFlags {
 	isUniquePtr = TypeFlagBase.ref * 5,
 
 	kindMask = TypeFlagBase.kind * 15,
-	isPrimitive = TypeFlagBase.kind * 1,
+	isArithmetic = TypeFlagBase.kind * 1,
 	isClass = TypeFlagBase.kind * 2,
 	isClassPtr = TypeFlagBase.kind * 3,
 	isSharedClassPtr = TypeFlagBase.kind * 4,
@@ -248,7 +248,10 @@ export function typeModule(self: any) {
 				break;
 
 			case StructureType.pointer:
-				if((subType.flags & TypeFlags.kindMask) == TypeFlags.isPrimitive && subType.ptrSize == 1) {
+				if(
+					(subType.flags & TypeFlags.kindMask) == TypeFlags.isArithmetic &&
+					subType.spec.ptrSize == 1
+				) {
 					spec.flags = TypeFlags.isCString;
 					break;
 				}
@@ -293,9 +296,13 @@ export function typeModule(self: any) {
 		const refKind = flags & TypeFlags.refMask;
 		let kind = flags & TypeFlags.kindMask;
 
-		if(!spec.name && kind == TypeFlags.isPrimitive) {
-			if(flags & TypeFlags.isSignless) {
-				spec.name = 'char';
+		if(!spec.name && kind == TypeFlags.isArithmetic) {
+			if(spec.ptrSize == 1) {
+				spec.name = (
+					flags & TypeFlags.isSignless ?
+					'' :
+					(flags & TypeFlags.isUnsigned ? 'un' : '') + 'signed '
+				) + 'char';
 			} else {
 				spec.name = (
 					(flags & TypeFlags.isUnsigned ? 'u' : '') +

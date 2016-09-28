@@ -65,9 +65,9 @@ class PrimitiveMethods {
 	std::string getString();
 	static std::string getStringStatic();
 	static int32_t strLengthStatic(const char *);
-	int32_t strLength(const uint8_t *);
+	int32_t strLength(const unsigned char *);
 	static char * catenateStatic(const char *, const char *);
-	uint8_t * catenate(const uint8_t *, const uint8_t *);
+	unsigned char * catenate(const unsigned char *, const unsigned char *);
 	static int64_t ftol(float64_t);
 	static uint64_t ftoul(float64_t);
 	static int64_t ftoll(float64_t);

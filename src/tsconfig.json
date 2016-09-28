@@ -13,6 +13,7 @@
 	"files": [
 		"int64.ts",
 		"reflect.ts",
+		"todts.ts",
 		"nbind.ts"
 	]
 }

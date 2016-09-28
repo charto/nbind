@@ -104,7 +104,7 @@ class nbind { // tslint:disable-line:class-name
 		HEAP32[usedPtr / 4] = 0;
 
 		_nbind.makeTypeKindTbl = {
-			[TypeFlags.isPrimitive]: _nbind.PrimitiveType,
+			[TypeFlags.isArithmetic]: _nbind.PrimitiveType,
 			[TypeFlags.isBig]: _nbind.Int64Type,
 			[TypeFlags.isClass]: _nbind.BindClass,
 			[TypeFlags.isClassPtr]: _nbind.BindClassPtr,
@@ -144,7 +144,7 @@ class nbind { // tslint:disable-line:class-name
 	@dep('_nbind')
 	static _nbind_register_primitive(id: number, size: number, flags: number) {
 		const spec = {
-			flags: TypeFlags.isPrimitive | flags,
+			flags: TypeFlags.isArithmetic | flags,
 			id: id,
 			ptrSize: size
 		};

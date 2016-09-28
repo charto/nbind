@@ -55,7 +55,7 @@ enum class TypeFlags : uint32_t {
 	isUniquePtr = TypeFlagBase.ref * 5,
 
 	kindMask = TypeFlagBase.kind * 15,
-	isPrimitive = TypeFlagBase.kind * 1,
+	isArithmetic = TypeFlagBase.kind * 1,
 	isClass = TypeFlagBase.kind * 2,
 	isClassPtr = TypeFlagBase.kind * 3,
 	isSharedClassPtr = TypeFlagBase.kind * 4,
