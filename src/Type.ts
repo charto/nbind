@@ -111,8 +111,6 @@ export const enum StructureType {
 	max
 }
 
-export type MakeTypeTbl = { [flags: number]: { new(spec: TypeSpecWithName): TypeClass } };
-
 /* tslint:disable:no-shadowed-variable */
 export function typeModule(self: any) {
 
@@ -174,10 +172,10 @@ export function typeModule(self: any) {
 		));
 	}
 
-	function getComplexType(
+	function getComplexType<BindType extends TypeClass>(
 		id: number,
-		constructType: (kind: TypeFlags, spec: TypeSpecWithName) => TypeClass,
-		getType: (id: number) => TypeClass,
+		constructType: (kind: TypeFlags, spec: TypeSpecWithName) => BindType,
+		getType: (id: number) => BindType,
 		queryType: (id: number) => {
 			placeholderFlag: number,
 			paramList: number[]
@@ -287,8 +285,8 @@ export function typeModule(self: any) {
 		return(makeType(constructType, spec));
 	}
 
-	function makeType(
-		constructType: (kind: TypeFlags, spec: TypeSpecWithName) => TypeClass,
+	function makeType<BindType extends TypeClass>(
+		constructType: (kind: TypeFlags, spec: TypeSpecWithName) => BindType,
 		spec: TypeSpec
 	) {
 		const flags = spec.flags;

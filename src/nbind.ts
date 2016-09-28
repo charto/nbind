@@ -70,17 +70,20 @@ export interface DefaultExportType {
 export class Binding<ExportType extends DefaultExportType> {
 	[ key: string ]: any;
 
+	queryType?<Result>(
+		id: number,
+		outTypeDetail: (kind: number, ...args: any[]) => Result
+	): Result;
+
 	/** Bind a value type (class with a fromJS method) to an equivalent C++ type. */
 
-	bind: (name: string, proto: ClassType ) => void;
+	bind: (name: string, proto: ClassType) => void;
 
 	reflect: (
 		outPrimitive: (id: number, size: number, flag: number) => void,
 		outType: (id: number, name: string) => void,
 		outClass: (
 			id: number,
-			ptrId: number,
-			constPtrId: number,
 			name: string
 		) => void,
 		outMethod: (
@@ -90,11 +93,6 @@ export class Binding<ExportType extends DefaultExportType> {
 			argTypeList: number[],
 			policyList: string[]
 		) => void
-	) => void;
-
-	queryType: (
-		id: number,
-		outTypeDetail: (kind: number, ...args: any[]) => void
 	) => void;
 
 	toggleLightGC: (enable: boolean) => void;

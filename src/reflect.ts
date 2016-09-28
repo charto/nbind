@@ -8,14 +8,13 @@ import {
 	TypeFlags,
 	TypeSpec,
 	TypeSpecWithName,
-	TypeClass,
-	MakeTypeTbl
+	TypeClass
 } from './Type';
 
 const { Type, makeType, getComplexType } = typeModule(typeModule);
 
-export type BindType = TypeClass;
-export const BindType = Type as { new(spec: TypeSpec): TypeClass };
+export type TypeBase = TypeClass;
+export const TypeBase = Type as { new(spec: TypeSpec): TypeClass };
 
 class NBindID {
 	constructor(id: number) {
@@ -31,6 +30,16 @@ class NBindID {
 	}
 
 	id: number;
+}
+
+export class BindType extends TypeBase {
+	constructor(spec: TypeSpec) {
+		super(spec);
+
+		this.isClass = (spec.flags & TypeFlags.kindMask) == TypeFlags.isClass;
+	}
+
+	isClass: boolean;
 }
 
 export class BindClass extends BindType {
@@ -148,17 +157,14 @@ export class BindProperty {
 	isWritable = false;
 }
 
-const makeTypeTbl: MakeTypeTbl = {
-	[TypeFlags.isPrimitive]: BindType,
-	[TypeFlags.isBig]: BindType,
-	[TypeFlags.isClass]: BindClass,
-	[TypeFlags.isClassPtr]: BindType,
-	[TypeFlags.isSharedClassPtr]: BindType,
-	[TypeFlags.isVector]: BindType,
-	[TypeFlags.isArray]: BindType,
-	[TypeFlags.isCString]: BindType,
-	[TypeFlags.isOther]: BindType
-};
+/** Type-safe Function.bind, name inspired by Dojo. */
+
+function hitch<ObjectType extends Object, MethodType extends Function>(
+	obj: ObjectType,
+	method: MethodType
+) {
+	return(method.bind(obj) as MethodType);
+}
 
 export class Reflect {
 	constructor(binding: Binding<any>) {
@@ -169,10 +175,10 @@ export class Reflect {
 		binding.bind('NBindID', NBindID);
 
 		binding.reflect(
-			this.readPrimitive.bind(this),
-			this.readType.bind(this),
-			this.readClass.bind(this),
-			this.readMethod.bind(this)
+			hitch(this, this.readPrimitive),
+			hitch(this, this.readType),
+			hitch(this, this.readClass),
+			hitch(this, this.readMethod)
 		);
 
 		function compareName({ name: a }: {name: string}, { name: b }: {name: string}) {
@@ -234,8 +240,8 @@ export class Reflect {
 		const typeList = typeIdList.map((id: number) => getComplexType(
 			id,
 			this.constructType,
-			this.getType,
-			this.queryType,
+			hitch(this, this.getType),
+			hitch(this, this.queryType),
 			'reflect ' + bindClass.name + '.' + name
 		));
 
@@ -256,13 +262,25 @@ export class Reflect {
 		}
 	}
 
+	private getType(id: number) { return(this.typeIdTbl[id]); }
+
+	private queryType(id: number) {
+		return(this.binding.queryType!(
+			id,
+			(kind: number, target: number, param: number) => ({
+				paramList: [target, param],
+				placeholderFlag: kind
+			})
+		));
+	}
+
 	dumpPseudo() {
 		const classCodeList: string[] = [];
 		let indent: string;
 		let staticPrefix: string;
 
 		for(let bindClass of this.classList.concat([this.globalScope])) {
-			if((bindClass.flags & TypeFlags.kindMask) == TypeFlags.isClass) {
+			if(bindClass.isClass) {
 				indent = '\t';
 				staticPrefix = 'static ';
 			} else {
@@ -311,22 +329,14 @@ export class Reflect {
 	}
 
 	private constructType = ((kind: TypeFlags, spec: TypeSpecWithName) => {
-		const bindType = new makeTypeTbl[kind](spec as TypeSpecWithName);
+		const construct = (kind == TypeFlags.isClass) ? BindClass : BindType;
+		const bindType = new construct(spec);
 
 		this.typeNameTbl[spec.name] = bindType;
 		this.typeIdTbl[spec.id] = bindType;
 
 		return(bindType);
 	}).bind(this);
-
-	private getType = ((id: number) => this.typeIdTbl[id]).bind(this);
-
-	private queryType = ((id: number) =>
-		this.binding.queryType(id, (kind: number, target: number, param: number) => ({
-			paramList: [target, param],
-			placeholderFlag: kind
-		}))
-	).bind(this);
 
 	skipNameTbl: { [key: string]: boolean } = {
 		'Int64': true,

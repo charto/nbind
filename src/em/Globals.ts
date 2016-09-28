@@ -8,7 +8,7 @@ import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
-import {MakeTypeTbl, TypeFlags, TypeSpecWithName, PolicyTbl} from '../Type';
+import {TypeFlags, TypeSpecWithName, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -77,7 +77,7 @@ export namespace _nbind {
 	}
 
 	type TypeConstructor = { new(spec: TypeSpecWithName): _type.BindType };
-	export var makeTypeKindTbl: MakeTypeTbl;
+	export var makeTypeKindTbl: { [flags: number]: TypeConstructor };
 	export var makeTypeNameTbl: { [name: string]: TypeConstructor };
 
 	export function constructType(kind: TypeFlags, spec: TypeSpecWithName) {
