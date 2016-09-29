@@ -16,6 +16,7 @@ const nameTbl: { [key: string]: [string, boolean] } = {
 
 type PolicyTbl = { [key: string]: boolean };
 
+// tslint:disable-next-line:typedef
 function formatType(bindType: BindType, policyTbl: PolicyTbl = {}, needParens = false): string {
 	const flags = bindType.flags;
 	const kind = flags & TypeFlags.kindMask;
@@ -26,8 +27,7 @@ function formatType(bindType: BindType, policyTbl: PolicyTbl = {}, needParens = 
 	}
 
 	function addParens(name: string) {
-		if(needParens) return('(' + name + ')');
-		else return(name);
+		return(needParens ? '(' + name + ')' : name);
 	}
 
 	if(flags & TypeFlags.isConst) return(formatSubType(needParens));
@@ -60,8 +60,7 @@ function formatType(bindType: BindType, policyTbl: PolicyTbl = {}, needParens = 
 			return(addParens(formatSubType(true) + '[]'));
 
 		case TypeFlags.isCString:
-			if(isNullable) return(addParens('string | null'));
-			else return('string');
+			return(isNullable ? addParens('string | null') : 'string');
 
 		case TypeFlags.isString:
 			return('string');

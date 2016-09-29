@@ -6,11 +6,11 @@ declare var gc: any;
 declare var Buffer: any;
 
 import * as nbind from '..';
-import * as foo from './testlib';
+import * as testLib from './testlib';
 import {Int64} from '../dist/int64';
 const test = require('tap').test;
 
-const binding = nbind.init<typeof foo>();
+const binding = nbind.init<typeof testLib>();
 const testModule = binding.lib;
 
 let prepareGC: (obj: any) => void;
@@ -99,12 +99,12 @@ test('Constructors and destructors', function(t: any) {
 		t.strictEqual(Type.getStateStatic(), 54);
 
 		// Constructing with or without "new" operator should work identically.
-		obj = (Type as any as (p0?: number) => foo.PrimitiveMethods)();
+		obj = (Type as any as (p0?: number) => testLib.PrimitiveMethods)();
 		t.strictEqual(Type.getStateStatic(), 42);
 
 		prepareGC(obj);
 
-		obj = (Type as any as (p0?: number) => foo.PrimitiveMethods)(54);
+		obj = (Type as any as (p0?: number) => testLib.PrimitiveMethods)(54);
 		t.strictEqual(Type.getStateStatic(), 54);
 
 		gc();
@@ -300,7 +300,7 @@ test('Nullable', function(t: any) {
 	Type.foo(Type.getCoord()!);
 	t.strictEqual(Type.getNull(), null);
 	t.throws(function() {
-		Type.foo(null as any as foo.Coord);
+		Type.foo(null as any as testLib.Coord);
 	}, {message: 'Type mismatch'});
 
 	Type.bar(null);
