@@ -1,14 +1,24 @@
-var nbind = require('..');
-var Int64 = require('../dist/int64.js').Int64;
-var test = require('tap').test;
+declare var __dirname: any;
+declare var require: any;
+declare var process: any;
+declare var gc: any;
 
-var binding = nbind.init();
-var testModule = binding.lib;
+declare var Buffer: any;
 
-var prepareGC;
-var lost = null;
+import * as nbind from '..';
+import * as foo from './testlib';
+import {Int64} from '../dist/int64';
+const test = require('tap').test;
 
-if(typeof(gc) == 'function') {
+const binding = nbind.init<typeof foo>();
+const testModule = binding.lib;
+
+let prepareGC: (obj: any) => void;
+var lost: any = null;
+
+const global = (0, eval)('this');
+
+if(global.gc) {
 	prepareGC = function(obj) { gc(); }
 } else {
 	console.warn('Garbage collector is not accessible. Faking it...');
@@ -17,7 +27,7 @@ if(typeof(gc) == 'function') {
 
 	prepareGC = function(obj) { lost = obj; }
 
-	gc = function() {
+	global.gc = function() {
 		if(lost) lost.free();
 		lost = null;
 	}
@@ -25,7 +35,27 @@ if(typeof(gc) == 'function') {
 
 binding.toggleLightGC(true);
 
-test('Methods and primitive types', function(t) {
+class Coord {
+	constructor(x: number, y: number) {
+		this.x = x;
+		this.y = y;
+	}
+
+	fromJS(output: (x: number, y: number) => void) {
+		output(this.x, this.y);
+	}
+
+	x: number;
+	y: number;
+}
+
+type CoordJS = Coord;
+
+declare module './testlib' {
+	interface Coord extends CoordJS {}
+}
+
+test('Methods and primitive types', function(t: any) {
 	var Type = testModule.PrimitiveMethods;
 
 	(function() {
@@ -48,7 +78,7 @@ test('Methods and primitive types', function(t) {
 		t.strictEqual(Type.catenateStatic('foo', 'bar'), 'foobar');
 		t.strictEqual(obj.catenate('Java', 'Script'), 'JavaScript');
 
-		t.strictEqual(Type.strLengthStatic(123), 3);
+		t.strictEqual(Type.strLengthStatic(123 as any as string), 3);
 
 		obj = new Type(0, 'quux');
 		t.strictEqual(Type.getStringStatic(), 'quux');
@@ -58,23 +88,23 @@ test('Methods and primitive types', function(t) {
 	t.end();
 });
 
-test('Constructors and destructors', function(t) {
-	var Type = testModule.PrimitiveMethods;
+test('Constructors and destructors', function(t: any) {
+	const Type = testModule.PrimitiveMethods;
 
 	(function() {
-		var obj = new Type();
+		let obj = new Type();
 		t.strictEqual(Type.getStateStatic(), 42);
 
-		var obj = new Type(54);
+		obj = new Type(54);
 		t.strictEqual(Type.getStateStatic(), 54);
 
 		// Constructing with or without "new" operator should work identically.
-		obj = Type();
+		obj = (Type as any as (p0?: number) => foo.PrimitiveMethods)();
 		t.strictEqual(Type.getStateStatic(), 42);
 
 		prepareGC(obj);
 
-		obj = Type(54);
+		obj = (Type as any as (p0?: number) => foo.PrimitiveMethods)(54);
 		t.strictEqual(Type.getStateStatic(), 54);
 
 		gc();
@@ -95,16 +125,16 @@ test('Constructors and destructors', function(t) {
 	t.end();
 });
 
-test('Functions', function(t) {
+test('Functions', function(t: any) {
 	t.strictEqual(testModule.incrementInt(1), 2);
 	t.strictEqual(testModule.decrementInt(2), 1);
 
 	t.end();
 });
 
-test('Getters and setters', function(t) {
-	var Type = testModule.GetterSetter;
-	var obj = new Type();
+test('Getters and setters', function(t: any) {
+	const Type = testModule.GetterSetter;
+	const obj = new Type();
 
 	t.strictEqual(obj.x, 1);
 	t.strictEqual(obj.y, 2);
@@ -128,43 +158,34 @@ test('Getters and setters', function(t) {
 	t.end();
 });
 
-test('Callbacks', function(t) {
-	var Type = testModule.Callback;
+test('Callbacks', function(t: any) {
+	const Type = testModule.Callback;
 
 	t.type(Type.callVoidFunc(function() {}), 'undefined');
-	t.strictEqual(Type.callNegate(function(x) {return(!x);}, false), true);
-	t.strictEqual(Type.callIncrementInt(function(x) {return(x + 1);}, 1), 2);
-	t.strictEqual(Type.callIncrementDouble(function(x) {return(x + 0.25);}, 0.5), 0.75);
-	t.strictEqual(Type.callCatenate(function(x, y) {return(x + y);}, 'foo', 'bar'), 'foobar');
+	t.strictEqual(Type.callNegate(function(x: boolean) {return(!x);}, false), true);
+	t.strictEqual(Type.callIncrementInt(function(x: number) {return(x + 1);}, 1), 2);
+	t.strictEqual(Type.callIncrementDouble(function(x: number) {return(x + 0.25);}, 0.5), 0.75);
+	t.strictEqual(Type.callCatenate(function(x: string, y: string) {return(x + y);}, 'foo', 'bar'), 'foobar');
 
 	t.throws(function() {
-		Type.callNegate({}, true);
+		Type.callNegate({} as any as (x: boolean) => boolean, true);
 	}, {message: 'Type mismatch'});
 
-	Type.callCStrings(function(foo, bar, baz) {
+	Type.callCStrings(function(foo: string, bar: string, baz: string) {
 		t.strictDeepEqual([foo, bar, baz], ['foo', 'bar', 'baz']);
 	});
 
 	t.end();
 });
 
-test('Value objects', function(t) {
-	var Type = testModule.Value;
+test('Value objects', function(t: any) {
+	const Type = testModule.Value;
 
 //	t.throws(function() {
 //		Type.getCoord()
 //	}, {message: 'Value type JavaScript class is missing or not registered'});
 
 	t.type(Type.getCoord(), 'object');
-
-	function Coord(x, y) {
-		this.x = x;
-		this.y = y;
-	}
-
-	Coord.prototype.fromJS = function(output) {
-		output(this.x, this.y);
-	}
 
 	binding.bind('Coord', Coord);
 
@@ -174,7 +195,7 @@ test('Value objects', function(t) {
 	t.strictEqual(xy.y, 25);
 
 	xy.fromJS(function() {});
-	xy = Type.callWithCoord(function(a, b) {
+	xy = Type.callWithCoord(function(a: Coord, b: Coord) {
 		t.strictEqual(a.x, xy.x);
 		t.strictEqual(a.y, xy.y);
 		t.strictEqual(b.x, 123);
@@ -190,40 +211,40 @@ test('Value objects', function(t) {
 	t.end();
 });
 
-test('Pointers and references', function(t) {
-	var Type = testModule.Reference;
+test('Pointers and references', function(t: any) {
+	const Type = testModule.Reference;
 
-	var own = new Type();
-	var value = Type.getValue();
-	var ptr = Type.getPtr();
-	var ref = Type.getRef();
-	var constPtr = Type.getConstPtr();
-	var constRef = Type.getConstRef();
+	const own = new Type();
+	const value = Type.getValue();
+	const ptr = Type.getPtr();
+	const ref = Type.getRef();
+	const constPtr = Type.getConstPtr();
+	const constRef = Type.getConstRef();
 
-	var types = [ own, value, ptr, ref, constPtr, constRef ];
+	const types = [ own, value, ptr, ref, constPtr, constRef ];
 
 	for(var i = 0; i < types.length; ++i) {
-		t.type(Type.readPtr(types[i]), 'undefined');
-		t.type(Type.readRef(types[i]), 'undefined');
+		t.type(Type.readPtr(types[i]!), 'undefined');
+		t.type(Type.readRef(types[i]!), 'undefined');
 
 		if(types[i] == constPtr || types[i] == constRef) {
 			t.throws(function() {
-				Type.writePtr(types[i]);
+				Type.writePtr(types[i]!);
 			}, {message: 'Passing a const value as a non-const argument'});
 
 			t.throws(function() {
-				Type.writeRef(types[i]);
+				Type.writeRef(types[i]!);
 			}, {message: 'Passing a const value as a non-const argument'});
 		} else {
-			t.type(Type.writePtr(types[i]), 'undefined');
-			t.type(Type.writeRef(types[i]), 'undefined');
+			t.type(Type.writePtr(types[i]!), 'undefined');
+			t.type(Type.writeRef(types[i]!), 'undefined');
 		}
 	}
 
-	t.type(ptr.read(), 'undefined');
+	t.type(ptr!.read(), 'undefined');
 	t.type(ref.read(), 'undefined');
 
-	t.type(ptr.write(), 'undefined');
+	t.type(ptr!.write(), 'undefined');
 	t.type(ref.write(), 'undefined');
 
 	t.type(constPtr.read(), 'undefined');
@@ -240,46 +261,46 @@ test('Pointers and references', function(t) {
 	t.end();
 });
 
-test('Arrays', function(t) {
-	var ArrayType = testModule.Array;
-	var VectorType = testModule.Vector;
+test('Arrays', function(t: any) {
+	const ArrayType = testModule.Array;
+	const VectorType = testModule.Vector;
 
-	var arr = [13, 21, 34];
+	const arr = [13, 21, 34];
 
 	t.strictDeepEqual(ArrayType.getInts(), arr);
 	t.strictDeepEqual(VectorType.getInts(), arr);
 
-	t.strictDeepEqual(ArrayType.callWithInts(function(a) {
+	t.strictDeepEqual(ArrayType.callWithInts(function(a: number[]) {
 		t.strictDeepEqual(a, arr);
 		return(arr);
 	}, arr), arr);
 
-	t.strictDeepEqual(VectorType.callWithInts(function(a) {
+	t.strictDeepEqual(VectorType.callWithInts(function(a: number[]) {
 		t.strictDeepEqual(a, arr);
 		return(arr);
 	}, arr), arr);
 
 	t.throws(function() {
-		ArrayType.callWithInts(function(a) {}, [1, 2]);
+		ArrayType.callWithInts(function(a: number[]) {}, [1, 2]);
 	}, {message: 'Type mismatch'});
 
-	var arr = ['foo', 'bar', 'baz'];
+	const arr2 = ['foo', 'bar', 'baz'];
 
-	t.strictDeepEqual(VectorType.callWithStrings(function(a) {
-		t.strictDeepEqual(a, arr);
-		return(arr);
-	}, arr), arr);
+	t.strictDeepEqual(VectorType.callWithStrings(function(a: string[]) {
+		t.strictDeepEqual(a, arr2);
+		return(arr2);
+	}, arr2), arr2);
 
 	t.end();
 });
 
-test('Nullable', function(t) {
-	var Type = testModule.Nullable;
+test('Nullable', function(t: any) {
+	const Type = testModule.Nullable;
 
-	Type.foo(Type.getCoord());
+	Type.foo(Type.getCoord()!);
 	t.strictEqual(Type.getNull(), null);
 	t.throws(function() {
-		Type.foo(null);
+		Type.foo(null as any as foo.Coord);
 	}, {message: 'Type mismatch'});
 
 	Type.bar(null);
@@ -287,20 +308,20 @@ test('Nullable', function(t) {
 	t.end();
 });
 
-test('Strict conversion policy', function(t) {
-	var typeList = [ testModule, testModule.StrictStatic, new testModule.Strict() ];
+test('Strict conversion policy', function(t: any) {
+	const typeList = [ testModule, testModule.StrictStatic, new testModule.Strict() ];
 
-	for(var i = 0; i < typeList.length; ++i) {
+	for(let i = 0; i < typeList.length; ++i) {
 		var Type = typeList[i];
 
 		t.strictEqual(Type.testInt(1), 1);
 		t.strictEqual(Type.testBool(true), true);
 		t.strictEqual(Type.testString('foo'), 'foo');
 		t.strictEqual(Type.testCString('foo'), 'foo');
-		t.strictEqual(Type.testInt('123'), 123);
-		t.strictEqual(Type.testBool(0), false);
-		t.strictEqual(Type.testString(123), '123');
-		t.strictEqual(Type.testCString(123), '123');
+		t.strictEqual(Type.testInt('123' as any as number), 123);
+		t.strictEqual(Type.testBool(0 as any as boolean), false);
+		t.strictEqual(Type.testString(123 as any as string), '123');
+		t.strictEqual(Type.testCString(123 as any as string), '123');
 
 		t.strictEqual(Type.strictInt(1), 1);
 		t.strictEqual(Type.strictBool(true), true);
@@ -308,32 +329,32 @@ test('Strict conversion policy', function(t) {
 		t.strictEqual(Type.strictCString('foo'), 'foo');
 
 		t.throws(function() {
-			Type.strictInt('123');
+			Type.strictInt('123' as any as number);
 		}, {message: 'Type mismatch'});
 
 		t.throws(function() {
-			Type.strictBool(0);
+			Type.strictBool(0 as any as boolean);
 		}, {message: 'Type mismatch'});
 
 		t.throws(function() {
-			Type.strictString(123);
+			Type.strictString(123 as any as string);
 		}, {message: 'Type mismatch'});
 
 		t.throws(function() {
-			Type.strictCString(123);
+			Type.strictCString(123 as any as string);
 		}, {message: 'Type mismatch'});
 	}
 
 	t.end();
 });
 
-test('64-bit integers', function(t) {
-	var Type = testModule.PrimitiveMethods;
-	var lastDigit;
+test('64-bit integers', function(t: any) {
+	const Type = testModule.PrimitiveMethods;
+	let lastDigit: string;
 
-	var x = Type.ftoul(42);
-	var y = Type.ftol(42);
-	var z = Type.ftol(-42);
+	let x = Type.ftoul(42);
+	let y = Type.ftol(42);
+	let z = Type.ftol(-42);
 
 	t.strictEqual(Type.ultof(x), 42);
 	t.strictEqual(Type.ltof(y), 42);
@@ -365,9 +386,9 @@ test('64-bit integers', function(t) {
 	t.end();
 });
 
-test('Overloaded functions', function(t) {
-	var Type = testModule.Overload;
-	var obj = new Type();
+test('Overloaded functions', function(t: any) {
+	const Type = testModule.Overload;
+	const obj = new Type();
 
 	t.strictEqual(obj.test(0), 1);
 	t.strictEqual(obj.test2(0, 0), 2);
@@ -384,24 +405,24 @@ test('Overloaded functions', function(t) {
 	t.end();
 });
 
-test('Smart pointers', function(t) {
-	var Type = testModule.Smart;
+test('Smart pointers', function(t: any) {
+	const Type = testModule.Smart;
 
-	var obj = Type.make(31337);
+	const obj = Type.make(31337);
 
-	obj.test();
-	Type.testStatic(obj);
-	Type.testShared(obj);
+	obj!.test();
+	Type.testStatic(obj!);
+	Type.testShared(obj!);
 
-	obj.free();
+	obj!.free!();
 	// obj.free();
 
 	t.end();
 });
 
-test('Buffers', function(t) {
-	var Type = testModule.Buffer;
-	var buf;
+test('Buffers', function(t: any) {
+	const Type = testModule.Buffer;
+	let buf: any;
 
 	if(ArrayBuffer && (typeof(process) != 'object' || typeof(process.versions) != 'object' || process.versions.modules >= 14)) {
 		buf = new ArrayBuffer(16);
@@ -438,10 +459,10 @@ test('Buffers', function(t) {
 	t.end();
 });
 
-test('Reflection', function(t) {
-	var fs = require('fs');
-	var path = require('path').resolve(__dirname, 'reflect.txt');
-	var reflect = new (require('../dist/reflect.js').Reflect)(binding);
+test('Reflection', function(t: any) {
+	const fs = require('fs');
+	const path = require('path').resolve(__dirname, 'reflect.txt');
+	const reflect = new (require('../dist/reflect.js').Reflect)(binding);
 
 	t.strictEqual(
 		reflect.dumpPseudo().replace(/int64/g, 'int32'),

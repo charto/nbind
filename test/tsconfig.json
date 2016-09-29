@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"declaration": false,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"removeComments": false,
+		"strictNullChecks": true,
+		"target": "es5"
+	},
+	"files": [
+		"test.ts"
+	]
+}

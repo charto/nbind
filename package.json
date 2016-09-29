@@ -1,12 +1,13 @@
 {
   "name": "nbind",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Magical headers that make your C++ library accessible from JavaScript",
   "main": "dist/nbind.js",
   "typings": "dist/nbind.d.ts",
   "bin": {
     "copyasm": "bin/copyasm.js",
-    "emcc-path": "bin/emcc-path.js"
+    "emcc-path": "bin/emcc-path.js",
+    "ndts": "bin/ndts.js"
   },
   "scripts": {
     "autogypi": "autogypi",
@@ -20,8 +21,9 @@
     "lint": "tslint -c src/tslint.json src/*.ts src/em/*.ts",
     "prepublish": "npm run lint && tsc -p src/em && tsc -p src && cbuild -x -v -s dist/bundle/em/em-api.js -o dist/em-api.js",
     "clean-asm": "cd test/em && node-gyp clean",
-    "test-asm": "autogypi -c test/autogypi.json && cd test/em && node-gyp configure build --asmjs=1 && tap ../test.js",
-    "test":     "autogypi -c test/autogypi.json && cd test/v8 && node-gyp configure build           && tap --gc ../test.js && tap --gc ../test-v8.js"
+    "config-test": "autogypi -c test/autogypi.json",
+    "test-asm": "npm run config-test && cd test/em && node-gyp configure build --asmjs=1 && node ../../bin/ndts . > ../testlib.d.ts && tsc -p .. && tap ../test.js",
+    "test":     "npm run config-test && cd test/v8 && node-gyp configure build           && node ../../bin/ndts . > ../testlib.d.ts && tsc -p .. && tap ../test.js --gc && tap ../test-v8.js"
   },
   "author": "Juha Järvi",
   "license": "MIT",

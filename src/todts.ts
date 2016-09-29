@@ -90,7 +90,9 @@ function formatProperty(prop: BindProperty) {
 }
 
 export function dump(reflect: Reflect) {
-	const classCodeList: string[] = [];
+	const classCodeList = [
+		'export class NBindBase { free?(): void }'
+	];
 	let indent: string;
 	let staticPrefixCC: string;
 	let staticPrefixJS: string;
@@ -140,7 +142,7 @@ export function dump(reflect: Reflect) {
 
 		if(indent) {
 			classCode = (
-				'export class ' + bindClass.name + ' {' +
+				'export class ' + bindClass.name + ' extends NBindBase {' +
 				(classCode ? '\n' + classCode + '\n' : '') +
 				'}'
 			);
