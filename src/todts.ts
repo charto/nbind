@@ -4,62 +4,71 @@
 import {Reflect, BindType, BindMethod, BindProperty} from './reflect';
 import {TypeFlags} from './Type';
 
-const nameTbl: { [key: string]: string } = {
-	'void': 'void',
-	'bool': 'boolean',
-	'cbFunction &': '(...args: any[]) => any',
-	'std::string': 'string',
-	'External': 'any',
-	'Buffer': 'number[] | ArrayBuffer | DataView | Uint8Array | Buffer',
-	'Int64': 'number' // | Int64 (interface)?
+const nameTbl: { [key: string]: [string, boolean] } = {
+	'void': ['void', false],
+	'bool': ['boolean', false],
+	'cbFunction &': ['(...args: any[]) => any', true],
+	'std::string': ['string', false],
+	'External': ['any', false],
+	'Buffer': ['number[] | ArrayBuffer | DataView | Uint8Array | Buffer', true],
+	'Int64': ['number', false] // | Int64 (interface)?
 };
 
 type PolicyTbl = { [key: string]: boolean };
 
-function formatType(bindType: BindType, policyTbl: PolicyTbl = {}): string {
+function formatType(bindType: BindType, policyTbl: PolicyTbl = {}, needParens = false): string {
 	const flags = bindType.flags;
 	const kind = flags & TypeFlags.kindMask;
 	const refKind = flags & TypeFlags.refMask;
 
-	function formatSubType() {
-		return(formatType(bindType.spec.paramList![0] as BindType, policyTbl));
+	function formatSubType(needsParens: boolean) {
+		return(formatType(bindType.spec.paramList![0] as BindType, policyTbl, needsParens));
 	}
 
-	if(flags & TypeFlags.isConst) return(formatSubType());
+	function addParens(name: string) {
+		if(needParens) return('(' + name + ')');
+		else return(name);
+	}
+
+	if(flags & TypeFlags.isConst) return(formatSubType(needParens));
+
+	let isNullable = policyTbl['Nullable'];
 
 	switch(kind) {
 		case TypeFlags.isArithmetic:
 			return('number');
 
 		case TypeFlags.isClass:
-			return(
-				(
-					refKind ?
-					formatSubType() :
-					bindType.name
-				) + (
-					// Objects passed by pointer (not value or reference)
-					// may be nullable.
-					policyTbl['Nullable'] && (
-						refKind == TypeFlags.isPointer ||
-						refKind == TypeFlags.isSharedPtr ||
-						refKind == TypeFlags.isUniquePtr
-					) ? ' | null' : ''
-				)
+			// Objects passed by pointer (not value or reference)
+			// may be nullable.
+
+			isNullable = isNullable && (
+				refKind == TypeFlags.isPointer ||
+				refKind == TypeFlags.isSharedPtr ||
+				refKind == TypeFlags.isUniquePtr
 			);
+
+			needParens = needParens && isNullable;
+
+			return(addParens(
+				(refKind ? formatSubType(isNullable) : bindType.name) +
+				(isNullable ? ' | null' : '')
+			));
 
 		case TypeFlags.isVector:
 		case TypeFlags.isArray:
-			return(formatSubType() + '[]');
+			return(addParens(formatSubType(true) + '[]'));
 
 		case TypeFlags.isCString:
-			return('string' + (policyTbl['Nullable'] ? ' | null' : ''));
+			if(isNullable) return(addParens('string | null'));
+			else return('string');
 
 		case TypeFlags.isString:
 			return('string');
 
 		case TypeFlags.isOther:
-			return(nameTbl[bindType.name] || 'any');
+			const spec = nameTbl[bindType.name];
+			return(spec ? (spec[1] ? addParens(spec[0]) : spec[0]) : 'any');
 
 		default:
 			return('any');
