@@ -66,11 +66,8 @@
 #define construct definer.constructor
 
 #define field(name) definer.field(#name, &Bound::name)
-#define getter(name) definer.property(#name, &Bound::name)
-// TODO: varargs macro also supporting this:
-//#define getter(name, get) definer.property(#name, &Bound::get)
-#define getset(getName, setName) definer.property(#getName, &Bound::getName, &Bound::setName)
-// TODO: varargs macro also supporting this:
-// #define getset(name, get, set) definer.property(#name, &Bound::get, &Bound::set)
+#define getter(name, ...) definer.property(#name, &Bound::name, ## __VA_ARGS__)
+#define getset(getName, setName, ...) \
+definer.property(#getName, &Bound::getName, &Bound::setName, ## __VA_ARGS__)
 
 #endif // BUILDING_NODE_EXTENSION || EMSCRIPTEN

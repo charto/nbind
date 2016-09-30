@@ -244,7 +244,7 @@ public:
 	template <typename GetterType, typename... Policies>
 	BindDefiner &property(
 		const char* name,
-		GetterType getter,
+		GetterType (Bound::*getter),
 		Policies... policies
 	) {
 		addMethodMaybeConst<GetterSignature>(name, getter, policies...);
@@ -257,8 +257,8 @@ public:
 	template <typename GetterType, typename SetterType, typename... Policies>
 	BindDefiner &property(
 		const char* name,
-		GetterType getter,
-		SetterType setter,
+		GetterType (Bound::*getter),
+		SetterType (Bound::*setter),
 		Policies... policies
 	) {
 		addMethodMaybeConst<SetterSignature>(name, setter, policies...);
