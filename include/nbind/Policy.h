@@ -182,7 +182,7 @@ struct NoPolicy {
 };
 
 template <typename ArgType>
-NoPolicy detectPolicies(ArgType, int);
+NoPolicy detectPolicies(const ArgType &, int);
 
 // Value object policy (autodetected)
 
@@ -206,7 +206,7 @@ class cbOutput;
 // SFINAE test if the class has a toJS method with cbOutput parameter.
 
 template <typename ArgType, typename = decltype(std::declval<ArgType>().toJS(std::declval<cbOutput>()))>
-ValuePolicy detectPolicies(ArgType, double);
+ValuePolicy detectPolicies(const ArgType &, double);
 
 // Policy autodetection part 2
 
