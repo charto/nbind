@@ -1,6 +1,6 @@
 {
 	"includes": [
-		"../common.gypi"
+		"../auto-top.gypi"
 	],
 
 	"targets": [
