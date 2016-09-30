@@ -222,18 +222,6 @@ template <> struct BindingType<StrictType<ArgType>> : public BindingType<ArgType
 	}                                                   \
 }
 
-/*
-		TODO: functions accepting nbind::Buffer (class remains unimplemented)
-		as a parameter could be called like this:
-
-		if(node::Buffer::HasInstance(arg)) {
-			v8::Local<v8::Object> buffer = arg->ToObject();
-			auto data = reinterpret_cast<const unsigned char *>(node::Buffer::Data(buffer));
-			size_t len = node::Buffer::Length(buffer);
-			return(nbind::Buffer(data, len));
-		}
-*/
-
 DEFINE_STRING_BINDING_TYPE(unsigned char *);
 DEFINE_STRING_BINDING_TYPE(char *);
 DEFINE_STRING_BINDING_TYPE(const unsigned char *);
