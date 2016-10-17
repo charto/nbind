@@ -96,6 +96,94 @@ const char *NBindID :: toString() {
 
 typedef BaseSignature :: SignatureType SignatureType;
 
+static void registerMethods(BindClassBase &bindClass, Local<FunctionTemplate> constructorTemplate) {
+	Local<ObjectTemplate> proto = constructorTemplate->PrototypeTemplate();
+	char *nameBuf = nullptr;
+
+	funcPtr setter = nullptr;
+	funcPtr getter = nullptr;
+	unsigned int getterNum = 0;
+	unsigned int setterNum = 0;
+	SignatureParam *param;
+
+	for(auto &func : bindClass.getMethodList()) {
+		// TODO: Support for function overloading goes here.
+
+		const BaseSignature *signature = func.getSignature();
+
+		if(signature == nullptr) {
+
+			if(func.getName() == emptyGetter) {
+				getter = nullptr;
+				getterNum = 0;
+			}
+
+			if(func.getName() == emptySetter) {
+				setter = nullptr;
+				setterNum = 0;
+			}
+
+			continue;
+		}
+
+		param = new SignatureParam();
+
+		switch(signature->getType()) {
+			case SignatureType :: method:
+				param->methodNum = func.getNum();
+				Nan::SetPrototypeTemplate(constructorTemplate, func.getName(),
+					Nan::New<FunctionTemplate>(
+						reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
+						Nan::New<v8::External>(param)
+					)
+				);
+
+				break;
+
+			case SignatureType :: func:
+				param->methodNum = func.getNum();
+				Nan::SetTemplate(constructorTemplate, func.getName(),
+					Nan::New<FunctionTemplate>(
+						reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
+						Nan::New<v8::External>(param)
+					)
+				);
+
+				break;
+
+			case SignatureType :: setter:
+				setter = signature->getCaller();
+				setterNum = func.getNum();
+
+				break;
+
+			case SignatureType :: getter:
+				getter = signature->getCaller();
+
+				param->setterNum = setterNum;
+				param->methodNum = func.getNum();
+				Nan::SetAccessor(
+					proto,
+					Nan::New<String>(stripGetterPrefix(func.getName(), nameBuf)).ToLocalChecked(),
+					reinterpret_cast<BindClassBase::jsGetter *>(getter),
+					reinterpret_cast<BindClassBase::jsSetter *>(setter),
+					Nan::New<v8::External>(param)
+				);
+
+				break;
+
+			case SignatureType :: construct:
+
+				// Constructors in method list are ignored.
+				// They're handled by overloaders for wrappers and values.
+
+				break;
+		}
+	}
+
+	if(nameBuf != nullptr) free(nameBuf);
+}
+
 static void initModule(Handle<Object> exports) {
 	// Register NBind a second time to make sure it's first on the list
 	// of classes and gets defined first, so pointers to it can be added
@@ -103,13 +191,17 @@ static void initModule(Handle<Object> exports) {
 	registerClass(BindClass<NBind>::getInstance());
 
 	Local<FunctionTemplate> nBindTemplate;
+	SignatureParam *param;
 
 	for(auto &func : getFunctionList()) {
 		const BaseSignature *signature = func.getSignature();
 
+		param = new SignatureParam();
+		param->methodNum = func.getNum();
+
 		Local<FunctionTemplate> functionTemplate = Nan::New<FunctionTemplate>(
 			reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
-			Nan::New<Number>(func.getNum())
+			Nan::New<v8::External>(param)
 		);
 
 		Local<v8::Function> jsFunction = functionTemplate->GetFunction();
@@ -133,9 +225,12 @@ static void initModule(Handle<Object> exports) {
 
 		bindClass->init();
 
+		param = new SignatureParam();
+		param->overloadNum = bindClass->wrapperConstructorNum;
+
 		Local<FunctionTemplate> constructorTemplate = Nan::New<FunctionTemplate>(
 			Overloader::create,
-			Nan::New<Number>(bindClass->wrapperConstructorNum << overloadShift)
+			Nan::New<v8::External>(param)
 		);
 
 		constructorTemplate->SetClassName(Nan::New<String>(bindClass->getName()).ToLocalChecked());
@@ -147,85 +242,7 @@ static void initModule(Handle<Object> exports) {
 			)
 		);
 
-		Local<ObjectTemplate> proto = constructorTemplate->PrototypeTemplate();
-		char *nameBuf = nullptr;
-
-		funcPtr setter = nullptr;
-		funcPtr getter = nullptr;
-		unsigned int getterNum = 0;
-		unsigned int setterNum = 0;
-
-		for(auto &func : bindClass->getMethodList()) {
-			// TODO: Support for function overloading goes here.
-
-			const BaseSignature *signature = func.getSignature();
-
-			if(signature == nullptr) {
-
-				if(func.getName() == emptyGetter) {
-					getter = nullptr;
-					getterNum = 0;
-				}
-
-				if(func.getName() == emptySetter) {
-					setter = nullptr;
-					setterNum = 0;
-				}
-
-				continue;
-			}
-
-			switch(signature->getType()) {
-				case SignatureType :: method:
-					Nan::SetPrototypeTemplate(constructorTemplate, func.getName(),
-						Nan::New<FunctionTemplate>(
-							reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
-							Nan::New<Number>(func.getNum())
-						)
-					);
-
-					break;
-
-				case SignatureType :: func:
-					Nan::SetTemplate(constructorTemplate, func.getName(),
-						Nan::New<FunctionTemplate>(
-							reinterpret_cast<BindClassBase::jsMethod *>(signature->getCaller()),
-							Nan::New<Number>(func.getNum())
-						)
-					);
-
-					break;
-
-				case SignatureType :: setter:
-					setter = signature->getCaller();
-					setterNum = func.getNum();
-
-					break;
-
-				case SignatureType :: getter:
-					getter = signature->getCaller();
-					getterNum = func.getNum();
-
-					Nan::SetAccessor(
-						proto,
-						Nan::New<String>(stripGetterPrefix(func.getName(), nameBuf)).ToLocalChecked(),
-						reinterpret_cast<BindClassBase::jsGetter *>(getter),
-						reinterpret_cast<BindClassBase::jsSetter *>(setter),
-						Nan::New<Number>((setterNum << accessorSetterShift) | getterNum)
-					);
-
-					break;
-
-				case SignatureType :: construct:
-
-					// Constructors in method list are ignored.
-					// They're handled by overloaders for wrappers and values.
-
-					break;
-			}
-		}
-
-		if(nameBuf != nullptr) free(nameBuf);
+		registerMethods(*bindClass, constructorTemplate);
 
 		// Add NBind references to other classes to enforce visibility.
 		if(bindClass == &BindClass<NBind>::getInstance()) {

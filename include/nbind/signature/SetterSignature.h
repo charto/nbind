@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 // This file is very similar to FunctionSignature.h and MethodSignature.h
@@ -9,11 +9,6 @@
 #include "BaseSignature.h"
 
 namespace nbind {
-
-// Getters and setters come in pairs with a single associated metadata value.
-// We need to store separate getter and setter ID numbers as metadata
-// so they're packed as 16-bit values into a single 32-bit int.
-static constexpr unsigned int accessorSetterShift = 16;
 
 // Wrapper for all C++ getters and setters with matching class and data types.
 
@@ -45,7 +40,7 @@ public:
 		Parent::template callInnerSafely<Bound>(
 			valuePtr,
 			args,
-			args.Data()->Uint32Value() >> accessorSetterShift
+			SignatureParam::get(args)->setterNum
 		);
 	}
 

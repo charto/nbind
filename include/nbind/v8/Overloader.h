@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 /*
@@ -39,10 +39,8 @@ public:
 	};
 
 	static void call(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		static std::vector<OverloadDef> &overloadVect = overloadVectStore();
-
 		// Fetch overloads of the requested function.
-		OverloadDef &def = overloadVect[args.Data()->Uint32Value() >> overloadShift];
+		OverloadDef &def = getDef(SignatureParam::get(args)->overloadNum);
 
 		unsigned int argc = args.Length();
 
@@ -100,7 +98,7 @@ public:
 	}
 
 	static void callNew(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		OverloadDef &def = getDef(args.Data()->Uint32Value() >> overloadShift);
+		OverloadDef &def = getDef(SignatureParam::get(args)->overloadNum);
 
 		unsigned int argc = args.Length();
 		std::vector<v8::Local<v8::Value>> argv(argc);
@@ -195,7 +193,7 @@ public:
 		getDef(num).wrapPtr = wrapPtr;
 	}
 
-	static OverloadDef &getDef(unsigned int num) {
+	static inline OverloadDef &getDef(unsigned int num) {
 		return(overloadVectStore()[num]);
 	}
 

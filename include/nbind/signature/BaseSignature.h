@@ -1,15 +1,9 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 #pragma once
 
 namespace nbind {
-
-// Constants for packing several method signatures into a single overloaded name,
-// and several methods with identical argument and return types into a single signature.
-
-static constexpr unsigned int overloadShift = 16;
-static constexpr unsigned int signatureMemberMask = 0xffff;
 
 // Base class for signatures of all constructors, functions and methods.
 // A signature represents a unique set of argument and return types,
@@ -123,15 +117,6 @@ public:
 	template <typename MethodType>
 	static unsigned int addMethod(MethodType func, TypeFlags flags) {
 		auto &funcVect = getInstance().funcVect;
-
-#		if defined(BUILDING_NODE_EXTENSION)
-
-			if(funcVect.size() >= signatureMemberMask) {
-				// TODO:
-				// ABORT ABORT ABORT too many functions with the same signature!
-			}
-
-#		endif // BUILDING_NODE_EXTENSION
 
 		funcVect.emplace_back(func, flags);
 

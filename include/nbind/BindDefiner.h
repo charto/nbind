@@ -16,6 +16,7 @@
 #if defined(BUILDING_NODE_EXTENSION)
 
 #	include "v8/Caller.h"
+#	include "signature/SignatureParam.h"
 #	include "signature/BaseSignature.h" // Needs Caller
 #	include "v8/Overloader.h" // Needs ArgStorage
 #	include "BindClass.h"     // Needs Overloader and BaseSignature

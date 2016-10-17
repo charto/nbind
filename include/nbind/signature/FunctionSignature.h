@@ -1,4 +1,4 @@
-// This file is part of nbind, copyright (C) 2014-2015 BusFaster Ltd.
+// This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
 // This file is very similar to MethodSignature.h and AccessorSignature.h
@@ -41,7 +41,7 @@ public:
 		Parent::template callInnerSafely<void>(
 			args,
 			args,
-			args.Data()->Uint32Value() & signatureMemberMask
+			SignatureParam::get(args)->methodNum
 		);
 	}
 
