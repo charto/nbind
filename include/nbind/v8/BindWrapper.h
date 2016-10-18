@@ -56,18 +56,125 @@ struct hash<nbind::TypeFlags> {
 
 namespace nbind {
 
+class BindWrapperBase : public node::ObjectWrap {
+
+public:
+
+	BindWrapperBase(void *bound, TypeFlags flags) :
+		boundUnsafe(bound), flags(flags) {}
+
+	inline TypeFlags getFlags() const { return(flags); }
+
+	inline void *getBound(TypeFlags argFlags) {
+		if(!!(flags & TypeFlags::isConst) && !(argFlags & TypeFlags::isConst)) {
+			throw(std::runtime_error("Passing a const value as a non-const argument"));
+		}
+
+		return(boundUnsafe);
+	}
+
+#if !defined(DUPLICATE_POINTERS)
+
+	static Nan::Persistent<v8::Object> *findInstance(const void *ptr, TypeFlags flags) {
+		// This will insert a null pointer (to a non-existent wrapper)
+		// in the map if the object pointer is not found yet.
+
+		return(&getInstanceTbl()[HashablePair<const void *, TypeFlags>(ptr, flags)]);
+	}
+
+#endif // DUPLICATE_POINTERS
+
+protected:
+
+	void wrapThis(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+
+#		if !defined(DUPLICATE_POINTERS)
+
+			addInstance(args.This());
+
+#		endif // DUPLICATE_POINTERS
+
+		this->Wrap(args.This());
+	}
+
+#if !defined(DUPLICATE_POINTERS)
+
+	// If the GC wants to free the wrapper object, get rid of our reference to it.
+
+	static void weakCallback(const Nan::WeakCallbackInfo<Nan::Persistent<v8::Object>> &data) {
+		// This causes a crash. Maybe it's a reference counter that already got decremented?
+		// data.GetParameter()->Reset();
+	}
+
+	// Add a mapping from a pointer to a wrapper object,
+	// to re-use the same wrapper for duplicates of the same pointer.
+
+	void addInstance(v8::Local<v8::Object> obj) {
+		Nan::Persistent<v8::Object> *ref = &getInstanceTbl()[
+			HashablePair<const void *, TypeFlags>(
+				boundUnsafe,
+				flags
+			)
+		];
+
+		ref->Reset(obj);
+
+		// Mark the reference to the wrapper weak, so it can be
+		// garbage collected when no copies remain.
+		// If the same pointer needs wrapping later, we can just
+		// create a new wrapper again.
+
+		ref->SetWeak(ref, weakCallback, Nan::WeakCallbackType::kParameter);
+		ref->MarkIndependent();
+	}
+
+	void removeInstance() {
+		// This causes a crash. Maybe it's a reference counter that already got decremented?
+		// auto iter = getInstanceTbl().find(bound.get());
+		// (*iter).second.Reset();
+
+		getInstanceTbl().erase(
+			HashablePair<const void *, TypeFlags>(
+				boundUnsafe,
+				flags
+			)
+		);
+	}
+
+	// This is effectively a map from C++ instance pointers
+	// to weak references to JavaScript objects wrapping them.
+
+	static std::unordered_map<
+		HashablePair<const void *, TypeFlags>,
+		Nan::Persistent<v8::Object>
+	> &getInstanceTbl() {
+		static std::unordered_map<
+			HashablePair<const void *, TypeFlags>,
+			Nan::Persistent<v8::Object>
+		> instanceTbl;
+
+		return(instanceTbl);
+	}
+
+#endif // DUPLICATE_POINTERS
+
+	void *boundUnsafe;
+	TypeFlags flags;
+
+};
+
 // BindWrapper encapsulates a C++ object created in Node.js.
 
 template <class Bound>
-class BindWrapper : public node::ObjectWrap {
+class BindWrapper : public BindWrapperBase {
 
 public:
 
 	BindWrapper(Bound *bound, TypeFlags flags) :
-		boundUnsafe(bound), flags(flags) {}
+		BindWrapperBase(bound, flags) {}
 
 	BindWrapper(std::shared_ptr<Bound> bound, TypeFlags flags) :
-		boundUnsafe(bound.get()), boundShared(bound), flags(flags) {}
+		BindWrapperBase(bound.get(), flags), boundShared(bound) {}
 
 	// This destructor is called automatically by the JavaScript garbage collector.
 
@@ -132,104 +239,10 @@ public:
 
 	inline std::shared_ptr<Bound> getShared() { return(boundShared); }
 
-	inline TypeFlags getFlags() const { return(flags); }
-
-	inline Bound *getBound(TypeFlags argFlags) {
-		if(!!(flags & TypeFlags::isConst) && !(argFlags & TypeFlags::isConst)) {
-			throw(std::runtime_error("Passing a const value as a non-const argument"));
-		}
-
-		return(boundUnsafe);
-	}
-
-#if !defined(DUPLICATE_POINTERS)
-
-	static Nan::Persistent<v8::Object> *findInstance(const Bound *ptr, TypeFlags flags) {
-		// This will insert a null pointer (to a non-existent wrapper)
-		// in the map if the object pointer is not found yet.
-
-		return(&getInstanceTbl()[HashablePair<const Bound *, TypeFlags>(ptr, flags)]);
-	}
-
-#endif // DUPLICATE_POINTERS
-
 private:
 
-	void wrapThis(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-
-#		if !defined(DUPLICATE_POINTERS)
-
-			addInstance(args.This());
-
-#		endif // DUPLICATE_POINTERS
-
-		this->Wrap(args.This());
-	}
-
-#if !defined(DUPLICATE_POINTERS)
-
-	// If the GC wants to free the wrapper object, get rid of our reference to it.
-
-	static void weakCallback(const Nan::WeakCallbackInfo<Nan::Persistent<v8::Object>> &data) {
-		// This causes a crash. Maybe it's a reference counter that already got decremented?
-		// data.GetParameter()->Reset();
-	}
-
-	// Add a mapping from a pointer to a wrapper object,
-	// to re-use the same wrapper for duplicates of the same pointer.
-
-	void addInstance(v8::Local<v8::Object> obj) {
-		Nan::Persistent<v8::Object> *ref = &getInstanceTbl()[
-			HashablePair<const Bound *, TypeFlags>(
-				boundUnsafe,
-				flags
-			)
-		];
-
-		ref->Reset(obj);
-
-		// Mark the reference to the wrapper weak, so it can be
-		// garbage collected when no copies remain.
-		// If the same pointer needs wrapping later, we can just
-		// create a new wrapper again.
-
-		ref->SetWeak(ref, weakCallback, Nan::WeakCallbackType::kParameter);
-		ref->MarkIndependent();
-	}
-
-	void removeInstance() {
-		// This causes a crash. Maybe it's a reference counter that already got decremented?
-		// auto iter = getInstanceTbl().find(bound.get());
-		// (*iter).second.Reset();
-
-		getInstanceTbl().erase(
-			HashablePair<const Bound *, TypeFlags>(
-				boundUnsafe,
-				flags
-			)
-		);
-	}
-
-	// This is effectively a map from C++ instance pointers
-	// to weak references to JavaScript objects wrapping them.
-
-	static std::unordered_map<
-		HashablePair<const Bound *, TypeFlags>,
-		Nan::Persistent<v8::Object>
-	> &getInstanceTbl() {
-		static std::unordered_map<
-			HashablePair<const Bound *, TypeFlags>,
-			Nan::Persistent<v8::Object>
-		> instanceTbl;
-
-		return(instanceTbl);
-	}
-
-#endif // DUPLICATE_POINTERS
-
-	Bound *boundUnsafe;
 	std::shared_ptr<Bound> boundShared;
-	TypeFlags flags;
+
 };
 
 } // namespace

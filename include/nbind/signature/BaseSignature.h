@@ -172,8 +172,8 @@ public:
 		Bound **targetOut,
 		TypeFlags flags
 	) {
-		BindWrapper<Bound> *wrapper = node::ObjectWrap::Unwrap<
-			BindWrapper<Bound>
+		BindWrapperBase *wrapper = node::ObjectWrap::Unwrap<
+			BindWrapperBase
 		>(nanArgs.This());
 
 		if(!!(wrapper->getFlags() & TypeFlags::isConst) && !(flags & TypeFlags::isConst)) {
@@ -181,7 +181,7 @@ public:
 			return(false);
 		}
 
-		Bound *target = wrapper->getBound(flags);
+		Bound *target = static_cast<Bound *>(wrapper->getBound(flags));
 
 		if(target == nullptr) {
 			Nan::ThrowError("Attempt to access deleted object");

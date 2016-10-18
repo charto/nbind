@@ -55,9 +55,11 @@ struct BindingType<ArgType *> {
 			TypeFlags::none;
 
 		return(
-			node::ObjectWrap::Unwrap<
-				BindWrapper<BaseType>
-			>(argWrapped)->getBound(flags)
+			static_cast<BaseType *>(
+				node::ObjectWrap::Unwrap<
+					BindWrapperBase
+				>(argWrapped)->getBound(flags)
+			)
 		);
 	}
 
