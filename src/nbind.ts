@@ -86,6 +86,10 @@ export class Binding<ExportType extends DefaultExportType> {
 			id: number,
 			name: string
 		) => void,
+		outSuper: (
+			classId: number,
+			superIdList: number[]
+		) => void,
 		outMethod: (
 			classId: number,
 			name: string,

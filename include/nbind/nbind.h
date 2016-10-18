@@ -55,6 +55,8 @@
 
 #define method(name, ...) definer.method(#name, &Bound::name, ## __VA_ARGS__)
 
+#define inherit(Name) definer.inherit<Name>()
+
 #define args(...) <__VA_ARGS__>
 
 #define multimethod(name, args, ...) nbind::BindDefiner<Bound> :: template Overloaded args :: multimethod(definer, #name, &Bound::name, ## __VA_ARGS__)

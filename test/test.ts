@@ -348,6 +348,43 @@ test('Strict conversion policy', function(t: any) {
 	t.end();
 });
 
+test('Inheritance', function(t: any) {
+	const A = testModule.InheritanceA;
+	const B = testModule.InheritanceB;
+	const C = testModule.InheritanceC;
+	const D = testModule.InheritanceD;
+
+	const d = new D();
+
+	// t.ok(d instanceof A);
+	// t.ok(d instanceof B || d instanceof C);
+	t.ok(d instanceof D);
+
+	t.ok(d.a instanceof A);
+	// t.ok(d.b instanceof A);
+	// t.ok(d.c instanceof A);
+
+	t.ok(d.b instanceof B);
+	t.ok(d.c instanceof C);
+
+	t.ok(d.b.a instanceof A);
+	t.ok(d.c.a instanceof A);
+
+	// t.strictEqual(d.useA(), 1);
+	// t.strictEqual(d.useB(), 2);
+	// t.strictEqual(d.useC(), 3);
+	t.strictEqual(d.useD(), 4);
+
+	t.strictEqual(d.a.useA(), 1);
+	t.strictEqual(d.b.useB(), 2);
+	t.strictEqual(d.c.useC(), 3);
+
+	t.strictEqual(d.b.a.useA(), 1);
+	t.strictEqual(d.c.a.useA(), 1);
+
+	t.end();
+});
+
 test('64-bit integers', function(t: any) {
 	const Type = testModule.PrimitiveMethods;
 	let lastDigit: string;

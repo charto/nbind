@@ -43,6 +43,10 @@ export class BindType extends TypeBase {
 }
 
 export class BindClass extends BindType {
+	addSuper(superClass: BindClass) {
+		this.superList.push(superClass);
+	}
+
 	addMethod(name: string, kind: SignatureType, typeList: BindType[], policyList: string[]) {
 		const bindMethod = new BindMethod(
 			this,
@@ -79,6 +83,8 @@ export class BindClass extends BindType {
 	}
 
 	name: string;
+
+	superList: BindClass[] = [];
 
 	methodTbl: { [name: string]: BindMethod } = {};
 	methodList: BindMethod[] = [];
@@ -178,6 +184,7 @@ export class Reflect {
 			hitch(this, this.readPrimitive),
 			hitch(this, this.readType),
 			hitch(this, this.readClass),
+			hitch(this, this.readSuper),
 			hitch(this, this.readMethod)
 		);
 
@@ -215,6 +222,17 @@ export class Reflect {
 		if(!this.skipNameTbl[bindClass.name]) this.classList.push(bindClass);
 	}
 
+	private readSuper(
+		classId: number,
+		superIdList: number[]
+	) {
+		const bindClass = this.getType(classId) as BindClass;
+
+		for(let superId of superIdList) {
+			bindClass.addSuper(this.getType(superId) as BindClass);
+		}
+	}
+
 	private readMethod(
 		classId: number,
 		name: string,
@@ -222,7 +240,7 @@ export class Reflect {
 		typeIdList: number[],
 		policyList: string[]
 	) {
-		let bindClass = this.typeIdTbl[classId] as BindClass;
+		let bindClass = this.getType(classId) as BindClass;
 
 		if(!bindClass) {
 			if(!this.globalScope) {
@@ -314,9 +332,17 @@ export class Reflect {
 				propertyBlock
 			);
 
+			let inheritCode = '';
+
+			if(bindClass.superList.length) {
+				inheritCode = ' : ' + bindClass.superList.map(
+					(superClass: BindClass) => 'public ' + superClass.name
+				).join(', ');
+			}
+
 			if(indent) {
 				classCode = (
-					'class ' + bindClass.name + ' {' +
+					'class ' + bindClass.name + inheritCode + ' {' +
 					(classCode ? '\n' + classCode + '\n' : '') +
 					'};'
 				);

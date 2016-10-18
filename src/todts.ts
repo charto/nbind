@@ -1,7 +1,7 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-import {Reflect, BindType, BindMethod, BindProperty} from './reflect';
+import {Reflect, BindType, BindClass, BindMethod, BindProperty} from './reflect';
 import {TypeFlags} from './Type';
 
 const nameTbl: { [key: string]: [string, boolean] } = {
@@ -148,9 +148,24 @@ export function dump(reflect: Reflect) {
 			propertyBlock
 		);
 
+		let superClass = 'NBindBase';
+
+		if(bindClass.superList.length == 1) {
+			superClass = bindClass.superList[0].name;
+		} else if(bindClass.superList.length > 1) {
+			superClass = '_' + bindClass.name;
+
+			classCodeList.push(
+				'export interface ' + superClass + ' extends ' + bindClass.superList.map(
+					(superClass: BindClass) => superClass.name
+				).join(', ') + ' {}\n' +
+				'export var ' + superClass + ': { new(): ' + superClass + ' };'
+			);
+		}
+
 		if(indent) {
 			classCode = (
-				'export class ' + bindClass.name + ' extends NBindBase {' +
+				'export class ' + bindClass.name + ' extends ' + superClass + ' {' +
 				(classCode ? '\n' + classCode + '\n' : '') +
 				'}'
 			);

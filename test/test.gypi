@@ -9,6 +9,7 @@
 		"Array.cc",
 		"Nullable.cc",
 		"Strict.cc",
+		"Inheritance.cc",
 		"Overload.cc",
 		"Smart.cc",
 		"Buffers.cc"

@@ -89,6 +89,13 @@ public:
 		registerClass(bindClass);
 	}
 
+	template <class SuperType>
+	BindDefiner &inherit() {
+		bindClass.template addSuperClass<SuperType>();
+
+		return(*this);
+	}
+
 	template <
 		class Signature,
 		typename MethodType

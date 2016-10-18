@@ -48,6 +48,7 @@ void NBind :: reflect(
 	cbFunction &outPrimitive,
 	cbFunction &outType,
 	cbFunction &outClass,
+	cbFunction &outSuper,
 	cbFunction &outMethod
 ) {
 
@@ -70,24 +71,37 @@ void NBind :: reflect(
 		);
 	}
 
-	for(auto *bindClass : getClassList()) {
+	for(BindClassBase *bindClass : getClassList()) {
 		if(!bindClass) continue;
 
-		const TYPEID *classTypes = bindClass->getTypes();
+		NBindID classType{bindClass->getTypes()[0]};
 
 		outClass(
-			NBindID(classTypes[0]),
+			classType,
 			bindClass->getName()
 		);
 	}
 
 	listMethods(NBindID(nullptr), getFunctionList(), outMethod);
 
-	for(auto *bindClass : getClassList()) {
+	for(BindClassBase *bindClass : getClassList()) {
 		if(!bindClass) continue;
 
+		NBindID classType{bindClass->getTypes()[0]};
+		auto superClassList = bindClass->getSuperClassList();
+
+		if(!superClassList.empty()) {
+			std::vector<NBindID> superIdList;
+
+			for(BindClassBase *superClass : superClassList) {
+				superIdList.push_back(NBindID(superClass->getTypes()[0]));
+			}
+
+			outSuper(classType, superIdList);
+		}
+
 		listMethods(
-			NBindID(bindClass->getTypes()[0]),
+			classType,
 			bindClass->getMethodList(),
 			outMethod
 		);

@@ -40,6 +40,13 @@ public:
 
 	void init() { readyState |= 1; }
 
+	template <class SuperType>
+	inline void addSuperClass();
+
+	std::forward_list<BindClassBase *> &getSuperClassList() {
+		return(superClassList);
+	}
+
 	void addConstructor(BaseSignature *signature) {
 
 #		if defined(BUILDING_NODE_EXTENSION)
@@ -122,6 +129,8 @@ protected:
 
 	const char *name;
 
+	std::forward_list<BindClassBase *> superClassList;
+
 	std::forward_list<MethodDef> methodList;
 	decltype(methodList.before_begin()) methodLast = methodList.before_begin();
 
@@ -188,9 +197,23 @@ public:
 
 };
 
+#if defined(BUILDING_NODE_EXTENSION)
+
+template <class Bound>
+BindClassBase &BindWrapper<Bound> :: getBindClass() {
+	return(BindClass<Bound>::getInstance());
+}
+
+#endif
+
 template <class Bound>
 cbFunction *getValueConstructorJS() {
 	return(BindClass<Bound>::getInstance().getValueConstructorJS());
+}
+
+template <class SuperType>
+inline void BindClassBase :: addSuperClass() {
+	this->superClassList.emplace_front(&BindClass<SuperType>::getInstance());
 }
 
 } // namespace

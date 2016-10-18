@@ -41,6 +41,7 @@ public:
 		cbFunction &outPrimitive,
 		cbFunction &outType,
 		cbFunction &outClass,
+		cbFunction &outSuper,
 		cbFunction &outMethod
 	);
 

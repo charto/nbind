@@ -56,12 +56,14 @@ struct hash<nbind::TypeFlags> {
 
 namespace nbind {
 
+class BindClassBase;
+
 class BindWrapperBase : public node::ObjectWrap {
 
 public:
 
-	BindWrapperBase(void *bound, TypeFlags flags) :
-		boundUnsafe(bound), flags(flags) {}
+	BindWrapperBase(void *bound, TypeFlags flags, BindClassBase &bindClass) :
+		boundUnsafe(bound), flags(flags), bindClass(bindClass) {}
 
 	inline TypeFlags getFlags() const { return(flags); }
 
@@ -161,6 +163,8 @@ protected:
 	void *boundUnsafe;
 	TypeFlags flags;
 
+	BindClassBase &bindClass;
+
 };
 
 // BindWrapper encapsulates a C++ object created in Node.js.
@@ -171,16 +175,21 @@ class BindWrapper : public BindWrapperBase {
 public:
 
 	BindWrapper(Bound *bound, TypeFlags flags) :
-		BindWrapperBase(bound, flags) {}
+		BindWrapperBase(bound, flags, getBindClass()) {}
 
 	BindWrapper(std::shared_ptr<Bound> bound, TypeFlags flags) :
-		BindWrapperBase(bound.get(), flags), boundShared(bound) {}
+		BindWrapperBase(bound.get(), flags, getBindClass()), boundShared(bound) {}
 
 	// This destructor is called automatically by the JavaScript garbage collector.
 
 	~BindWrapper() {
 		destroy();
 	}
+
+	// Calls BindClass<Bound>::getInstance();
+	// We don't want to depend on BindClass.h here.
+
+	static BindClassBase &getBindClass();
 
 	// Pass any constructor arguments to wrapped class.
 	template<typename... Args>

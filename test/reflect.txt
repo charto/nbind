@@ -33,6 +33,43 @@ class GetterSetter {
 	int32_t XYZ; // Read-only
 };
 
+class InheritanceA {
+	InheritanceA();
+	uint32_t useA();
+	static uint32_t staticA(InheritanceA &);
+};
+
+class InheritanceB : public InheritanceA {
+	InheritanceB();
+	uint32_t useB();
+	static uint32_t staticA(InheritanceB &);
+	static uint32_t staticB(InheritanceB &);
+
+	InheritanceA * a; // Read-only
+};
+
+class InheritanceC : public InheritanceA {
+	InheritanceC();
+	uint32_t useC();
+	static uint32_t staticA(InheritanceC &);
+	static uint32_t staticC(InheritanceC &);
+
+	InheritanceA * a; // Read-only
+};
+
+class InheritanceD : public InheritanceC, public InheritanceB {
+	InheritanceD();
+	uint32_t useD();
+	static uint32_t staticA(InheritanceD &);
+	static uint32_t staticB(InheritanceD &);
+	static uint32_t staticC(InheritanceD &);
+	static uint32_t staticD(InheritanceD &);
+
+	InheritanceA * a; // Read-only
+	InheritanceB * b; // Read-only
+	InheritanceC * c; // Read-only
+};
+
 class Nullable {
 	static Coord * getCoord();
 	static Coord * getNull();
