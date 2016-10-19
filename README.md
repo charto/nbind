@@ -227,6 +227,7 @@ User guide
 - [Using nbind headers](#using-nbind-headers)
 - [Functions](#functions)
 - [Classes and constructors](#classes-and-constructors)
+- [Inheritance](#inheritance) <sup>new in 0.3.5</sup>
 - [Methods and properties](#methods-and-properties)
 - [Overloaded functions](#overloaded-functions) <sup>new in 0.3.2</sup>
 - [Getters and setters](#getters-and-setters)
@@ -583,6 +584,28 @@ Run the example with `node 2-classes.js` after [installing](#installing-the-exam
 No arguments
 Ints: 42 54
 String: Don't panic
+```
+
+Inheritance
+-----------
+
+When a C++ class inherits another, the `inherit` macro can be used to allow calling parent
+class methods on the child class, or passing child class instances to C++ methods expecting
+parent class instances.
+
+Internally JavaScript only has prototype-based single inheritance while C++ supports
+multiple inheritance. To simulate it, nbind will use one parent class as the child class
+prototype, and copy the contents of the other parents to the prototype. This has otherwise
+the same effect, except the JavaScript `instanceof` operator will return `true` for only
+one of the parent classes.
+
+Example:
+
+```JavaScript
+NBIND_CLASS(Child) {
+    inherit(FirstParent);
+    inherit(SecondParent);
+}
 ```
 
 Methods and properties
