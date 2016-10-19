@@ -4,6 +4,7 @@
 #ifdef BUILDING_NODE_EXTENSION
 
 #include <cstring>
+#include <unordered_set>
 
 #include "nbind/BindDefiner.h"
 
@@ -184,6 +185,44 @@ static void registerMethods(BindClassBase &bindClass, Local<FunctionTemplate> co
 	if(nameBuf != nullptr) free(nameBuf);
 }
 
+/** Register class members and simulate multiple inheritance. */
+
+static void registerSuperMethods(
+	BindClassBase &bindClass,
+	/** Index of first superclass not natively inherited,
+	  * or -1 to recursively ignore all members. */
+	signed int firstSuper,
+	Local<FunctionTemplate> constructorTemplate,
+	std::unordered_set<BindClassBase *> &visitTbl
+) {
+	// Stop if this class has already been visited.
+	if(visitTbl.find(&bindClass) != visitTbl.end()) return;
+
+	// Mark this class visited.
+	visitTbl.insert(&bindClass);
+
+	// If not just marking visits, include contents in class constructor template.
+	if(firstSuper >= 0) registerMethods(bindClass, constructorTemplate);
+
+	signed int superNum = 0;
+	signed int nextFirst;
+
+	for(auto *superClass : bindClass.getSuperClassList()) {
+		if(superNum++ < firstSuper || firstSuper < 0) {
+			// Contents of the initial first superclass and all of its
+			// superclasses have already been inherited through the prototype
+			// chain. Just mark them visited recursively.
+			nextFirst = -1;
+		} else {
+			// Complete contents of all other superclasses must be included
+			// recursively.
+			nextFirst = 0;
+		}
+
+		registerSuperMethods(*superClass, nextFirst, constructorTemplate, visitTbl);
+	}
+}
+
 static void initModule(Handle<Object> exports) {
 	// Register NBind a second time to make sure it's first on the list
 	// of classes and gets defined first, so pointers to it can be added
@@ -214,6 +253,8 @@ static void initModule(Handle<Object> exports) {
 
 	auto &classList = getClassList();
 
+	// Create all class constructor templates.
+
 	for(auto pos = classList.begin(); pos != classList.end(); ++pos ) {
 		auto *bindClass = *pos;
 
@@ -236,13 +277,32 @@ static void initModule(Handle<Object> exports) {
 		constructorTemplate->SetClassName(Nan::New<String>(bindClass->getName()).ToLocalChecked());
 		constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 
+		bindClass->constructorTemplate.Reset(constructorTemplate);
+	}
+
+	// Define inheritance between class constructor templates and add methods.
+
+	for(auto *bindClass : classList) {
+		if(!bindClass) continue;
+
+		Local<FunctionTemplate> constructorTemplate = Nan::New(bindClass->constructorTemplate);
+
+		auto superClassList = bindClass->getSuperClassList();
+
+		if(!superClassList.empty()) {
+			// This fails if the constructor template of any other child class
+			// has already been instantiated!
+			constructorTemplate->Inherit(Nan::New(superClassList.front()->constructorTemplate));
+		}
+
+		std::unordered_set<BindClassBase *> visitTbl;
+		registerSuperMethods(*bindClass, 1, constructorTemplate, visitTbl);
+
 		Nan::SetPrototypeTemplate(constructorTemplate, "free",
 			Nan::New<FunctionTemplate>(
 				bindClass->getDeleter()
 			)
 		);
-
-		registerMethods(*bindClass, constructorTemplate);
 
 		// Add NBind references to other classes to enforce visibility.
 		if(bindClass == &BindClass<NBind>::getInstance()) {
@@ -250,8 +310,15 @@ static void initModule(Handle<Object> exports) {
 		} else {
 			Nan::SetTemplate(constructorTemplate, "NBind", nBindTemplate);
 		}
+	}
 
-		Local<v8::Function> jsConstructor = constructorTemplate->GetFunction();
+	// Instantiate and export class constructor templates.
+
+	for(auto *bindClass : classList) {
+		if(!bindClass) continue;
+
+		// Instantiate the constructor template.
+		Local<Function> jsConstructor = Nan::New(bindClass->constructorTemplate)->GetFunction();
 
 		Overloader::setConstructorJS(bindClass->wrapperConstructorNum, jsConstructor);
 		Overloader::setPtrWrapper(bindClass->wrapperConstructorNum, bindClass->wrapPtr);

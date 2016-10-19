@@ -100,6 +100,8 @@ public:
 	/** Handler to wrap object pointers instantiated in C++ for use in JavaScript. */
 	jsMethod *wrapPtr;
 
+	Nan::Persistent<v8::FunctionTemplate> constructorTemplate;
+
 #endif // BUILDING_NODE_EXTENSION
 
 	// A JavaScript "value constructor" creates a JavaScript object with
