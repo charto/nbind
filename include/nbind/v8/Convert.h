@@ -5,9 +5,8 @@
 
 namespace nbind {
 
-// This just calls BindClass<Bound>::getInstance()->getValueConstructorJS();
-// It's in a wrapper function defined in BindClass.h to break a circular
-// dependency between header files.
+// Calls BindClass<Bound>::getInstance()->getValueConstructorJS();
+// We don't want to depend on BindClass.h here.
 
 template <class Bound>
 cbFunction *getValueConstructorJS();

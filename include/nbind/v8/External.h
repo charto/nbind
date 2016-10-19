@@ -92,8 +92,8 @@ private:
 		void (*callback)(Data *);
 		Data *data;
 
-		// Hold a weak reference to the object, so we'll detect but not
-		// prevent garbage collecting it.
+		// Hold a weak reference to the object, to detect but not prevent its
+		// garbage collection.
 		Nan::Persistent<v8::Object> weak;
 
 	};

@@ -63,7 +63,7 @@ public:
 				signature->getValueConstructor()
 			);
 
-#		endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
+#		endif // BUILDING_NODE_EXTENSION
 
 		addMethod(nullptr, signature);
 
