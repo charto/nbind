@@ -356,13 +356,13 @@ test('Inheritance', function(t: any) {
 
 	const d = new D();
 
-	// t.ok(d instanceof A);
-	// t.ok(d instanceof B || d instanceof C);
+	t.ok(d instanceof A);
+	t.ok(d instanceof B || d instanceof C);
 	t.ok(d instanceof D);
 
 	t.ok(d.a instanceof A);
-	// t.ok(d.b instanceof A);
-	// t.ok(d.c instanceof A);
+	t.ok(d.b instanceof A);
+	t.ok(d.c instanceof A);
 
 	t.ok(d.b instanceof B);
 	t.ok(d.c instanceof C);
@@ -370,9 +370,13 @@ test('Inheritance', function(t: any) {
 	t.ok(d.b.a instanceof A);
 	t.ok(d.c.a instanceof A);
 
-	// t.strictEqual(d.useA(), 1);
-	// t.strictEqual(d.useB(), 2);
-	// t.strictEqual(d.useC(), 3);
+	t.throws(function() {
+		d.useA.call(new Date());
+	}, {message: 'Type mismatch'});
+
+	t.strictEqual(d.useA(), 1);
+	t.strictEqual(d.useB(), 2);
+	t.strictEqual(d.useC(), 3);
 	t.strictEqual(d.useD(), 4);
 
 	t.strictEqual(d.a.useA(), 1);
@@ -381,6 +385,22 @@ test('Inheritance', function(t: any) {
 
 	t.strictEqual(d.b.a.useA(), 1);
 	t.strictEqual(d.c.a.useA(), 1);
+
+	t.strictEqual(A.staticA(d), 1);
+	t.strictEqual(A.staticA(d.b), 1);
+	t.strictEqual(A.staticA(d.c), 1);
+
+	t.strictEqual(B.staticB(d), 2);
+	t.strictEqual(B.staticB(d.b), 2);
+	t.throws(function() {
+		B.staticB(d.c as any);
+	}, {message: 'Type mismatch'});
+
+	t.strictEqual(C.staticC(d), 3);
+	t.strictEqual(C.staticC(d.c), 3);
+	t.throws(function() {
+		C.staticC(d.b as any);
+	}, {message: 'Type mismatch'});
 
 	t.end();
 });

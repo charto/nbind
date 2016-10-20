@@ -50,7 +50,7 @@ export interface TypeClass extends TypeSpec {
 
 export const enum TypeFlagBase {
 	flag = 1,
-	num = flag * 4,
+	num = flag * 8,
 	ref = num * 16,
 	kind = ref * 8
 }
@@ -63,6 +63,7 @@ export const enum TypeFlags {
 	flagMask = TypeFlagBase.flag * 3,
 	isConst = TypeFlagBase.flag * 1,
 	isValueObject = TypeFlagBase.flag * 2,
+	isMethod = TypeFlagBase.flag * 4,
 
 	numMask = TypeFlagBase.num * 15,
 	isUnsigned = TypeFlagBase.num * 1,

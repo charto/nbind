@@ -5,6 +5,18 @@
 
 namespace nbind {
 
+class BindClassBase;
+
+struct SuperClassSpec {
+	explicit SuperClassSpec(
+		BindClassBase &superClass,
+		void *(&upcast)(void *)
+	) : superClass(superClass), upcast(upcast) {}
+
+	BindClassBase &superClass;
+	void *(&upcast)(void *);
+};
+
 // Templated singleton class for each C++ class accessible from Node.js.
 // Stores their information defined in static constructors, until the Node.js
 // plugin is initialized.
@@ -40,10 +52,7 @@ public:
 
 	void init() { readyState |= 1; }
 
-	template <class SuperType>
-	inline void addSuperClass();
-
-	std::forward_list<BindClassBase *> &getSuperClassList() {
+	std::forward_list<SuperClassSpec> &getSuperClassList() {
 		return(superClassList);
 	}
 
@@ -101,6 +110,7 @@ public:
 	jsMethod *wrapPtr;
 
 	Nan::Persistent<v8::FunctionTemplate> constructorTemplate;
+	Nan::Persistent<v8::FunctionTemplate> superTemplate;
 
 #endif // BUILDING_NODE_EXTENSION
 
@@ -121,6 +131,17 @@ public:
 
 	cbFunction *getValueConstructorJS() const { return(valueConstructorJS); }
 
+	void *upcastStep(BindClassBase &dst, void *ptr) {
+		if(&dst == this) return(ptr);
+
+		for(auto &spec : superClassList) {
+			void *superPtr = spec.superClass.upcastStep(dst, spec.upcast(ptr));
+			if(superPtr) return(superPtr);
+		}
+
+		return(nullptr);
+	}
+
 protected:
 
 	TYPEID idList[2];
@@ -131,7 +152,7 @@ protected:
 
 	const char *name;
 
-	std::forward_list<BindClassBase *> superClassList;
+	std::forward_list<SuperClassSpec> superClassList;
 
 	std::forward_list<MethodDef> methodList;
 	decltype(methodList.before_begin()) methodLast = methodList.before_begin();
@@ -176,6 +197,9 @@ public:
 		return(instance);
 	}
 
+	template <class SuperType>
+	inline void addSuperClass();
+
 #if defined(BUILDING_NODE_EXTENSION)
 
 	static void destroy(const Nan::FunctionCallbackInfo<v8::Value> &args) {
@@ -206,6 +230,31 @@ BindClassBase &BindWrapper<Bound> :: getBindClass() {
 	return(BindClass<Bound>::getInstance());
 }
 
+/** Test that a JavaScript object is an instance of a class from this addon
+  * and has some data attached (hopefully a wrapped C++ object). */
+
+template <class Bound>
+void BindWrapper<Bound> :: testInstance(v8::Local<v8::Object> arg) {
+	if(
+		!Nan::New(getBindClass().superTemplate)->HasInstance(arg) ||
+		arg->InternalFieldCount() != 1
+	) {
+		throw(std::runtime_error("Type mismatch"));
+	}
+}
+
+void *upcastStep(BindClassBase &src, BindClassBase &dst, void *ptr);
+
+template <class Bound>
+Bound *BindWrapperBase :: upcast() {
+	BindClassBase &src = getClass();
+	BindClassBase &dst = BindClass<Bound>::getInstance();
+
+	if(&src == &dst) return(static_cast<Bound *>(boundUnsafe));
+
+	return(static_cast<Bound *>(src.upcastStep(dst, boundUnsafe)));
+}
+
 #endif
 
 template <class Bound>
@@ -213,9 +262,17 @@ cbFunction *getValueConstructorJS() {
 	return(BindClass<Bound>::getInstance().getValueConstructorJS());
 }
 
-template <class SuperType>
-inline void BindClassBase :: addSuperClass() {
-	this->superClassList.emplace_front(&BindClass<SuperType>::getInstance());
+template <class Bound, class SuperType>
+void *upcast(void *arg) {
+	return(static_cast<SuperType *>(static_cast<Bound *>(arg)));
+}
+
+template <class Bound> template <class SuperType>
+inline void BindClass<Bound> :: addSuperClass() {
+	this->superClassList.emplace_front(
+		BindClass<SuperType>::getInstance(),
+		upcast<Bound, SuperType>
+	);
 }
 
 } // namespace

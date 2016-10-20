@@ -44,23 +44,16 @@ struct BindingType<ArgType *> {
 	typedef typename std::remove_const<ArgType>::type BaseType;
 
 	static inline bool checkType(WireType arg) {
-		// TODO: Also check type of object!
 		return(arg->IsObject());
 	}
 
 	static inline Type fromWireType(WireType arg) {
-		v8::Local<v8::Object> argWrapped = arg->ToObject();
-		TypeFlags flags = std::is_const<ArgType>::value ?
-			TypeFlags::isConst :
-			TypeFlags::none;
-
-		return(
-			static_cast<BaseType *>(
-				node::ObjectWrap::Unwrap<
-					BindWrapperBase
-				>(argWrapped)->getBound(flags)
-			)
-		);
+		return(BindWrapper<BaseType>::getBound(
+			arg->ToObject(),
+			std::is_const<ArgType>::value ?
+				TypeFlags::isConst :
+				TypeFlags::none
+		));
 	}
 
 	static inline WireType toWireType(Type arg);
@@ -75,7 +68,6 @@ struct BindingType<ArgType &> {
 	typedef ArgType &Type;
 
 	static inline bool checkType(WireType arg) {
-		// TODO: Also check type of object!
 		return(arg->IsObject());
 	}
 
@@ -96,13 +88,16 @@ struct BindingType<std::shared_ptr<ArgType>> {
 	typedef typename std::remove_const<ArgType>::type BaseType;
 
 	static inline bool checkType(WireType arg) {
-		// TODO: Also check type of object!
 		return(arg->IsObject());
 	}
 
 	static inline Type fromWireType(WireType arg) {
-		v8::Local<v8::Object> argWrapped = arg->ToObject();
-		return(node::ObjectWrap::Unwrap<BindWrapper<ArgType>>(argWrapped)->getShared());
+		return(BindWrapper<BaseType>::getShared(
+			arg->ToObject(),
+			std::is_const<ArgType>::value ?
+				TypeFlags::isConst :
+				TypeFlags::none
+		));
 	}
 
 	static inline WireType toWireType(Type &&arg);

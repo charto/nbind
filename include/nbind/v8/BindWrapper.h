@@ -65,14 +65,18 @@ public:
 	BindWrapperBase(void *bound, TypeFlags flags, BindClassBase &bindClass) :
 		boundUnsafe(bound), flags(flags), bindClass(bindClass) {}
 
-	inline TypeFlags getFlags() const { return(flags); }
-
-	inline void *getBound(TypeFlags argFlags) {
+	inline void testTarget(TypeFlags argFlags) {
 		if(!!(flags & TypeFlags::isConst) && !(argFlags & TypeFlags::isConst)) {
-			throw(std::runtime_error("Passing a const value as a non-const argument"));
+			throw(std::runtime_error(
+				!!(argFlags & TypeFlags::isMethod) ?
+					"Calling a non-const method on a const object" :
+					"Passing a const value as a non-const argument"
+			));
 		}
 
-		return(boundUnsafe);
+		if(boundUnsafe == nullptr) {
+			throw(std::runtime_error("Attempt to access deleted object"));
+		}
 	}
 
 #if !defined(DUPLICATE_POINTERS)
@@ -85,6 +89,11 @@ public:
 	}
 
 #endif // DUPLICATE_POINTERS
+
+	BindClassBase &getClass() { return(bindClass); }
+
+	template <class Bound>
+	Bound *upcast();
 
 protected:
 
@@ -244,9 +253,34 @@ public:
 
 	}
 
+	static void testInstance(v8::Local<v8::Object> arg);
+
+	static Bound *getBound(v8::Local<v8::Object> arg, TypeFlags argFlags) {
+		BindWrapper::testInstance(arg);
+
+		BindWrapperBase *wrapper = node::ObjectWrap::Unwrap<BindWrapperBase>(arg);
+
+		wrapper->testTarget(argFlags);
+
+		Bound *ptr = wrapper->upcast<Bound>();
+
+		if(!ptr) throw(std::runtime_error("Type mismatch"));
+
+		return(ptr);
+	}
+
 	// TODO: this should throw or never get called if bound is not shared!
 
-	inline std::shared_ptr<Bound> getShared() { return(boundShared); }
+	static std::shared_ptr<Bound> getShared(v8::Local<v8::Object> arg, TypeFlags argFlags) {
+		BindWrapper::testInstance(arg);
+
+		BindWrapper<Bound> *wrapper = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(arg);
+
+		wrapper->testTarget(argFlags);
+
+		// TODO: upcast!
+		return(wrapper->boundShared);
+	}
 
 private:
 

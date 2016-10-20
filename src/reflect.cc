@@ -93,8 +93,8 @@ void NBind :: reflect(
 		if(!superClassList.empty()) {
 			std::vector<NBindID> superIdList;
 
-			for(BindClassBase *superClass : superClassList) {
-				superIdList.push_back(NBindID(superClass->getTypes()[0]));
+			for(auto &spec : superClassList) {
+				superIdList.push_back(NBindID(spec.superClass.getTypes()[0]));
 			}
 
 			outSuper(classType, superIdList);

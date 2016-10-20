@@ -207,7 +207,7 @@ static void registerSuperMethods(
 	signed int superNum = 0;
 	signed int nextFirst;
 
-	for(auto *superClass : bindClass.getSuperClassList()) {
+	for(auto &spec : bindClass.getSuperClassList()) {
 		if(superNum++ < firstSuper || firstSuper < 0) {
 			// Contents of the initial first superclass and all of its
 			// superclasses have already been inherited through the prototype
@@ -219,8 +219,12 @@ static void registerSuperMethods(
 			nextFirst = 0;
 		}
 
-		registerSuperMethods(*superClass, nextFirst, constructorTemplate, visitTbl);
+		registerSuperMethods(spec.superClass, nextFirst, constructorTemplate, visitTbl);
 	}
+}
+
+static void nop(const Nan::FunctionCallbackInfo<v8::Value> &args) {
+	args.GetReturnValue().Set(Nan::Undefined());
 }
 
 static void initModule(Handle<Object> exports) {
@@ -229,7 +233,6 @@ static void initModule(Handle<Object> exports) {
 	// to other classes to enforce its visibility in npm exports.
 	registerClass(BindClass<NBind>::getInstance());
 
-	Local<FunctionTemplate> nBindTemplate;
 	SignatureParam *param;
 
 	for(auto &func : getFunctionList()) {
@@ -250,6 +253,10 @@ static void initModule(Handle<Object> exports) {
 			jsFunction
 		);
 	}
+
+	// Base class for all C++ objects.
+
+	Local<FunctionTemplate> superTemplate = Nan::New<FunctionTemplate>(nop);
 
 	auto &classList = getClassList();
 
@@ -278,7 +285,16 @@ static void initModule(Handle<Object> exports) {
 		constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 
 		bindClass->constructorTemplate.Reset(constructorTemplate);
+		bindClass->superTemplate.Reset(superTemplate);
 	}
+
+	// Add NBind reference to base class to enforce its visibility.
+
+	Nan::SetTemplate(
+		superTemplate,
+		"NBind",
+		Nan::New(BindClass<NBind>::getInstance().constructorTemplate)
+	);
 
 	// Define inheritance between class constructor templates and add methods.
 
@@ -292,7 +308,9 @@ static void initModule(Handle<Object> exports) {
 		if(!superClassList.empty()) {
 			// This fails if the constructor template of any other child class
 			// has already been instantiated!
-			constructorTemplate->Inherit(Nan::New(superClassList.front()->constructorTemplate));
+			constructorTemplate->Inherit(Nan::New(superClassList.front().superClass.constructorTemplate));
+		} else {
+			constructorTemplate->Inherit(superTemplate);
 		}
 
 		std::unordered_set<BindClassBase *> visitTbl;
@@ -303,13 +321,6 @@ static void initModule(Handle<Object> exports) {
 				bindClass->getDeleter()
 			)
 		);
-
-		// Add NBind references to other classes to enforce visibility.
-		if(bindClass == &BindClass<NBind>::getInstance()) {
-			nBindTemplate = constructorTemplate;
-		} else {
-			Nan::SetTemplate(constructorTemplate, "NBind", nBindTemplate);
-		}
 	}
 
 	// Instantiate and export class constructor templates.

@@ -118,7 +118,7 @@ public:
 	static unsigned int addMethod(MethodType func, TypeFlags flags) {
 		auto &funcVect = getInstance().funcVect;
 
-		funcVect.emplace_back(func, flags);
+		funcVect.emplace_back(func, flags | TypeFlags::isMethod);
 
 		return(funcVect.size() - 1);
 	}
@@ -167,39 +167,22 @@ public:
 	}
 
 	template <typename NanArgs, typename Bound>
-	static bool getTargetSafely(
+	static Bound *getTargetSafely(
 		NanArgs &nanArgs,
-		Bound **targetOut,
+		Bound *target,
 		TypeFlags flags
 	) {
-		BindWrapperBase *wrapper = node::ObjectWrap::Unwrap<
-			BindWrapperBase
-		>(nanArgs.This());
-
-		if(!!(wrapper->getFlags() & TypeFlags::isConst) && !(flags & TypeFlags::isConst)) {
-			Nan::ThrowError("Calling a non-const method on a const object");
-			return(false);
-		}
-
-		Bound *target = static_cast<Bound *>(wrapper->getBound(flags));
-
-		if(target == nullptr) {
-			Nan::ThrowError("Attempt to access deleted object");
-			return(false);
-		}
-
-		*targetOut = target;
-		return(true);
+		return(BindWrapper<Bound>::getBound(nanArgs.This(), flags));
 	}
 
 	// Overload second argument, effectively a partial specialization of the function template above.
 	template <typename NanArgs>
-	static bool getTargetSafely(
+	static void *getTargetSafely(
 		NanArgs &nanArgs,
-		void **targetOut,
+		void *target,
 		TypeFlags flags
 	) {
-		return(true);
+		return(nullptr);
 	}
 
 	template <typename Bound, typename V8Args, typename NanArgs>
@@ -221,11 +204,10 @@ public:
 
 		const MethodInfo &method = getMethod(methodNum);
 
-		if(!getTargetSafely(nanArgs, &target, method.flags)) return;
-
-		Status::clearError();
-
 		try {
+			target = getTargetSafely(nanArgs, target, method.flags);
+
+			Status::clearError();
 			Signature::callInner(method, args, nanArgs, target);
 			if(Status::getError() != nullptr) Nan::ThrowError(Status::getError());
 		} catch(const std::exception &ex) {
