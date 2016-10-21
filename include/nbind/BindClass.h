@@ -47,11 +47,6 @@ public:
 
 	const char *getName() const { return(name); }
 
-	// The explicit nonzero test silences a compiler warning in Visual Studio.
-	bool isReady() const { return((readyState & 1) != 0); }
-
-	void init() { readyState |= 1; }
-
 	std::forward_list<SuperClassSpec> &getSuperClassList() {
 		return(superClassList);
 	}
@@ -145,8 +140,6 @@ public:
 protected:
 
 	TYPEID idList[2];
-
-	int readyState = 0;
 
 	const char **policyNameList;
 

@@ -228,11 +228,6 @@ static void nop(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 }
 
 static void initModule(Handle<Object> exports) {
-	// Register NBind a second time to make sure it's first on the list
-	// of classes and gets defined first, so pointers to it can be added
-	// to other classes to enforce its visibility in npm exports.
-	registerClass(BindClass<NBind>::getInstance());
-
 	SignatureParam *param;
 
 	for(auto &func : getFunctionList()) {
@@ -262,17 +257,7 @@ static void initModule(Handle<Object> exports) {
 
 	// Create all class constructor templates.
 
-	for(auto pos = classList.begin(); pos != classList.end(); ++pos ) {
-		auto *bindClass = *pos;
-
-		// Avoid registering the same class twice.
-		if(!bindClass || bindClass->isReady()) {
-			*pos = nullptr;
-			continue;
-		}
-
-		bindClass->init();
-
+	for(auto *bindClass : classList) {
 		param = new SignatureParam();
 		param->overloadNum = bindClass->wrapperConstructorNum;
 
@@ -299,8 +284,6 @@ static void initModule(Handle<Object> exports) {
 	// Define inheritance between class constructor templates and add methods.
 
 	for(auto *bindClass : classList) {
-		if(!bindClass) continue;
-
 		Local<FunctionTemplate> constructorTemplate = Nan::New(bindClass->constructorTemplate);
 
 		auto superClassList = bindClass->getSuperClassList();
@@ -326,8 +309,6 @@ static void initModule(Handle<Object> exports) {
 	// Instantiate and export class constructor templates.
 
 	for(auto *bindClass : classList) {
-		if(!bindClass) continue;
-
 		// Instantiate the constructor template.
 		Local<Function> jsConstructor = Nan::New(bindClass->constructorTemplate)->GetFunction();
 
