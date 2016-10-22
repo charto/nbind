@@ -45,7 +45,7 @@
 
 namespace nbind {
 
-extern const char *emptyGetter;
+// extern const char *emptyGetter; unused for now.
 extern const char *emptySetter;
 
 template <typename PolicyList>

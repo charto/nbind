@@ -5,7 +5,7 @@
 
 using namespace nbind;
 
-const char *nbind :: emptyGetter = "";
+// const char *nbind :: emptyGetter = ""; unused for now.
 const char *nbind :: emptySetter = "";
 
 // Linkage for module-wide error message.

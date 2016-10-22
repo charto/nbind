@@ -110,7 +110,10 @@ void cbOutput :: call(Args... args) {
 		(BindingType<Args>::toWireType(std::forward<Args>(args)))...
 	};
 
-	*output = jsConstructor.getJsFunction()->NewInstance(sizeof...(Args), argv);
+	auto result = Nan::NewInstance(jsConstructor.getJsFunction(), sizeof...(Args), argv);
+
+	if(result.IsEmpty()) *output = Nan::Undefined();
+	else *output = result.ToLocalChecked();
 }
 
 } // namespace

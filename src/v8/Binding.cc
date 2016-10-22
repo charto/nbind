@@ -103,7 +103,7 @@ static void registerMethods(BindClassBase &bindClass, Local<FunctionTemplate> co
 
 	funcPtr setter = nullptr;
 	funcPtr getter = nullptr;
-	unsigned int getterNum = 0;
+	// unsigned int getterNum = 0; unused for now.
 	unsigned int setterNum = 0;
 	SignatureParam *param;
 
@@ -114,10 +114,13 @@ static void registerMethods(BindClassBase &bindClass, Local<FunctionTemplate> co
 
 		if(signature == nullptr) {
 
+			/*
+			Currently properties must have getters so this is unused.
 			if(func.getName() == emptyGetter) {
 				getter = nullptr;
 				getterNum = 0;
 			}
+			*/
 
 			if(func.getName() == emptySetter) {
 				setter = nullptr;
@@ -326,7 +329,7 @@ static void initModule(Handle<Object> exports) {
 
 	for(auto *bindClass : classList) {
 		// Instantiate the constructor template.
-		Local<Function> jsConstructor = Nan::New(bindClass->constructorTemplate)->GetFunction();
+		Local<Function> jsConstructor = Nan::GetFunction(Nan::New(bindClass->constructorTemplate)).ToLocalChecked();
 
 		Overloader::setConstructorJS(bindClass->wrapperConstructorNum, jsConstructor);
 		Overloader::setPtrWrapper(bindClass->wrapperConstructorNum, bindClass->wrapPtr);

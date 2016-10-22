@@ -62,7 +62,7 @@ static inline WireType makeExternal(TypeFlags flags, TargetType *ptr, ArgType &&
 	// This will try to call the C++ constructor, so Overloader or Creator
 	// needs to detect the argument is a v8::External and just wrap it instead.
 
-	return(constructor->NewInstance(argc, argv));
+	return(Nan::NewInstance(constructor, argc, argv).ToLocalChecked());
 }
 
 template <typename ArgType>
