@@ -137,6 +137,10 @@ public:
 		return(nullptr);
 	}
 
+	bool isVisited() { return(visited); }
+	void visit() { visited = true; }
+	void unvisit() { visited = false; }
+
 protected:
 
 	TYPEID idList[2];
@@ -162,6 +166,8 @@ protected:
 	// if possible.
 
 	cbFunction *valueConstructorJS = nullptr;
+
+	bool visited;
 
 };
 

@@ -72,8 +72,6 @@ void NBind :: reflect(
 	}
 
 	for(BindClassBase *bindClass : getClassList()) {
-		if(!bindClass) continue;
-
 		NBindID classType{bindClass->getTypes()[0]};
 
 		outClass(
@@ -85,8 +83,6 @@ void NBind :: reflect(
 	listMethods(NBindID(nullptr), getFunctionList(), outMethod);
 
 	for(BindClassBase *bindClass : getClassList()) {
-		if(!bindClass) continue;
-
 		NBindID classType{bindClass->getTypes()[0]};
 		auto superClassList = bindClass->getSuperClassList();
 

@@ -144,16 +144,22 @@ static void initModule() {
 
 	auto &classList = getClassList();
 
-	for(auto pos = classList.begin(); pos != classList.end(); ++pos ) {
-		auto *bindClass = *pos;
+	for(auto *bindClass : classList) bindClass->unvisit();
+
+	auto posPrev = classList.before_begin();
+	auto pos = classList.begin();
+
+	while(pos != classList.end()) {
+		auto *bindClass = *pos++;
 
 		// Avoid registering the same class twice.
-		if(!bindClass || bindClass->isReady()) {
-			*pos = nullptr;
+		if(bindClass->isVisited()) {
+			classList.erase_after(posPrev);
 			continue;
 		}
 
-		bindClass->init();
+		bindClass->visit();
+		++posPrev;
 
 		_nbind_register_class(
 			bindClass->getTypes(),

@@ -257,7 +257,23 @@ static void initModule(Handle<Object> exports) {
 
 	// Create all class constructor templates.
 
-	for(auto *bindClass : classList) {
+	for(auto *bindClass : classList) bindClass->unvisit();
+
+	auto posPrev = classList.before_begin();
+	auto pos = classList.begin();
+
+	while(pos != classList.end()) {
+		auto *bindClass = *pos++;
+
+		// Avoid registering the same class twice.
+		if(bindClass->isVisited()) {
+			classList.erase_after(posPrev);
+			continue;
+		}
+
+		bindClass->visit();
+		++posPrev;
+
 		param = new SignatureParam();
 		param->overloadNum = bindClass->wrapperConstructorNum;
 
