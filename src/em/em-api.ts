@@ -23,7 +23,7 @@ import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
 import { _nbind as _gc } from './GC';             export { _gc };
 import {SignatureType, removeAccessorPrefix} from '../common';
-import {typeModule, StateFlags, TypeFlags} from '../Type';
+import {typeModule, TypeFlags, TypeSpecWithName} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -57,8 +57,7 @@ export namespace _nbind {
 	export var BindClass: typeof _class.BindClass;
 	export var BindClassPtr: typeof _class.BindClassPtr;
 	export var SharedClassPtr: typeof _class.BindClassPtr;
-	export var makeBound: typeof _class.makeBound;
-	export var disableMember: typeof _class.disableMember;
+	export var pendingChildTbl: typeof _class.pendingChildTbl;
 
 	export var ExternalType: typeof _external.ExternalType;
 
@@ -156,23 +155,23 @@ class nbind { // tslint:disable-line:class-name
 	static _nbind_register_class(
 		idListPtr: number,
 		policyListPtr: number,
+		superListPtr: number,
+		superCount: number,
 		namePtr: number,
 		destructorPtr: number
 	) {
 		const name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 2);
+		const superIdList = HEAPU32.subarray(superListPtr / 4, superListPtr / 4 + superCount);
 
-		const Bound = _nbind.makeBound(policyTbl);
-		const spec = {
+		const spec: TypeSpecWithName = {
 			flags: TypeFlags.isClass | (policyTbl['Value'] ? TypeFlags.isValueObject : 0),
 			id: idList[0],
 			name: name
 		};
 
 		const bindClass = _nbind.makeType(_nbind.constructType, spec) as _class.BindClass;
-
-		bindClass.setBound(Bound);
 
 		bindClass.ptrType = _nbind.getComplexType(
 			idList[1],
@@ -181,33 +180,51 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.queryType
 		) as _class.BindClassPtr;
 
-		const destroy = _nbind.makeMethodCaller(
+		bindClass.destroy = _nbind.makeMethodCaller(
 			destructorPtr,
 			0, // num
 			TypeFlags.none,
 			bindClass.name + '.free',
 			spec.id,
-			// void destroy(uint32_t, void *ptr, void *shared, TypeFlags flags)
 			['void', 'uint32_t', 'uint32_t'],
 			null
-		);
+		) as (shared: number, flags: number) => void;
 
-		_nbind.addMethod(
-			bindClass.proto.prototype,
-			'free',
-			function(this: _class.Wrapper) {
-				destroy.call(this, this.__nbindShared, this.__nbindFlags);
+		const childTbl = _nbind.pendingChildTbl;
 
-				this.__nbindState |= StateFlags.isDeleted;
+		Array.prototype.forEach.call(superIdList, (superId: number) => {
+			const superClass = _nbind.getType(superId) as _class.BindClass;
 
-				_nbind.disableMember(this, '__nbindShared');
-				_nbind.disableMember(this, '__nbindPtr');
-			},
-			0
-		);
+			if(superClass) {
+				bindClass.superList.push(superClass);
+			} else {
+				const childList = childTbl[superId] || [];
+				childList.push(idList[0]);
+				childTbl[superId] = childList;
 
-		// Export the class.
-		Module[name] = Bound;
+				++bindClass.pendingSuperCount;
+			}
+		});
+
+		// tslint:disable-next-line:no-shadowed-variable
+		function register(bindClass: _class.BindClass, id: number) {
+			if(!bindClass.pendingSuperCount) {
+				// Export the class.
+				Module[bindClass.name] = bindClass.makeBound(policyTbl);
+
+				// Try to export child classes.
+				for(let childId of childTbl[id] || []) {
+					const childClass = _nbind.getType(childId) as _class.BindClass;
+
+					childClass.superList.push(bindClass);
+
+					--childClass.pendingSuperCount;
+					register(childClass, childId);
+				}
+			}
+		}
+
+		register(bindClass, idList[0]);
 	}
 
 	@dep('_nbind')

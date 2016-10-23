@@ -22,7 +22,7 @@ export namespace _nbind {
 	function sweep() {
 		for(let obj of dirtyList) {
 			if(!(obj.__nbindState & (StateFlags.isPersistent | StateFlags.isDeleted))) {
-				obj.free();
+				obj.free!();
 			}
 		}
 

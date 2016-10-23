@@ -51,6 +51,8 @@ public:
 		return(superClassList);
 	}
 
+	unsigned int getSuperClassCount() { return(superClassCount); }
+
 	void addConstructor(BaseSignature *signature) {
 
 #		if defined(BUILDING_NODE_EXTENSION)
@@ -150,6 +152,7 @@ protected:
 	const char *name;
 
 	std::forward_list<SuperClassSpec> superClassList;
+	unsigned int superClassCount = 0;
 
 	std::forward_list<MethodDef> methodList;
 	decltype(methodList.before_begin()) methodLast = methodList.before_begin();
@@ -268,10 +271,11 @@ void *upcast(void *arg) {
 
 template <class Bound> template <class SuperType>
 inline void BindClass<Bound> :: addSuperClass() {
-	this->superClassList.emplace_front(
+	superClassList.emplace_front(
 		BindClass<SuperType>::getInstance(),
 		upcast<Bound, SuperType>
 	);
+	++superClassCount;
 }
 
 } // namespace

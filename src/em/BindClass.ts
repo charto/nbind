@@ -32,12 +32,14 @@ export namespace _nbind {
 
 	export var mark: typeof _gc.mark;
 
-	// Base class for wrapped instances of bound C++ classes.
+	/** Base class for wrapped instances of bound C++ classes.
+	  * Note that some hacks avoid ever constructing this,
+	  * so initializing values inside its definition won't work. */
 
 	export class Wrapper {
 		persist() { this.__nbindState |= StateFlags.isPersistent; }
 
-		free: () => void;
+		free?(): void
 
 		/* tslint:disable:variable-name */
 
@@ -64,8 +66,17 @@ export namespace _nbind {
 
 	const ptrMarker = {};
 
-	export function makeBound(policyTbl: PolicyTbl) {
-		class Bound extends Wrapper {
+	interface SuperClassType extends Wrapper {}
+
+	export function makeBound(
+		policyTbl: PolicyTbl,
+		bindClass: BindClass
+	) {
+		const SuperClass = bindClass.superList[0] ?
+			bindClass.superList[0].proto as { new(): Wrapper } :
+			Wrapper;
+
+		class Bound extends SuperClass {
 			constructor(marker: {}, flags: number, ptr: number, shared?: number) {
 				// super() never gets called here but TypeScript 1.8 requires it.
 				if((false && super()) || !(this instanceof Bound)) {
@@ -81,8 +92,6 @@ export namespace _nbind {
 						Array.prototype.concat.apply([null], arguments)
 					))());
 				}
-
-				super();
 
 				let nbindFlags = flags;
 				let nbindPtr = ptr;
@@ -121,6 +130,15 @@ export namespace _nbind {
 				_defineHidden(StateFlags.none)(this, '__nbindState');
 			}
 
+			free() {
+				bindClass.destroy.call(this, this.__nbindShared, this.__nbindFlags);
+
+				this.__nbindState |= StateFlags.isDeleted;
+
+				disableMember(this, '__nbindShared');
+				disableMember(this, '__nbindPtr');
+			}
+
 			@_defineHidden()
 			// tslint:disable-next-line:variable-name
 			__nbindConstructor: (...args: any[]) => number;
@@ -147,8 +165,13 @@ export namespace _nbind {
 			if(spec.paramList) this.proto = (spec.paramList[0] as BindClass).proto;
 		}
 
-		setBound(proto: WrapperClass) {
-			this.proto = proto;
+		makeBound(policyTbl: PolicyTbl) {
+			const Bound = makeBound(policyTbl, this);
+
+			this.proto = Bound;
+			this.ptrType.proto = Bound;
+
+			return(Bound);
 		}
 
 		wireRead = (arg: number) => popValue(arg, this.ptrType);
@@ -162,7 +185,16 @@ export namespace _nbind {
 
 		proto: WrapperClass;
 		ptrType: BindClassPtr;
+
+		destroy: (shared: number, flags: number) => void;
+
+		/** Number of super classes left to initialize. */
+		pendingSuperCount = 0;
+
+		superList: BindClass[] = [];
 	}
+
+	export const pendingChildTbl: { [id: number]: number[] } = {};
 
 	export function popPointer(ptr: number, type: BindClassPtr) {
 		return(ptr ? new type.proto(ptrMarker, type.flags, ptr) : null);
@@ -253,7 +285,7 @@ export namespace _nbind {
 		proto: WrapperClass;
 	}
 
-	export function disableMember(obj: Wrapper, name: string) {
+	function disableMember(obj: Wrapper, name: string) {
 		function die() { throw(new Error('Accessing deleted object')); }
 
 		Object.defineProperty(obj, name, {
