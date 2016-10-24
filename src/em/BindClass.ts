@@ -10,8 +10,10 @@ import {
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _value} from './ValueObj';
+import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
 import {_nbind as _gc} from './GC';
+import {SignatureType} from '../common';
 import {StateFlags, TypeFlags, TypeSpecWithName, TypeSpecWithParam, PolicyTbl} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
@@ -25,10 +27,16 @@ export namespace _nbind {
 
 export namespace _nbind {
 
+	export var addMethod: typeof _globals.addMethod;
+	export var getType: typeof _globals.getType;
+
 	export var pushValue: typeof _value.pushValue;
 	export var popValue: typeof _value.popValue;
 
 	export var resources: typeof _resource.resources;
+
+	export var makeCaller: typeof _caller.makeCaller;
+	export var makeMethodCaller: typeof _caller.makeMethodCaller;
 
 	export var mark: typeof _gc.mark;
 
@@ -62,21 +70,17 @@ export namespace _nbind {
 
 	interface WrapperClass {
 		new(marker: {}, flags: number, ptr: number, shared?: number): Wrapper;
+
+		[key: string]: any;
 	}
 
 	const ptrMarker = {};
-
-	interface SuperClassType extends Wrapper {}
 
 	export function makeBound(
 		policyTbl: PolicyTbl,
 		bindClass: BindClass
 	) {
-		const SuperClass = bindClass.superList[0] ?
-			bindClass.superList[0].proto as { new(): Wrapper } :
-			Wrapper;
-
-		class Bound extends SuperClass {
+		class Bound extends Wrapper {
 			constructor(marker: {}, flags: number, ptr: number, shared?: number) {
 				// super() never gets called here but TypeScript 1.8 requires it.
 				if((false && super()) || !(this instanceof Bound)) {
@@ -155,6 +159,19 @@ export namespace _nbind {
 		return(Bound);
 	}
 
+	export interface MethodSpec {
+		name: string;
+		title: string;
+		signatureType?: SignatureType;
+		boundID?: number;
+		policyTbl?: PolicyTbl;
+		typeList?: (number | string)[];
+		ptr: number;
+		direct?: number;
+		num?: number;
+		flags?: TypeFlags;
+	}
+
 	// Base class for all bound C++ classes (not their instances),
 	// also inheriting from a generic type definition.
 
@@ -174,6 +191,116 @@ export namespace _nbind {
 			return(Bound);
 		}
 
+		addMethod(spec: MethodSpec) {
+			const overloadList = this.methodTbl[spec.name] || [];
+
+			overloadList.push(spec);
+
+			this.methodTbl[spec.name] = overloadList;
+		}
+
+		registerMethods(src: BindClass, staticOnly: boolean) {
+			let setter: ((arg: any) => void) | undefined;
+
+			for(let name of Object.keys(src.methodTbl)) {
+				const overloadList = src.methodTbl[name];
+
+				for(let spec of overloadList) {
+					let target: any;
+					let caller: any;
+
+					target = this.proto.prototype;
+
+					if(staticOnly && spec.signatureType != SignatureType.func) continue;
+
+					switch(spec.signatureType) {
+						case SignatureType.func:
+							target = this.proto;
+
+						// tslint:disable-next-line:no-switch-case-fall-through
+						case SignatureType.construct:
+							caller = makeCaller(spec);
+							addMethod(target, spec.name, caller, spec.typeList!.length - 1);
+							break;
+
+						case SignatureType.setter:
+							setter = makeMethodCaller(spec) as (arg: any) => void;
+							break;
+
+						case SignatureType.getter:
+							Object.defineProperty(target, spec.name, {
+								configurable: true,
+								enumerable: false,
+								get: makeMethodCaller(spec) as () => any,
+								set: setter
+							});
+							break;
+
+						case SignatureType.method:
+							caller = makeMethodCaller(spec);
+							addMethod(target, spec.name, caller, spec.typeList!.length - 1);
+							break;
+
+						default:
+							break;
+					}
+				}
+			}
+		}
+
+		registerSuperMethods(
+			src: BindClass,
+			firstSuper: number,
+			visitTbl: { [name: string]: boolean }
+		) {
+			if(visitTbl[src.name]) return;
+			visitTbl[src.name] = true;
+
+			this.registerMethods(src, firstSuper < 0);
+
+			let superNum = 0;
+			let nextFirst: number;
+
+			for(let superId of src.superIdList || []) {
+				const superClass = getType(superId) as BindClass;
+
+				if(superNum++ < firstSuper || firstSuper < 0) {
+					nextFirst = -1;
+				} else {
+					nextFirst = 0;
+				}
+
+				this.registerSuperMethods(superClass, nextFirst, visitTbl);
+			}
+		}
+
+		finish() {
+			if(this.ready) return;
+			this.ready = true;
+
+			let superClass: BindClass | undefined;
+			let firstSuper: BindClass | undefined;
+
+			for(let superId of this.superIdList || []) {
+				superClass = getType(superId) as BindClass;
+				superClass.finish();
+
+				firstSuper = firstSuper || superClass;
+			}
+
+			if(firstSuper) {
+				const Bound = this.proto;
+				const Proto = function(this: Wrapper) {
+					this.constructor = Bound;
+				} as any as { new(): Wrapper };
+
+				Proto.prototype = firstSuper.proto.prototype;
+				Bound.prototype = new Proto();
+			}
+
+			this.registerSuperMethods(this, 1, {});
+		}
+
 		wireRead = (arg: number) => popValue(arg, this.ptrType);
 		wireWrite = pushValue;
 
@@ -191,10 +318,13 @@ export namespace _nbind {
 		/** Number of super classes left to initialize. */
 		pendingSuperCount = 0;
 
-		superList: BindClass[] = [];
-	}
+		ready = false;
 
-	export const pendingChildTbl: { [id: number]: number[] } = {};
+		superIdList: number[];
+		methodTbl: { [name: string]: MethodSpec[] } = {};
+
+		static list: BindClass[] = [];
+	}
 
 	export function popPointer(ptr: number, type: BindClassPtr) {
 		return(ptr ? new type.proto(ptrMarker, type.flags, ptr) : null);

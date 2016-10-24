@@ -37,7 +37,6 @@ export namespace _nbind {
 	export var Pool: typeof _globals.Pool;
 	export var bigEndian: typeof _globals.bigEndian;
 
-	export var addMethod: typeof _globals.addMethod;
 	export var readTypeIdList: typeof _globals.readTypeIdList;
 	export var readAsciiString: typeof _globals.readAsciiString;
 	export var readPolicyList: typeof _globals.readPolicyList;
@@ -57,7 +56,6 @@ export namespace _nbind {
 	export var BindClass: typeof _class.BindClass;
 	export var BindClassPtr: typeof _class.BindClassPtr;
 	export var SharedClassPtr: typeof _class.BindClassPtr;
-	export var pendingChildTbl: typeof _class.pendingChildTbl;
 
 	export var ExternalType: typeof _external.ExternalType;
 
@@ -70,7 +68,6 @@ export namespace _nbind {
 	export var ArrayType: typeof _std.ArrayType;
 	export var StringType: typeof _std.StringType;
 
-	export var makeCaller: typeof _caller.makeCaller;
 	export var makeMethodCaller: typeof _caller.makeMethodCaller;
 
 	export var BufferType: typeof _buffer.BufferType;
@@ -125,6 +122,15 @@ class nbind { // tslint:disable-line:class-name
 		};
 
 		Module['toggleLightGC'] = _nbind.toggleLightGC;
+
+		const globalScope = _nbind.makeType(_nbind.constructType, {
+			flags: TypeFlags.isClass,
+			id: 0,
+			name: ''
+		}) as _class.BindClass;
+
+		globalScope.proto = Module as any;
+		_nbind.BindClass.list.push(globalScope);
 	}
 
 	@dep('_nbind', '_typeModule')
@@ -157,13 +163,12 @@ class nbind { // tslint:disable-line:class-name
 		policyListPtr: number,
 		superListPtr: number,
 		superCount: number,
-		namePtr: number,
-		destructorPtr: number
+		destructorPtr: number,
+		namePtr: number
 	) {
 		const name = _nbind.readAsciiString(namePtr);
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const idList = HEAPU32.subarray(idListPtr / 4, idListPtr / 4 + 2);
-		const superIdList = HEAPU32.subarray(superListPtr / 4, superListPtr / 4 + superCount);
 
 		const spec: TypeSpecWithName = {
 			flags: TypeFlags.isClass | (policyTbl['Value'] ? TypeFlags.isValueObject : 0),
@@ -180,226 +185,91 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.queryType
 		) as _class.BindClassPtr;
 
-		bindClass.destroy = _nbind.makeMethodCaller(
-			destructorPtr,
-			0, // num
-			TypeFlags.none,
-			bindClass.name + '.free',
-			spec.id,
-			['void', 'uint32_t', 'uint32_t'],
-			null
-		) as (shared: number, flags: number) => void;
+		bindClass.destroy = _nbind.makeMethodCaller({
+			boundID: spec.id,
+			flags: TypeFlags.none,
+			name: 'destroy',
+			num: 0,
+			ptr: destructorPtr,
+			title: bindClass.name + '.free',
+			typeList: ['void', 'uint32_t', 'uint32_t']
+		}) as (shared: number, flags: number) => void;
 
-		const childTbl = _nbind.pendingChildTbl;
-
-		// Check if superclasses are defined.
-		Array.prototype.forEach.call(superIdList, (superId: number) => {
-			const superClass = _nbind.getType(superId) as _class.BindClass;
-
-			if(superClass) {
-				bindClass.superList.push(superClass);
-			} else {
-				// If a superclass is undefined, attach the current class ID
-				// to its ID in pendingChildTbl. Current class constructor
-				// will be created after its superclasses are defined.
-				const childList = childTbl[superId] || [];
-				childList.push(idList[0]);
-				childTbl[superId] = childList;
-
-				++bindClass.pendingSuperCount;
-			}
-		});
-
-		/** When all superclasses are defined, recursively create a JavaScript
-		  * constructor for the class and any remaining child classes. */
-
-		// tslint:disable-next-line:no-shadowed-variable
-		function register(bindClass: _class.BindClass, id: number) {
-			if(!bindClass.pendingSuperCount) {
-				// Export the class.
-				Module[bindClass.name] = bindClass.makeBound(policyTbl);
-
-				// Try to export child classes.
-				for(let childId of childTbl[id] || []) {
-					const childClass = _nbind.getType(childId) as _class.BindClass;
-
-					childClass.superList.push(bindClass);
-
-					--childClass.pendingSuperCount;
-					register(childClass, childId);
-				}
-			}
+		if(superCount) {
+			bindClass.superIdList = Array.prototype.slice.call(
+				HEAPU32.subarray(superListPtr / 4, superListPtr / 4 + superCount)
+			);
 		}
 
-		register(bindClass, idList[0]);
-	}
+		Module[bindClass.name] = bindClass.makeBound(policyTbl);
 
-	@dep('_nbind')
-	static _nbind_register_constructor(
-		typeID: number,
-		policyListPtr: number,
-		typeListPtr: number,
-		typeCount: number,
-		ptr: number,
-		ptrValue: number
-	) {
-		const policyTbl = _nbind.readPolicyList(policyListPtr);
-		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		const bindClass = _nbind.getType(typeID) as _class.BindClass;
-		const proto = bindClass.proto.prototype;
-
-		// The constructor returns a pointer to the new object.
-		// It fits in uint32_t.
-
-		typeList[0] = 'uint32_t';
-
-		_nbind.addMethod(
-			proto,
-			'__nbindConstructor',
-			_nbind.makeCaller(
-				null,
-				0, // num
-				TypeFlags.none,
-				bindClass.name + ' constructor',
-				ptr,
-				typeList,
-				policyTbl
-			),
-			typeCount - 1
-		);
-
-		// First argument is a pointer to the C++ object to construct in place.
-		// It fits in uint32_t.
-
-		typeList.splice(0, 1, 'void', 'uint32_t');
-
-		_nbind.addMethod(
-			proto,
-			'__nbindValueConstructor',
-			_nbind.makeCaller(
-				null,
-				0, // num
-				TypeFlags.none,
-				bindClass.name + ' value constructor',
-				ptrValue,
-				typeList,
-				policyTbl
-			),
-			typeCount
-		);
-	}
-
-	@dep('_nbind')
-	static _nbind_register_function(
-		typeID: number,
-		policyListPtr: number,
-		typeListPtr: number,
-		typeCount: number,
-		ptr: number,
-		namePtr: number,
-		num: number,
-		flags: TypeFlags,
-		direct: number
-	) {
-		const name = _nbind.readAsciiString(namePtr);
-		const policyTbl = _nbind.readPolicyList(policyListPtr);
-		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		let bindClass: _class.BindClass | undefined;
-		let target: any;
-
-		if(typeID) {
-			bindClass = _nbind.getType(typeID) as _class.BindClass;
-			target = bindClass.proto;
-		} else {
-			target = Module;
-		}
-
-		_nbind.addMethod(
-			target,
-			name,
-			_nbind.makeCaller(
-				ptr,
-				num,
-				flags,
-				(bindClass ? bindClass.name + '.' : '') + name,
-				direct,
-				typeList,
-				policyTbl
-			),
-			typeCount - 1
-		);
+		_nbind.BindClass.list.push(bindClass);
 	}
 
 	@dep('_nbind', '_removeAccessorPrefix')
-	static _nbind_register_method(
-		typeID: number,
+	static _nbind_register_function(
+		boundID: number,
 		policyListPtr: number,
 		typeListPtr: number,
 		typeCount: number,
 		ptr: number,
+		direct: number,
+		signatureType: SignatureType,
 		namePtr: number,
 		num: number,
-		flags: TypeFlags,
-		signatureType: SignatureType
+		flags: TypeFlags
 	) {
-		let name = _nbind.readAsciiString(namePtr);
+		const bindClass = _nbind.getType(boundID) as _class.BindClass;
 		const policyTbl = _nbind.readPolicyList(policyListPtr);
 		const typeList = _nbind.readTypeIdList(typeListPtr, typeCount);
-		const bindClass = _nbind.getType(typeID) as _class.BindClass;
-		const proto = bindClass.proto.prototype;
 
-		if(signatureType == SignatureType.method) {
-			_nbind.addMethod(
-				proto,
-				name,
-				_nbind.makeMethodCaller(
-					ptr,
-					num,
-					flags,
-					bindClass.name + '.' + name,
-					typeID,
-					typeList,
-					policyTbl
-				),
-				typeCount - 1
-			);
+		let specList: _class.MethodSpec[];
 
-			return;
-		}
-
-		name = _removeAccessorPrefix(name);
-
-		if(signatureType == SignatureType.setter) {
-
-			// A setter is always followed by a getter, so we can just
-			// temporarily store an invoker in the property.
-			// The getter definition then binds it properly.
-
-			proto[name] = _nbind.makeMethodCaller(
-				ptr,
-				num,
-				flags,
-				bindClass.name + '.' + 'set ' + name,
-				typeID,
-				typeList,
-				policyTbl
-			);
+		if(signatureType == SignatureType.construct) {
+			specList = [{
+				direct: ptr,
+				name: '__nbindConstructor',
+				ptr: 0,
+				title: bindClass.name + ' constructor',
+				typeList: ['uint32_t'].concat(typeList.slice(1))
+			}, {
+				direct: direct,
+				name: '__nbindValueConstructor',
+				ptr: 0,
+				title: bindClass.name + ' value constructor',
+				typeList: ['void', 'uint32_t'].concat(typeList.slice(1))
+			}];
 		} else {
-			Object.defineProperty(proto, name, {
-				configurable: true,
-				enumerable: true,
-				get: _nbind.makeMethodCaller(
-					ptr,
-					num,
-					flags,
-					bindClass.name + '.' + 'get ' + name,
-					typeID,
-					typeList,
-					policyTbl
-				) as () => any,
-				set: proto[name]
-			});
+			let name = _nbind.readAsciiString(namePtr);
+			const title = (bindClass.name && bindClass.name + '.') + name;
+
+			if(signatureType == SignatureType.getter || signatureType == SignatureType.setter) {
+				name = _removeAccessorPrefix(name);
+			}
+
+			specList = [{
+				boundID: boundID,
+				direct: direct,
+				name: name,
+				ptr: ptr,
+				title: title,
+				typeList: typeList
+			}];
 		}
+
+		for(let spec of specList) {
+			spec.signatureType = signatureType;
+			spec.policyTbl = policyTbl;
+			spec.num = num;
+			spec.flags = flags;
+
+			bindClass.addMethod(spec);
+		}
+	}
+
+	@dep('_nbind')
+	static _nbind_finish() {
+		for(let bindClass of _nbind.BindClass.list) bindClass.finish();
 	}
 
 	@dep('_nbind')

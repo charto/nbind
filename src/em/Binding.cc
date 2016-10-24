@@ -12,15 +12,19 @@ using namespace nbind;
 
 extern "C" {
 	extern void _nbind_register_pool(unsigned int pageSize, unsigned int *usedPtr, unsigned char *rootPtr, unsigned char **pagePtr);
-	extern void _nbind_register_primitive(  TYPEID typeID, unsigned int size, unsigned char flag);
-	extern void _nbind_register_type(       TYPEID typeID,    const char *name);
-	extern void _nbind_register_class(const TYPEID *typeList, const char **policies, const TYPEID *superList, unsigned int superCount, const char *name, funcPtr destructor);
-	extern void _nbind_register_constructor(TYPEID classType, const char **policies, const TYPEID *types, unsigned int typeCount, funcPtr func, funcPtr ptrValue);
-	extern void _nbind_register_function(   TYPEID classType, const char **policies, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
-		unsigned int num, unsigned int flags, funcPtr direct);
-	extern void _nbind_register_method(     TYPEID classType, const char **policies, const TYPEID *types, unsigned int typeCount, funcPtr func, const char *name,
-		unsigned int num, unsigned int flags, unsigned int methodType
+	extern void _nbind_register_primitive(TYPEID typeID, unsigned int size, unsigned char flag);
+	extern void _nbind_register_type(TYPEID typeID, const char *name);
+	extern void _nbind_register_class(const TYPEID *typeList,
+		const char **policies, const TYPEID *superList, unsigned int superCount,
+		funcPtr destructor,
+		const char *name
 	);
+	extern void _nbind_register_function(TYPEID boundID,
+		const char **policies, const TYPEID *types, unsigned int typeCount,
+		funcPtr func, funcPtr direct, unsigned int signatureType,
+		const char *name, unsigned int num, unsigned int flags
+	);
+	extern void _nbind_finish();
 }
 
 unsigned int Pool::used = 0;
@@ -173,8 +177,8 @@ static void initModule() {
 			bindClass->getPolicies(),
 			superIdList,
 			bindClass->getSuperClassCount(),
-			bindClass->getName(),
-			bindClass->getDeleter()
+			bindClass->getDeleter(),
+			bindClass->getName()
 		);
 	}
 
@@ -189,10 +193,11 @@ static void initModule() {
 			signature->getTypeList(),
 			signature->getArity() + 1,
 			signature->getCaller(),
+			func.getPtr(),
+			static_cast<unsigned int>(signature->getType()),
 			func.getName(),
 			func.getNum(),
-			static_cast<unsigned int>(func.getFlags()),
-			func.getPtr()
+			static_cast<unsigned int>(func.getFlags())
 		);
 	}
 
@@ -216,16 +221,17 @@ static void initModule() {
 				case SignatureType :: getter:
 				case SignatureType :: setter:
 
-					_nbind_register_method(
+					_nbind_register_function(
 						id,
 						signature->getPolicies(),
 						signature->getTypeList(),
 						signature->getArity() + 1,
 						signature->getCaller(),
+						nullptr,
+						static_cast<unsigned int>(signature->getType()),
 						func.getName(),
 						func.getNum(),
-						static_cast<unsigned int>(func.getFlags()),
-						static_cast<unsigned int>(signature->getType())
+						static_cast<unsigned int>(func.getFlags())
 					);
 
 					break;
@@ -238,29 +244,36 @@ static void initModule() {
 						signature->getTypeList(),
 						signature->getArity() + 1,
 						signature->getCaller(),
+						func.getPtr(),
+						static_cast<unsigned int>(signature->getType()),
 						func.getName(),
 						func.getNum(),
-						static_cast<unsigned int>(func.getFlags()),
-						func.getPtr()
+						static_cast<unsigned int>(func.getFlags())
 					);
 
 					break;
 
 				case SignatureType :: construct:
 
-					_nbind_register_constructor(
+					_nbind_register_function(
 						id,
 						signature->getPolicies(),
 						signature->getTypeList(),
 						signature->getArity() + 1,
 						signature->getCaller(),
-						signature->getValueConstructor()
+						signature->getValueConstructor(),
+						static_cast<unsigned int>(signature->getType()),
+						nullptr, 0, 0
 					);
 
 					break;
 			}
 		}
 	}
+
+	// Set up inheritance.
+
+	_nbind_finish();
 }
 
 extern "C" {

@@ -262,32 +262,27 @@ export namespace _nbind {
 
 	/** Dynamically create an invoker function for calling a C++ class method. */
 
-	export function makeMethodCaller(
-		ptr: number,
-		num: number,
-		flags: TypeFlags,
-		name: string,
-		boundID: number,
-		idList: TypeIdList,
-		policyTbl: PolicyTbl | null
-	) {
-		const argCount = idList.length - 1;
+	export function makeMethodCaller(spec: _class.MethodSpec) {
+		const argCount = spec.typeList!.length - 1;
 
 		// The method invoker function adds two arguments to those of the method:
 		// - Number of the method in a list of methods with identical signatures.
 		// - Target object
 
-		idList.splice(1, 0, 'uint32_t', boundID);
+		const typeIdList = spec.typeList!.slice(0);
+		typeIdList.splice(1, 0, 'uint32_t', spec.boundID!);
 
-		const typeList = getTypes(idList, name);
+		const typeList = getTypes(typeIdList, spec.title);
 		const returnType = typeList[0];
 		const argTypeList = typeList.slice(3);
-		const needsWireRead = returnType.needsWireRead(policyTbl);
-		const needsWireWrite = anyNeedsWireWrite(argTypeList, policyTbl);
+		const needsWireRead = returnType.needsWireRead(spec.policyTbl!);
+		const needsWireWrite = anyNeedsWireWrite(argTypeList, spec.policyTbl!);
+		const ptr = spec.ptr;
+		const num = spec.num!;
 
-		const dynCall = getDynCall(typeList, name);
+		const dynCall = getDynCall(typeList, spec.title);
 
-		const mask = ~flags & TypeFlags.isConst;
+		const mask = ~spec.flags & TypeFlags.isConst;
 
 		function err() {
 			throw(new Error('Calling a non-const method on a const object'));
@@ -321,7 +316,7 @@ export namespace _nbind {
 			dynCall,
 			ptr,
 			num,
-			policyTbl,
+			spec.policyTbl!,
 			needsWireWrite,
 			'ptr,num,this.__nbindPtr',
 			returnType,
@@ -333,28 +328,22 @@ export namespace _nbind {
 
 	/** Dynamically create an invoker function for calling a C++ function. */
 
-	export function makeCaller(
-		ptr: number | null,
-		num: number,
-		flags: TypeFlags,
-		name: string,
-		direct: number,
-		idList: TypeIdList,
-		policyTbl: PolicyTbl
-	) {
-		const argCount = idList.length - 1;
+	export function makeCaller(spec: _class.MethodSpec) {
+		const argCount = spec.typeList!.length - 1;
 
-		const typeList = getTypes(idList, name);
+		let typeList = getTypes(spec.typeList!, spec.title);
 		const returnType = typeList[0];
 		const argTypeList = typeList.slice(1);
-		const needsWireRead = returnType.needsWireRead(policyTbl);
-		const needsWireWrite = anyNeedsWireWrite(argTypeList, policyTbl);
+		const needsWireRead = returnType.needsWireRead(spec.policyTbl!);
+		const needsWireWrite = anyNeedsWireWrite(argTypeList, spec.policyTbl!);
+		const direct = spec.direct!;
+		let ptr = spec.ptr;
 
-		if(direct && !needsWireRead && !needsWireWrite) {
+		if(spec.direct && !needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
-			const dynCall = getDynCall(typeList, name);
+			const dynCall = getDynCall(typeList, spec.title);
 
 			switch(argCount) {
 				case 0: return(() =>
@@ -372,7 +361,7 @@ export namespace _nbind {
 			}
 
 			// Input and output types don't need conversion so omit dispatcher.
-			ptr = null;
+			ptr = 0;
 		}
 
 		let prefix: string;
@@ -381,7 +370,10 @@ export namespace _nbind {
 			// The function invoker adds an argument to those of the function:
 			// - Number of the function in a list of functions with identical signatures.
 
-			idList.splice(1, 0, 'uint32_t');
+			const typeIdList = spec.typeList!.slice(0);
+			typeIdList.splice(1, 0, 'uint32_t');
+
+			typeList = getTypes(typeIdList, spec.title);
 			prefix = 'ptr,num';
 		} else {
 			ptr = direct;
@@ -389,13 +381,13 @@ export namespace _nbind {
 		}
 
 		// Type ID list was changed.
-		const dynCall = getDynCall(getTypes(idList, name), name);
+		const dynCall = getDynCall(typeList, spec.title);
 
 		return(buildCallerFunction(
 			dynCall,
 			ptr,
-			num,
-			policyTbl,
+			spec.num!,
+			spec.policyTbl!,
 			needsWireWrite,
 			prefix,
 			returnType,
