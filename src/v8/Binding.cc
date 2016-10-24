@@ -310,10 +310,15 @@ static void initModule(Handle<Object> exports) {
 		if(!superClassList.empty()) {
 			// This fails if the constructor template of any other child class
 			// has already been instantiated!
+			// TODO: Is this correct? What the superclass inherits may still
+			// be undefined. Should this be in registerSuperMethods instead?
 			constructorTemplate->Inherit(Nan::New(superClassList.front().superClass.constructorTemplate));
 		} else {
 			constructorTemplate->Inherit(superTemplate);
 		}
+
+		// Add methods of the class and all its superclasses not inherited
+		// through the prototype chain.
 
 		std::unordered_set<BindClassBase *> visitTbl;
 		registerSuperMethods(*bindClass, 1, constructorTemplate, visitTbl);

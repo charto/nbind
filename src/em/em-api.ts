@@ -192,12 +192,16 @@ class nbind { // tslint:disable-line:class-name
 
 		const childTbl = _nbind.pendingChildTbl;
 
+		// Check if superclasses are defined.
 		Array.prototype.forEach.call(superIdList, (superId: number) => {
 			const superClass = _nbind.getType(superId) as _class.BindClass;
 
 			if(superClass) {
 				bindClass.superList.push(superClass);
 			} else {
+				// If a superclass is undefined, attach the current class ID
+				// to its ID in pendingChildTbl. Current class constructor
+				// will be created after its superclasses are defined.
 				const childList = childTbl[superId] || [];
 				childList.push(idList[0]);
 				childTbl[superId] = childList;
@@ -205,6 +209,9 @@ class nbind { // tslint:disable-line:class-name
 				++bindClass.pendingSuperCount;
 			}
 		});
+
+		/** When all superclasses are defined, recursively create a JavaScript
+		  * constructor for the class and any remaining child classes. */
 
 		// tslint:disable-next-line:no-shadowed-variable
 		function register(bindClass: _class.BindClass, id: number) {
