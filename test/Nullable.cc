@@ -32,8 +32,6 @@ public:
 
 #ifdef NBIND_CLASS
 
-NBIND_CLASS(Coord) {}
-
 NBIND_CLASS(Nullable) {
 	method(getCoord);
 	method(getNull);
