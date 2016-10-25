@@ -19,6 +19,7 @@ import { _nbind as _callback } from './Callback'; export { _callback };
 import { _nbind as _value } from './ValueObj';    export { _value };
 import { _nbind as _std } from './BindingStd';    export { _std };
 import { _nbind as _caller } from './Caller';     export { _caller };
+import { _nbind as _wrapper } from './Wrapper';   export { _wrapper };
 import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
 import { _nbind as _gc } from './GC';             export { _gc };

@@ -8,6 +8,7 @@ import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
+import {_nbind as _wrapper} from './Wrapper';
 import {_nbind as _external} from './External';
 import {_nbind as _resource} from './Resource';
 import {TypeFlags, PolicyTbl} from '../Type';
@@ -19,7 +20,7 @@ export namespace _nbind {
 
 	type BindType = _type.BindType;
 
-	type Wrapper = _class.Wrapper;
+	type Wrapper = _wrapper.Wrapper;
 
 	type Func = _globals.Func;
 	type FuncList = _globals.FuncList;

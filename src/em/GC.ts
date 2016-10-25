@@ -5,7 +5,7 @@
 // wrapped in type conversions for arguments and return values.
 
 import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as _class} from './BindClass';
+import {_nbind as _wrapper} from './Wrapper';
 import {StateFlags} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
@@ -13,7 +13,7 @@ setEvil((code: string) => eval(code));
 
 export namespace _nbind {
 
-	type Wrapper = _class.Wrapper;
+	type Wrapper = _wrapper.Wrapper;
 
 	let dirtyList: Wrapper[] = [];
 

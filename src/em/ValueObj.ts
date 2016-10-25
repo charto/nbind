@@ -16,6 +16,7 @@ import {
 import {_nbind as _globals} from './Globals';
 import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
+import {_nbind as _wrapper} from './Wrapper';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -62,7 +63,7 @@ export namespace _nbind {
 	export function popValue(
 		num: number,
 		type?: BindClassPtr
-	): ValueObject | _class.Wrapper | null {
+	): ValueObject | _wrapper.Wrapper | null {
 		if(!num) throwError('Value type JavaScript class is missing or not registered');
 
 		if(num & 1) {
