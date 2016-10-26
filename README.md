@@ -109,7 +109,7 @@ Requirements
 
 You need:
 
-- [Node.js](https://nodejs.org/en/) 0.10.x - 6.x.x (newer may also work).
+- [Node.js](https://nodejs.org/en/) 0.10.x - 7.x.x (newer may also work).
 - Python 2.7, NOT 3.x (required by `node-gyp`, [see instructions](https://github.com/nodejs/node-gyp#installation)).
 
 And one of the following C++ compilers:
