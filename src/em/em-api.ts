@@ -57,6 +57,7 @@ export namespace _nbind {
 	export var BindClass: typeof _class.BindClass;
 	export var BindClassPtr: typeof _class.BindClassPtr;
 	export var SharedClassPtr: typeof _class.BindClassPtr;
+	export var callUpcast: typeof _class.callUpcast;
 
 	export var ExternalType: typeof _external.ExternalType;
 
@@ -123,6 +124,7 @@ class nbind { // tslint:disable-line:class-name
 		};
 
 		Module['toggleLightGC'] = _nbind.toggleLightGC;
+		_nbind.callUpcast = Module['dynCall_ii'];
 
 		const globalScope = _nbind.makeType(_nbind.constructType, {
 			flags: TypeFlags.isClass,
@@ -163,6 +165,7 @@ class nbind { // tslint:disable-line:class-name
 		idListPtr: number,
 		policyListPtr: number,
 		superListPtr: number,
+		upcastListPtr: number,
 		superCount: number,
 		destructorPtr: number,
 		namePtr: number
@@ -186,7 +189,7 @@ class nbind { // tslint:disable-line:class-name
 			_nbind.queryType
 		) as _class.BindClassPtr;
 
-		bindClass.destroy = _nbind.makeMethodCaller({
+		bindClass.destroy = _nbind.makeMethodCaller(bindClass.ptrType, {
 			boundID: spec.id,
 			flags: TypeFlags.none,
 			name: 'destroy',
@@ -199,6 +202,9 @@ class nbind { // tslint:disable-line:class-name
 		if(superCount) {
 			bindClass.superIdList = Array.prototype.slice.call(
 				HEAPU32.subarray(superListPtr / 4, superListPtr / 4 + superCount)
+			);
+			bindClass.upcastList = Array.prototype.slice.call(
+				HEAPU32.subarray(upcastListPtr / 4, upcastListPtr / 4 + superCount)
 			);
 		}
 

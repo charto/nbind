@@ -16,6 +16,7 @@ setEvil((code: string) => eval(code));
 
 export namespace _nbind {
 	export var BindType = _type.BindType;
+	export var Wrapper = _wrapper.Wrapper;
 }
 
 export namespace _nbind {
@@ -45,6 +46,8 @@ export namespace _nbind {
 
 	export const ptrMarker = {};
 
+	export var callUpcast: (upcast: number, ptr: number) => number;
+
 	export interface MethodSpec {
 		name: string;
 		title: string;
@@ -65,7 +68,10 @@ export namespace _nbind {
 		constructor(spec: TypeSpecWithName) {
 			super(spec);
 
-			if(spec.paramList) this.proto = (spec.paramList[0] as BindClass).proto;
+			if(spec.paramList) {
+				this.classType = (spec.paramList[0] as BindClass).classType;
+				this.proto = this.classType.proto;
+			} else this.classType = this;
 		}
 
 		makeBound(policyTbl: PolicyTbl) {
@@ -110,20 +116,20 @@ export namespace _nbind {
 							break;
 
 						case SignatureType.setter:
-							setter = makeMethodCaller(spec) as (arg: any) => void;
+							setter = makeMethodCaller(src.ptrType, spec) as (arg: any) => void;
 							break;
 
 						case SignatureType.getter:
 							Object.defineProperty(target, spec.name, {
 								configurable: true,
 								enumerable: false,
-								get: makeMethodCaller(spec) as () => any,
+								get: makeMethodCaller(src.ptrType, spec) as () => any,
 								set: setter
 							});
 							break;
 
 						case SignatureType.method:
-							caller = makeMethodCaller(spec);
+							caller = makeMethodCaller(src.ptrType, spec);
 							addMethod(target, spec.name, caller, spec.typeList!.length - 1);
 							break;
 
@@ -142,8 +148,6 @@ export namespace _nbind {
 			if(visitTbl[src.name]) return;
 			visitTbl[src.name] = true;
 
-			this.registerMethods(src, firstSuper < 0);
-
 			let superNum = 0;
 			let nextFirst: number;
 
@@ -158,33 +162,47 @@ export namespace _nbind {
 
 				this.registerSuperMethods(superClass, nextFirst, visitTbl);
 			}
+
+			this.registerMethods(src, firstSuper < 0);
 		}
 
 		finish() {
-			if(this.ready) return;
+			if(this.ready) return(this);
 			this.ready = true;
 
-			let superClass: BindClass | undefined;
-			let firstSuper: BindClass | undefined;
+			this.superList = (this.superIdList || []).map(
+				(superId: number) => (getType(superId) as BindClass).finish()
+			);
 
-			for(let superId of this.superIdList || []) {
-				superClass = getType(superId) as BindClass;
-				superClass.finish();
+			const Bound = this.proto;
 
-				firstSuper = firstSuper || superClass;
-			}
-
-			if(firstSuper) {
-				const Bound = this.proto;
+			if(this.superList.length) {
 				const Proto = function(this: Wrapper) {
 					this.constructor = Bound;
 				} as any as { new(): Wrapper };
 
-				Proto.prototype = firstSuper.proto.prototype;
+				Proto.prototype = this.superList[0].proto.prototype;
 				Bound.prototype = new Proto();
 			}
 
+			if(Bound != Module as any) Bound.prototype.__nbindType = this;
+
 			this.registerSuperMethods(this, 1, {});
+			return(this);
+		}
+
+		upcastStep(dst: BindClass, ptr: number): number {
+			if(dst == this) return(ptr);
+
+			for(let i = 0; i < this.superList.length; ++i) {
+				const superPtr = this.superList[i].upcastStep(
+					dst,
+					callUpcast(this.upcastList[i], ptr)
+				);
+				if(superPtr) return(superPtr);
+			}
+
+			return(0);
 		}
 
 		wireRead = (arg: number) => popValue(arg, this.ptrType);
@@ -196,6 +214,7 @@ export namespace _nbind {
 		// Reference to JavaScript class for wrapped instances
 		// of this C++ class.
 
+		classType: BindClass;
 		proto: WrapperClass;
 		ptrType: BindClassPtr;
 
@@ -207,6 +226,8 @@ export namespace _nbind {
 		ready = false;
 
 		superIdList: number[];
+		superList: BindClass[];
+		upcastList: number[];
 		methodTbl: { [name: string]: MethodSpec[] } = {};
 
 		static list: BindClass[] = [];
@@ -216,26 +237,44 @@ export namespace _nbind {
 		return(ptr ? new type.proto(ptrMarker, type.flags, ptr) : null);
 	}
 
-	function pushPointer(obj: Wrapper, type: BindClassPtr) {
-		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
-		return(obj.__nbindPtr);
+	export function pushPointer(obj: Wrapper, type: BindClassPtr) {
+		if(!(obj instanceof Wrapper)) throw(new Error('Type mismatch'));
+
+		let ptr = obj.__nbindPtr;
+		let objType = (obj.__nbindType).classType;
+		let classType = type.classType;
+
+		if(obj instanceof type.proto) {
+			// Fast path, requested type is in object's prototype chain.
+
+			while(objType != classType) {
+				ptr = callUpcast(objType.upcastList[0], ptr);
+				objType = objType.superList[0];
+			}
+		} else {
+			ptr = objType.upcastStep(classType, ptr);
+			if(!ptr) throw(new Error('Type mismatch'));
+		}
+
+		return(ptr);
 	}
 
 	function pushMutablePointer(obj: Wrapper, type: BindClassPtr) {
-		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
+		const ptr = pushPointer(obj, type);
 
 		if(obj.__nbindFlags & TypeFlags.isConst) {
 			throw(new Error('Passing a const value as a non-const argument'));
 		}
 
-		return(obj.__nbindPtr);
+		return(ptr);
 	}
 
 	export class BindClassPtr extends BindType {
 		constructor(spec: TypeSpecWithParam) {
 			super(spec);
 
-			this.proto = (spec.paramList[0] as BindClass).proto;
+			this.classType = (spec.paramList[0] as BindClass).classType;
+			this.proto = this.classType.proto;
 
 			const isConst = spec.flags & TypeFlags.isConst;
 			const isValue = (
@@ -257,17 +296,18 @@ export namespace _nbind {
 			this.wireWrite = (arg: any) => push(arg, this);
 		}
 
+		classType: BindClass;
 		proto: WrapperClass;
 	}
 
-	export function popShared(ptr: number, type: BindClassPtr) {
+	export function popShared(ptr: number, type: SharedClassPtr) {
 		const shared = HEAPU32[ptr / 4];
 		const unsafe = HEAPU32[ptr / 4 + 1];
 
 		return(unsafe ? new type.proto(ptrMarker, type.flags, unsafe, shared) : null);
 	}
 
-	function pushShared(obj: Wrapper, type: BindClassPtr) {
+	function pushShared(obj: Wrapper, type: SharedClassPtr) {
 		if(!(obj instanceof type.proto)) throw(new Error('Type mismatch'));
 
 		return(obj.__nbindShared);
@@ -287,7 +327,8 @@ export namespace _nbind {
 		constructor(spec: TypeSpecWithParam) {
 			super(spec);
 
-			this.proto = (spec.paramList[0] as BindClass).proto;
+			this.classType = (spec.paramList[0] as BindClass).classType;
+			this.proto = this.classType.proto;
 
 			const isConst = spec.flags & TypeFlags.isConst;
 			const push = isConst ? pushShared : pushMutableShared;
@@ -298,6 +339,7 @@ export namespace _nbind {
 
 		readResources = [ resources.pool ];
 
+		classType: BindClass;
 		proto: WrapperClass;
 	}
 

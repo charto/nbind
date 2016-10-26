@@ -15,7 +15,8 @@ extern "C" {
 	extern void _nbind_register_primitive(TYPEID typeID, unsigned int size, unsigned char flag);
 	extern void _nbind_register_type(TYPEID typeID, const char *name);
 	extern void _nbind_register_class(const TYPEID *typeList,
-		const char **policies, const TYPEID *superList, unsigned int superCount,
+		const char **policies, const TYPEID *superList, void *(**upcastList)(void *),
+		unsigned int superCount,
 		funcPtr destructor,
 		const char *name
 	);
@@ -165,17 +166,22 @@ static void initModule() {
 		bindClass->visit();
 		++posPrev;
 
-		TYPEID superIdList[ bindClass->getSuperClassCount()];
+		const unsigned int superCount = bindClass->getSuperClassCount();
+		TYPEID superIdList[superCount];
 		TYPEID *superPtr = superIdList;
+		void *(*upcastList[superCount])(void *);
+		auto *upcastPtr = upcastList;
 
 		for(auto &spec : bindClass->getSuperClassList()) {
 			*superPtr++ = spec.superClass.getTypes()[0];
+			*upcastPtr++ = spec.upcast;
 		}
 
 		_nbind_register_class(
 			bindClass->getTypes(),
 			bindClass->getPolicies(),
 			superIdList,
+			upcastList,
 			bindClass->getSuperClassCount(),
 			bindClass->getDeleter(),
 			bindClass->getName()

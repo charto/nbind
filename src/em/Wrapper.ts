@@ -41,6 +41,7 @@ export namespace _nbind {
 		  * Calls the C++ constructor and returns a numeric heap pointer. */
 		__nbindConstructor: (...args: any[]) => number;
 		__nbindValueConstructor: _globals.Func;
+		__nbindType: _class.BindClass;
 
 		__nbindPtr: number;
 		__nbindShared: number;

@@ -29,6 +29,8 @@ export namespace _nbind {
 	export var getTypes: typeof _globals.getTypes;
 	export var getDynCall: typeof _globals.getDynCall;
 
+	export var pushPointer: typeof _class.pushPointer;
+
 	export var externalList: _external.External<any>[];
 
 	export var listResources: typeof _resource.listResources;
@@ -116,6 +118,7 @@ export namespace _nbind {
 
 	function buildCallerFunction(
 		dynCall: Func,
+		ptrType: _class.BindClassPtr | null,
 		ptr: number,
 		num: number,
 		policyTbl: PolicyTbl | null,
@@ -263,7 +266,7 @@ export namespace _nbind {
 
 	/** Dynamically create an invoker function for calling a C++ class method. */
 
-	export function makeMethodCaller(spec: _class.MethodSpec) {
+	export function makeMethodCaller(ptrType: _class.BindClassPtr, spec: _class.MethodSpec) {
 		const argCount = spec.typeList!.length - 1;
 
 		// The method invoker function adds two arguments to those of the method:
@@ -296,16 +299,16 @@ export namespace _nbind {
 			switch(argCount) {
 				case 0: return(function(this: Wrapper) {
 					return(this.__nbindFlags & mask ? err() :
-				        dynCall(ptr, num, this.__nbindPtr)); });
+				        dynCall(ptr, num, pushPointer(this, ptrType))); });
 				case 1: return(function(this: Wrapper,     a1: any) {
 					return(this.__nbindFlags & mask ? err() :
-				        dynCall(ptr, num, this.__nbindPtr, a1    )); });
+				        dynCall(ptr, num, pushPointer(this, ptrType), a1    )); });
 				case 2: return(function(this: Wrapper,     a1: any, a2: any) {
 					return(this.__nbindFlags & mask ? err() :
-				        dynCall(ptr, num, this.__nbindPtr, a1,      a2    )); });
+				        dynCall(ptr, num, pushPointer(this, ptrType), a1,      a2    )); });
 				case 3: return(function(this: Wrapper,     a1: any, a2: any, a3: any) {
 					return(this.__nbindFlags & mask ? err() :
-				        dynCall(ptr, num, this.__nbindPtr, a1,      a2,      a3    )); });
+				        dynCall(ptr, num, pushPointer(this, ptrType), a1,      a2,      a3    )); });
 				default:
 					// Function takes over 3 arguments or needs type conversion.
 					// Let's create the invoker dynamically then.
@@ -315,11 +318,12 @@ export namespace _nbind {
 
 		return(buildCallerFunction(
 			dynCall,
+			ptrType,
 			ptr,
 			num,
 			spec.policyTbl!,
 			needsWireWrite,
-			'ptr,num,this.__nbindPtr',
+			'ptr,num,pushPointer(this,ptrType)',
 			returnType,
 			argTypeList,
 			mask,
@@ -386,6 +390,7 @@ export namespace _nbind {
 
 		return(buildCallerFunction(
 			dynCall,
+			null,
 			ptr,
 			spec.num!,
 			spec.policyTbl!,
