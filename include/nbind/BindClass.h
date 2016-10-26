@@ -245,8 +245,6 @@ void BindWrapper<Bound> :: testInstance(v8::Local<v8::Object> arg) {
 	}
 }
 
-void *upcastStep(BindClassBase &src, BindClassBase &dst, void *ptr);
-
 template <class Bound>
 Bound *BindWrapperBase :: upcast() {
 	BindClassBase &src = getClass();

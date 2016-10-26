@@ -97,7 +97,11 @@ const char *NBindID :: toString() {
 
 typedef BaseSignature :: SignatureType SignatureType;
 
-static void registerMethods(BindClassBase &bindClass, Local<FunctionTemplate> constructorTemplate) {
+static void registerMethods(
+	BindClassBase &bindClass,
+	Local<FunctionTemplate> constructorTemplate,
+	bool staticOnly
+) {
 	Local<ObjectTemplate> proto = constructorTemplate->PrototypeTemplate();
 	char *nameBuf = nullptr;
 
@@ -129,6 +133,8 @@ static void registerMethods(BindClassBase &bindClass, Local<FunctionTemplate> co
 
 			continue;
 		}
+
+		if(staticOnly && signature->getType() != SignatureType :: func) continue;
 
 		param = new SignatureParam();
 
@@ -204,17 +210,14 @@ static void registerSuperMethods(
 	// Mark this class visited.
 	visitTbl.insert(&bindClass);
 
-	// If not just marking visits, include contents in class constructor template.
-	if(firstSuper >= 0) registerMethods(bindClass, constructorTemplate);
-
 	signed int superNum = 0;
 	signed int nextFirst;
 
 	for(auto &spec : bindClass.getSuperClassList()) {
 		if(superNum++ < firstSuper || firstSuper < 0) {
-			// Contents of the initial first superclass and all of its
+			// Non-static contents of the initial first superclass and all of its
 			// superclasses have already been inherited through the prototype
-			// chain. Just mark them visited recursively.
+			// chain. Mark them visited recursively and inherit static methods.
 			nextFirst = -1;
 		} else {
 			// Complete contents of all other superclasses must be included
@@ -224,6 +227,9 @@ static void registerSuperMethods(
 
 		registerSuperMethods(spec.superClass, nextFirst, constructorTemplate, visitTbl);
 	}
+
+	// Include (possibly only static) contents in class constructor template.
+	registerMethods(bindClass, constructorTemplate, firstSuper < 0);
 }
 
 static void nop(const Nan::FunctionCallbackInfo<v8::Value> &args) {
