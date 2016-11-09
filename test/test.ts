@@ -22,7 +22,7 @@ if(global.gc) {
 	prepareGC = function(obj) { gc(); }
 } else {
 	console.warn('Garbage collector is not accessible. Faking it...');
-	console.warn('Run Node.js with --enable-gc to disable this warning.');
+	console.warn('Run Node.js with --expose-gc to disable this warning.');
 	console.warn('');
 
 	prepareGC = function(obj) { lost = obj; }
