@@ -245,6 +245,7 @@ User guide
 - [Using with TypeScript](#using-with-typescript) <sup>updated in 0.3.5</sup>
 - [Binding plain C](#binding-plain-c)
 - [Debugging](#debugging)
+- [Alternatives](#alternatives)
 
 Installing the examples
 -----------------------
@@ -1332,6 +1333,21 @@ Debugging
 In the browser it can be difficult to stop and debug at the correct spot in
 optimized C++ code. `nbind` provides an `_nbind_debug()` function in `api.h`
 that you can call from C++ to invoke the browser's debugger when using asm.js.
+
+Alternatives
+------------
+
+Very similar:
+
+- [Embind](https://kripken.github.io/emscripten-site/docs/porting/connecting_cpp_and_javascript/embind.html)
+- [v8pp](https://github.com/pmed/v8pp)
+
+Less similar:
+
+- [libembindcefv8](https://github.com/gogoprog/libembindcefv8)
+- [cbind](https://github.com/encharm/node-cbind)
+- [cpgf](https://github.com/cpgf/cpgf)
+- [n2o](https://github.com/agnat/n2o)
 
 Authors
 =======
