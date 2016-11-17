@@ -5,6 +5,7 @@
 	},
 
 	"target_name": "nbind",
+	"type": "loadable_module",
 	"sources": [
 		"common.cc",
 		"reflect.cc"
@@ -68,7 +69,7 @@
 
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
-				"CLANG_CXX_LANGUAGE_STANDARD":"c++11",
+				"CLANG_CXX_LANGUAGE_STANDARD": "c++11",
 				"MACOSX_DEPLOYMENT_TARGET": "10.7",
 				"OTHER_CPLUSPLUSFLAGS": [
 					"-O3",
