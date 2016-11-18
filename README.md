@@ -244,6 +244,7 @@ User guide
 - [Using in web browsers](#using-in-web-browsers) <sup>updated in 0.3.0</sup>
 - [Using with TypeScript](#using-with-typescript) <sup>updated in 0.3.5</sup>
 - [Binding plain C](#binding-plain-c)
+- [Binding external libraries](#binding-external-libraries)
 - [Debugging](#debugging)
 - [Alternatives](#alternatives)
 
@@ -1327,6 +1328,24 @@ A good example is [libui-node](https://github.com/parro-it/libui-node) which
 uses nbind to generate bindings for [libui](https://github.com/andlabs/libui),
 mainly a C library.
 
+Binding external libraries
+--------------------------
+
+If you have external library source code, you should compile it separately
+into a library first, and then link your Node.js addon with it. If the
+library has an installation script and the addon is only intended for your
+own use or other users are willing to do some extra steps, it's easiest to
+install the library globally first.
+
+For best user experience, [libui-node](https://github.com/parro-it/libui-node)
+is an example of distributing an external library together with your package.
+
+For creating the actual bindings, see for example
+[this](https://github.com/charto/nbind/issues/35#issuecomment-259480287) and
+[this](https://github.com/charto/nbind/issues/35#issuecomment-260106802)
+message and [a tutorial](https://github.com/charto/nbind/blob/master/doc/vg-tutorial.md)
+for getting the [`vg`](https://github.com/vgteam/vg) library working.
+
 Debugging
 ---------
 
@@ -1345,6 +1364,7 @@ Very similar:
 Less similar:
 
 - [libembindcefv8](https://github.com/gogoprog/libembindcefv8)
+- [node-ffi](https://github.com/node-ffi/node-ffi)
 - [cbind](https://github.com/encharm/node-cbind)
 - [cpgf](https://github.com/cpgf/cpgf)
 - [n2o](https://github.com/agnat/n2o)
