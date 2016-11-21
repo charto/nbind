@@ -1353,6 +1353,16 @@ In the browser it can be difficult to stop and debug at the correct spot in
 optimized C++ code. `nbind` provides an `_nbind_debug()` function in `api.h`
 that you can call from C++ to invoke the browser's debugger when using asm.js.
 
+For debugging a Node.js addon, if you would normally test it like
+`node test.js`, you can instead use `gdb node` and type `run test.js` in the
+GDB prompt. Then in case of a crash, it will show where it happened,
+inspect the stack etc.
+
+You should also modify `nbind.gypi` (inside nbind's `src` directory)
+and possibly your own `binding.gyp`, to remove any `-O?` flags and instead
+add a `-g` flag, then remove the `build` directory and recompile.
+This allows GDB to show much more information.
+
 Alternatives
 ------------
 
