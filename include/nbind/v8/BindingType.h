@@ -161,7 +161,7 @@ struct BindingType<ValueType<ArgType>> {
 // Numeric and boolean types.
 // The static cast silences a compiler warning in Visual Studio.
 
-#define DEFINE_NATIVE_BINDING_TYPE(ArgType, check, decode, jsClass) \
+#define DEFINE_NATIVE_BINDING_TYPE(ArgType, checker, decode, jsClass) \
 template <> struct BindingType<ArgType> {                   \
 	typedef ArgType Type;                                   \
 	                                                        \
@@ -180,7 +180,7 @@ template <> struct BindingType<ArgType> {                   \
                                                             \
 template <> struct BindingType<StrictType<ArgType>> : public BindingType<ArgType> { \
 	static inline bool checkType(WireType arg) {            \
-		return(arg->check());                               \
+		return(arg->checker());                             \
 	}                                                       \
 }
 

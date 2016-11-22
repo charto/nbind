@@ -42,7 +42,7 @@ struct CheckWire {
 	typedef TypeTransformer<ArgType, PolicyList> Transformed;
 
 	template <typename NanArgs>
-	static inline bool check(const NanArgs &args) {
+	static inline bool checkType(const NanArgs &args) {
 		return(Transformed::Binding::checkType(args[Index]));
 	}
 
@@ -65,7 +65,7 @@ struct Checker<TypeList<Args...>> {
 		bool validFlag = true;
 		(void)args; // Silence possible compiler warning about unused parameter.
 
-		pass(booleanAndTo(Args::check(args), validFlag)...);
+		pass(booleanAndTo(Args::checkType(args), validFlag)...);
 
 		return(validFlag);
 	}
@@ -74,7 +74,7 @@ struct Checker<TypeList<Args...>> {
 	static v8::Local<v8::Value> getTypeError(NanArgs &args, const TYPEID *typeList) {
 		(void)args; // Silence possible compiler warning about unused parameter.
 
-		bool flagList[] = { Args::check(args)..., true };
+		bool flagList[] = { Args::checkType(args)..., true };
 
 		return(makeTypeError(args, sizeof...(Args), typeList, flagList));
 	}
