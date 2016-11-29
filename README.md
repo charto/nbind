@@ -130,6 +130,7 @@ Features
   - On Linux, OS X and Windows.
   - Without changes to your C++ code. Simply add a separate short description at the end.
 - Distribute both **native** code and an **asm.js** fallback binary.
+- Automatically generate TypeScript `.d.ts` definition files from C++ code for IDE autocompletion and compile-time checks of JavaScript side code.
 
 In more detail:
 
@@ -187,7 +188,8 @@ Roadmap
 
 More is coming! Work is ongoing to:
 
-- Automatically generate TypeScript `.d.ts` definition files from C++ code for IDE autocompletion and compile-time checks of JavaScript side code.
+- Precompile to a single native library for all versions Node.js and Electron on the same platform
+  - Precompiled addons for different Node.js versions for efficiently calling the library will be provided with nbind
 - Support native Android and iPhone apps.
 
 Future `0.x.y` versions *should* remain completely backwards-compatible between matching `x` and otherwise with minor changes.
