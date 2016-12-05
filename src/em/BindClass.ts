@@ -206,7 +206,7 @@ export namespace _nbind {
 		}
 
 		wireRead = (arg: number) => popValue(arg, this.ptrType);
-		wireWrite = pushValue;
+		wireWrite = (arg: any) => pushPointer(arg, this.ptrType, true);
 
 		// Optional type conversion code
 		// makeWireWrite = (expr: string) => '_nbind.pushValue(' + expr + ')';
@@ -237,8 +237,12 @@ export namespace _nbind {
 		return(ptr ? new type.proto(ptrMarker, type.flags, ptr) : null);
 	}
 
-	export function pushPointer(obj: Wrapper, type: BindClassPtr) {
-		if(!(obj instanceof Wrapper)) throw(new Error('Type mismatch'));
+	export function pushPointer(obj: Wrapper, type: BindClassPtr, tryValue?: boolean) {
+		if(!(obj instanceof Wrapper)) {
+			if(tryValue) {
+				return(pushValue(obj));
+			} else throw(new Error('Type mismatch'));
+		}
 
 		let ptr = obj.__nbindPtr;
 		let objType = (obj.__nbindType).classType;
