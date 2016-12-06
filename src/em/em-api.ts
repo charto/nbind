@@ -30,51 +30,49 @@ import {typeModule, TypeFlags, TypeSpecWithName} from '../Type';
 setEvil((code: string) => eval(code));
 
 const _removeAccessorPrefix = removeAccessorPrefix;
-
-// tslint:disable-next-line:no-unused-variable
 const _typeModule = typeModule;
 
 export namespace _nbind {
-	export var Pool: typeof _globals.Pool;
-	export var bigEndian: typeof _globals.bigEndian;
+	export let Pool: typeof _globals.Pool;
+	export let bigEndian: typeof _globals.bigEndian;
 
-	export var readTypeIdList: typeof _globals.readTypeIdList;
-	export var readAsciiString: typeof _globals.readAsciiString;
-	export var readPolicyList: typeof _globals.readPolicyList;
-	export var makeTypeKindTbl: typeof _globals.makeTypeKindTbl;
-	export var makeTypeNameTbl: typeof _globals.makeTypeNameTbl;
-	export var constructType: typeof _globals.constructType;
-	export var getType: typeof _globals.getType;
-	export var queryType: typeof _globals.queryType;
+	export let readTypeIdList: typeof _globals.readTypeIdList;
+	export let readAsciiString: typeof _globals.readAsciiString;
+	export let readPolicyList: typeof _globals.readPolicyList;
+	export let makeTypeKindTbl: typeof _globals.makeTypeKindTbl;
+	export let makeTypeNameTbl: typeof _globals.makeTypeNameTbl;
+	export let constructType: typeof _globals.constructType;
+	export let getType: typeof _globals.getType;
+	export let queryType: typeof _globals.queryType;
 
-	export var makeType: typeof _type.makeType;
-	export var getComplexType: typeof _type.getComplexType;
-	export var BindType: typeof _type.BindType;
-	export var PrimitiveType: typeof _type.PrimitiveType;
-	export var BooleanType: typeof _type.BooleanType;
-	export var CStringType: typeof _type.CStringType;
+	export let makeType: typeof _type.makeType;
+	export let getComplexType: typeof _type.getComplexType;
+	export let BindType: typeof _type.BindType;
+	export let PrimitiveType: typeof _type.PrimitiveType;
+	export let BooleanType: typeof _type.BooleanType;
+	export let CStringType: typeof _type.CStringType;
 
-	export var BindClass: typeof _class.BindClass;
-	export var BindClassPtr: typeof _class.BindClassPtr;
-	export var SharedClassPtr: typeof _class.BindClassPtr;
-	export var callUpcast: typeof _class.callUpcast;
+	export let BindClass: typeof _class.BindClass;
+	export let BindClassPtr: typeof _class.BindClassPtr;
+	export let SharedClassPtr: typeof _class.BindClassPtr;
+	export let callUpcast: typeof _class.callUpcast;
 
-	export var ExternalType: typeof _external.ExternalType;
+	export let ExternalType: typeof _external.ExternalType;
 
-	export var CallbackType: typeof _callback.CallbackType;
+	export let CallbackType: typeof _callback.CallbackType;
 
-	export var CreateValueType: typeof _value.CreateValueType;
-	export var Int64Type: typeof _value.Int64Type;
-	export var popValue: typeof _value.popValue;
+	export let CreateValueType: typeof _value.CreateValueType;
+	export let Int64Type: typeof _value.Int64Type;
+	export let popValue: typeof _value.popValue;
 
-	export var ArrayType: typeof _std.ArrayType;
-	export var StringType: typeof _std.StringType;
+	export let ArrayType: typeof _std.ArrayType;
+	export let StringType: typeof _std.StringType;
 
-	export var makeMethodCaller: typeof _caller.makeMethodCaller;
+	export let makeMethodCaller: typeof _caller.makeMethodCaller;
 
-	export var BufferType: typeof _buffer.BufferType;
+	export let BufferType: typeof _buffer.BufferType;
 
-	export var toggleLightGC: typeof _gc.toggleLightGC;
+	export let toggleLightGC: typeof _gc.toggleLightGC;
 }
 
 publishNamespace('_nbind');
@@ -114,13 +112,13 @@ class nbind { // tslint:disable-line:class-name
 		};
 
 		_nbind.makeTypeNameTbl = {
+			'Buffer': _nbind.BufferType,
+			'External': _nbind.ExternalType,
+			'Int64': _nbind.Int64Type,
+			'_nbind_new': _nbind.CreateValueType,
 			'bool': _nbind.BooleanType,
 			'cbFunction &': _nbind.CallbackType,
-			'std::string': _nbind.StringType,
-			'External': _nbind.ExternalType,
-			'Buffer': _nbind.BufferType,
-			'Int64': _nbind.Int64Type,
-			'_nbind_new': _nbind.CreateValueType
+			'std::string': _nbind.StringType
 		};
 
 		Module['toggleLightGC'] = _nbind.toggleLightGC;

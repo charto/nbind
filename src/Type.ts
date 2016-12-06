@@ -1,7 +1,7 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-export var {
+export const {
 	Type, makeType, structureList
 } = typeModule(typeModule);
 
@@ -94,7 +94,7 @@ export const enum StateFlags {
 	none = 0,
 
 	isPersistent = 1,
-	isDeleted = 2,
+	isDeleted = 2
 }
 
 // These must match C++ enum StructureType in TypeID.h

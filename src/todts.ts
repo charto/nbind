@@ -5,13 +5,13 @@ import {Reflect, BindType, BindClass, BindMethod, BindProperty} from './reflect'
 import {TypeFlags} from './Type';
 
 const nameTbl: { [key: string]: [string, boolean] } = {
-	'void': ['void', false],
+	'Buffer': ['number[] | ArrayBuffer | DataView | Uint8Array | Buffer', true],
+	'External': ['any', false],
+	'Int64': ['number', false], // | Int64 (interface)?
 	'bool': ['boolean', false],
 	'cbFunction &': ['(...args: any[]) => any', true],
 	'std::string': ['string', false],
-	'External': ['any', false],
-	'Buffer': ['number[] | ArrayBuffer | DataView | Uint8Array | Buffer', true],
-	'Int64': ['number', false] // | Int64 (interface)?
+	'void': ['void', false]
 };
 
 type PolicyTbl = { [key: string]: boolean };

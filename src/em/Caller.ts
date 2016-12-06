@@ -26,15 +26,15 @@ export namespace _nbind {
 	type FuncList = _globals.FuncList;
 	type TypeIdList = _globals.TypeIdList;
 
-	export var getTypes: typeof _globals.getTypes;
-	export var getDynCall: typeof _globals.getDynCall;
+	export let getTypes: typeof _globals.getTypes;
+	export let getDynCall: typeof _globals.getDynCall;
 
-	export var pushPointer: typeof _class.pushPointer;
+	export let pushPointer: typeof _class.pushPointer;
 
-	export var externalList: _external.External<any>[];
+	export let externalList: _external.External<any>[];
 
-	export var listResources: typeof _resource.listResources;
-	export var resources: typeof _resource.resources;
+	export let listResources: typeof _resource.listResources;
+	export let resources: typeof _resource.resources;
 
 	/** Make a list of argument names a1, a2, a3...
 	  * for dynamically generating function source code. */

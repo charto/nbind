@@ -19,9 +19,9 @@ const _defineHidden = defineHidden;
 
 export namespace _nbind {
 
-	export var ptrMarker: typeof _class.ptrMarker;
+	export let ptrMarker: typeof _class.ptrMarker;
 
-	export var mark: typeof _gc.mark;
+	export let mark: typeof _gc.mark;
 
 	/** Base class for wrapped instances of bound C++ classes.
 	  * Note that some hacks avoid ever constructing this,

@@ -20,9 +20,9 @@ export namespace _nbind {
 
 	export const { Type, makeType, getComplexType } = _typeModule(_typeModule);
 
-	export var Pool: typeof _globals.Pool;
+	export let Pool: typeof _globals.Pool;
 
-	export var resources: typeof _resource.resources;
+	export let resources: typeof _resource.resources;
 
 	// A type definition, which registers itself upon construction.
 

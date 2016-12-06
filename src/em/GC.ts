@@ -31,7 +31,7 @@ export namespace _nbind {
 	}
 
 	// tslint:disable-next-line:no-empty
-	export var mark = (obj: Wrapper) => {};
+	export let mark = (obj: Wrapper) => {};
 
 	export function toggleLightGC(enable: boolean) {
 		if(enable) {

@@ -20,21 +20,21 @@ import {_nbind as _external} from './External';
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
-	export var BindType = _type.BindType;
-	export var External = _external.External;
+	export const BindType = _type.BindType;
+	export const External = _external.External;
 }
 
 export namespace _nbind {
 
-	export var readTypeIdList: typeof _globals.readTypeIdList;
-	export var throwError: typeof _globals.throwError;
+	export let readTypeIdList: typeof _globals.readTypeIdList;
+	export let throwError: typeof _globals.throwError;
 
-	export var makeJSCaller: typeof _caller.makeJSCaller;
+	export let makeJSCaller: typeof _caller.makeJSCaller;
 
 	// List of invoker functions for all argument and return value combinations
 	// seen so far.
 
-	export var callbackSignatureList: _globals.Func[] = [];
+	export let callbackSignatureList: _globals.Func[] = [];
 
 	export class CallbackType extends BindType {
 		wireWrite = (func: _globals.Func) => {

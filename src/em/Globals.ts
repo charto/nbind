@@ -25,13 +25,13 @@ export namespace _nbind {
 	export type Invoker = (ptr: number, ...args: any[]) => any;
 	export type TypeIdList = (number | string)[];
 
-	export var BindType: typeof _type.BindType;
-	export var getComplexType: typeof _type.getComplexType;
+	export let BindType: typeof _type.BindType;
+	export let getComplexType: typeof _type.getComplexType;
 
-	export var resources: typeof _resource.resources;
-	export var listResources: typeof _resource.listResources;
+	export let resources: typeof _resource.resources;
+	export let listResources: typeof _resource.listResources;
 
-	export var makeOverloader: typeof _caller.makeOverloader;
+	export let makeOverloader: typeof _caller.makeOverloader;
 
 	// Mapping from numeric typeIDs and type names to objects with type information.
 
@@ -77,8 +77,8 @@ export namespace _nbind {
 	}
 
 	type TypeConstructor = { new(spec: TypeSpecWithName): _type.BindType };
-	export var makeTypeKindTbl: { [flags: number]: TypeConstructor };
-	export var makeTypeNameTbl: { [name: string]: TypeConstructor };
+	export let makeTypeKindTbl: { [flags: number]: TypeConstructor };
+	export let makeTypeNameTbl: { [name: string]: TypeConstructor };
 
 	export function constructType(kind: TypeFlags, spec: TypeSpecWithName) {
 		const construct = (
@@ -224,7 +224,7 @@ export namespace _nbind {
 		throw(new Error(message));
 	}
 
-	export var bigEndian = false;
+	export let bigEndian = false;
 
 	// Export the namespace to Emscripten compiled output.
 	// This must be at the end of the namespace!

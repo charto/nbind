@@ -17,7 +17,7 @@ import {_nbind as _type} from './BindingType';
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
-	export var BindType = _type.BindType;
+	export const BindType = _type.BindType;
 }
 
 export namespace _nbind {
@@ -28,7 +28,7 @@ export namespace _nbind {
 	// The first element is a dummy value just so that a valid index to
 	// the list always tests as true (useful for the free list implementation).
 
-	export var externalList: (External<any> | number)[] = [0];
+	export let externalList: (External<any> | number)[] = [0];
 
 	// Head of free list for recycling available slots in the externals list.
 	let firstFreeExternal = 0;

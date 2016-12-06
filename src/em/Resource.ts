@@ -57,7 +57,7 @@ export namespace _nbind {
 		return(result);
 	}
 
-	export var resources = {
+	export const resources = {
 		pool: new Resource(
 			'var used=HEAPU32[_nbind.Pool.usedPtr],page=HEAPU32[_nbind.Pool.pagePtr];',
 			'_nbind.Pool.lreset(used,page);'

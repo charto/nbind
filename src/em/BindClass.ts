@@ -15,25 +15,25 @@ import {TypeFlags, TypeSpecWithName, TypeSpecWithParam, PolicyTbl} from '../Type
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
-	export var BindType = _type.BindType;
-	export var Wrapper = _wrapper.Wrapper;
+	export const BindType = _type.BindType;
+	export const Wrapper = _wrapper.Wrapper;
 }
 
 export namespace _nbind {
 
-	export var addMethod: typeof _globals.addMethod;
-	export var getType: typeof _globals.getType;
+	export let addMethod: typeof _globals.addMethod;
+	export let getType: typeof _globals.getType;
 
-	export var pushValue: typeof _value.pushValue;
-	export var popValue: typeof _value.popValue;
+	export let pushValue: typeof _value.pushValue;
+	export let popValue: typeof _value.popValue;
 
-	export var resources: typeof _resource.resources;
+	export let resources: typeof _resource.resources;
 
-	export var makeCaller: typeof _caller.makeCaller;
-	export var makeMethodCaller: typeof _caller.makeMethodCaller;
+	export let makeCaller: typeof _caller.makeCaller;
+	export let makeMethodCaller: typeof _caller.makeMethodCaller;
 
 	type Wrapper = _wrapper.Wrapper;
-	export var makeBound: typeof _wrapper.makeBound;
+	export let makeBound: typeof _wrapper.makeBound;
 
 	// Any subtype (not instance but type) of Wrapper.
 	// Declared as anything that constructs something compatible with Wrapper.
@@ -46,7 +46,7 @@ export namespace _nbind {
 
 	export const ptrMarker = {};
 
-	export var callUpcast: (upcast: number, ptr: number) => number;
+	export let callUpcast: (upcast: number, ptr: number) => number;
 
 	export interface MethodSpec {
 		name: string;

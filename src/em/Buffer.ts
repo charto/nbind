@@ -12,16 +12,16 @@ import {PolicyTbl} from '../Type';
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
-	export var Pool = _globals.Pool;
-	export var BindType = _type.BindType;
-	export var External = _external.External;
+	export const Pool = _globals.Pool;
+	export const BindType = _type.BindType;
+	export const External = _external.External;
 }
 
 export namespace _nbind {
 
-	export var externalList: typeof _external.externalList;
+	export let externalList: typeof _external.externalList;
 
-	export var resources: typeof _resource.resources;
+	export let resources: typeof _resource.resources;
 
 	class ExternalBuffer extends External<
 		number[] | ArrayBuffer | DataView | Uint8Array | Buffer

@@ -14,13 +14,13 @@ import {TypeSpecWithParam, PolicyTbl} from '../Type';
 setEvil((code: string) => eval(code));
 
 export namespace _nbind {
-	export var Pool = _globals.Pool;
-	export var BindType = _type.BindType;
+	export const Pool = _globals.Pool;
+	export const BindType = _type.BindType;
 }
 
 export namespace _nbind {
 
-	export var resources: typeof _resource.resources;
+	export let resources: typeof _resource.resources;
 
 	export function pushArray(arr: any[], type: ArrayType) {
 		if(!arr) return(0);

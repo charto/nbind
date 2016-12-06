@@ -60,8 +60,8 @@
     "autogypi": "~0.2.2",
     "cbuild": "~0.1.1",
     "node-gyp": "^3.4.0",
-    "tap": "^8.0.0",
-    "tslint": "^3.15.1",
-    "typescript": "^2.0.8"
+    "tap": "^8.0.1",
+    "tslint": "^4.0.2",
+    "typescript": "^2.0.10"
   }
 }

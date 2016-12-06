@@ -11,7 +11,6 @@
 		"interface-name": [ true, "never-prefix" ],
 		"jsdoc-format": false,
 		"label-position": true,
-		"label-undefined": true,
 		"max-line-length": [ true, 96 ],
 		"member-access": false,
 		"member-ordering": [ true, { "order": [
@@ -38,10 +37,8 @@
 		"no-consecutive-blank-lines": true,
 		"no-console": [ true, "log", "warn", "error" ],
 		"no-construct": true,
-		"no-constructor-vars": true,
 		"no-debugger": false,
 		"no-default-export": true,
-		"no-duplicate-key": true,
 		"no-duplicate-variable": true,
 		"no-empty": true,
 		"no-eval": false,
@@ -56,9 +53,7 @@
 		"no-string-literal": false,
 		"no-switch-case-fall-through": true,
 		"no-trailing-whitespace": true,
-		"no-unreachable": true,
 		"no-unused-expression": true,
-		"no-unused-variable": true,
 		"no-use-before-declare": true,
 		"no-var-keyword": true,
 		"no-var-requires": true,
@@ -80,7 +75,6 @@
 			{ "call-signature": "onespace", "index-signature": "onespace", "parameter": "onespace", "property-declaration": "onespace", "variable-declaration": "onespace" }
 		],
 		"use-isnan": true,
-		"use-strict": false,
 		"variable-name": [ true, "check-format", "allow-leading-underscore", "allow-pascal-case" ],
 		"whitespace": [ true, "check-decl", "check-operator", "check-module", "check-separator", "check-type", "check-typecast" ]
 	}

@@ -24,17 +24,17 @@ setEvil((code: string) => eval(code));
 const _defineHidden = defineHidden;
 
 export namespace _nbind {
-	export var BindType = _type.BindType;
+	export const BindType = _type.BindType;
 }
 
 export namespace _nbind {
 
-	export var popShared: typeof _class.popShared;
+	export let popShared: typeof _class.popShared;
 	type BindClassPtr = _class.BindClassPtr;
 
-	export var throwError: typeof _globals.throwError;
-	export var typeNameTbl: typeof _globals.typeNameTbl;
-	export var bigEndian: typeof _globals.bigEndian;
+	export let throwError: typeof _globals.throwError;
+	export let typeNameTbl: typeof _globals.typeNameTbl;
+	export let bigEndian: typeof _globals.bigEndian;
 
 	export interface ValueObject {
 		fromJS(output: (...args: any[]) => void): void;
