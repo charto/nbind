@@ -5,6 +5,8 @@
 
 namespace nbind {
 
+const char *stripGetterPrefix(const char *name, char *&nameBuf);
+
 class NBindID {
 
 public:

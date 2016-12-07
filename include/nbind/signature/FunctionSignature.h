@@ -27,7 +27,7 @@ public:
 		return(reinterpret_cast<funcPtr>(func));
 	}
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
 	template <typename V8Args, typename NanArgs>
 	static void callInner(const typename Parent::MethodInfo &method, V8Args &args, NanArgs &nanArgs, void *) {
@@ -43,6 +43,12 @@ public:
 			args,
 			SignatureParam::get(args)->methodNum
 		);
+	}
+
+#elif defined(BUILDING_NODE_EXTENSION) && defined(NODE_USE_NAPI)
+
+	static void call(napi_env env, const napi_func_cb_info info) {
+		printf("QUUX\n");
 	}
 
 #elif defined(EMSCRIPTEN)

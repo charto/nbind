@@ -13,16 +13,23 @@
 #include "MethodDef.h"
 #include "ArgStorage.h"
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
-#	include "v8/Caller.h"
+#	include "nan/Caller.h"
 #	include "signature/SignatureParam.h"
 #	include "signature/BaseSignature.h" // Needs Caller
-#	include "v8/Overloader.h" // Needs ArgStorage
+#	include "nan/Overloader.h" // Needs ArgStorage
 #	include "BindClass.h"     // Needs Overloader and BaseSignature
-#	include "v8/ValueObj.h"   // Needs BindClass
-#	include "v8/Int64.h"
-#	include "v8/Creator.h"    // Needs ArgStorage
+#	include "nan/ValueObj.h"   // Needs BindClass
+#	include "nan/Int64.h"
+#	include "nan/Creator.h"    // Needs ArgStorage
+
+#elif defined(BUILDING_NODE_EXTENSION) && defined(NODE_USE_NAPI)
+
+#	include "signature/SignatureParam.h"
+#	include "signature/BaseSignature.h"
+#	include "napi/Overloader.h"
+#	include "BindClass.h"
 
 #elif defined(EMSCRIPTEN)
 
@@ -79,7 +86,7 @@ public:
 	BindDefiner(const char *name) : bindClass(BindClass<Bound>::getInstance()) {
 		bindClass.init(name);
 
-#		if defined(BUILDING_NODE_EXTENSION)
+#		if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 			// Set up handler to wrap object pointers instantiated in C++
 			// for use in JavaScript.
 

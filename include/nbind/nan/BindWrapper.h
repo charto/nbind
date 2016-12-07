@@ -11,11 +11,6 @@
 
 #endif // DUPLICATE_POINTERS
 
-#include <v8.h>
-#include <node.h>
-#include <node_buffer.h>
-#include <nan.h>
-
 namespace nbind {
 
 template <typename A, typename B>

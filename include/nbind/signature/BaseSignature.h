@@ -123,7 +123,7 @@ public:
 		return(funcVect.size() - 1);
 	}
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
 	// Specialize static caller functions defined in Caller.h.
 
@@ -218,6 +218,8 @@ public:
 			Nan::ThrowError(message);
 		}
 	}
+
+#elif defined(BUILDING_NODE_EXTENSION) && defined(NODE_USE_NAPI)
 
 #endif // BUILDING_NODE_EXTENSION
 

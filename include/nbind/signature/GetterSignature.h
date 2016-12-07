@@ -23,7 +23,7 @@ public:
 
 	static constexpr auto typeExpr = BaseSignature :: SignatureType :: getter;
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
 	template <typename V8Args, typename NanArgs>
 	static void callInner(const typename Parent::MethodInfo &method, V8Args &args, NanArgs &nanArgs, Bound *target) {

@@ -27,19 +27,25 @@ public:
 
 	// Get type of method definitions to use in function pointers.
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
 	typedef std::remove_pointer<Nan::FunctionCallback>::type jsMethod;
 	typedef std::remove_pointer<Nan::GetterCallback>::type jsGetter;
 	typedef std::remove_pointer<Nan::SetterCallback>::type jsSetter;
 
-#else
+#elif defined(BUILDING_NODE_EXTENSION) && defined(NODE_USE_NAPI)
+
+	typedef void (jsMethod)(napi_env env, const napi_func_cb_info info);
+	typedef void (jsGetter)();
+	typedef void (jsSetter)();
+
+#elif defined(EMSCRIPTEN)
 
 	typedef void (jsMethod)();
 	typedef void (jsGetter)();
 	typedef void (jsSetter)();
 
-#endif // BUILDING_NODE_EXTENSION
+#endif
 
 	const TYPEID *getTypes() const { return(idList); }
 
@@ -55,7 +61,7 @@ public:
 
 	void addConstructor(BaseSignature *signature) {
 
-#		if defined(BUILDING_NODE_EXTENSION)
+#		if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
 			Overloader::addMethod(
 				wrapperConstructorNum,
@@ -69,7 +75,7 @@ public:
 				signature->getValueConstructor()
 			);
 
-#		endif // BUILDING_NODE_EXTENSION
+#		endif // BUILDING_NODE_EXTENSION && !NODE_USE_NAPI
 
 		addMethod(nullptr, signature);
 
@@ -98,7 +104,7 @@ public:
 
 	jsMethod *getDeleter() const { return(deleter); }
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
 	unsigned int wrapperConstructorNum = Overloader::addGroup();
 	unsigned int valueConstructorNum = Overloader::addGroup();
@@ -108,6 +114,11 @@ public:
 
 	Nan::Persistent<v8::FunctionTemplate> constructorTemplate;
 	Nan::Persistent<v8::FunctionTemplate> superTemplate;
+
+#elif defined(BUILDING_NODE_EXTENSION) && defined(NODE_USE_NAPI)
+
+	unsigned int wrapperConstructorNum = 0;
+	unsigned int valueConstructorNum = 0;
 
 #endif // BUILDING_NODE_EXTENSION
 
@@ -202,13 +213,18 @@ public:
 	template <class SuperType>
 	inline void addSuperClass();
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
 	static void destroy(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		v8::Local<v8::Object> targetWrapped = args.This();
 		auto wrapper = node::ObjectWrap::Unwrap<BindWrapper<Bound>>(targetWrapped);
 
 		wrapper->destroy();
+	}
+
+#elif defined(BUILDING_NODE_EXTENSION) && defined(NODE_USE_NAPI)
+
+	static void destroy(void) {
 	}
 
 #elif defined(EMSCRIPTEN)
@@ -225,7 +241,7 @@ public:
 
 };
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
 template <class Bound>
 BindClassBase &BindWrapper<Bound> :: getBindClass() {

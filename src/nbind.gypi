@@ -49,8 +49,9 @@
 		}, {
 
 			"sources": [
-				"v8/Buffer.cc",
-				"v8/Binding.cc"
+				"native.cc",
+				"nan/Buffer.cc",
+				"nan/Binding.cc"
 			],
 
 			"cflags_cc": [

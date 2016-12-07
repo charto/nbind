@@ -66,20 +66,32 @@ private:
 #include "TypeStd.h"
 #include "Policy.h"
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
-#	include "v8/BindWrapper.h"
-#	include "v8/BindingType.h"
+#	include <v8.h>
+#	include <node.h>
+#	include <node_buffer.h>
+#	include <nan.h>
+
+#	include "nan/BindWrapper.h"
+#	include "nan/BindingType.h"
 #	include "TypeTransformer.h"
-#	include "v8/NBind.h"
-#	include "v8/Output.h"
-#	include "v8/Convert.h"
-#	include "v8/ArgFromWire.h"
-#	include "v8/External.h"
-#	include "v8/Callback.h"
-#	include "v8/BindingStd.h"
+#	include "native.h"
+#	include "nan/Output.h"
+#	include "nan/Convert.h"
+#	include "nan/ArgFromWire.h"
+#	include "nan/External.h"
+#	include "nan/Callback.h"
+#	include "nan/BindingStd.h"
 #	include "Buffer.h"
-#	include "v8/Buffer.h"
+#	include "nan/Buffer.h"
+
+#elif defined(BUILDING_NODE_EXTENSION) && defined(NODE_USE_NAPI)
+
+#	include <node_jsvmapi.h>
+
+#	include "native.h"
+#	include "napi/Callback.h"
 
 #elif defined(EMSCRIPTEN)
 

@@ -26,7 +26,7 @@ public:
 
 	static constexpr auto typeExpr = BaseSignature :: SignatureType :: construct;
 
-#if defined(BUILDING_NODE_EXTENSION)
+#if defined(BUILDING_NODE_EXTENSION) && !defined(NODE_USE_NAPI)
 
 	typedef Creator<
 		Bound,
@@ -44,6 +44,14 @@ public:
 
 	static void createValue(ArgStorage &storage, const Nan::FunctionCallbackInfo<v8::Value> &args) {
 		ConstructWrapper::createValue(storage, args);
+	}
+
+#elif defined(BUILDING_NODE_EXTENSION) && defined(NODE_USE_NAPI)
+
+	static void call(napi_env env, const napi_func_cb_info info) {
+	}
+
+	static void createValue(ArgStorage &storage, napi_env env, const napi_func_cb_info info) {
 	}
 
 #elif defined(EMSCRIPTEN)
