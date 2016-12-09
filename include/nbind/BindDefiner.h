@@ -212,42 +212,53 @@ public:
 	template <typename... Args>
 	struct Overloaded {
 
+		Overloaded(BindDefiner &parentDefiner) : parentDefiner(parentDefiner), definer(*this) {}
+
+		Overloaded(const Overloaded &other) : parentDefiner(other.parentDefiner), definer(*this) {}
+
+		Overloaded(Overloaded &&other) : parentDefiner(other.parentDefiner), definer(*this) {}
+
 		// Overloaded static method.
 
 		template <typename ReturnType, typename... Policies>
-		static void multimethod(
-			BindDefiner &definer,
+		BindDefiner &method(
 			const char* name,
 			ReturnType(*func)(Args...),
 			Policies... policies
 		) {
-			definer.method(name, func, policies...);
+			return(parentDefiner.method(name, func, policies...));
 		}
 
 		// Overloaded dynamic non-const method.
 
 		template <typename ReturnType, typename... Policies>
-		static void multimethod(
-			BindDefiner &definer,
+		BindDefiner &method(
 			const char* name,
 			ReturnType (Bound::*method)(Args...),
 			Policies... policies
 		) {
-			definer.method(name, method, policies...);
+			return(parentDefiner.method(name, method, policies...));
 		}
 
 		// Overloaded dynamic const method.
 
 		template <typename ReturnType, typename... Policies>
-		static void multimethod(
-			BindDefiner &definer,
+		BindDefiner &method(
 			const char* name,
 			ReturnType (Bound::*method)(Args...) const,
 			Policies... policies
 		) {
-			definer.method(name, method, policies...);
+			return(parentDefiner.method(name, method, policies...));
 		}
+
+		BindDefiner &parentDefiner;
+		Overloaded &definer;
 	};
+
+	template <typename... Args>
+	Overloaded<Args...> overloaded() {
+		return(Overloaded<Args...>(*this));
+	}
 
 	template <typename GetterType, typename... Policies>
 	BindDefiner &property(
