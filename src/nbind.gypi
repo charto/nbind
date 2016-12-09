@@ -7,8 +7,8 @@
 	"target_name": "nbind",
 	"type": "loadable_module",
 	"sources": [
-		"common.cc",
-		"reflect.cc"
+		"common.cc"
+#		"reflect.cc"
 	],
 	"include_dirs": [
 		"../include"
@@ -51,7 +51,8 @@
 			"sources": [
 				"native.cc",
 				"nan/Buffer.cc",
-				"nan/Binding.cc"
+				"nan/Binding.cc",
+				"napi/Binding.cc"
 			],
 
 			"cflags_cc": [

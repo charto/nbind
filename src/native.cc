@@ -94,7 +94,7 @@ const char *NBindID :: toString() {
 
 #include "nbind/nbind.h"
 
-#ifndef NBIND_USE_NAPI
+#ifndef NODE_USE_NAPI
 
 NBIND_CLASS(NBind) {
 	construct<>();

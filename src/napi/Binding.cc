@@ -27,8 +27,8 @@ void RunCallback(napi_env env, const napi_func_cb_info info) {
 
 static void registerMethods(
 	BindClassBase &bindClass,
-	napi_env &env,
-	napi_value &obj,
+	napi_env env,
+	napi_value constructor,
 	bool staticOnly
 ) {
 /*
@@ -86,7 +86,7 @@ static void registerMethods(
 
 				napi_set_property(
 					env,
-					obj,
+					constructor,
 					napi_property_name(env, func.getName()),
 					caller
 				);

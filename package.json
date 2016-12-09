@@ -23,7 +23,7 @@
     "clean-asm": "cd test/em && node-gyp clean",
     "config-test": "autogypi -c test/autogypi.json",
     "test-asm": "npm run config-test && cd test/em && node-gyp configure build --asmjs=1 && node ../../bin/ndts . > ../testlib.d.ts && tsc -p .. && tap ../test.js",
-    "test":     "npm run config-test && cd test/v8 && node-gyp configure build           && node ../../bin/ndts . > ../testlib.d.ts && tsc -p .. && tap ../test.js --gc && tap ../test-v8.js"
+    "test":     "npm run config-test && cd test/v8 && node-gyp configure build           && tsc -p .. && tap ../test.js --gc && tap ../test-v8.js"
   },
   "author": "Juha Järvi",
   "license": "MIT",
@@ -62,6 +62,6 @@
     "node-gyp": "^3.4.0",
     "tap": "^8.0.1",
     "tslint": "^4.0.2",
-    "typescript": "^2.0.10"
+    "typescript": "^2.1.4"
   }
 }

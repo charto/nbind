@@ -33,7 +33,7 @@ if(global.gc) {
 	}
 }
 
-binding.toggleLightGC(true);
+// binding.toggleLightGC(true);
 
 class Coord {
 	constructor(x: number, y: number) {
@@ -57,6 +57,9 @@ declare module './testlib' {
 
 test('Methods and primitive types', function(t: any) {
 	var Type = testModule.PrimitiveMethods;
+
+console.log('TYPE:');
+console.log(Type);
 
 	(function() {
 		var obj = new Type(0);
