@@ -16,7 +16,7 @@ const testModule = binding.lib;
 let prepareGC: (obj: any) => void;
 var lost: any = null;
 
-const global = (0, eval)('this');
+const global = (0 || eval)('this');
 
 if(global.gc) {
 	prepareGC = function(obj) { gc(); }

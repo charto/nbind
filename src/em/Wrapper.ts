@@ -55,8 +55,9 @@ export namespace _nbind {
 	) {
 		class Bound extends Wrapper {
 			constructor(marker: {}, flags: number, ptr: number, shared?: number) {
-				// super() never gets called here but TypeScript 1.8 requires it.
-				if((false && super()) || !(this instanceof Bound)) {
+				super();
+
+				if(!(this instanceof Bound)) {
 
 					// Constructor called without new operator.
 					// Make correct call with given arguments.

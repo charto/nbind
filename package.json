@@ -52,7 +52,7 @@
     "win32"
   ],
   "dependencies": {
-    "emscripten-library-decorator": "~0.1.8",
+    "emscripten-library-decorator": "~0.2.0",
     "mkdirp": "~0.5.1",
     "nan": "^2.4.0"
   },
@@ -62,6 +62,6 @@
     "node-gyp": "^3.4.0",
     "tap": "^8.0.1",
     "tslint": "^4.0.2",
-    "typescript": "^2.0.10"
+    "typescript": "^2.1.4"
   }
 }
