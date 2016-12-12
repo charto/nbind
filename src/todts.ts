@@ -104,8 +104,11 @@ export function dump(reflect: Reflect) {
 	let indent: string;
 	let staticPrefixCC: string;
 	let staticPrefixJS: string;
+	let classList = reflect.classList;
 
-	for(let bindClass of reflect.classList.concat([reflect.globalScope])) {
+	if(reflect.globalScope) classList = classList.concat([reflect.globalScope]);
+
+	for(let bindClass of classList) {
 		if(bindClass.isClass) {
 			indent = '\t';
 			staticPrefixCC = 'static ';

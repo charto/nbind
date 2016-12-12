@@ -193,7 +193,7 @@ export class Reflect {
 		}
 
 		this.classList.sort(compareName);
-		this.globalScope.methodList.sort(compareName);
+		if(this.globalScope) this.globalScope.methodList.sort(compareName);
 	}
 
 	private readPrimitive(id: number, size: number, flags: number) {
