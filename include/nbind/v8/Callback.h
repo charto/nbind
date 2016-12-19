@@ -7,6 +7,11 @@
 
 namespace nbind {
 
+// Exception signaling a JavaScript callback has thrown, and an exception is
+// now bubbling up the JavaScript stack.
+
+class cbException : public std::exception {};
+
 // cbFunction is a functor that can be called with any number of arguments of any type
 // compatible with JavaScript. Types are autodetected from a parameter pack.
 // Normally the function returns nothing when called, but it has a templated
@@ -37,7 +42,11 @@ public:
 			Nan::Null()
 		};
 
-		return(convertFromWire<ReturnType>(func.Call(sizeof...(Args), argv)));
+		WireType result = func.Call(sizeof...(Args), argv);
+
+		if(result.IsEmpty()) throw(cbException());
+
+		return(convertFromWire<ReturnType>(result));
 	}
 
 	template <typename ReturnType, typename... Args>
@@ -51,7 +60,11 @@ public:
 			Nan::Null()
 		};
 
-		return(convertFromWire<ReturnType>(func.Call(target, sizeof...(Args), argv)));
+		WireType result = func.Call(target, sizeof...(Args), argv);
+
+		if(result.IsEmpty()) throw(cbException());
+
+		return(convertFromWire<ReturnType>(result));
 	}
 
 	v8::Local<v8::Function> getJsFunction() const { return(func.GetFunction()); }

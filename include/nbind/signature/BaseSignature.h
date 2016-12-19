@@ -210,6 +210,8 @@ public:
 			Status::clearError();
 			Signature::callInner(method, args, nanArgs, target);
 			if(Status::getError() != nullptr) Nan::ThrowError(Status::getError());
+		} catch(const cbException &ex) {
+			// A JavaScript exception is already heading up the stack.
 		} catch(const std::exception &ex) {
 			const char *message = Status::getError();
 

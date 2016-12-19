@@ -175,6 +175,10 @@ test('Callbacks', function(t: any) {
 		t.strictDeepEqual([foo, bar, baz], ['foo', 'bar', 'baz']);
 	});
 
+	t.throws(function() {
+		Type.callNegate(function(x: boolean) { throw(new Error('Test error')); }, true);
+	}, {message: 'Test error'});
+
 	t.end();
 });
 

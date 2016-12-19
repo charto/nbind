@@ -88,6 +88,8 @@ public:
 			}
 
 			args.GetReturnValue().Set(args.This());
+		} catch(const cbException &ex) {
+			// A JavaScript exception is already heading up the stack.
 		} catch(const std::exception &ex) {
 			const char *message = Status::getError();
 
