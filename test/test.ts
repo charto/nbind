@@ -175,9 +175,13 @@ test('Callbacks', function(t: any) {
 		t.strictDeepEqual([foo, bar, baz], ['foo', 'bar', 'baz']);
 	});
 
-	t.throws(function() {
-		Type.callNegate(function(x: boolean) { throw(new Error('Test error')); }, true);
-	}, {message: 'Test error'});
+	if(process.versions.modules > 14) {
+		// Node 0.12 and earlier seem unable to catch exceptions from callbacks.
+
+		t.throws(function() {
+			Type.callNegate(function(x: boolean) { throw(new Error('Test error')); }, true);
+		}, {message: 'Test error'});
+	}
 
 	t.end();
 });
