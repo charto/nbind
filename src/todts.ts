@@ -160,7 +160,7 @@ export function dump(reflect: Reflect) {
 
 			classCodeList.push(
 				'export interface ' + superClass + ' extends ' + bindClass.superList.map(
-					(superClass: BindClass) => superClass.name
+					(superClassEntry: BindClass) => superClassEntry.name
 				).join(', ') + ' {}\n' +
 				'export var ' + superClass + ': { new(): ' + superClass + ' };'
 			);

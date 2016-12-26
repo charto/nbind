@@ -30,8 +30,6 @@
 
 			"cflags": [
 				"-O3",
-				"-std=c++11",
-				"-fno-exceptions",
 				"--pre-js", "<(_prejs_path)",
 				"--post-js", "<(_postjs_path)",
 				"--js-library", "<(_jslib_path)",
@@ -39,6 +37,11 @@
 				"-s", "EXPORTED_FUNCTIONS=[\"_nbind_init\",\"_nbind_value\"]",
 				"-s", "DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\"nbind_value\",\"\\$$Browser\"]"
 			],
+
+                        "cflags_cc": [
+				"-std=c++11",
+				"-fno-exceptions",
+                        ],
 
 			"xcode_settings": {
 				"GCC_GENERATE_DEBUGGING_SYMBOLS": "NO",
@@ -53,8 +56,11 @@
 				"v8/Binding.cc"
 			],
 
+                        "cflags": [
+				"-O3"
+                        ],
+
 			"cflags_cc": [
-				"-O3",
 				"-std=c++11",
 				"-fexceptions"
 			],
