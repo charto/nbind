@@ -237,8 +237,14 @@ BindClassBase &BindWrapper<Bound> :: getBindClass() {
 
 template <class Bound>
 void BindWrapper<Bound> :: testInstance(v8::Local<v8::Object> arg) {
+	BindClassBase &bindClass = getBindClass();
+
+	if(bindClass.superTemplate.IsEmpty()) {
+		throw(std::runtime_error("Unbound type"));
+	}
+
 	if(
-		!Nan::New(getBindClass().superTemplate)->HasInstance(arg) ||
+		!Nan::New(bindClass.superTemplate)->HasInstance(arg) ||
 		arg->InternalFieldCount() != 1
 	) {
 		throw(std::runtime_error("Type mismatch"));

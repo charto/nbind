@@ -49,7 +49,14 @@ static inline WireType makeExternal(TypeFlags flags, TargetType *ptr, ArgType &&
 #endif // DUPLICATE_POINTERS
 
 	unsigned int constructorNum = BindClass<BaseType>::getInstance().wrapperConstructorNum;
-	v8::Local<v8::Function> constructor = Overloader::getDef(constructorNum).constructorJS->GetFunction();
+	Nan::Callback *constructorJS = Overloader::getDef(constructorNum).constructorJS;
+
+	if(constructorJS == nullptr) {
+		Nan::ThrowError("Unbound type");
+		return(Nan::Undefined());
+	}
+
+	v8::Local<v8::Function> constructor = constructorJS->GetFunction();
 
 	// TODO: first argument should be a unique marker of some kind.
 
