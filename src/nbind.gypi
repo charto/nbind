@@ -20,7 +20,6 @@
 			"product_name": "nbind.js",
 			"type":         "executable",
 			"sources":    [ "em/Binding.cc" ],
-			"cflags_cc":  [ "<@(_cflags)" ],
 			"ldflags":    [ "<@(_cflags)" ],
 
 			"copies": [{"destination": "<(INTERMEDIATE_DIR)", "files": ["pre.js", "post.js", "../dist/em-api.js"]}],
@@ -46,6 +45,7 @@
 			"xcode_settings": {
 				"GCC_GENERATE_DEBUGGING_SYMBOLS": "NO",
 				"OTHER_CFLAGS": [ "<@(_cflags)" ],
+				"OTHER_CPLUSPLUSFLAGS": [ "<@(_cflags_cc)" ],
 				"OTHER_LDFLAGS": [ "<@(_cflags)" ]
 			}
 
@@ -77,12 +77,12 @@
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
 				"CLANG_CXX_LANGUAGE_STANDARD": "c++11",
 				"MACOSX_DEPLOYMENT_TARGET": "10.7",
+				"OTHER_CFLAGS": [ "<@(_cflags)" ],
 				"OTHER_CPLUSPLUSFLAGS": [
-					"-O3",
-					"-std=c++11",
+					"<@(_cflags_cc)",
 					"-stdlib=libc++"
 				],
-				"OTHER_LDFLAGS": ["-stdlib=libc++"]
+				"OTHER_LDFLAGS": [ "-stdlib=libc++" ]
 			}
 
 		}]
