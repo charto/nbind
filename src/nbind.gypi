@@ -38,10 +38,10 @@
 				"-s", "DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\"nbind_value\",\"\\$$Browser\"]"
 			],
 
-                        "cflags_cc": [
+			"cflags_cc": [
 				"-std=c++11",
-				"-fno-exceptions",
-                        ],
+				"-fno-exceptions"
+			],
 
 			"xcode_settings": {
 				"GCC_GENERATE_DEBUGGING_SYMBOLS": "NO",
@@ -56,9 +56,9 @@
 				"v8/Binding.cc"
 			],
 
-                        "cflags": [
+			"cflags": [
 				"-O3"
-                        ],
+			],
 
 			"cflags_cc": [
 				"-std=c++11",
