@@ -1,6 +1,6 @@
 {
   "name": "nbind",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Magical headers that make your C++ library accessible from JavaScript",
   "main": "dist/nbind.js",
   "typings": "dist/nbind.d.ts",
@@ -54,14 +54,14 @@
   "dependencies": {
     "emscripten-library-decorator": "~0.2.0",
     "mkdirp": "~0.5.1",
-    "nan": "^2.4.0"
+    "nan": "^2.5.0"
   },
   "devDependencies": {
     "autogypi": "~0.2.2",
     "cbuild": "~0.1.1",
     "node-gyp": "^3.4.0",
     "tap": "^8.0.1",
-    "tslint": "^4.1.1",
+    "tslint": "^4.2.0",
     "typescript": "^2.1.4"
   }
 }
