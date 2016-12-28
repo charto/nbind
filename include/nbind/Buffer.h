@@ -25,7 +25,7 @@ public:
 
 #	endif
 
-#elif defined(EMSCRIPTEN)
+#elif defined(__EMSCRIPTEN__)
 
 	Buffer(unsigned char *ptr = nullptr, size_t len = 0, unsigned int num = 0) :
 		ptr(ptr), len(len), handle(num) {}

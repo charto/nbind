@@ -46,7 +46,7 @@ public:
 		ConstructWrapper::createValue(storage, args);
 	}
 
-#elif defined(EMSCRIPTEN)
+#elif defined(__EMSCRIPTEN__)
 
 	typedef Creator<
 		PolicyList,
@@ -69,7 +69,7 @@ public:
 		ConstructWrapper::createValue(storage, args...);
 	}
 
-#endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
+#endif // BUILDING_NODE_EXTENSION, __EMSCRIPTEN__
 
 };
 

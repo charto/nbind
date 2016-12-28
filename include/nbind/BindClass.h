@@ -211,7 +211,7 @@ public:
 		wrapper->destroy();
 	}
 
-#elif defined(EMSCRIPTEN)
+#elif defined(__EMSCRIPTEN__)
 
 	static void destroy(uint32_t, void *ptr, void *shared, TypeFlags flags) {
 		if((flags & TypeFlags::refMask) == TypeFlags::isSharedPtr) {

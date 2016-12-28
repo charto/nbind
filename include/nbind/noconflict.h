@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if defined(BUILDING_NODE_EXTENSION) || defined(EMSCRIPTEN)
+#if defined(BUILDING_NODE_EXTENSION) || defined(__EMSCRIPTEN__)
 
 #include "BindDefiner.h"
 #include "FunctionDefiner.h"
@@ -74,4 +74,4 @@
 #define NBIND_GETSET(getName, setName, ...) \
 definer.property(#getName, &Bound::getName, &Bound::setName, ## __VA_ARGS__)
 
-#endif // BUILDING_NODE_EXTENSION || EMSCRIPTEN
+#endif // BUILDING_NODE_EXTENSION || __EMSCRIPTEN__

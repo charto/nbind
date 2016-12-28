@@ -81,7 +81,7 @@ private:
 #	include "Buffer.h"
 #	include "v8/Buffer.h"
 
-#elif defined(EMSCRIPTEN)
+#elif defined(__EMSCRIPTEN__)
 
 #	include "em/NBind.h"
 #	include "em/BindingType.h"

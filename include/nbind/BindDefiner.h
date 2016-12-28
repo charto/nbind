@@ -24,7 +24,7 @@
 #	include "v8/Int64.h"
 #	include "v8/Creator.h"    // Needs ArgStorage
 
-#elif defined(EMSCRIPTEN)
+#elif defined(__EMSCRIPTEN__)
 
 #	include "em/Caller.h"
 #	include "signature/BaseSignature.h"

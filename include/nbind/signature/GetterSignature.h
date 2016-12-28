@@ -43,7 +43,7 @@ public:
 		);
 	}
 
-#elif defined(EMSCRIPTEN)
+#elif defined(__EMSCRIPTEN__)
 
 	static typename TypeTransformer<ReturnType, PolicyList>::Binding::WireType call(
 		uint32_t num,
@@ -55,7 +55,7 @@ public:
 		return(Caller<PolicyList, ReturnType, Args...>::callMethod(*target, method, args...));
 	}
 
-#endif // BUILDING_NODE_EXTENSION, EMSCRIPTEN
+#endif // BUILDING_NODE_EXTENSION, __EMSCRIPTEN__
 
 };
 
