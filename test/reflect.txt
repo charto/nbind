@@ -13,8 +13,8 @@ class Callback {
 	Callback();
 	static void callVoidFunc(cbFunction &);
 	static bool callNegate(cbFunction &, bool);
-	static int32_t callIncrementInt(cbFunction &, int32_t);
-	static float64_t callIncrementDouble(cbFunction &, float64_t);
+	static int32_t callIncrementInt(const cbFunction &, int32_t);
+	static float64_t callIncrementDouble(const cbFunction &, float64_t);
 	static std::string callCatenate(cbFunction &, const char *, const char *);
 	static void callCStrings(cbFunction &);
 };

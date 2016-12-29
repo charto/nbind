@@ -21,7 +21,7 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename BindingType<ReturnType>::Type call(Args&&... args) {
+	typename BindingType<ReturnType>::Type call(Args&&... args) const {
 		// Restore linear allocator state in RAII style when done.
 		PoolRestore restore;
 
@@ -148,11 +148,24 @@ template<> struct cbFunction::Caller<cbOutput::CreateValue> {
 
 };
 
-template <> struct BindingType<cbFunction &> {
+template <> struct BindingType<const cbFunction &> {
 
-	typedef cbFunction & Type;
+	typedef const cbFunction &Type;
 
 	typedef unsigned int WireType;
+
+};
+
+template <> struct BindingType<cbFunction &> : public BindingType<const cbFunction &> {};
+
+template<typename PolicyList>
+struct ArgFromWire<PolicyList, const cbFunction &> {
+
+	explicit ArgFromWire(unsigned int num) : val(num) {}
+
+	inline cbFunction &get(unsigned int num) { return(val); }
+
+	cbFunction val;
 
 };
 

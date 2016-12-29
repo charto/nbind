@@ -36,7 +36,7 @@ public:
 	}
 
 	template <typename ReturnType, typename... Args>
-	typename TypeTransformer<ReturnType>::Type call(Args&&... args) {
+	typename TypeTransformer<ReturnType>::Type call(Args&&... args) const {
 		v8::Local<v8::Value> argv[] = {
 			(convertToWire(std::move(args)))...,
 			// Avoid error C2466: cannot allocate an array of constant size 0.
@@ -54,7 +54,7 @@ public:
 	typename TypeTransformer<ReturnType>::Type callMethod(
 		v8::Local<v8::Object> target,
 		Args&&... args
-	) {
+	) const {
 		v8::Local<v8::Value> argv[] = {
 			(convertToWire(std::move(args)))...,
 			// Avoid error C2466: cannot allocate an array of constant size 0.
@@ -76,6 +76,8 @@ private:
 
 };
 
+// Note: passing cbFunction by value on asm.js doesn't work.
+
 template <> struct BindingType<cbFunction> {
 
 	typedef const cbFunction Type;
@@ -90,9 +92,9 @@ template <> struct BindingType<cbFunction> {
 
 };
 
-template <> struct BindingType<cbFunction &> {
+template <> struct BindingType<const cbFunction &> {
 
-	typedef const cbFunction & Type;
+	typedef const cbFunction &Type;
 
 	static inline bool checkType(WireType arg) {
 		return(arg->IsFunction());
@@ -100,8 +102,25 @@ template <> struct BindingType<cbFunction &> {
 
 };
 
+template <> struct BindingType<cbFunction &> : public BindingType<const cbFunction &> {};
+
 // Handle callback functions. They are converted to a functor of type cbFunction,
 // which can be called directly from C++ with arguments of any type.
+
+template<typename PolicyList, size_t Index>
+struct ArgFromWire<PolicyList, Index, const cbFunction &> {
+
+	template <typename NanArgs>
+	ArgFromWire(const NanArgs &args) : val(args[Index].template As<v8::Function>()) {}
+
+	template <typename NanArgs>
+	inline const cbFunction &get(const NanArgs &args) {
+		return(val);
+	}
+
+	cbFunction val;
+
+};
 
 template<typename PolicyList, size_t Index>
 struct ArgFromWire<PolicyList, Index, cbFunction &> {

@@ -16,9 +16,9 @@ public:
 
 	static bool callNegate(nbind::cbFunction &negate, bool x) {return(negate.call<bool>(x));}
 
-	static int callIncrementInt(nbind::cbFunction &incrementInt, int x) {return(incrementInt.call<int>(x));}
+	static int callIncrementInt(const nbind::cbFunction &incrementInt, int x) {return(incrementInt.call<int>(x));}
 
-	static double callIncrementDouble(nbind::cbFunction &incrementDouble, double x) {return(incrementDouble.call<double>(x));}
+	static double callIncrementDouble(const nbind::cbFunction &incrementDouble, double x) {return(incrementDouble.call<double>(x));}
 
 	static std::string callCatenate(nbind::cbFunction &catenate, const char *a, const char *b) {return(catenate.call<std::string>(a, b));}
 

@@ -117,7 +117,9 @@ class nbind { // tslint:disable-line:class-name
 			'Int64': _nbind.Int64Type,
 			'_nbind_new': _nbind.CreateValueType,
 			'bool': _nbind.BooleanType,
+			// 'cbFunction': _nbind.CallbackType,
 			'cbFunction &': _nbind.CallbackType,
+			'const cbFunction &': _nbind.CallbackType,
 			'std::string': _nbind.StringType
 		};
 
