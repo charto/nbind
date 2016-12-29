@@ -7,8 +7,6 @@
 
 namespace nbind {
 
-class cbFunction;
-
 class cbOutput {
 
 	template<typename ArgType>

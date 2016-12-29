@@ -18,20 +18,21 @@ class cbException : public std::exception {};
 // call<ReturnType>() method that accepts the expected return type as a template
 // parameter, and handles conversion automatically.
 
-class cbFunction {
+template <typename DefaultReturnType>
+class cbWrapper {
 
 	template<typename PolicyList, size_t Index, typename ArgType>
 	friend struct ArgFromWire;
 
 public:
 
-	explicit cbFunction(const v8::Local<v8::Function> &func) : func(func) {}
+	explicit cbWrapper(const v8::Local<v8::Function> &func) : func(func) {}
 
-	cbFunction(const cbFunction &func) : func(func.getJsFunction()) {}
+	cbWrapper(const cbWrapper &func) : func(func.getJsFunction()) {}
 
 	template<typename... Args>
-	void operator()(Args&&... args) {
-		call<void>(std::move(args)...);
+	DefaultReturnType operator()(Args&&... args) {
+		call<DefaultReturnType>(std::move(args)...);
 	}
 
 	template <typename ReturnType, typename... Args>

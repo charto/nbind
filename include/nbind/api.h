@@ -78,6 +78,7 @@ private:
 #	include "v8/External.h"
 #	include "v8/Callback.h"
 #	include "v8/BindingStd.h"
+#	include "v8/StdFunction.h"
 #	include "Buffer.h"
 #	include "v8/Buffer.h"
 
