@@ -5,16 +5,9 @@
 
 #include <memory>
 
-#if !defined(DUPLICATE_POINTERS)
+#if !defined(NBIND_DUPLICATE_POINTERS)
 
-	#include <unordered_map>
-
-#endif // DUPLICATE_POINTERS
-
-#include <v8.h>
-#include <node.h>
-#include <node_buffer.h>
-#include <nan.h>
+#include <unordered_map>
 
 namespace nbind {
 
@@ -54,6 +47,13 @@ struct hash<nbind::TypeFlags> {
 
 }
 
+#endif // NBIND_DUPLICATE_POINTERS
+
+#include <v8.h>
+#include <node.h>
+#include <node_buffer.h>
+#include <nan.h>
+
 namespace nbind {
 
 class BindClassBase;
@@ -79,7 +79,7 @@ public:
 		}
 	}
 
-#if !defined(DUPLICATE_POINTERS)
+#if !defined(NBIND_DUPLICATE_POINTERS)
 
 	static Nan::Persistent<v8::Object> *findInstance(const void *ptr, TypeFlags flags) {
 		// This will insert a null pointer (to a non-existent wrapper)
@@ -88,7 +88,7 @@ public:
 		return(&getInstanceTbl()[HashablePair<const void *, TypeFlags>(ptr, flags)]);
 	}
 
-#endif // DUPLICATE_POINTERS
+#endif // NBIND_DUPLICATE_POINTERS
 
 	BindClassBase &getClass() { return(bindClass); }
 
@@ -99,16 +99,16 @@ protected:
 
 	void wrapThis(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 
-#		if !defined(DUPLICATE_POINTERS)
+#		if !defined(NBIND_DUPLICATE_POINTERS)
 
 			addInstance(args.This());
 
-#		endif // DUPLICATE_POINTERS
+#		endif // NBIND_DUPLICATE_POINTERS
 
 		this->Wrap(args.This());
 	}
 
-#if !defined(DUPLICATE_POINTERS)
+#if !defined(NBIND_DUPLICATE_POINTERS)
 
 	// If the GC wants to free the wrapper object, get rid of our reference to it.
 
@@ -167,7 +167,7 @@ protected:
 		return(instanceTbl);
 	}
 
-#endif // DUPLICATE_POINTERS
+#endif // NBIND_DUPLICATE_POINTERS
 
 	void *boundUnsafe;
 	TypeFlags flags;
@@ -235,14 +235,14 @@ public:
 		// Avoid freeing the object twice.
 		if(!boundUnsafe) return;
 
-#		if !defined(DUPLICATE_POINTERS)
+#		if !defined(NBIND_DUPLICATE_POINTERS)
 
 			// JavaScript side no longer holds any references to the object,
 			// so remove our weak pointer to the wrapper.
 
 			removeInstance();
 
-#		endif // DUPLICATE_POINTERS
+#		endif // NBIND_DUPLICATE_POINTERS
 
 		// Delete the bound object if the C++ side isn't holding onto it.
 		// The weak pointer must be removed first,

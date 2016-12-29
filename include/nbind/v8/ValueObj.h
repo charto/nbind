@@ -38,7 +38,7 @@ template <typename BaseType, typename TargetType, typename ArgType>
 static inline WireType makeExternal(TypeFlags flags, TargetType *ptr, ArgType &&arg) {
 	if(std::is_const<TargetType>::value) flags = flags | TypeFlags::isConst;
 
-#ifndef DUPLICATE_POINTERS
+#ifndef NBIND_DUPLICATE_POINTERS
 
 	auto ref = BindWrapper<BaseType>::findInstance(ptr, flags);
 
@@ -46,7 +46,7 @@ static inline WireType makeExternal(TypeFlags flags, TargetType *ptr, ArgType &&
 		return(Nan::New<v8::Object>(*ref));
 	}
 
-#endif // DUPLICATE_POINTERS
+#endif // NBIND_DUPLICATE_POINTERS
 
 	unsigned int constructorNum = BindClass<BaseType>::getInstance().wrapperConstructorNum;
 	Nan::Callback *constructorJS = Overloader::getDef(constructorNum).constructorJS;
