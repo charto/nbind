@@ -47,10 +47,10 @@ const typename Typer<ArgType>::SpecType Typer<ArgType>::spec = {
 
 // Parameterized types
 
-typedef struct {
+struct ParamStructure {
 	const StructureType placeholderFlag;
 	const TYPEID target;
-} ParamStructure;
+};
 
 #define NBIND_TYPER_PARAM(Type, flag)           \
 template<typename ArgType>                      \

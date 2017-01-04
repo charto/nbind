@@ -10,30 +10,30 @@
 
 namespace nbind {
 
-	NBIND_TYPER_PARAM(std::shared_ptr<ArgType>, shared);
-	NBIND_TYPER_PARAM(std::unique_ptr<ArgType>, unique);
-	NBIND_TYPER_PARAM(std::vector<ArgType>, vector);
+NBIND_TYPER_PARAM(std::shared_ptr<ArgType>, shared);
+NBIND_TYPER_PARAM(std::unique_ptr<ArgType>, unique);
+NBIND_TYPER_PARAM(std::vector<ArgType>, vector);
 
-	typedef struct {
-		const StructureType placeholderFlag;
-		const TYPEID member;
-		const size_t length;
-	} ArrayStructure;
+typedef struct {
+	const StructureType placeholderFlag;
+	const TYPEID member;
+	const size_t length;
+} ArrayStructure;
 
-	template<typename MemberType, size_t size>
-	struct Typer<std::array<MemberType, size>> {
-		static const ArrayStructure spec;
+template<typename MemberType, size_t size>
+struct Typer<std::array<MemberType, size>> {
+	static const ArrayStructure spec;
 
-		static NBIND_CONSTEXPR TYPEID makeID() {
-			return(&spec.placeholderFlag);
-		}
-	};
+	static NBIND_CONSTEXPR TYPEID makeID() {
+		return(&spec.placeholderFlag);
+	}
+};
 
-	template<typename MemberType, size_t size>
-	const ArrayStructure Typer<std::array<MemberType, size>>::spec = {
-		StructureType :: array,
-		Typer<MemberType>::makeID(),
-		size
-	};
+template<typename MemberType, size_t size>
+const ArrayStructure Typer<std::array<MemberType, size>>::spec = {
+	StructureType :: array,
+	Typer<MemberType>::makeID(),
+	size
+};
 
 } // namespace
