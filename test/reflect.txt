@@ -1,7 +1,7 @@
 class Array {
 	Array();
-	static std::array<int32_t, Y> getInts();
-	static std::array<int32_t, Y> callWithInts(cbFunction &, std::array<int32_t, Y>);
+	static std::array<int32_t, 3> getInts();
+	static std::array<int32_t, 3> callWithInts(cbFunction &, std::array<int32_t, 3>);
 };
 
 class Buffer {
@@ -12,8 +12,11 @@ class Buffer {
 class Callback {
 	Callback();
 	static void callVoidFunc(cbFunction &);
+	static void callVoidFunc2(std::function<void ()>);
 	static bool callNegate(cbFunction &, bool);
-	static int32_t callIncrementInt(const cbFunction &, int32_t);
+	static bool callNegate2(std::function<bool (bool)>, bool);
+	static int32_t callAddInt(const cbFunction &, int32_t, int32_t);
+	static int32_t callAddInt2(const std::function<int32_t (int32_t, int32_t)> &, int32_t, int32_t);
 	static float64_t callIncrementDouble(const cbFunction &, float64_t);
 	static std::string callCatenate(cbFunction &, const char *, const char *);
 	static void callCStrings(cbFunction &);

@@ -110,9 +110,13 @@ External NBind :: queryType(
 ) {
 	const ParamStructure *paramSpec;
 	const ArrayStructure *arraySpec;
+	const CallbackStructure<1> *callbackSpec;
 	External result;
 
 	StructureType placeholderFlag = id.getStructureType();
+	std::vector<NBindID> typeIdList;
+	const TYPEID *rawTypePtr;
+	unsigned int arity;
 
 	switch(placeholderFlag) {
 		case StructureType :: none:
@@ -129,6 +133,24 @@ External NBind :: queryType(
 				static_cast<unsigned char>(placeholderFlag),
 				NBindID(arraySpec->member),
 				arraySpec->length
+			);
+
+			break;
+
+		case StructureType :: callback:
+			callbackSpec = static_cast<const CallbackStructure<1> *>(id.getStructure());
+			rawTypePtr = callbackSpec->argType + 1;
+			arity = callbackSpec->arity;
+
+			while(arity--) {
+				typeIdList.push_back(NBindID(*rawTypePtr));
+				++rawTypePtr;
+			}
+
+			result = outTypeDetail.call<External>(
+				static_cast<unsigned char>(placeholderFlag),
+				NBindID(callbackSpec->argType[0]),
+				typeIdList
 			);
 
 			break;

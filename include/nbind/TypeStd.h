@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <functional>
 
 namespace nbind {
 
@@ -34,6 +35,31 @@ const ArrayStructure Typer<std::array<MemberType, size>>::spec = {
 	StructureType :: array,
 	Typer<MemberType>::makeID(),
 	size
+};
+
+//template<typename ReturnType, typename... Args>
+template <int argCount>
+struct CallbackStructure {
+	const StructureType placeholderFlag;
+	const int arity;
+	const TYPEID argType[argCount + 1];
+};
+
+template<typename ReturnType, typename... Args>
+struct Typer<std::function<ReturnType (Args...)>> {
+	static const CallbackStructure<sizeof...(Args)> spec;
+
+	static NBIND_CONSTEXPR TYPEID makeID() {
+		return(&spec.placeholderFlag);
+	}
+};
+
+template<typename ReturnType, typename... Args>
+const CallbackStructure<sizeof...(Args)> Typer<std::function<ReturnType (Args...)>>::spec = {
+	StructureType :: callback,
+	sizeof...(Args),
+	Typer<ReturnType>::makeID(),
+	Typer<Args>::makeID()...
 };
 
 } // namespace

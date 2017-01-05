@@ -13,10 +13,13 @@ public:
 	Callback() {}
 
 	static void callVoidFunc(nbind::cbFunction &voidFunc) {voidFunc.call<void>();}
+	static void callVoidFunc2(std::function<void ()> voidFunc) { voidFunc(); }
 
 	static bool callNegate(nbind::cbFunction &negate, bool x) {return(negate.call<bool>(x));}
+	static bool callNegate2(std::function<bool (bool)> negate, bool x) {return(negate(x));}
 
-	static int callIncrementInt(const nbind::cbFunction &incrementInt, int x) {return(incrementInt.call<int>(x));}
+	static int callAddInt(const nbind::cbFunction &incrementInt, int x, int y) {return(incrementInt.call<int>(x, y));}
+	static int callAddInt2(const std::function<int (int, int)> &incrementInt, int x, int y) {return(incrementInt(x, y));}
 
 	static double callIncrementDouble(const nbind::cbFunction &incrementDouble, double x) {return(incrementDouble.call<double>(x));}
 
@@ -39,8 +42,14 @@ NBIND_CLASS(Callback) {
 	construct<>();
 
 	method(callVoidFunc);
+	method(callVoidFunc2);
+
 	method(callNegate);
-	method(callIncrementInt);
+	method(callNegate2);
+
+	method(callAddInt);
+	method(callAddInt2);
+
 	method(callIncrementDouble);
 	method(callCatenate);
 	method(callCStrings);

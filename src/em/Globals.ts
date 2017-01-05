@@ -27,6 +27,7 @@ export namespace _nbind {
 
 	export let BindType: typeof _type.BindType;
 	export let getComplexType: typeof _type.getComplexType;
+	export let structureList: typeof _type.structureList;
 
 	export let resources: typeof _resource.resources;
 	export let listResources: typeof _resource.listResources;
@@ -87,6 +88,9 @@ export namespace _nbind {
 			makeTypeKindTbl[kind]
 		);
 
+		// console.error(spec.id + ' ' + spec.name + ' ' + kind); // tslint:disable-line
+		// console.error(construct.toString()); // tslint:disable-line
+
 		const bindType = new construct(spec as TypeSpecWithName) as _type.BindType;
 
 		typeIdTbl[spec.id] = bindType;
@@ -101,6 +105,8 @@ export namespace _nbind {
 
 	export function queryType(id: number) {
 		const placeholderFlag = HEAPU8[id as number];
+
+		// TODO: get paramList length from structureList[placeholderFlag][1]
 
 		return({
 			paramList: [

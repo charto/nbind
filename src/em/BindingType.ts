@@ -18,7 +18,7 @@ setEvil((code: string) => eval(code));
 
 export namespace _nbind {
 
-	export const { Type, makeType, getComplexType } = _typeModule(_typeModule);
+	export const { Type, makeType, getComplexType, structureList } = _typeModule(_typeModule);
 
 	export let Pool: typeof _globals.Pool;
 

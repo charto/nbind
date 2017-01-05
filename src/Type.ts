@@ -87,7 +87,8 @@ export const enum TypeFlags {
 	isArray = TypeFlagBase.kind * 6,
 	isCString = TypeFlagBase.kind * 7,
 	isString = TypeFlagBase.kind * 8,
-	isOther = TypeFlagBase.kind * 9
+	isCallback = TypeFlagBase.kind * 9,
+	isOther = TypeFlagBase.kind * 10
 }
 
 export const enum StateFlags {
@@ -109,25 +110,27 @@ export const enum StructureType {
 	unique,
 	vector,
 	array,
+	callback,
 	max
 }
 
 /* tslint:disable:no-shadowed-variable */
 export function typeModule(self: any) {
 
-	// Printable name of each StructureType.
+	// Parameter count and printable name of each StructureType.
 
-	type Structure = [TypeFlags, string];
+	type Structure = [TypeFlags, number, string];
 	const structureList: Structure[] = [
-		[0, 'X'],
-		[TypeFlags.isConst, 'const X'],
-		[TypeFlags.isPointer, 'X *'],
-		[TypeFlags.isReference, 'X &'],
-		[TypeFlags.isRvalueRef, 'X &&'],
-		[TypeFlags.isSharedPtr, 'std::shared_ptr<X>'],
-		[TypeFlags.isUniquePtr, 'std::unique_ptr<X>'],
-		[TypeFlags.isVector, 'std::vector<X>'],
-		[TypeFlags.isArray, 'std::array<X, Y>']
+		[0, 1, 'X'],
+		[TypeFlags.isConst, 1, 'const X'],
+		[TypeFlags.isPointer, 1, 'X *'],
+		[TypeFlags.isReference, 1, 'X &'],
+		[TypeFlags.isRvalueRef, 1, 'X &&'],
+		[TypeFlags.isSharedPtr, 1, 'std::shared_ptr<X>'],
+		[TypeFlags.isUniquePtr, 1, 'std::unique_ptr<X>'],
+		[TypeFlags.isVector, 1, 'std::vector<X>'],
+		[TypeFlags.isArray, 2, 'std::array<X, Y>'],
+		[TypeFlags.isCallback, -1, 'std::function<X (Y)>']
 	];
 
 	function applyStructure(
@@ -135,6 +138,7 @@ export function typeModule(self: any) {
 		outerFlags: TypeFlags,
 		innerName: string,
 		innerFlags: TypeFlags,
+		param: string,
 		flip?: boolean
 	) {
 		if(outerFlags == TypeFlags.isConst) {
@@ -149,9 +153,9 @@ export function typeModule(self: any) {
 		let name: string;
 
 		if(flip) {
-			name = innerName.replace('X', outerName);
+			name = innerName.replace('X', outerName).replace('Y', param);
 		} else {
-			name = outerName.replace('X', innerName);
+			name = outerName.replace('X', innerName).replace('Y', param);
 		}
 
 		// Remove spaces between consecutive * and & characters.
@@ -179,7 +183,7 @@ export function typeModule(self: any) {
 		getType: (id: number) => BindType,
 		queryType: (id: number) => {
 			placeholderFlag: number,
-			paramList: number[]
+			paramList: (number | number[])[]
 		},
 		place?: string,
 		// C++ type name string built top-down, for printing helpful errors.
@@ -198,8 +202,9 @@ export function typeModule(self: any) {
 
 		if(prevStructure && structure) {
 			kind = applyStructure(
-				prevStructure[1], prevStructure[0],
+				prevStructure[2], prevStructure[0],
 				kind, structure[0],
+				'?',
 				true
 			);
 		}
@@ -212,7 +217,7 @@ export function typeModule(self: any) {
 
 		if(problem) reportProblem(problem, id, kind, structureType, place || '?');
 
-		const subId = query.paramList[0];
+		const subId = query.paramList[0] as number;
 		const subType = getComplexType(
 			subId,
 			constructType,
@@ -224,24 +229,16 @@ export function typeModule(self: any) {
 			depth + 1
 		);
 
-		const name = applyStructure(
-			structure[1], structure[0],
-			subType.name, subType.flags
-		);
-
-		// Note: at every recursion depth the full type name is:
-		// applyStructure(kind, 0, name, 0)
-		// (combining top-down and bottom-up parts).
-
-		// console.log(applyStructure(kind, 0, name, 0) + ' - ' + name); // tslint:disable-line
-
 		let srcSpec: TypeSpec | undefined;
 		let spec: TypeSpecWithParam = {
 			flags: structure[0],
 			id: id,
-			name: name,
+			name: '',
 			paramList: [subType]
 		};
+
+		const argList: string[] = [];
+		let structureParam = '?';
 
 		switch(query.placeholderFlag) {
 			case StructureType.constant:
@@ -271,12 +268,39 @@ export function typeModule(self: any) {
 				break;
 
 			case StructureType.array:
-				spec.paramList.push(query.paramList[1]);
+				structureParam = '' + (query.paramList[1] as number);
+				spec.paramList.push(query.paramList[1] as number);
+				break;
+
+			case StructureType.callback:
+				for(let paramId of (query.paramList[1] as number[])) {
+					const paramType = getComplexType(
+						paramId,
+						constructType,
+						getType,
+						queryType,
+						place,
+						kind,
+						structure,
+						depth + 1
+					);
+
+					argList.push(paramType.name);
+					spec.paramList.push(paramType);
+				}
+
+				structureParam = argList.join(', ');
 				break;
 
 			default:
 				break;
 		}
+
+		spec.name = applyStructure(
+			structure[2], structure[0],
+			subType.name, subType.flags,
+			structureParam
+		);
 
 		if(srcSpec) {
 			for(let key of Object.keys(srcSpec)) {

@@ -163,7 +163,9 @@ test('Callbacks', function(t: any) {
 
 	t.type(Type.callVoidFunc(function() {}), 'undefined');
 	t.strictEqual(Type.callNegate(function(x: boolean) {return(!x);}, false), true);
-	t.strictEqual(Type.callIncrementInt(function(x: number) {return(x + 1);}, 1), 2);
+	t.strictEqual(Type.callNegate2(function(x: boolean) {return(!x);}, false), true);
+	t.strictEqual(Type.callAddInt(function(x: number, y: number) {return(x + y);}, 40, 2), 42);
+	t.strictEqual(Type.callAddInt2(function(x: number, y: number) {return(x + y);}, 40, 2), 42);
 	t.strictEqual(Type.callIncrementDouble(function(x: number) {return(x + 0.25);}, 0.5), 0.75);
 	t.strictEqual(Type.callCatenate(function(x: string, y: string) {return(x + y);}, 'foo', 'bar'), 'foobar');
 

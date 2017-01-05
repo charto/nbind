@@ -64,7 +64,8 @@ enum class TypeFlags : uint32_t {
 	isArray = TypeFlagBase.kind * 6,
 	isCString = TypeFlagBase.kind * 7,
 	isString = TypeFlagBase.kind * 8,
-	isOther = TypeFlagBase.kind * 9
+	isCallback = TypeFlagBase.kind * 9,
+	isOther = TypeFlagBase.kind * 10
 };
 
 inline TypeFlags operator& (TypeFlags a, TypeFlags b) {

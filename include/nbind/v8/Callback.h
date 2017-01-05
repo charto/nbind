@@ -32,7 +32,7 @@ public:
 
 	template<typename... Args>
 	DefaultReturnType operator()(Args&&... args) {
-		call<DefaultReturnType>(std::move(args)...);
+		return(call<DefaultReturnType>(std::move(args)...));
 	}
 
 	template <typename ReturnType, typename... Args>
@@ -75,6 +75,11 @@ private:
 	Nan::Callback func;
 
 };
+
+template <> template<typename... Args>
+void cbWrapper<void> :: operator()(Args&&... args) {
+	call<void>(std::move(args)...);
+}
 
 // Note: passing cbFunction by value on asm.js doesn't work.
 

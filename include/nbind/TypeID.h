@@ -17,6 +17,7 @@ enum class StructureType : unsigned char {
 	unique,
 	vector,
 	array,
+	callback,
 	max
 };
 

@@ -4,6 +4,9 @@
 import {Reflect, BindType, BindClass, BindMethod, BindProperty} from './reflect';
 import {TypeFlags} from './Type';
 
+// TypeScript alternatives to named C++ types,
+// and a flag whether they need surrounding parentheses when nested.
+
 const nameTbl: { [key: string]: [string, boolean] } = {
 	'Buffer': ['number[] | ArrayBuffer | DataView | Uint8Array | Buffer', true],
 	'External': ['any', false],
@@ -22,8 +25,9 @@ function formatType(bindType: BindType, policyTbl: PolicyTbl = {}, needParens = 
 	const kind = flags & TypeFlags.kindMask;
 	const refKind = flags & TypeFlags.refMask;
 
-	function formatSubType(needsParens: boolean) {
-		return(formatType(bindType.spec.paramList![0] as BindType, policyTbl, needsParens));
+	// tslint:disable-next-line:typedef
+	function formatSubType(needsParens: boolean, num = 0) {
+		return(formatType(bindType.spec.paramList![num] as BindType, policyTbl, needsParens));
 	}
 
 	function addParens(name: string) {
@@ -33,6 +37,7 @@ function formatType(bindType: BindType, policyTbl: PolicyTbl = {}, needParens = 
 	if(flags & TypeFlags.isConst) return(formatSubType(needParens));
 
 	let isNullable = policyTbl['Nullable'];
+	const argList: string[] = [];
 
 	switch(kind) {
 		case TypeFlags.isArithmetic:
@@ -64,6 +69,15 @@ function formatType(bindType: BindType, policyTbl: PolicyTbl = {}, needParens = 
 
 		case TypeFlags.isString:
 			return('string');
+
+		case TypeFlags.isCallback:
+			for(let num = 1; num < bindType.spec.paramList!.length; ++num) {
+				argList.push('p' + (num - 1) + ': ' + formatSubType(false, num));
+			}
+
+			return(addParens(
+				'(' + argList.join(', ') + ') => ' + formatSubType(true)
+			));
 
 		case TypeFlags.isOther:
 			const spec = nameTbl[bindType.name];
