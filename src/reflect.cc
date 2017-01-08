@@ -139,7 +139,7 @@ External NBind :: queryType(
 
 		case StructureType :: callback:
 			callbackSpec = static_cast<const CallbackStructure<1> *>(id.getStructure());
-			rawTypePtr = callbackSpec->argType + 1;
+			rawTypePtr = callbackSpec->argType;
 			arity = callbackSpec->arity;
 
 			while(arity--) {
@@ -149,7 +149,7 @@ External NBind :: queryType(
 
 			result = outTypeDetail.call<External>(
 				static_cast<unsigned char>(placeholderFlag),
-				NBindID(callbackSpec->argType[0]),
+				NBindID(callbackSpec->returnType),
 				typeIdList
 			);
 

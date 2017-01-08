@@ -42,7 +42,8 @@ template <int argCount>
 struct CallbackStructure {
 	const StructureType placeholderFlag;
 	const int arity;
-	const TYPEID argType[argCount + 1];
+	const TYPEID returnType;
+	const TYPEID argType[argCount];
 };
 
 template<typename ReturnType, typename... Args>
@@ -59,7 +60,7 @@ const CallbackStructure<sizeof...(Args)> Typer<std::function<ReturnType (Args...
 	StructureType :: callback,
 	sizeof...(Args),
 	Typer<ReturnType>::makeID(),
-	Typer<Args>::makeID()...
+	{ Typer<Args>::makeID()... }
 };
 
 } // namespace
