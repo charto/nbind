@@ -283,6 +283,8 @@ static void initModule(Handle<Object> exports) {
 		bindClass->visit();
 		++posPrev;
 
+		if(bindClass->isReady()) continue;
+
 		param = new SignatureParam();
 		param->overloadNum = bindClass->wrapperConstructorNum;
 
@@ -309,6 +311,8 @@ static void initModule(Handle<Object> exports) {
 	// Define inheritance between class constructor templates and add methods.
 
 	for(auto *bindClass : classList) {
+		if(bindClass->isReady()) continue;
+
 		Local<FunctionTemplate> constructorTemplate = Nan::New(bindClass->constructorTemplate);
 
 		auto superClassList = bindClass->getSuperClassList();
@@ -349,6 +353,8 @@ static void initModule(Handle<Object> exports) {
 			Nan::New<String>(bindClass->getName()).ToLocalChecked(),
 			jsConstructor
 		);
+
+		bindClass->setReady();
 	}
 }
 

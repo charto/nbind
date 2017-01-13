@@ -143,6 +143,9 @@ public:
 	void visit() { visited = true; }
 	void unvisit() { visited = false; }
 
+	bool isReady() { return(ready); }
+	void setReady() { ready = true; }
+
 protected:
 
 	TYPEID idList[2];
@@ -170,7 +173,8 @@ protected:
 
 	cbFunction *valueConstructorJS = nullptr;
 
-	bool visited;
+	bool visited = false;
+	bool ready = false;
 
 };
 
