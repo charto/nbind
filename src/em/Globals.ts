@@ -167,7 +167,7 @@ export namespace _nbind {
 	// tslint:disable-next-line:no-shadowed-variable
 	export function getDynCall(typeList: _type.BindType[], name: string) {
 		const mangleMap: { [name: string]: string; } = {
-			float32_t: 'f',
+			float32_t: 'd',
 			float64_t: 'd',
 			int64_t: 'd',
 			uint64_t: 'd',
