@@ -93,6 +93,7 @@ private:
 #	include "em/External.h"
 #	include "em/Callback.h"
 #	include "em/BindingStd.h"
+#	include "em/StdFunction.h"
 #	include "Buffer.h"
 #	include "em/Buffer.h"
 

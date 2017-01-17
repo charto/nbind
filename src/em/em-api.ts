@@ -108,6 +108,7 @@ class nbind { // tslint:disable-line:class-name
 			[TypeFlags.isVector]: _nbind.ArrayType,
 			[TypeFlags.isArray]: _nbind.ArrayType,
 			[TypeFlags.isCString]: _nbind.CStringType,
+			[TypeFlags.isCallback]: _nbind.CallbackType,
 			[TypeFlags.isOther]: _nbind.BindType
 		};
 

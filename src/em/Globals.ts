@@ -8,7 +8,7 @@ import {_nbind as _type} from './BindingType';
 import {_nbind as _class} from './BindClass';
 import {_nbind as _caller} from './Caller';
 import {_nbind as _resource} from './Resource';
-import {TypeFlags, TypeSpecWithName, PolicyTbl} from '../Type';
+import {TypeFlags, TypeSpecWithName, PolicyTbl, StructureType} from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -104,16 +104,26 @@ export namespace _nbind {
 	}
 
 	export function queryType(id: number) {
-		const placeholderFlag = HEAPU8[id as number];
+		const placeholderFlag = HEAPU8[id];
+		let paramCount = structureList[placeholderFlag][1];
 
-		// TODO: get paramList length from structureList[placeholderFlag][1]
+		id /= 4;
+
+		if(paramCount < 0) {
+			++id;
+			paramCount = HEAPU32[id] + 1;
+		}
+
+		let paramList: (number | number[])[] = Array.prototype.slice.call(
+			HEAPU32.subarray(id + 1, id + 1 + paramCount)
+		);
+
+		if(placeholderFlag == StructureType.callback) {
+			paramList = [ paramList[0], (paramList as number[]).slice(1) ];
+		}
 
 		return({
-			paramList: [
-				HEAPU32[((id as number) >> 2) + 1],
-				HEAPU32[((id as number) >> 2) + 2]
-			],
-
+			paramList: paramList,
 			placeholderFlag: placeholderFlag
 		});
 	}

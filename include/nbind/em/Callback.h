@@ -9,15 +9,26 @@
 
 namespace nbind {
 
-class cbFunction {
+// Wrapper class to specialize call function for different return types,
+// since function template partial specialization is forbidden.
+template <typename ReturnType>
+struct cbCaller {
+	typedef typename TypeTransformer<ReturnType>::Binding ReturnBindingType;
+
+	template <typename... Args>
+	static ReturnType call(unsigned int num, Args... args);
+};
+
+template <typename DefaultReturnType>
+class cbWrapper {
 
 public:
 
-	explicit cbFunction(unsigned int num = 0) : handle(num) {}
+	explicit cbWrapper(unsigned int num = 0) : handle(num) {}
 
 	template<typename... Args>
-	void operator()(Args&&... args) {
-		call<void>(std::forward<Args>(args)...);
+	DefaultReturnType operator()(Args&&... args) {
+		return(call<DefaultReturnType>(std::forward<Args>(args)...));
 	}
 
 	template <typename ReturnType, typename... Args>
@@ -25,27 +36,19 @@ public:
 		// Restore linear allocator state in RAII style when done.
 		PoolRestore restore;
 
-		return(Caller<ReturnType>::call(handle.getNum(), std::forward<Args>(args)...));
+		return(cbCaller<ReturnType>::call(handle.getNum(), std::forward<Args>(args)...));
 	}
 
 private:
 
-	// Wrapper class to specialize call function for different return types,
-	// since function template partial specialization is forbidden.
-	template <typename ReturnType>
-	struct Caller {
-		typedef typename TypeTransformer<ReturnType>::Binding ReturnBindingType;
-
-		template <typename... Args>
-		static ReturnType call(unsigned int num, Args... args);
-	};
-
-	template<typename... Args>
-	static double callDouble(unsigned int num, Args... args);
-
 	External handle;
 
 };
+
+template<> template<typename... Args>
+void cbWrapper<void> :: operator()(Args&&... args) {
+	call<void>(std::forward<Args>(args)...);
+}
 
 class cbOutput {
 
@@ -81,8 +84,8 @@ private:
 
 };
 
-template<typename... Args>
-double cbFunction::callDouble(unsigned int num, Args... args) {
+template <typename... Args>
+double callDouble(unsigned int num, Args... args) {
 	return(EM_ASM_DOUBLE(
 		{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
 		CallbackSignature<double, Args...>::getInstance().getNum(),
@@ -92,7 +95,7 @@ double cbFunction::callDouble(unsigned int num, Args... args) {
 }
 
 template <typename ReturnType> template <typename... Args>
-ReturnType cbFunction::Caller<ReturnType>::call(unsigned int num, Args... args) {
+ReturnType cbCaller<ReturnType>::call(unsigned int num, Args... args) {
 	return(ReturnBindingType::fromWireType(reinterpret_cast<typename ReturnBindingType::WireType>(
 		EM_ASM_INT(
 			{return(_nbind.callbackSignatureList[$0].apply(this,arguments));},
@@ -103,7 +106,7 @@ ReturnType cbFunction::Caller<ReturnType>::call(unsigned int num, Args... args) 
 	)));
 }
 
-template<> struct cbFunction::Caller<void> {
+template<> struct cbCaller<void> {
 
 	template <typename... Args>
 	static void call(unsigned int num, Args... args) {
@@ -117,25 +120,25 @@ template<> struct cbFunction::Caller<void> {
 
 };
 
-template<> struct cbFunction::Caller<double> {
+template<> struct cbCaller<double> {
 
 	template <typename... Args>
 	static double call(unsigned int num, Args... args) {
-		return(cbFunction::callDouble(num, args...));
+		return(callDouble(num, args...));
 	}
 
 };
 
-template<> struct cbFunction::Caller<float> {
+template<> struct cbCaller<float> {
 
 	template <typename... Args>
 	static float call(unsigned int num, Args... args) {
-		return(cbFunction::callDouble(num, args...));
+		return(callDouble(num, args...));
 	}
 
 };
 
-template<> struct cbFunction::Caller<cbOutput::CreateValue> {
+template<> struct cbCaller<cbOutput::CreateValue> {
 
 	template <typename... Args>
 	static int call(unsigned int num, Args... args) {

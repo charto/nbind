@@ -29,7 +29,11 @@ private:
 };
 
 class External;
-class cbFunction;
+
+template <typename DefaultReturnType>
+class cbWrapper;
+
+typedef cbWrapper<void> cbFunction;
 
 class NBind {
 
