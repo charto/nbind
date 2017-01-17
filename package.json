@@ -59,9 +59,9 @@
   "devDependencies": {
     "autogypi": "~0.2.2",
     "cbuild": "~0.1.1",
-    "node-gyp": "^3.4.0",
-    "tap": "^8.0.1",
-    "tslint": "^4.2.0",
-    "typescript": "^2.1.4"
+    "node-gyp": "^3.5.0",
+    "tap": "^9.0.3",
+    "tslint": "^4.3.1",
+    "typescript": "^2.1.5"
   }
 }
