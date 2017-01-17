@@ -19,6 +19,7 @@ class Callback {
 	static int32_t callAddInt2(const std::function<int32_t (int32_t, int32_t)> &, int32_t, int32_t);
 	static float64_t callIncrementDouble(const cbFunction &, float64_t);
 	static std::string callCatenate(cbFunction &, const char *, const char *);
+	static std::string callCatenate2(cbFunction &, const char *, const char *);
 	static void callCStrings(cbFunction &);
 };
 

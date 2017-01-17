@@ -168,6 +168,7 @@ test('Callbacks', function(t: any) {
 	t.strictEqual(Type.callAddInt2(function(x: number, y: number) {return(x + y);}, 40, 2), 42);
 	t.strictEqual(Type.callIncrementDouble(function(x: number) {return(x + 0.25);}, 0.5), 0.75);
 	t.strictEqual(Type.callCatenate(function(x: string, y: string) {return(x + y);}, 'foo', 'bar'), 'foobar');
+	t.strictEqual(Type.callCatenate2(function(x: string, y: string) {return(x + y);}, 'foo', 'bar'), 'foobar');
 
 	t.throws(function() {
 		Type.callNegate({} as any as (x: boolean) => boolean, true);

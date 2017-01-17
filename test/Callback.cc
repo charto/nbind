@@ -24,6 +24,7 @@ public:
 	static double callIncrementDouble(const nbind::cbFunction &incrementDouble, double x) {return(incrementDouble.call<double>(x));}
 
 	static std::string callCatenate(nbind::cbFunction &catenate, const char *a, const char *b) {return(catenate.call<std::string>(a, b));}
+	static std::string callCatenate2(nbind::cbFunction &catenate, const char *a, const char *b) {return(catenate.call<std::string>(a, b));}
 
 	static void callCStrings(nbind::cbFunction &cb) {
 		std::string foo = "foo";
@@ -51,7 +52,10 @@ NBIND_CLASS(Callback) {
 	method(callAddInt2);
 
 	method(callIncrementDouble);
+
 	method(callCatenate);
+	method(callCatenate2);
+
 	method(callCStrings);
 }
 
