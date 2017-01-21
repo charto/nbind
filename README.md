@@ -1391,4 +1391,4 @@ License
 
 [The MIT License](https://raw.githubusercontent.com/charto/nbind/master/LICENSE)
 
-Copyright (c) 2014-2016 BusFaster Ltd
+Copyright (c) 2014-2017 BusFaster Ltd
