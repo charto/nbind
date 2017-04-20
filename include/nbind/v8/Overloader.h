@@ -115,7 +115,7 @@ public:
 		v8::Local<v8::Function> constructor = def.constructorJS->GetFunction();
 
 		// Call the JavaScript constructor with the new operator.
-		auto result = Nan::NewInstance(constructor, argc, &argv[0]);
+		auto result = Nan::NewInstance(constructor, argc, (argc)?(&argv[0]):(nullptr));
 
 		if(result.IsEmpty()) args.GetReturnValue().Set(Nan::Undefined());
 		else args.GetReturnValue().Set(result.ToLocalChecked());
