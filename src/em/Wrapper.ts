@@ -30,7 +30,7 @@ export namespace _nbind {
 	export class Wrapper {
 		persist() { this.__nbindState |= StateFlags.isPersistent; }
 
-		free?(): void
+		free?(): void;
 
 		/* tslint:disable:variable-name */
 

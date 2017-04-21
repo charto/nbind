@@ -17,7 +17,7 @@ export namespace _nbind {
 
 	let dirtyList: Wrapper[] = [];
 
-	let gcTimer = 0;
+	let gcTimer: number | NodeJS.Timer = 0;
 
 	function sweep() {
 		for(let obj of dirtyList) {
@@ -48,4 +48,4 @@ export namespace _nbind {
 
 	@prepareNamespace('_nbind')
 	export class _ {} // tslint:disable-line:class-name
-};
+}

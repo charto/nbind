@@ -332,7 +332,7 @@ export function typeModule(self: any) {
 				spec.name = (
 					(flags & TypeFlags.isUnsigned ? 'u' : '') +
 					(flags & TypeFlags.isFloat ? 'float' : 'int') +
-					(spec.ptrSize * 8 + '_t')
+					(spec.ptrSize! * 8 + '_t')
 				);
 			}
 		}

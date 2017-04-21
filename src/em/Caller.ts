@@ -286,7 +286,7 @@ export namespace _nbind {
 
 		const dynCall = getDynCall(typeList, spec.title);
 
-		const mask = ~spec.flags & TypeFlags.isConst;
+		const mask = ~spec.flags! & TypeFlags.isConst;
 
 		function err() {
 			throw(new Error('Calling a non-const method on a const object'));

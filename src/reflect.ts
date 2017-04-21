@@ -188,7 +188,10 @@ export class Reflect {
 			hitch(this, this.readMethod)
 		);
 
-		function compareName({ name: a }: {name: string}, { name: b }: {name: string}) {
+		function compareName(
+			{ name: a }: { name: string },
+			{ name: b }: { name: string }
+		) {
 			return(~~(a > b) - ~~(a < b));
 		}
 

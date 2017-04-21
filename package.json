@@ -1,6 +1,6 @@
 {
   "name": "nbind",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Magical headers that make your C++ library accessible from JavaScript",
   "main": "dist/nbind.js",
   "typings": "dist/nbind.d.ts",
@@ -18,7 +18,7 @@
     "tslint": "tslint",
     "cbuild": "cbuild",
     "dump-lib": "dump-em-lib dist/em-api.js",
-    "lint": "tslint -c src/tslint.json src/*.ts src/em/*.ts",
+    "lint": "tslint --type-check -c src/tslint.json -p src/tsconfig.json && tslint --type-check -c src/tslint.json -p src/em/tsconfig.json",
     "prepublish": "npm run lint && tsc -p src/em && tsc -p src && cbuild -x -v -s dist/bundle/em/em-api.js -o dist/em-api.js",
     "clean-asm": "cd test/em && node-gyp clean",
     "config-test": "autogypi -c test/autogypi.json",
@@ -52,16 +52,17 @@
     "win32"
   ],
   "dependencies": {
-    "emscripten-library-decorator": "~0.2.0",
+    "@types/node": "^7.0.13",
+    "emscripten-library-decorator": "~0.2.2",
     "mkdirp": "~0.5.1",
-    "nan": "^2.5.0"
+    "nan": "^2.6.2"
   },
   "devDependencies": {
     "autogypi": "~0.2.2",
-    "cbuild": "~0.1.1",
-    "node-gyp": "^3.5.0",
-    "tap": "^9.0.3",
-    "tslint": "^4.3.1",
-    "typescript": "^2.1.5"
+    "cbuild": "~0.1.2",
+    "node-gyp": "^3.6.0",
+    "tap": "^10.3.2",
+    "tslint": "^5.1.0",
+    "typescript": "^2.2.2"
   }
 }

@@ -67,7 +67,7 @@ export namespace _nbind {
 		// Called by C++ side destructor through unregisterExternal
 		// to free any related JavaScript resources.
 
-		free?(): void
+		free?(): void;
 
 		refCount = 1;
 		data: any;
