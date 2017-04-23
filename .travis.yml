@@ -49,9 +49,6 @@ matrix:
 #    - os: osx
 #      env: CC=clang-3.8 CXX=clang++-3.8 npm_config_clang=1
 
-before_install:
-  VER=`npm --version` eval 'ARRAY=(${VER//./ }) && if [ ${ARRAY[0]} -lt 2 ] || ( [ ${ARRAY[0]} -eq 2 ] && [ ${ARRAY[1]} -lt 13 ] ) ; then npm install -g npm; fi'
-
 after_script:
   if [ ${TRAVIS_JOB_NUMBER##*.} == 1 ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then bin/ci-trigger; fi
 
