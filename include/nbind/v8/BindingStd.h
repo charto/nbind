@@ -141,4 +141,40 @@ template <> struct BindingType<StrictType<std::string>> : public BindingType<std
 	}
 };
 
+// String reference.
+
+template <> struct BindingType<const std::string &> {
+
+	typedef std::string Type;
+
+	static inline bool checkType(WireType arg) {
+		return(true);
+	}
+
+};
+
+template <> struct BindingType<StrictType<const std::string &>> : public BindingType<const std::string &> {
+	static inline bool checkType(WireType arg) {
+		return(arg->IsString());
+	}
+};
+
+template<typename PolicyList, size_t Index>
+struct ArgFromWire<PolicyList, Index, const std::string &> {
+
+	// TODO: Get string length from JS to support zero bytes?
+	template <typename NanArgs>
+	ArgFromWire(const NanArgs &args) : val(*Nan::Utf8String(args[Index]->ToString())) {}
+
+	template <typename NanArgs>
+	inline const std::string &get(const NanArgs &args) {
+		return(val);
+	}
+
+	// RAII style storage for the string data.
+
+	std::string val;
+
+};
+
 } // namespace

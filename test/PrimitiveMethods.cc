@@ -49,6 +49,10 @@ public:
 		return((unsigned char *)buf);
 	}
 
+	std::string catenate2(const std::string &x, const std::string &y) {
+		return(x + y);
+	}
+
 	template <typename T>
 	static T toInt(double x) {
 		T y = x;
@@ -110,6 +114,7 @@ NBIND_CLASS(PrimitiveMethods) {
 
 	method(catenateStatic);
 	method(catenate);
+	method(catenate2);
 
 	method(ftol);
 	method(ftoul);

@@ -186,4 +186,36 @@ template<> struct BindingType<std::string> {
 
 template <> struct BindingType<StrictType<std::string>> : public BindingType<std::string> {};
 
+// String reference.
+
+template<> struct BindingType<const std::string &> {
+
+	typedef std::string Type;
+
+	typedef struct {
+		uint32_t length;
+		char data[1];
+	} *WireType;
+
+};
+
+template <> struct BindingType<StrictType<const std::string &>> : public BindingType<const std::string &> {};
+
+template<typename PolicyList>
+struct ArgFromWire<PolicyList, const std::string &> {
+
+	typedef typename BindingType<const std::string &>::WireType WireType;
+
+	explicit ArgFromWire(WireType arg) : val(arg->data, arg->length) {}
+
+	inline const std::string &get(WireType arg) const {
+		return(val);
+	}
+
+	// RAII style storage for the string data.
+
+	std::string val;
+
+};
+
 } // namespace

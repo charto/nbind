@@ -121,6 +121,7 @@ class nbind { // tslint:disable-line:class-name
 			// 'cbFunction': _nbind.CallbackType,
 			'cbFunction &': _nbind.CallbackType,
 			'const cbFunction &': _nbind.CallbackType,
+			'const std::string &': _nbind.StringType,
 			'std::string': _nbind.StringType
 		};
 

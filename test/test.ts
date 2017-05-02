@@ -77,6 +77,7 @@ test('Methods and primitive types', function(t: any) {
 
 		t.strictEqual(Type.catenateStatic('foo', 'bar'), 'foobar');
 		t.strictEqual(obj.catenate('Java', 'Script'), 'JavaScript');
+		t.strictEqual(obj.catenate2('Java', 'Script'), 'JavaScript');
 
 		t.strictEqual(Type.strLengthStatic(123 as any as string), 3);
 
