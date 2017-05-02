@@ -18,18 +18,17 @@ static ArgType int64FromWire(WireType arg, void(init)(const Nan::FunctionCallbac
 
 	ArgType storage = 0;
 
+	// TODO: cache this for a speedup (replace init param).
+	auto storageTemplate = Nan::New<v8::ObjectTemplate>();
+	storageTemplate->SetInternalFieldCount(1);
+	Nan::SetCallAsFunctionHandler(storageTemplate, init);
+
+	auto instance = Nan::NewInstance(storageTemplate).ToLocalChecked();
+	Nan::SetInternalFieldPointer(instance, 0, &storage);
+
 	// TODO: cache this for a speedup.
 	cbFunction converter(v8::Local<v8::Function>::Cast(fromJS));
-
-	v8::Local<v8::FunctionTemplate> constructorTemplate = Nan::New<v8::FunctionTemplate>(
-		init,
-		Nan::New<v8::External>(&storage)
-	);
-
-	// TODO: cache this for a speedup.
-	auto constructor = constructorTemplate->GetFunction();
-
-	converter.callMethod<void>(target, constructor);
+	converter.callMethod<void>(target, instance);
 
 	return(storage);
 }
@@ -49,7 +48,7 @@ template <int size> struct Int64Converter {
 
 	template <typename ArgType>
 	static void uint64Init(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		ArgType &storage = *static_cast<ArgType *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
+		ArgType &storage = *static_cast<ArgType *>(Nan::GetInternalFieldPointer(args.Holder(), 0));
 
 		unsigned int argc = args.Length();
 		if(argc > 0) storage = args[0]->Uint32Value();
@@ -59,7 +58,7 @@ template <int size> struct Int64Converter {
 
 	template <typename ArgType>
 	static void int64Init(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		ArgType &storage = *static_cast<ArgType *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
+		ArgType &storage = *static_cast<ArgType *>(Nan::GetInternalFieldPointer(args.Holder(), 0));
 
 		unsigned int argc = args.Length();
 		if(argc > 0) storage = args[0]->Uint32Value();
@@ -135,7 +134,7 @@ template<> struct Int64Converter<8> {
 
 	template <typename ArgType>
 	static void uint64Init(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		ArgType &storage = *static_cast<ArgType *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
+		ArgType &storage = *static_cast<ArgType *>(Nan::GetInternalFieldPointer(args.Holder(), 0));
 
 		unsigned int argc = args.Length();
 		if(argc > 0) storage = args[0]->Uint32Value();
@@ -146,7 +145,7 @@ template<> struct Int64Converter<8> {
 
 	template <typename ArgType>
 	static void int64Init(const Nan::FunctionCallbackInfo<v8::Value> &args) {
-		ArgType &storage = *static_cast<ArgType *>(v8::Handle<v8::External>::Cast(args.Data())->Value());
+		ArgType &storage = *static_cast<ArgType *>(Nan::GetInternalFieldPointer(args.Holder(), 0));
 
 		unsigned int argc = args.Length();
 		if(argc > 0) storage = args[0]->Uint32Value();

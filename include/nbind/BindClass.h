@@ -108,6 +108,7 @@ public:
 
 	Nan::Persistent<v8::FunctionTemplate> constructorTemplate;
 	Nan::Persistent<v8::FunctionTemplate> superTemplate;
+	Nan::Persistent<v8::ObjectTemplate> storageTemplate;
 
 #endif // BUILDING_NODE_EXTENSION
 

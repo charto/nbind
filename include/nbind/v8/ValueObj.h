@@ -97,11 +97,13 @@ inline WireType BindingType<std::unique_ptr<ArgType>>::toWireType(
 	return(makeExternal<BaseType>(TypeFlags::isSharedPtr, arg.get(), std::move(arg)));
 }
 
-template <> struct BindingType<v8::Local<v8::Function>> {
+// Allow passing internal wrapped value object storage pointers.
 
-	typedef v8::Local<v8::Function> Type;
+template <> struct BindingType<v8::Local<v8::Object>> {
 
-	static inline WireType toWireType(v8::Local<v8::Function> arg) {
+	typedef v8::Local<v8::Object> Type;
+
+	static inline WireType toWireType(v8::Local<v8::Object> arg) {
 		return(arg);
 	}
 
@@ -114,23 +116,17 @@ inline ArgType BindingType<ValueType<ArgType>>::fromWireType(WireType arg) noexc
 
 	if(!fromJS->IsFunction()) throw(std::runtime_error("Type mismatch"));
 
-	TemplatedArgStorage<ArgType> storage(
-		BindClass<ArgType>::getInstance().valueConstructorNum
-	);
+	BindClassBase &bindClass = BindClass<ArgType>::getInstance();
+
+	TemplatedArgStorage<ArgType> storage(bindClass.valueConstructorNum);
+
+	auto instance = Nan::NewInstance(Nan::New(bindClass.storageTemplate)).ToLocalChecked();
+	// Data specifically for createValue function.
+	Nan::SetInternalFieldPointer(instance, 0, &storage);
 
 	// TODO: cache this for a speedup.
 	cbFunction converter(v8::Local<v8::Function>::Cast(fromJS));
-
-	v8::Local<v8::FunctionTemplate> constructorTemplate = Nan::New<v8::FunctionTemplate>(
-		Overloader::createValue,
-		// Data specifically for createValue function.
-		Nan::New<v8::External>(&storage)
-	);
-
-	// TODO: cache this for a speedup.
-	auto constructor = constructorTemplate->GetFunction();
-
-	converter.callMethod<void>(target, constructor);
+	converter.callMethod<void>(target, instance);
 
 	const char *message = Status::getError();
 	if(message) throw(std::runtime_error(message));
