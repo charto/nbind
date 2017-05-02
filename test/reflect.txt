@@ -164,6 +164,11 @@ class StrictStatic {
 	static const char * strictCString(const char *); // Strict
 };
 
+class StringStream {
+	StringStream();
+	uint32_t bug();
+};
+
 class Value {
 	Value();
 	static Coord getCoord();

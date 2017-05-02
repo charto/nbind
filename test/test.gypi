@@ -12,6 +12,7 @@
 		"Inheritance.cc",
 		"Overload.cc",
 		"Smart.cc",
-		"Buffers.cc"
+		"Buffers.cc",
+		"StringStream.cc"
 	]
 }

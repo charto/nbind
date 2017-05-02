@@ -539,3 +539,11 @@ test('Reflection', function(t: any) {
 
 	t.end();
 });
+
+test('Reflection', function(t: any) {
+	const StringStream = testModule.StringStream;
+
+	t.strictEqual(new StringStream().bug(), 6);
+
+	t.end();
+});
