@@ -82,7 +82,11 @@
 					"<@(_cflags_cc)",
 					"-stdlib=libc++"
 				],
-				"OTHER_LDFLAGS": [ "-stdlib=libc++" ]
+				"OTHER_LDFLAGS": [
+					"-stdlib=libc++",
+					"-exported_symbols_list",
+					"/dev/null"
+				]
 			}
 
 		}]
