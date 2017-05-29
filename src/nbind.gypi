@@ -51,6 +51,9 @@
 
 		}, {
 
+			"copies": [{"destination": "<(INTERMEDIATE_DIR)", "files": ["symbols.txt"]}],
+			"symbols_path": "<(INTERMEDIATE_DIR)/symbols.txt",
+
 			"sources": [
 				"v8/Buffer.cc",
 				"v8/Binding.cc"
@@ -84,8 +87,7 @@
 				],
 				"OTHER_LDFLAGS": [
 					"-stdlib=libc++",
-					"-exported_symbols_list",
-					"/dev/null"
+					"-exported_symbols_list", "<(_symbols_path)"
 				]
 			}
 
