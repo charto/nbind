@@ -15,10 +15,11 @@ public:
 
 	// Type of the signature.
 	// Determines the actual signature class of each instance.
-	// These must match JavaScript enum SignatureType in enums.ts
+	// These must match JavaScript enum SignatureType in common.ts
 
 	enum class SignatureType: unsigned int {
-		func = 0,
+		none = 0,
+		func,
 		method,
 		getter,
 		setter,
@@ -92,6 +93,10 @@ public:
 	static Signature &getInstance() {
 		// Linkage for a singleton instance of each templated class.
 		static Signature instance;
+
+		// The constructor should have been called, but sometimes it wasn't!
+		if(instance.getType() == SignatureType :: none) new (&instance) Signature();
+
 		return(instance);
 	}
 

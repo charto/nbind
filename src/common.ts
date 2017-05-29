@@ -4,7 +4,8 @@
 // These must match C++ enum SignatureType in BaseSignature.h
 
 export const enum SignatureType {
-	func = 0,
+	none = 0,
+	func,
 	method,
 	getter,
 	setter,

@@ -223,6 +223,11 @@ static void initModule() {
 			}
 
 			switch(signature->getType()) {
+				case SignatureType :: none:
+
+					// Impossible!
+					abort();
+
 				case SignatureType :: method:
 				case SignatureType :: getter:
 				case SignatureType :: setter:
