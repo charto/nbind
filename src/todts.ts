@@ -111,17 +111,22 @@ function formatProperty(prop: BindProperty) {
 	return(prop.name + ': ' + formatType(prop.bindType) + ';');
 }
 
-export function dump(reflect: Reflect) {
-	const classCodeList = [
-		'import { Buffer } from "nbind/dist/shim";',
-		'export class NBindBase { free?(): void }'
-	];
+export function dump(options: { reflect: Reflect, shim?: boolean } ) {
+	const classCodeList = [];
 	let indent: string;
 	let staticPrefixCC: string;
 	let staticPrefixJS: string;
-	let classList = reflect.classList;
+	let classList = options.reflect.classList;
 
-	if(reflect.globalScope) classList = classList.concat([reflect.globalScope]);
+	if(options.shim) {
+		classCodeList.push('import { Buffer } from "nbind/dist/shim";');
+	}
+
+	classCodeList.push('export class NBindBase { free?(): void }');
+
+	if(options.reflect.globalScope) {
+		classList = classList.concat([options.reflect.globalScope]);
+	}
 
 	for(let bindClass of classList) {
 		if(bindClass.isClass) {

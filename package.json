@@ -22,8 +22,8 @@
     "prepublish": "npm run lint && tsc -p src/em && tsc -p src && (node src/checkver.js lt 0.12.0 || cbuild -x -v -s dist/bundle/em/em-api.js -o dist/em-api.js)",
     "clean-asm": "cd test/em && node-gyp clean",
     "config-test": "autogypi -c test/autogypi.json",
-    "test-asm": "npm run config-test && cd test/em && node-gyp configure build --asmjs=1 && node ../../bin/ndts . > ../testlib.d.ts && tsc -p .. && tap ../test.js",
-    "test":     "npm run config-test && cd test/v8 && node-gyp configure build           && node ../../bin/ndts . > ../testlib.d.ts && tsc -p .. && tap ../test.js --gc && tap ../test-v8.js"
+    "test-asm": "npm run config-test && cd test/em && node-gyp configure build --asmjs=1 && node ../../bin/ndts --no-shim . > ../testlib.d.ts && tsc -p .. && tap ../test.js",
+    "test":     "npm run config-test && cd test/v8 && node-gyp configure build           && node ../../bin/ndts --no-shim . > ../testlib.d.ts && tsc -p .. && tap ../test.js --gc && tap ../test-v8.js"
   },
   "author": "Juha Järvi",
   "license": "MIT",

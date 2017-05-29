@@ -139,6 +139,11 @@ static void registerMethods(
 		param = new SignatureParam();
 
 		switch(signature->getType()) {
+			case SignatureType :: none:
+
+				// Impossible!
+				abort();
+
 			case SignatureType :: method:
 				param->methodNum = func.getNum();
 				Nan::SetPrototypeTemplate(constructorTemplate, func.getName(),
