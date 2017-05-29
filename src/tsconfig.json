@@ -14,6 +14,7 @@
 		"int64.ts",
 		"reflect.ts",
 		"todts.ts",
+		"shim.ts",
 		"nbind.ts"
 	]
 }

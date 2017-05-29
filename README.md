@@ -1196,7 +1196,7 @@ to create the type definitions:
 
 ```bash
 npm run -- node-gyp configure build
-npm run -- ndts . > lib-types.d.ts
+npm run -s -- ndts . > lib-types.d.ts
 ```
 
 When run in this way, the first argument of `ndts` is a path from the package

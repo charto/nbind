@@ -113,6 +113,7 @@ function formatProperty(prop: BindProperty) {
 
 export function dump(reflect: Reflect) {
 	const classCodeList = [
+		'import { Buffer } from "nbind/dist/shim";',
 		'export class NBindBase { free?(): void }'
 	];
 	let indent: string;
