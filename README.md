@@ -6,6 +6,7 @@
 [License](#license)
 
 [![nbind flowchart](doc/images/diagram.png)](doc/images/diagram.png)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fcharto%2Fnbind.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fcharto%2Fnbind?ref=badge_shield)
 
 `nbind` is a set of headers that make your C++11 library accessible from JavaScript.
 With a single `#include` statement, your C++ compiler generates the necessary bindings
@@ -1392,3 +1393,7 @@ License
 [The MIT License](https://raw.githubusercontent.com/charto/nbind/master/LICENSE)
 
 Copyright (c) 2014-2017 BusFaster Ltd
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fcharto%2Fnbind.svg?type=large)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fcharto%2Fnbind?ref=badge_large)
