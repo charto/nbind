@@ -1,15 +1,15 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as _globals} from './Globals';
-import {_nbind as _type} from './BindingType';
-import {_nbind as _value} from './ValueObj';
-import {_nbind as _caller} from './Caller';
-import {_nbind as _wrapper} from './Wrapper';
-import {_nbind as _resource} from './Resource';
-import {SignatureType} from '../common';
-import {TypeFlags, TypeSpecWithName, TypeSpecWithParam, PolicyTbl} from '../Type';
+import { setEvil, prepareNamespace } from 'emscripten-library-decorator';
+import { _nbind as _globals } from './Globals';
+import { _nbind as _type } from './BindingType';
+import { _nbind as _value } from './ValueObj';
+import { _nbind as _caller } from './Caller';
+import { _nbind as _wrapper } from './Wrapper';
+import { _nbind as _resource } from './Resource';
+import { SignatureType } from '../common';
+import { TypeFlags, TypeSpecWithName, TypeSpecWithParam, PolicyTbl } from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));

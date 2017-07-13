@@ -11,10 +11,10 @@ import {
 	dep
 } from 'emscripten-library-decorator';
 
-import {_nbind as _globals} from './Globals';
-import {_nbind as _type} from './BindingType';
-import {_nbind as _caller} from './Caller';
-import {_nbind as _external} from './External';
+import { _nbind as _globals } from './Globals';
+import { _nbind as _type } from './BindingType';
+import { _nbind as _caller } from './Caller';
+import { _nbind as _external } from './External';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));

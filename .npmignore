@@ -5,6 +5,7 @@ example/
 build/
 test/
 doc/
+package-lock.json
 *.log.*
 *.log
 *.tgz

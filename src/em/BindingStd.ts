@@ -4,11 +4,11 @@
 // This file handles type conversion of C++ standard library types
 // to / from JavaScript.
 
-import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as _globals} from './Globals';
-import {_nbind as _type} from './BindingType';
-import {_nbind as _resource} from './Resource';
-import {TypeSpecWithParam, PolicyTbl} from '../Type';
+import { setEvil, prepareNamespace } from 'emscripten-library-decorator';
+import { _nbind as _globals } from './Globals';
+import { _nbind as _type } from './BindingType';
+import { _nbind as _resource } from './Resource';
+import { TypeSpecWithParam, PolicyTbl } from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));

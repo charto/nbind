@@ -6,10 +6,10 @@
 // the type passed between the two is called WireType.
 // Anything from the standard library is instead in BindingStd.ts
 
-import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as _globals} from './Globals';
-import {_nbind as _resource} from './Resource';
-import {typeModule, TypeFlags, TypeSpecWithSize, PolicyTbl} from '../Type';
+import { setEvil, prepareNamespace } from 'emscripten-library-decorator';
+import { _nbind as _globals } from './Globals';
+import { _nbind as _resource } from './Resource';
+import { typeModule, TypeFlags, TypeSpecWithSize, PolicyTbl } from '../Type';
 
 const _typeModule = typeModule;
 

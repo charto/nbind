@@ -23,8 +23,8 @@ import { _nbind as _wrapper } from './Wrapper';   export { _wrapper };
 import { _nbind as _resource } from './Resource'; export { _resource };
 import { _nbind as _buffer } from './Buffer';     export { _buffer };
 import { _nbind as _gc } from './GC';             export { _gc };
-import {SignatureType, removeAccessorPrefix} from '../common';
-import {typeModule, TypeFlags, TypeSpecWithName} from '../Type';
+import { SignatureType, removeAccessorPrefix } from '../common';
+import { typeModule, TypeFlags, TypeSpecWithName } from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));

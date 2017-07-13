@@ -4,7 +4,7 @@
 // makeModulePathList and findCompiledModule are adapted from the npm module
 // "bindings" licensed under the MIT license terms in BINDINGS-LICENSE.
 
-import {SignatureType} from './common';
+import { SignatureType } from './common';
 
 /** Typings for Node.js require(). */
 

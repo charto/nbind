@@ -4,14 +4,14 @@
 // This file handles creating invoker functions for Emscripten dyncalls
 // wrapped in type conversions for arguments and return values.
 
-import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as _globals} from './Globals';
-import {_nbind as _type} from './BindingType';
-import {_nbind as _class} from './BindClass';
-import {_nbind as _wrapper} from './Wrapper';
-import {_nbind as _external} from './External';
-import {_nbind as _resource} from './Resource';
-import {TypeFlags, PolicyTbl} from '../Type';
+import { setEvil, prepareNamespace } from 'emscripten-library-decorator';
+import { _nbind as _globals } from './Globals';
+import { _nbind as _type } from './BindingType';
+import { _nbind as _class } from './BindClass';
+import { _nbind as _wrapper } from './Wrapper';
+import { _nbind as _external } from './External';
+import { _nbind as _resource } from './Resource';
+import { TypeFlags, PolicyTbl } from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
@@ -342,13 +342,14 @@ export namespace _nbind {
 		const needsWireRead = returnType.needsWireRead(spec.policyTbl!);
 		const needsWireWrite = anyNeedsWireWrite(argTypeList, spec.policyTbl!);
 		const direct = spec.direct!;
+		let dynCall: (...args: any[]) => any;
 		let ptr = spec.ptr;
 
 		if(spec.direct && !needsWireRead && !needsWireWrite) {
 			// If there are only a few arguments not requiring type conversion,
 			// build a simple invoker function without using eval.
 
-			const dynCall = getDynCall(typeList, spec.title);
+			dynCall = getDynCall(typeList, spec.title);
 
 			switch(argCount) {
 				case 0: return(() =>
@@ -386,7 +387,7 @@ export namespace _nbind {
 		}
 
 		// Type ID list was changed.
-		const dynCall = getDynCall(typeList, spec.title);
+		dynCall = getDynCall(typeList, spec.title);
 
 		return(buildCallerFunction(
 			dynCall,

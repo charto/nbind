@@ -1,8 +1,8 @@
 // This file is part of nbind, copyright (C) 2014-2016 BusFaster Ltd.
 // Released under the MIT license, see LICENSE.
 
-import {Reflect, BindType, BindClass, BindMethod, BindProperty} from './reflect';
-import {TypeFlags} from './Type';
+import { Reflect, BindType, BindClass, BindMethod, BindProperty } from './reflect';
+import { TypeFlags } from './Type';
 
 // TypeScript alternatives to named C++ types,
 // and a flag whether they need surrounding parentheses when nested.

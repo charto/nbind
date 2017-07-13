@@ -5,8 +5,8 @@
 // For example if any type conversion requires space in the C++ stack,
 // at the end of the invoker it must be reset as it was before.
 
-import {setEvil, prepareNamespace} from 'emscripten-library-decorator';
-import {_nbind as _type} from './BindingType';
+import { setEvil, prepareNamespace } from 'emscripten-library-decorator';
+import { _nbind as _type } from './BindingType';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));

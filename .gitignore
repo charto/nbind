@@ -1,6 +1,7 @@
 node_modules/
 build/
 dist/
+package-lock.json
 *.log.*
 *.log
 *.tgz

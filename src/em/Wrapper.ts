@@ -7,10 +7,10 @@ import {
 	prepareNamespace
 } from 'emscripten-library-decorator';
 
-import {_nbind as _globals} from './Globals';
-import {_nbind as _class} from './BindClass';
-import {_nbind as _gc} from './GC';
-import {StateFlags, TypeFlags, PolicyTbl} from '../Type';
+import { _nbind as _globals } from './Globals';
+import { _nbind as _class } from './BindClass';
+import { _nbind as _gc } from './GC';
+import { StateFlags, TypeFlags, PolicyTbl } from '../Type';
 
 // Let decorators run eval in current scope to read function source code.
 setEvil((code: string) => eval(code));
