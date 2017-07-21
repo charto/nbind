@@ -57,12 +57,12 @@
     "nan": "^2.6.2"
   },
   "devDependencies": {
-    "@types/node": "^8.0.12",
+    "@types/node": "^8.0.14",
     "autogypi": "~0.2.2",
     "cbuild": "~0.1.2",
     "node-gyp": "^3.6.2",
     "tap": "^10.7.0",
     "tslint": "^5.5.0",
-    "typescript": "^2.4.1"
+    "typescript": "~2.3.4"
   }
 }
