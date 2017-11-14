@@ -14,7 +14,7 @@ body='{ "request": {
 			"source emscripten/emsdk_env.sh",
 			"git clone --depth=1 --branch='$TRAVIS_BRANCH' https://github.com/'$TRAVIS_REPO_SLUG'.git tree",
 			"cd tree",
-			"npm install -g npm",
+			"npm install -g npm@4.6.1",
 			"npm install"
 		],
 		"script": "npm run test-asm",
