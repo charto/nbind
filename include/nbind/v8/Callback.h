@@ -30,6 +30,14 @@ public:
 
 	cbWrapper(const cbWrapper &func) : func(func.getJsFunction()) {}
 
+	~cbWrapper() {
+		func.Reset();
+	}
+
+	void reset() {
+		func.Reset();
+	}
+
 	template<typename... Args>
 	DefaultReturnType operator()(Args&&... args) {
 		return(call<DefaultReturnType>(std::move(args)...));
