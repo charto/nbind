@@ -1,6 +1,6 @@
 {
   "name": "nbind",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "Magical headers that make your C++ library accessible from JavaScript",
   "main": "dist/nbind.js",
   "typings": "dist/nbind.d.ts",
@@ -23,7 +23,7 @@
     "clean-asm": "cd test/em && node-gyp clean",
     "config-test": "autogypi -c test/autogypi.json",
     "test-asm": "npm run config-test && cd test/em && node-gyp configure build --asmjs=1 && node ../../bin/ndts --no-shim . > ../testlib.d.ts && tsc -p .. && tap ../test.js",
-    "test":     "npm run config-test && cd test/v8 && node-gyp configure build           && node ../../bin/ndts --no-shim . > ../testlib.d.ts && tsc -p .. && tap ../test.js --gc && tap ../test-v8.js"
+    "test": "npm run config-test && cd test/v8 && node-gyp configure build           && node ../../bin/ndts --no-shim . > ../testlib.d.ts && tsc -p .. && tap ../test.js --gc && tap ../test-v8.js"
   },
   "author": "Juha Järvi",
   "license": "MIT",
@@ -54,14 +54,14 @@
   "dependencies": {
     "emscripten-library-decorator": "~0.2.2",
     "mkdirp": "~0.5.1",
-    "nan": "^2.6.2"
+    "nan": "^2.7.0"
   },
   "devDependencies": {
-    "@types/node": "^8.0.14",
+    "@types/node": "^8.0.51",
     "autogypi": "~0.2.2",
-    "cbuild": "~0.1.2",
+    "cbuild": "~0.1.5",
     "node-gyp": "^3.6.2",
-    "tap": "^10.7.0",
+    "tap": "^10.7.3",
     "tslint": "^5.5.0",
     "typescript": "~2.3.4"
   }
