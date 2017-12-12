@@ -80,6 +80,10 @@
 				}
 			},
 
+			"defines": [
+				"_HAS_EXCEPTIONS=1"
+			],
+
 			"xcode_settings": {
 				"GCC_ENABLE_CPP_RTTI": "YES",
 				"GCC_ENABLE_CPP_EXCEPTIONS": "YES",
