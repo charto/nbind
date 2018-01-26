@@ -34,6 +34,7 @@
 				"--js-library", "<(_jslib_path)",
 				"-s", "NO_FILESYSTEM=1",
 				"-s", "EXPORTED_FUNCTIONS=[\"_nbind_init\",\"_nbind_value\"]",
+				"-s", "EXTRA_EXPORTED_RUNTIME_METHODS=[\"ccall\"]",
 				"-s", "DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=[\"nbind_value\",\"\\$$Browser\"]"
 			],
 
