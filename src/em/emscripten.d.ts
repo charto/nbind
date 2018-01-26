@@ -2,18 +2,19 @@
 // Only contains features required by nbind.
 
 declare var Module: {
-	Pointer_stringify(ptr: number, length?: number): string;
-	lengthBytesUTF8(str: string): number;
-	stringToUTF8Array(
+	[name: string]: any;
+};
+
+// These functions were previously part of Module, but as of emscripten 1.37.24 are globals instead
+declare var Pointer_stringify: (ptr: number, length?: number) => string;
+declare var lengthBytesUTF8: (str: string) => number;
+declare var stringToUTF8Array: (
 		str: string,
 		outU8Array: Uint8Array,
 		outIdx: number,
 		maxBytesToWrite: number
-	): number;
-	stringToUTF8(str: string, outPtr: number, maxBytesToWrite: number): number;
-
-	[name: string]: any;
-};
+	) => number;
+declare var stringToUTF8: (str: string, outPtr: number, maxBytesToWrite: number) => number;
 
 declare var Runtime: {
 	stackAlloc(size: number): number;

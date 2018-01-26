@@ -93,11 +93,11 @@ export namespace _nbind {
 			if(typeof(str) != 'string') throw(new Error('Type mismatch'));
 		} else str = str.toString();
 
-		const length = Module.lengthBytesUTF8(str) + 1;
+		const length = lengthBytesUTF8(str) + 1;
 		const result = Pool.lalloc(length);
 
 		// Convert the string and append a zero byte.
-		Module.stringToUTF8Array(str, HEAPU8, result, length);
+		stringToUTF8Array(str, HEAPU8, result, length);
 
 		return(result);
 	}
@@ -107,7 +107,7 @@ export namespace _nbind {
 	export function popCString(ptr: number) {
 		if(ptr === 0) return(null);
 
-		return(Module.Pointer_stringify(ptr));
+		return(Pointer_stringify(ptr));
 	}
 
 	// Zero-terminated 'const char *' style string, passed through the C++ stack.

@@ -121,7 +121,7 @@ export namespace _nbind {
 			if(typeof(str) != 'string') throw(new Error('Type mismatch'));
 		} else str = str.toString();
 
-		const length = Module.lengthBytesUTF8(str);
+		const length = lengthBytesUTF8(str);
 
 		// 32-bit length, string and a zero terminator
 		// (stringToUTF8Array insists on adding it)
@@ -129,7 +129,7 @@ export namespace _nbind {
 		const result = Pool.lalloc(4 + length + 1);
 
 		HEAPU32[result / 4] = length;
-		Module.stringToUTF8Array(str, HEAPU8, result + 4, length + 1);
+		stringToUTF8Array(str, HEAPU8, result + 4, length + 1);
 
 		return(result);
 	}
@@ -139,7 +139,7 @@ export namespace _nbind {
 
 		const length = HEAPU32[ptr / 4];
 
-		return(Module.Pointer_stringify(ptr + 4, length));
+		return(Pointer_stringify(ptr + 4, length));
 	}
 
 	export class StringType extends BindType {
