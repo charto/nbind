@@ -47,6 +47,7 @@
     "node-gyp"
   ],
   "os": [
+    "android",
     "darwin",
     "linux",
     "win32"
