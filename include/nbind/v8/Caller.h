@@ -53,21 +53,20 @@ template<typename ArgList> struct Checker;
 template<typename... Args>
 struct Checker<TypeList<Args...>> {
 
-	template<typename... DummyArgs> static inline void pass(DummyArgs&&...) {}
+	static bool booleanAnd(bool flag) {
+		return(flag);
+	}
 
-	static inline bool booleanAndTo(bool valid, bool &validFlag) {
-		validFlag &= valid;
-		return(valid);
+	template <typename... Rest>
+	static bool booleanAnd(bool flag, Rest... rest) {
+		return(flag & booleanAnd(rest...));
 	}
 
 	template <typename NanArgs>
 	static bool typesAreValid(NanArgs &args) {
-		bool validFlag = true;
 		(void)args; // Silence possible compiler warning about unused parameter.
 
-		pass(booleanAndTo(Args::checkType(args), validFlag)...);
-
-		return(validFlag);
+		return(booleanAnd(Args::checkType(args)..., true));
 	}
 
 	template <typename NanArgs>
