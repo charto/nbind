@@ -23,8 +23,8 @@ matrix:
     - os: osx
       env: CC=gcc-4.8 CXX=g++-4.8
   allow_failures:
-    - nodejs_version: "0.12"
-    - nodejs_version: "0.10"
+    - node_js: "0.12"
+    - node_js: "0.10"
 
 after_script:
   if [ ${TRAVIS_JOB_NUMBER##*.} == 1 ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then bin/ci-trigger; fi
