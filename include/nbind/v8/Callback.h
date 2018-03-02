@@ -51,11 +51,11 @@ public:
 			Nan::Null()
 		};
 
-		WireType result = func.Call(sizeof...(Args), argv);
+		Nan::MaybeLocal<v8::Value> result = Nan::Call(func, Nan::GetCurrentContext()->Global(), sizeof...(Args), argv);
 
 		if(result.IsEmpty()) throw(cbException());
 
-		return(convertFromWire<ReturnType>(result));
+		return(convertFromWire<ReturnType>(result.ToLocalChecked()));
 	}
 
 	template <typename ReturnType, typename... Args>
@@ -69,11 +69,11 @@ public:
 			Nan::Null()
 		};
 
-		WireType result = func.Call(target, sizeof...(Args), argv);
+		Nan::MaybeLocal<v8::Value> result = Nan::Call(func, target, sizeof...(Args), argv);
 
 		if(result.IsEmpty()) throw(cbException());
 
-		return(convertFromWire<ReturnType>(result));
+		return(convertFromWire<ReturnType>(result.ToLocalChecked()));
 	}
 
 	v8::Local<v8::Function> getJsFunction() const { return(func.GetFunction()); }
