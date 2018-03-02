@@ -54,15 +54,15 @@
   "dependencies": {
     "emscripten-library-decorator": "~0.2.2",
     "mkdirp": "~0.5.1",
-    "nan": "^2.7.0"
+    "nan": "^2.9.2"
   },
   "devDependencies": {
     "@types/node": "^8.0.51",
     "autogypi": "~0.2.2",
-    "cbuild": "~0.1.5",
+    "cbuild": "~0.1.8",
     "node-gyp": "^3.6.2",
     "tap": "^10.7.3",
-    "tslint": "^5.5.0",
+    "tslint": "^5.9.1",
     "typescript": "~2.3.4"
   }
 }

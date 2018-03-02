@@ -6,14 +6,15 @@ init:
 - ps: Install-Product node $env:nodejs_version
 environment:
   matrix:
-  - nodejs_version: 7.0
-  - nodejs_version: 6.9
-  - nodejs_version: 4.6
-  - nodejs_version: 0.12
-  - nodejs_version: 0.10
+  - nodejs_version: "9"
+  - nodejs_version: "8"
+  - nodejs_version: "4"
+  - nodejs_version: "0.12"
+  - nodejs_version: "0.10"
 matrix:
   allow_failures:
-  - nodejs_version: 0.10
+  - nodejs_version: "0.12"
+  - nodejs_version: "0.10"
 install:
 - set PATH=%APPDATA%\npm;%PATH%
 - npm install

@@ -5,9 +5,9 @@ os:
   - osx
 
 node_js:
-  - "7.0"
-  - "6.9"
-  - "4.6"
+  - "9"
+  - "8"
+  - "4"
   - "0.12"
   - "0.10"
 
@@ -17,37 +17,14 @@ env:
 #  - CC=clang-3.8 CXX=clang++-3.8 npm_config_clang=1
 
 matrix:
-#  include:
-#    - os: linux
-#      env: CC=gcc-4.8 CXX=g++-4.8
-#      node_js: "iojs-v3.0.0"
-#    - os: linux
-#      env: CC=gcc-4.8 CXX=g++-4.8
-#      node_js: "iojs-v2.0.0"
-#    - os: linux
-#      env: CC=gcc-4.8 CXX=g++-4.8
-#      node_js: "iojs-v1.1.0"
-#    - os: linux
-#      env: CC=gcc-4.8 CXX=g++-4.8
-#      node_js: "6.0"
-#    - os: linux
-#      env: CC=gcc-4.8 CXX=g++-4.8
-#      node_js: "5.12"
-#    - os: linux
-#      env: CC=gcc-4.8 CXX=g++-4.8
-#      node_js: "5.0"
-#    - os: linux
-#      env: CC=gcc-4.8 CXX=g++-4.8
-#      node_js: "4.0"
   exclude:
     - os: linux
       env: CC=clang CXX=clang
     - os: osx
       env: CC=gcc-4.8 CXX=g++-4.8
   allow_failures:
-    - nodejs_version: 0.10
-#    - os: osx
-#      env: CC=clang-3.8 CXX=clang++-3.8 npm_config_clang=1
+    - nodejs_version: "0.12"
+    - nodejs_version: "0.10"
 
 after_script:
   if [ ${TRAVIS_JOB_NUMBER##*.} == 1 ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then bin/ci-trigger; fi
