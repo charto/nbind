@@ -731,13 +731,22 @@ The second of the two would be referenced like:
 multimethod(test, args(unsigned int, unsigned int));
 ```
 
-If it needs to be renamed, the call would be:
+As always, the return type and method constness are autodetected.
+
+For calling from JavaScript, additionally each overload needs to have a distinct name.
+For renaming an overload JavaScript will see, the binding code is like:
 
 ```C++
 multimethod(test, args(unsigned int, unsigned int), "test2");
 ```
 
-As always, the return type and method constness are autodetected.
+You can then write a JavaScript wrapper to inspect arguments and select which
+overload to call. The reason for this is, that `nbind` binds a JavaScript property to
+a single C++ function pointer, which wraps one overloaded version of the function
+with type conversion code.
+
+Otherwise, it would need to generate a new C++ function that also checks the arguments.
+This would result in a larger native binary without any speed advantage.
 
 Getters and setters
 -------------------
