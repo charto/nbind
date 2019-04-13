@@ -11,7 +11,7 @@ template <typename ArgType>
 static ArgType int64FromWire(WireType arg, void(init)(const Nan::FunctionCallbackInfo<v8::Value> &args)) {
 	Nan::HandleScope();
 
-	auto target = arg->ToObject();
+	auto target = Nan::To<v8::Object>(arg).ToLocalChecked();
 	auto fromJS = target->Get(Nan::New<v8::String>("fromJS").ToLocalChecked());
 
 	if(!fromJS->IsFunction()) throw(std::runtime_error("Type mismatch"));
@@ -51,7 +51,7 @@ template <int size> struct Int64Converter {
 		ArgType &storage = *static_cast<ArgType *>(Nan::GetInternalFieldPointer(args.Holder(), 0));
 
 		unsigned int argc = args.Length();
-		if(argc > 0) storage = args[0]->Uint32Value();
+		if(argc > 0) storage = Nan::To<unsigned int>(args[0]).FromJust();
 
 		args.GetReturnValue().Set(Nan::Undefined());
 	}
@@ -61,8 +61,8 @@ template <int size> struct Int64Converter {
 		ArgType &storage = *static_cast<ArgType *>(Nan::GetInternalFieldPointer(args.Holder(), 0));
 
 		unsigned int argc = args.Length();
-		if(argc > 0) storage = args[0]->Uint32Value();
-		if(argc > 2 && args[2]->BooleanValue()) storage = -storage;
+		if(argc > 0) storage = Nan::To<unsigned int>(args[0]).FromJust();
+		if(argc > 2 && Nan::To<bool>(args[2]).FromJust()) storage = -storage;
 
 		args.GetReturnValue().Set(Nan::Undefined());
 	}
@@ -137,8 +137,8 @@ template<> struct Int64Converter<8> {
 		ArgType &storage = *static_cast<ArgType *>(Nan::GetInternalFieldPointer(args.Holder(), 0));
 
 		unsigned int argc = args.Length();
-		if(argc > 0) storage = args[0]->Uint32Value();
-		if(argc > 1) storage += static_cast<uint64_t>(args[1]->Uint32Value()) << 32;
+		if(argc > 0) storage = Nan::To<unsigned int>(args[0]).FromJust();
+		if(argc > 1) storage += static_cast<uint64_t>(Nan::To<unsigned int>(args[1]).FromJust()) << 32;
 
 		args.GetReturnValue().Set(Nan::Undefined());
 	}
@@ -148,9 +148,9 @@ template<> struct Int64Converter<8> {
 		ArgType &storage = *static_cast<ArgType *>(Nan::GetInternalFieldPointer(args.Holder(), 0));
 
 		unsigned int argc = args.Length();
-		if(argc > 0) storage = args[0]->Uint32Value();
-		if(argc > 1) storage += static_cast<uint64_t>(args[1]->Uint32Value()) << 32;
-		if(argc > 2 && args[2]->BooleanValue()) storage = -storage;
+		if(argc > 0) storage = Nan::To<unsigned int>(args[0]).FromJust();
+		if(argc > 1) storage += static_cast<uint64_t>(Nan::To<unsigned int>(args[1]).FromJust()) << 32;
+		if(argc > 2 && Nan::To<bool>(args[2]).FromJust()) storage = -storage;
 
 		args.GetReturnValue().Set(Nan::Undefined());
 	}
@@ -172,7 +172,7 @@ template <> struct BindingType<ArgType> {                   \
 		if(arg->IsObject()) {                               \
 			return(int64FromWire<ArgType>(arg, Int64Converter<sizeof(Type)>::decode<ArgType>)); \
 		} else {                                            \
-			return(static_cast<Type>(arg->NumberValue()));  \
+			return(static_cast<Type>(Nan::To<double>(arg).FromJust()));  \
 		}                                                   \
 	}                                                       \
 };                                                          \

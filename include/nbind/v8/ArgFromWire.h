@@ -34,7 +34,7 @@ template<typename PolicyList, size_t Index>
 struct ArgFromWire<PolicyList, Index, const char *> {
 
 	template <typename NanArgs>
-	ArgFromWire(const NanArgs &args) : val(args[Index]->ToString()) {}
+	ArgFromWire(const NanArgs &args) : val(Nan::To<v8::String>(args[Index]).ToLocalChecked()) {}
 
 	template <typename NanArgs>
 	inline const char *get(const NanArgs &args) {
@@ -53,7 +53,7 @@ template<typename PolicyList, size_t Index>
 struct ArgFromWire<PolicyList, Index, const unsigned char *> {
 
 	template <typename NanArgs>
-	ArgFromWire(const NanArgs &args) : val(args[Index]->ToString()) {}
+	ArgFromWire(const NanArgs &args) : val(Nan::To<v8::String>(args[Index]).ToLocalChecked()) {}
 
 	template <typename NanArgs>
 	inline const unsigned char *get(const NanArgs &args) {

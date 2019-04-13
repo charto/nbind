@@ -125,7 +125,7 @@ template <> struct BindingType<std::string> {
 	}
 
 	static inline Type fromWireType(WireType arg) {
-		Nan::Utf8String val(arg->ToString());
+		Nan::Utf8String val(Nan::To<v8::String>(arg).ToLocalChecked());
 		return(std::string(*val, val.length()));
 	}
 
@@ -164,7 +164,7 @@ struct ArgFromWire<PolicyList, Index, const std::string &> {
 
 	// TODO: Get string length from JS to support zero bytes?
 	template <typename NanArgs>
-	ArgFromWire(const NanArgs &args) : val(*Nan::Utf8String(args[Index]->ToString())) {}
+	ArgFromWire(const NanArgs &args) : val(*Nan::Utf8String(Nan::To<v8::String>(args[Index]).ToLocalChecked())) {}
 
 	template <typename NanArgs>
 	inline const std::string &get(const NanArgs &args) {
