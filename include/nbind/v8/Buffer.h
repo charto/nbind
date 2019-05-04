@@ -30,7 +30,7 @@ template<> struct BindingType<Buffer> {
 	}
 
 	static inline Type fromWireType(WireType arg) {
-		Buffer result(nullptr, 0, arg->ToObject());
+		Buffer result(nullptr, 0, Nan::To<v8::Object>(arg).ToLocalChecked());
 
 #		if NODE_MODULE_VERSION >= 14 // Node.js 0.12
 			if(arg->IsArrayBuffer() || arg->IsArrayBufferView()) {

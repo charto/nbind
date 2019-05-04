@@ -366,7 +366,7 @@ test('Inheritance', function(t: any) {
 	const C = testModule.InheritanceC;
 	const D = testModule.InheritanceD;
 
-	const d = new D();
+	const d: any = new D();
 
 	t.ok(d instanceof A);
 	t.ok(d instanceof B || d instanceof C);

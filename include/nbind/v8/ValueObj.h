@@ -111,7 +111,7 @@ template <> struct BindingType<v8::Local<v8::Object>> {
 
 template <typename ArgType>
 inline ArgType BindingType<ValueType<ArgType>>::fromWireType(WireType arg) noexcept(false) {
-	auto target = arg->ToObject();
+	auto target = Nan::To<v8::Object>(arg).ToLocalChecked();
 	auto fromJS = target->Get(Nan::New<v8::String>("fromJS").ToLocalChecked());
 
 	if(!fromJS->IsFunction()) throw(std::runtime_error("Type mismatch"));

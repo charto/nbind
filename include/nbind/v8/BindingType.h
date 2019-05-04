@@ -49,7 +49,7 @@ struct BindingType<ArgType *> {
 
 	static inline Type fromWireType(WireType arg) {
 		return(BindWrapper<BaseType>::getBound(
-			arg->ToObject(),
+			Nan::To<v8::Object>(arg).ToLocalChecked(),
 			std::is_const<ArgType>::value ?
 				TypeFlags::isConst :
 				TypeFlags::none
@@ -93,7 +93,7 @@ struct BindingType<std::shared_ptr<ArgType>> {
 
 	static inline Type fromWireType(WireType arg) {
 		return(BindWrapper<BaseType>::getShared(
-			arg->ToObject(),
+			Nan::To<v8::Object>(arg).ToLocalChecked(),
 			std::is_const<ArgType>::value ?
 				TypeFlags::isConst :
 				TypeFlags::none
@@ -161,7 +161,7 @@ struct BindingType<ValueType<ArgType>> {
 // Numeric and boolean types.
 // The static cast silences a compiler warning in Visual Studio.
 
-#define DEFINE_NATIVE_BINDING_TYPE(ArgType, checker, decode, jsClass) \
+#define DEFINE_NATIVE_BINDING_TYPE(ArgType, checker, FromType, jsClass) \
 template <> struct BindingType<ArgType> {                   \
 	typedef ArgType Type;                                   \
 	                                                        \
@@ -170,7 +170,7 @@ template <> struct BindingType<ArgType> {                   \
 	}                                                       \
 	                                                        \
 	static inline Type fromWireType(WireType arg) {         \
-		return(static_cast<Type>(arg->decode()));           \
+		return(static_cast<ArgType>(Nan::To<FromType>(arg).FromJust()));           \
 	}                                                       \
 	                                                        \
 	static inline WireType toWireType(Type arg) {           \
@@ -184,20 +184,20 @@ template <> struct BindingType<StrictType<ArgType>> : public BindingType<ArgType
 	}                                                       \
 }
 
-DEFINE_NATIVE_BINDING_TYPE(bool, IsBoolean, BooleanValue, v8::Boolean);
+DEFINE_NATIVE_BINDING_TYPE(bool, IsBoolean, bool, v8::Boolean);
 
-DEFINE_NATIVE_BINDING_TYPE(double, IsNumber, NumberValue, v8::Number);
-DEFINE_NATIVE_BINDING_TYPE(float, IsNumber, NumberValue, v8::Number);
+DEFINE_NATIVE_BINDING_TYPE(double, IsNumber, double, v8::Number);
+DEFINE_NATIVE_BINDING_TYPE(float, IsNumber, double, v8::Number);
 
-DEFINE_NATIVE_BINDING_TYPE(unsigned int, IsNumber, Uint32Value, v8::Uint32);
-DEFINE_NATIVE_BINDING_TYPE(unsigned short, IsNumber, Uint32Value, v8::Uint32);
-DEFINE_NATIVE_BINDING_TYPE(unsigned char, IsNumber, Uint32Value, v8::Uint32);
+DEFINE_NATIVE_BINDING_TYPE(unsigned int, IsNumber, unsigned int, v8::Uint32);
+DEFINE_NATIVE_BINDING_TYPE(unsigned short, IsNumber, unsigned int, v8::Uint32);
+DEFINE_NATIVE_BINDING_TYPE(unsigned char, IsNumber, unsigned int, v8::Uint32);
 
-DEFINE_NATIVE_BINDING_TYPE(signed int, IsNumber, Int32Value, v8::Int32);
-DEFINE_NATIVE_BINDING_TYPE(signed short, IsNumber, Int32Value, v8::Int32);
-DEFINE_NATIVE_BINDING_TYPE(signed char, IsNumber, Int32Value, v8::Int32);
+DEFINE_NATIVE_BINDING_TYPE(signed int, IsNumber, int, v8::Int32);
+DEFINE_NATIVE_BINDING_TYPE(signed short, IsNumber, int, v8::Int32);
+DEFINE_NATIVE_BINDING_TYPE(signed char, IsNumber, int, v8::Int32);
 
-DEFINE_NATIVE_BINDING_TYPE(char, IsNumber, Int32Value, v8::Int32);
+DEFINE_NATIVE_BINDING_TYPE(char, IsNumber, int, v8::Int32);
 
 #define DEFINE_STRING_BINDING_TYPE(ArgType)             \
 template <> struct BindingType<ArgType> {               \

@@ -109,7 +109,7 @@ struct BindingType<External> {
 
 	static inline bool checkType(WireType arg) { return(arg->IsObject()); }
 
-	static inline Type fromWireType(WireType arg) { return(External(arg->ToObject())); }
+	static inline Type fromWireType(WireType arg) { return(External(Nan::To<v8::Object>(arg).ToLocalChecked())); }
 	static inline WireType toWireType(Type arg) { return(arg.getHandle()); }
 
 };
