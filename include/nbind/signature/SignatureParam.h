@@ -13,7 +13,7 @@ struct SignatureParam {
 	static SignatureParam *get(const InfoType &args) {
 		return(
 			static_cast<SignatureParam *>(
-				v8::Handle<v8::External>::Cast(
+				v8::Local<v8::External>::Cast(
 					args.Data()
 				)->Value()
 			)

@@ -241,7 +241,7 @@ static void nop(const Nan::FunctionCallbackInfo<v8::Value> &args) {
 	args.GetReturnValue().Set(Nan::Undefined());
 }
 
-static void initModule(Handle<Object> exports) {
+static void initModule(Local<Object> exports) {
 	SignatureParam *param;
 
 	for(auto &func : getFunctionList()) {

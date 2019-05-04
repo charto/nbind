@@ -18,7 +18,7 @@
     "tslint": "tslint",
     "cbuild": "cbuild",
     "dump-lib": "dump-em-lib dist/em-api.js",
-    "lint": "node src/checkver.js lt 4.1.2 || (tslint --type-check -c src/tslint.json -p src/tsconfig.json && tslint --type-check -c src/tslint.json -p src/em/tsconfig.json)",
+    "lint": "node src/checkver.js lt 10.0.0 || (tslint --type-check -c src/tslint.json -p src/tsconfig.json && tslint --type-check -c src/tslint.json -p src/em/tsconfig.json)",
     "prepublish": "npm run lint && tsc -p src/em && tsc -p src && (node src/checkver.js lt 0.12.0 || cbuild -x -v -s dist/bundle/em/em-api.js -o dist/em-api.js)",
     "clean-asm": "cd test/em && node-gyp clean",
     "config-test": "autogypi -c test/autogypi.json",
