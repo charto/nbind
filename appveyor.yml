@@ -6,8 +6,8 @@ init:
 - ps: Install-Product node $env:nodejs_version
 environment:
   matrix:
-  - nodejs_version: "9"
-  - nodejs_version: "8"
+  - nodejs_version: "12"
+  - nodejs_version: "10"
   - nodejs_version: "4"
   - nodejs_version: "0.12"
   - nodejs_version: "0.10"
